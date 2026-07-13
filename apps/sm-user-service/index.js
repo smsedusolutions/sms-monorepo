@@ -21,6 +21,7 @@ const driverRoutes = require('./routes/driver.routes');
 const emailTemplateRoutes = require('./routes/emailTemplate.routes');
 const testEmailRoutes = require('./routes/testEmail.routes');
 const roleRoutes = require('./routes/role.routes');
+const statusRoutes = require('./routes/status.routes');
 const { initCronJobs } = require('./utils/cronJobs');
 const { commonRateLimiter } = require('@sms/shared/middlewares');
 
@@ -75,6 +76,7 @@ app.use('/api/school/:schoolId/drivers', driverRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/test', testEmailRoutes);
 app.use('/api/school/upload', uploadRoutes);
+app.use('/api/status', statusRoutes);
 
 // Health check endpoint
 app.get('/health', (_req, res) => {
