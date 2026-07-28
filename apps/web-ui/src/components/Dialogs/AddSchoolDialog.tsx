@@ -391,7 +391,7 @@ const SchoolDialog: React.FC<SchoolDialogProps> = ({
               placeholder="Excellence in Education since 1992"
             />
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+            {/* <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
               <Box>
                 <Typography variant="caption" sx={{ color: '#64748B', mb: 0.5, display: 'block' }}>
                   Primary Color
@@ -481,7 +481,7 @@ const SchoolDialog: React.FC<SchoolDialogProps> = ({
                 placeholder="Inter"
                 size="small"
               />
-            </Box>
+            </Box> */}
 
             {/* <AppInput
               label="Custom Login HTML (optional)"
