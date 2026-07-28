@@ -483,7 +483,7 @@ const SchoolDialog: React.FC<SchoolDialogProps> = ({
               />
             </Box>
 
-            <AppInput
+            {/* <AppInput
               label="Custom Login HTML (optional)"
               labelHint="When set, replaces the ENTIRE login page with this HTML"
               value={(formData as any).loginTheme?.customLoginHtml || ''}
@@ -494,7 +494,7 @@ const SchoolDialog: React.FC<SchoolDialogProps> = ({
               multiline
               rows={5}
               placeholder={`<!DOCTYPE html><html>...</html>\n\nUse window.parent.postMessage({ type: 'SMS_LOGIN', email, password }) to submit login.`}
-            />
+            /> */}
 
             <Divider sx={{ my: 1 }} />
 
