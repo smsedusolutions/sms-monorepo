@@ -391,7 +391,7 @@ const SchoolDialog: React.FC<SchoolDialogProps> = ({
               placeholder="Excellence in Education since 1992"
             />
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+            {/* <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
               <Box>
                 <Typography variant="caption" sx={{ color: '#64748B', mb: 0.5, display: 'block' }}>
                   Primary Color
@@ -481,9 +481,9 @@ const SchoolDialog: React.FC<SchoolDialogProps> = ({
                 placeholder="Inter"
                 size="small"
               />
-            </Box>
+            </Box> */}
 
-            <AppInput
+            {/* <AppInput
               label="Custom Login HTML (optional)"
               labelHint="When set, replaces the ENTIRE login page with this HTML"
               value={(formData as any).loginTheme?.customLoginHtml || ''}
@@ -494,7 +494,7 @@ const SchoolDialog: React.FC<SchoolDialogProps> = ({
               multiline
               rows={5}
               placeholder={`<!DOCTYPE html><html>...</html>\n\nUse window.parent.postMessage({ type: 'SMS_LOGIN', email, password }) to submit login.`}
-            />
+            /> */}
 
             <Divider sx={{ my: 1 }} />
 

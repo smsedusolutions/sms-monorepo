@@ -9,7 +9,6 @@ import {
   useGetUserMenus,
 } from "../../queries/Menus";
 import {
-  Avatar,
   Toolbar,
   Typography,
   Divider,
@@ -43,7 +42,7 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
 
   // Get user and school data from Zustand store
   const { user, fetchProfile } = useUserStore();
-  const { fetchRoles, getRoleByCode } = useRoleStore();
+  const { fetchRoles } = useRoleStore();
 
   // Fetch profile and roles on component mount
   useEffect(() => {
@@ -139,11 +138,7 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
 
   const menuItems = getMenuItems();
 
-  // Get user's full name
-  const userName = user
-    ? `${user.firstName} ${user.lastName}`
-    : TokenService.getUserName() || "User";
-  const profileImage = user?.profileImage || "";
+
 
   return (
     <>
@@ -189,54 +184,6 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
           }}
         >
           <Toolbar className="navbar-toolbar" />
-          {/* User Profile Section */}
-          <div
-            className="sidebar-user-profile"
-            style={{
-              padding: "20px",
-              borderBottom: "1px solid #334155",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              textAlign: "center",
-            }}
-          >
-            <Avatar
-              alt={userName}
-              src={profileImage}
-              sx={{
-                width: 60,
-                height: 60,
-                background: "#3b82f6",
-                fontSize: "1.5rem",
-                marginBottom: "10px",
-              }}
-            >
-              {userName?.charAt(0).toUpperCase()}
-            </Avatar>
-            <div className="welcome-text" style={{ color: "#fff" }}>
-              <Typography
-                style={{
-                  fontWeight: "600",
-                  color: "white",
-                  fontSize: "1rem",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {userName}
-              </Typography>
-              <Typography
-                style={{
-                  color: "#94a3b8",
-                  fontSize: "0.75rem",
-                  textTransform: "capitalize",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {role ? getRoleByCode(role)?.roleName || role.replace("_", " ") : "User"}
-              </Typography>
-            </div>
-          </div>
 
           {/* Menu Items */}
           <div
