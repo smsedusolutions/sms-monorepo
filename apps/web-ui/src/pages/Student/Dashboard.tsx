@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Box, Typography, Grid, Skeleton, Alert, Avatar, Paper, Button, Stack, Chip } from '@mui/material';
+import { Box, Typography, Grid, Skeleton, Alert, Avatar, Paper, Button, Stack, Chip, Divider } from '@mui/material';
 import {
     School as ClassIcon,
     Assessment as ResultsIcon,
@@ -11,13 +11,23 @@ import {
     CheckCircle as PresentIcon,
     Cancel as AbsentIcon,
     Schedule as LateIcon,
-    TrendingUp as TrendIcon,
+    Campaign as AnnouncementIcon,
+    MenuBook as HomeworkIcon,
+    AccessTime as TimeIcon,
+    CalendarMonth as CalendarIcon,
+    Assignment as AssignmentIcon,
+    Warning as OverdueIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Chart } from 'react-google-charts';
 import { AppCard } from '../../components/shared/AppCard';
 import TokenService from '../../queries/token/tokenService';
 import { useGetSimpleStudentAttendance } from '../../queries/Attendance';
+import { useGetClassTimetable, useGetActiveConfig } from '../../queries/Timetable';
+import { useGetAnnouncements } from '../../queries/Announcement';
+import { useGetHomeworkByStudent } from '../../queries/Homework';
+import { useGetSubjects } from '../../queries/Subject';
+import { useGetTeachers } from '../../queries/Teacher';
 
 const StudentDashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -25,18 +35,51 @@ const StudentDashboard: React.FC = () => {
     const userName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Student';
     const schoolId = TokenService.getSchoolId() || '';
     const studentId = TokenService.getStudentId() || '';
+    const userClass = user?.class || '';
+    const userSection = user?.section || '';
 
-    // Get last 30 days of attendance
+    // Attendance dates
     const endDate = new Date().toISOString().split('T')[0];
     const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    const { data: attendanceData, isLoading, error } = useGetSimpleStudentAttendance(
-        schoolId,
-        studentId,
-        startDate,
-        endDate
+    // Queries
+    const { data: attendanceData, isLoading: attendanceLoading, error: attendanceError } = useGetSimpleStudentAttendance(
+        schoolId, studentId, startDate, endDate
     );
+    const { data: configData } = useGetActiveConfig(schoolId);
+    const { data: timetableData, isLoading: timetableLoading } = useGetClassTimetable(schoolId, userClass, userSection);
+    const { data: announcementData, isLoading: announcementsLoading } = useGetAnnouncements(schoolId);
+    const { data: homeworkData, isLoading: homeworkLoading } = useGetHomeworkByStudent(schoolId, studentId, { status: 'active' });
+    const { data: subjectsData } = useGetSubjects(schoolId);
+    const { data: teachersData } = useGetTeachers(schoolId);
 
+    // Helpers to resolve subject name and teacher name
+    const getSubjectName = (item: any): string => {
+        if (!item) return 'Subject';
+        if (typeof item === 'string') {
+            const found = subjectsData?.data?.find((s: any) => s.subjectId === item || s._id === item);
+            return found?.name || item;
+        }
+        if (item.subjectName) return item.subjectName;
+        if (item.subject?.name) return item.subject.name;
+        const sId = item.subjectId || item.subject;
+        const found = subjectsData?.data?.find((s: any) => s.subjectId === sId || s._id === sId);
+        return found?.name || sId || 'Subject';
+    };
+
+    const getTeacherName = (period: any): string => {
+        if (!period) return '';
+        if (period.teacherName) return period.teacherName;
+        if (period.teacher?.name) return period.teacher.name;
+        if (period.teacher?.firstName) return `${period.teacher.firstName} ${period.teacher.lastName || ''}`.trim();
+        const tId = period.teacherId || period.teacher;
+        if (!tId) return '';
+        const found = teachersData?.data?.find((t: any) => t.teacherId === tId || t._id === tId);
+        if (found) return `${found.firstName} ${found.lastName}`.trim();
+        return '';
+    };
+
+    // ── Attendance Summary ──
     const summary = attendanceData?.data?.summary;
     const totalDays = summary?.total || 0;
     const presentDays = (summary?.present || 0) + (summary?.late || 0);
@@ -44,54 +87,79 @@ const StudentDashboard: React.FC = () => {
     const pctNumber = parseFloat(percentage);
     const percentageColor = pctNumber >= 90 ? '#10b981' : pctNumber >= 75 ? '#f59e0b' : '#ef4444';
 
-    const donutData = useMemo(() => {
-        return [
-            ['Status', 'Days'],
-            ['Present', summary?.present || 0],
-            ['Absent', summary?.absent || 0],
-            ['Late', summary?.late || 0],
-            ['Leave', summary?.leave || 0],
-        ];
-    }, [summary]);
+    const donutData = useMemo(() => [
+        ['Status', 'Days'],
+        ['Present', summary?.present || 0],
+        ['Absent', summary?.absent || 0],
+        ['Late', summary?.late || 0],
+        ['Leave', summary?.leave || 0],
+    ], [summary]);
+
+    // ── Today's Timetable ──
+    const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const todayDayName = daysOfWeek[new Date().getDay()];
+    const todayFormattedDate = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
+
+    const config = configData?.data;
+    const allEntries = timetableData?.data?.entries || [];
+
+    const todayPeriods = useMemo(() => {
+        const filtered = allEntries.filter((e: any) => e.dayOfWeek?.toLowerCase() === todayDayName);
+        filtered.sort((a: any, b: any) => a.periodNumber - b.periodNumber);
+
+        if (!config?.periods) return filtered;
+        return filtered.map((e: any) => {
+            const periodInfo = config.periods.find((p: any) => p.periodNumber === e.periodNumber);
+            return {
+                ...e,
+                startTime: periodInfo?.startTime || '',
+                endTime: periodInfo?.endTime || '',
+                periodName: periodInfo?.name || `Period ${e.periodNumber}`,
+            };
+        });
+    }, [allEntries, todayDayName, config]);
+
+    // ── Recent Announcements ──
+    const recentAnnouncements = useMemo(() => {
+        return (announcementData?.data || []).slice(0, 3);
+    }, [announcementData]);
+
+    // ── Pending Homework ──
+    const recentHomework = useMemo(() => {
+        return (homeworkData?.data || []).slice(0, 3);
+    }, [homeworkData]);
+
+    const isOverdue = (dueDate: string) => new Date(dueDate) < new Date();
 
     return (
         <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 1300, mx: 'auto' }}>
             {/* Welcome Header */}
-            <Box sx={{ mb: { xs: 3, md: 5 }, mt: 1 }}>
-                {isLoading ? (
-                    <>
-                        <Skeleton variant="text" width="60%" height={70} sx={{ borderRadius: 2 }} />
-                        <Skeleton variant="text" width="40%" height={28} sx={{ mt: 1 }} />
-                    </>
-                ) : (
-                    <>
-                        <Typography
-                            variant="h3"
-                            fontWeight={800}
-                            sx={{
-                                mb: 0.5,
-                                background: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                fontSize: { xs: '2rem', md: '2.75rem' }
-                            }}
-                        >
-                            Welcome back, {userName}!
-                        </Typography>
-                        <Typography variant="h6" color="text.secondary" fontWeight={400} sx={{ opacity: 0.85 }}>
-                            Here is your academic & attendance status for today.
-                        </Typography>
-                    </>
-                )}
+            <Box sx={{ mb: { xs: 3, md: 4 }, mt: 1 }}>
+                <Typography
+                    variant="h4"
+                    fontWeight={800}
+                    sx={{
+                        mb: 0.5,
+                        background: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        fontSize: { xs: '1.75rem', md: '2.5rem' }
+                    }}
+                >
+                    Welcome back, {userName}!
+                </Typography>
+                <Typography variant="body1" color="text.secondary" fontWeight={400}>
+                    Here is your daily schedule, homework, and announcements for today.
+                </Typography>
             </Box>
 
-            {error && (
+            {attendanceError && (
                 <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>
                     Failed to load dashboard data. Please try again later.
                 </Alert>
             )}
 
-            {/* Attendance Short Report Widget */}
+            {/* Attendance Summary Card */}
             <Paper
                 elevation={0}
                 onClick={() => navigate('/student/attendance')}
@@ -143,8 +211,8 @@ const StudentDashboard: React.FC = () => {
                     </Button>
                 </Box>
 
-                {isLoading ? (
-                    <Skeleton variant="rectangular" height={160} sx={{ borderRadius: 3 }} />
+                {attendanceLoading ? (
+                    <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 3 }} />
                 ) : (
                     <Grid container spacing={3} alignItems="center">
                         <Grid size={{ xs: 12, sm: 4 }}>
@@ -160,8 +228,8 @@ const StudentDashboard: React.FC = () => {
                                         backgroundColor: 'transparent',
                                         pieSliceBorderColor: 'transparent',
                                     }}
-                                    width="160px"
-                                    height="160px"
+                                    width="150px"
+                                    height="150px"
                                 />
                                 <Box sx={{
                                     position: 'absolute', display: 'flex', flexDirection: 'column',
@@ -181,28 +249,28 @@ const StudentDashboard: React.FC = () => {
                             <Grid container spacing={2}>
                                 <Grid size={{ xs: 6, sm: 3 }}>
                                     <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#ecfdf5', border: '1px solid #a7f3d0', textAlign: 'center' }}>
-                                        <PresentIcon sx={{ color: '#10b981', fontSize: 24, mb: 0.5 }} />
+                                        <PresentIcon sx={{ color: '#10b981', fontSize: 22, mb: 0.5 }} />
                                         <Typography variant="h5" fontWeight={800} color="#10b981">{summary?.present || 0}</Typography>
                                         <Typography variant="caption" fontWeight={600} color="#065f46">Present</Typography>
                                     </Box>
                                 </Grid>
                                 <Grid size={{ xs: 6, sm: 3 }}>
                                     <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#fef2f2', border: '1px solid #fecaca', textAlign: 'center' }}>
-                                        <AbsentIcon sx={{ color: '#ef4444', fontSize: 24, mb: 0.5 }} />
+                                        <AbsentIcon sx={{ color: '#ef4444', fontSize: 22, mb: 0.5 }} />
                                         <Typography variant="h5" fontWeight={800} color="#ef4444">{summary?.absent || 0}</Typography>
                                         <Typography variant="caption" fontWeight={600} color="#991b1b">Absent</Typography>
                                     </Box>
                                 </Grid>
                                 <Grid size={{ xs: 6, sm: 3 }}>
                                     <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#fffbeb', border: '1px solid #fde68a', textAlign: 'center' }}>
-                                        <LateIcon sx={{ color: '#f59e0b', fontSize: 24, mb: 0.5 }} />
+                                        <LateIcon sx={{ color: '#f59e0b', fontSize: 22, mb: 0.5 }} />
                                         <Typography variant="h5" fontWeight={800} color="#f59e0b">{summary?.late || 0}</Typography>
                                         <Typography variant="caption" fontWeight={600} color="#92400e">Late</Typography>
                                     </Box>
                                 </Grid>
                                 <Grid size={{ xs: 6, sm: 3 }}>
                                     <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#f5f3ff', border: '1px solid #ddd6fe', textAlign: 'center' }}>
-                                        <LeaveIcon sx={{ color: '#8b5cf6', fontSize: 24, mb: 0.5 }} />
+                                        <LeaveIcon sx={{ color: '#8b5cf6', fontSize: 22, mb: 0.5 }} />
                                         <Typography variant="h5" fontWeight={800} color="#8b5cf6">{summary?.leave || 0}</Typography>
                                         <Typography variant="caption" fontWeight={600} color="#5b21b6">Leave</Typography>
                                     </Box>
@@ -213,10 +281,323 @@ const StudentDashboard: React.FC = () => {
                 )}
             </Paper>
 
+            {/* ── 3 Main Dashboard Cards: Timetable, Homework, Announcements ── */}
+            <Grid container spacing={3} sx={{ mb: 4 }}>
+
+                {/* 1. Today's Classes & Timetable */}
+                <Grid size={{ xs: 12, lg: 4 }}>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 3,
+                            height: '100%',
+                            borderRadius: 4,
+                            border: '1px solid #e2e8f0',
+                            bgcolor: '#ffffff',
+                            boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                                <Avatar sx={{ bgcolor: '#eff6ff', color: '#2563eb', width: 40, height: 40 }}>
+                                    <TimetableIcon fontSize="small" />
+                                </Avatar>
+                                <Box>
+                                    <Typography variant="subtitle1" fontWeight={700} color="#1e293b">
+                                        Today's Classes
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        {todayFormattedDate}
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                            <Chip label={`${todayPeriods.length} periods`} size="small" color="primary" variant="outlined" />
+                        </Box>
+
+                        <Divider sx={{ mb: 2 }} />
+
+                        {timetableLoading ? (
+                            <Stack spacing={1.5}>
+                                {[1, 2, 3].map(i => <Skeleton key={i} variant="rectangular" height={50} sx={{ borderRadius: 2 }} />)}
+                            </Stack>
+                        ) : todayPeriods.length === 0 ? (
+                            <Box sx={{ py: 4, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                                <CalendarIcon sx={{ fontSize: 40, color: '#cbd5e1', mb: 1 }} />
+                                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                                    No classes scheduled for today ({todayDayName}).
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <Stack spacing={1.5} sx={{ flex: 1 }}>
+                                {todayPeriods.map((period: any) => (
+                                    <Box
+                                        key={period._id || `${period.periodNumber}-${period.subjectName}`}
+                                        sx={{
+                                            p: 1.5,
+                                            borderRadius: 2.5,
+                                            bgcolor: '#f8fafc',
+                                            border: '1px solid #f1f5f9',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justify: 'space-between',
+                                            gap: 1,
+                                            transition: 'background-color 0.2s',
+                                            '&:hover': { bgcolor: '#f1f5f9' }
+                                        }}
+                                    >
+                                        <Box sx={{ minWidth: 70 }}>
+                                            <Typography variant="caption" fontWeight={700} color="primary.main" sx={{ display: 'block' }}>
+                                                P{period.periodNumber}
+                                            </Typography>
+                                            {period.startTime && (
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {period.startTime}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                                            <Typography variant="body2" fontWeight={700} noWrap color="#1e293b">
+                                                {getSubjectName(period)}
+                                            </Typography>
+                                            {getTeacherName(period) && (
+                                                <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+                                                    Teacher: {getTeacherName(period)}
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                        {period.roomName && (
+                                            <Chip label={period.roomName} size="small" variant="outlined" sx={{ height: 22, fontSize: '0.65rem' }} />
+                                        )}
+                                    </Box>
+                                ))}
+                            </Stack>
+                        )}
+
+                        <Button
+                            fullWidth
+                            variant="outlined"
+                            size="small"
+                            onClick={() => navigate('/student/timetable')}
+                            sx={{ mt: 2, borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                        >
+                            View Full Weekly Timetable
+                        </Button>
+                    </Paper>
+                </Grid>
+
+                {/* 2. Pending Homework */}
+                <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 3,
+                            height: '100%',
+                            borderRadius: 4,
+                            border: '1px solid #e2e8f0',
+                            bgcolor: '#ffffff',
+                            boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                                <Avatar sx={{ bgcolor: '#fff7ed', color: '#ea580c', width: 40, height: 40 }}>
+                                    <HomeworkIcon fontSize="small" />
+                                </Avatar>
+                                <Box>
+                                    <Typography variant="subtitle1" fontWeight={700} color="#1e293b">
+                                        Pending Homework
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        Active assignments
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                            <Chip label={`${recentHomework.length} active`} size="small" color="warning" variant="outlined" />
+                        </Box>
+
+                        <Divider sx={{ mb: 2 }} />
+
+                        {homeworkLoading ? (
+                            <Stack spacing={1.5}>
+                                {[1, 2, 3].map(i => <Skeleton key={i} variant="rectangular" height={50} sx={{ borderRadius: 2 }} />)}
+                            </Stack>
+                        ) : recentHomework.length === 0 ? (
+                            <Box sx={{ py: 4, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                                <AssignmentIcon sx={{ fontSize: 40, color: '#cbd5e1', mb: 1 }} />
+                                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                                    No pending homework! All caught up. 🎉
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <Stack spacing={1.5} sx={{ flex: 1 }}>
+                                {recentHomework.map((hw: any) => {
+                                    const overdue = isOverdue(hw.dueDate);
+                                    return (
+                                        <Box
+                                            key={hw._id || hw.homeworkId}
+                                            onClick={() => navigate('/student/homework')}
+                                            sx={{
+                                                p: 1.5,
+                                                borderRadius: 2.5,
+                                                bgcolor: overdue ? '#fef2f2' : '#f8fafc',
+                                                border: '1px solid',
+                                                borderColor: overdue ? '#fecaca' : '#f1f5f9',
+                                                cursor: 'pointer',
+                                                transition: 'background-color 0.2s',
+                                                '&:hover': { bgcolor: overdue ? '#fee2e2' : '#f1f5f9' }
+                                            }}
+                                        >
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                                                <Chip
+                                                    label={getSubjectName(hw)}
+                                                    size="small"
+                                                    color={overdue ? 'error' : 'warning'}
+                                                    sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700 }}
+                                                />
+                                                {overdue && (
+                                                    <Chip
+                                                        label="Overdue"
+                                                        size="small"
+                                                        color="error"
+                                                        icon={<OverdueIcon fontSize="small" />}
+                                                        sx={{ height: 20, fontSize: '0.65rem' }}
+                                                    />
+                                                )}
+                                            </Box>
+                                            <Typography variant="body2" fontWeight={700} noWrap color="#1e293b">
+                                                {hw.title}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                                Due: {new Date(hw.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                            </Typography>
+                                        </Box>
+                                    );
+                                })}
+                            </Stack>
+                        )}
+
+                        <Button
+                            fullWidth
+                            variant="outlined"
+                            size="small"
+                            color="warning"
+                            onClick={() => navigate('/student/homework')}
+                            sx={{ mt: 2, borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                        >
+                            View All Homework
+                        </Button>
+                    </Paper>
+                </Grid>
+
+                {/* 3. Recent Announcements */}
+                <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: 3,
+                            height: '100%',
+                            borderRadius: 4,
+                            border: '1px solid #e2e8f0',
+                            bgcolor: '#ffffff',
+                            boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                                <Avatar sx={{ bgcolor: '#f3e8ff', color: '#9333ea', width: 40, height: 40 }}>
+                                    <AnnouncementIcon fontSize="small" />
+                                </Avatar>
+                                <Box>
+                                    <Typography variant="subtitle1" fontWeight={700} color="#1e293b">
+                                        Announcements
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        School circulars & updates
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                            <Chip label={`${recentAnnouncements.length} new`} size="small" color="secondary" variant="outlined" />
+                        </Box>
+
+                        <Divider sx={{ mb: 2 }} />
+
+                        {announcementsLoading ? (
+                            <Stack spacing={1.5}>
+                                {[1, 2, 3].map(i => <Skeleton key={i} variant="rectangular" height={50} sx={{ borderRadius: 2 }} />)}
+                            </Stack>
+                        ) : recentAnnouncements.length === 0 ? (
+                            <Box sx={{ py: 4, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                                <AnnouncementIcon sx={{ fontSize: 40, color: '#cbd5e1', mb: 1 }} />
+                                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                                    No announcements at the moment.
+                                </Typography>
+                            </Box>
+                        ) : (
+                            <Stack spacing={1.5} sx={{ flex: 1 }}>
+                                {recentAnnouncements.map((ann: any) => (
+                                    <Box
+                                        key={ann._id || ann.announcementId}
+                                        onClick={() => navigate('/student/announcements')}
+                                        sx={{
+                                            p: 1.5,
+                                            borderRadius: 2.5,
+                                            bgcolor: '#f8fafc',
+                                            border: '1px solid #f1f5f9',
+                                            cursor: 'pointer',
+                                            transition: 'background-color 0.2s',
+                                            '&:hover': { bgcolor: '#f1f5f9' }
+                                        }}
+                                    >
+                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                                            <Chip
+                                                label={ann.category || 'General'}
+                                                size="small"
+                                                color="secondary"
+                                                variant="outlined"
+                                                sx={{ height: 20, fontSize: '0.65rem', textTransform: 'capitalize', fontWeight: 700 }}
+                                            />
+                                            <Typography variant="caption" color="text.secondary">
+                                                {new Date(ann.createdAt || ann.publishDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                            </Typography>
+                                        </Box>
+                                        <Typography variant="body2" fontWeight={700} noWrap color="#1e293b">
+                                            {ann.title}
+                                        </Typography>
+                                        {ann.content && (
+                                            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', mt: 0.25 }}>
+                                                {ann.content}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                ))}
+                            </Stack>
+                        )}
+
+                        <Button
+                            fullWidth
+                            variant="outlined"
+                            size="small"
+                            color="secondary"
+                            onClick={() => navigate('/student/announcements')}
+                            sx={{ mt: 2, borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                        >
+                            View All Announcements
+                        </Button>
+                    </Paper>
+                </Grid>
+
+            </Grid>
+
             {/* Academic Navigation Grid */}
             <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Quick Access & Modules</Typography>
             <Grid container spacing={3}>
-                {isLoading ? (
+                {attendanceLoading ? (
                     [1, 2, 3, 4, 5, 6].map((i) => (
                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
                             <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 4 }} />
