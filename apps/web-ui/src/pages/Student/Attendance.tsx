@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
     Box, Typography, Paper, Grid, Card, CardContent, Button, ButtonGroup,
-    Chip, LinearProgress, Skeleton, Alert, Stack, Tooltip, Divider,
+    Chip, LinearProgress, Skeleton, Stack, Tooltip,
 } from '@mui/material';
 import {
     CheckCircle as PresentIcon,
@@ -13,7 +13,6 @@ import {
     PictureAsPdf as PdfIcon,
     TableChart as ExcelIcon,
     LocalFireDepartment as StreakIcon,
-    ArrowBack as ArrowBackIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Chart } from 'react-google-charts';

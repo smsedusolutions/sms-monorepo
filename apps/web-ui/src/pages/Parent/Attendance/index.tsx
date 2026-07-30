@@ -15,7 +15,6 @@ import {
     TableChart as ExcelIcon,
     LocalFireDepartment as StreakIcon,
     TrendingUp as TrendIcon,
-    Download as DownloadIcon,
     FilterList as FilterIcon,
 } from '@mui/icons-material';
 import { Chart } from 'react-google-charts';

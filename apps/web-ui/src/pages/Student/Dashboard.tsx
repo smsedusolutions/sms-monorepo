@@ -13,7 +13,6 @@ import {
     Schedule as LateIcon,
     Campaign as AnnouncementIcon,
     MenuBook as HomeworkIcon,
-    AccessTime as TimeIcon,
     CalendarMonth as CalendarIcon,
     Assignment as AssignmentIcon,
     Warning as OverdueIcon,
