@@ -406,8 +406,18 @@ const getExamSchedule = async (req, res) => {
 
         const schedules = await ExamSchedule.find(query)
             .sort({ date: 1, startTime: 1 })
-            .populate('roomId', 'name')
             .lean();
+
+        // Manually lookup rooms by roomId string (not ObjectId)
+        const allRoomIds = [...new Set(schedules.map(s => typeof s.roomId === 'object' ? s.roomId?.roomId : s.roomId).filter(Boolean))];
+        const rooms = await Room.find({ roomId: { $in: allRoomIds } })
+            .select('roomId name code building floor capacity')
+            .lean();
+
+        const roomMap = {};
+        rooms.forEach(r => {
+            roomMap[r.roomId] = r;
+        });
 
         // Manually lookup invigilators by teacherId (not ObjectId)
         const allInvigilatorIds = [...new Set(schedules.flatMap(s => s.invigilators || []))];
@@ -420,11 +430,15 @@ const getExamSchedule = async (req, res) => {
             teacherMap[t.teacherId] = t;
         });
 
-        // Enrich schedules with teacher details
-        const enrichedSchedules = schedules.map(s => ({
-            ...s,
-            invigilators: (s.invigilators || []).map(id => teacherMap[id] || { teacherId: id })
-        }));
+        // Enrich schedules with room and teacher details
+        const enrichedSchedules = schedules.map(s => {
+            const rawRoomId = typeof s.roomId === 'object' ? s.roomId?.roomId : s.roomId;
+            return {
+                ...s,
+                roomId: rawRoomId ? (roomMap[rawRoomId] || { roomId: rawRoomId, name: rawRoomId }) : null,
+                invigilators: (s.invigilators || []).map(id => teacherMap[id] || { teacherId: id })
+            };
+        });
 
         res.status(200).json({ success: true, data: enrichedSchedules });
     } catch (error) {

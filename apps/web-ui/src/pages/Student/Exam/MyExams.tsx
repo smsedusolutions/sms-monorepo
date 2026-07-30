@@ -51,7 +51,7 @@ const MyExams = () => {
     const studentId = user?.userId || '';
 
     const { data: reportCardData, isLoading: reportLoading } = useGetStudentReportCard(schoolId, studentId);
-    const { data: examsData, isLoading: examsLoading, error: examsError } = useGetExams(schoolId, '2025-2026');
+    const { data: examsData, isLoading: examsLoading, error: examsError } = useGetExams(schoolId);
 
     const upcomingExams = examsData?.data?.filter((e: any) => ['scheduled', 'ongoing', 'draft'].includes(e.status)) || [];
 

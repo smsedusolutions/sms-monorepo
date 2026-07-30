@@ -187,7 +187,7 @@ const ParentFees: React.FC = () => {
             </Box>
 
             <Alert severity="info" icon={<InfoIcon />} sx={{ mb: 4, borderRadius: 3 }}>
-                Online payment gateway integrations are scheduled for V2. To settle outstanding balances, please contact the school cash counter.
+                Online payment gateway integrations are coming soon. To settle outstanding balances, please contact the school cash counter.
             </Alert>
 
             {/* Child tabs */}

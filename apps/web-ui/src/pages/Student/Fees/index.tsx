@@ -81,7 +81,7 @@ const StudentFees: React.FC = () => {
             </Box>
 
             <Alert severity="info" icon={<InfoIcon />} sx={{ mb: 4, borderRadius: 3 }}>
-                Online payments are scheduled for V2. To settle dues, please pay at the school accounts counter.
+                Online payments are coming soon. To settle dues, please pay at the school accounts counter.
             </Alert>
 
             {/* Account Summary Cards */}

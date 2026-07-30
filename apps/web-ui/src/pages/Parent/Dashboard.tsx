@@ -13,8 +13,9 @@ import {
     Cancel as AbsentIcon,
     Schedule as LateIcon,
     EventNote as LeaveIcon,
-    Payment as PaymentsIcon,
     ReceiptLong as FeeIcon,
+    People as TeachersIcon,
+    Schedule as TimetableIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Chart } from 'react-google-charts';
@@ -229,12 +230,19 @@ const ParentDashboard = () => {
                     <Box sx={{ my: 3 }}>
                         <Paper
                             elevation={0}
+                            onClick={() => navigate('/parent/attendance')}
                             sx={{
                                 p: 3,
                                 borderRadius: 4,
                                 border: '1px solid #e2e8f0',
                                 bgcolor: '#ffffff',
                                 boxShadow: '0 8px 24px rgba(0, 0, 0, 0.04)',
+                                cursor: 'pointer',
+                                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: '0 12px 28px rgba(0, 0, 0, 0.08)',
+                                }
                             }}
                         >
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1.5 }}>
@@ -255,7 +263,7 @@ const ParentDashboard = () => {
                                 {/* Multiple Children Switcher Chips */}
                                 <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                                     {childrenCount > 1 && (
-                                        <Box sx={{ display: 'flex', gap: 0.75, mr: 1 }}>
+                                        <Box sx={{ display: 'flex', gap: 0.75, mr: 1 }} onClick={(e) => e.stopPropagation()}>
                                             {dashboard?.children?.map((c: ChildStats) => {
                                                 const active = selectedChild?.studentId === c.studentId;
                                                 return (
@@ -280,7 +288,7 @@ const ParentDashboard = () => {
                                         variant="contained"
                                         size="small"
                                         endIcon={<ArrowForwardIcon />}
-                                        onClick={() => navigate('/parent/attendance')}
+                                        onClick={(e) => { e.stopPropagation(); navigate('/parent/attendance'); }}
                                         sx={{
                                             bgcolor: '#2563eb',
                                             '&:hover': { bgcolor: '#1d4ed8' },
@@ -484,10 +492,12 @@ const ParentDashboard = () => {
                     <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Quick Actions</Typography>
                     <Grid container spacing={2}>
                         {[
-                            { label: 'Attendance Report', icon: <AccessTimeIcon />, path: '/parent/attendance', color: '#2563eb' },
                             { label: 'Apply Leave', icon: <LeaveIcon />, path: '/parent/leave/apply', color: '#f59e0b' },
-                            { label: 'View Results', icon: <SchoolIcon />, path: '/parent/results', color: '#10b981' },
-                            { label: 'Fees & Payments', icon: <PaymentsIcon />, path: '/parent/fees', color: '#6366f1' },
+                            { label: 'Exam Results', icon: <SchoolIcon />, path: '/parent/exam/results', color: '#10b981' },
+                            { label: 'Class Timetable', icon: <TimetableIcon />, path: '/parent/timetable', color: '#3b82f6' },
+                            { label: 'Teachers', icon: <TeachersIcon />, path: '/parent/teachers', color: '#8b5cf6' },
+                            { label: 'Homework', icon: <AssignmentIcon />, path: '/parent/homework', color: '#ec4899' },
+                            { label: 'Announcements', icon: <AnnouncementIcon />, path: '/parent/announcements', color: '#06b6d4' },
                         ].map((action) => (
                             <Grid size={{ xs: 6 }} key={action.label}>
                                 <AppCard
@@ -542,7 +552,7 @@ const ParentDashboard = () => {
                         <Button
                             variant="contained"
                             fullWidth
-                            onClick={() => navigate('/parent/fees')}
+                            onClick={(e) => { e.stopPropagation(); navigate('/parent/fees'); }}
                             sx={{ bgcolor: '#7c3aed', '&:hover': { bgcolor: '#6d28d9' }, borderRadius: 2, fontWeight: 700, textTransform: 'none' }}
                         >
                             Manage & Pay Fees
