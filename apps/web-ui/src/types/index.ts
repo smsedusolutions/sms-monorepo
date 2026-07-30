@@ -308,6 +308,13 @@ export interface Parent {
   status: "active" | "inactive";
   profileImage?: string;
   signature?: string;
+  childrenNames?: string[];
+  childrenDetails?: {
+    studentId: string;
+    name: string;
+    classSection?: string;
+    profileImage?: string;
+  }[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -454,6 +461,7 @@ export interface ClassFilters {
 }
 
 export interface Subject {
+  _id?: string;
   subjectId: string;
   schoolId: string;
   name: string;

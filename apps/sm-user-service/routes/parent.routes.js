@@ -32,7 +32,7 @@ router.post(
 router.get(
     "/",
     Authenticated,
-    authorizeRoles("super_admin", "sch_admin", "teacher"),
+    authorizeRoles("super_admin", "sch_admin", "teacher", "parent"),
     getAllParents
 );
 
@@ -40,7 +40,7 @@ router.get(
 router.get(
     "/student/:studentId",
     Authenticated,
-    authorizeRoles("super_admin", "sch_admin", "teacher"),
+    authorizeRoles("super_admin", "sch_admin", "teacher", "parent"),
     getParentsByStudentId
 );
 
@@ -48,7 +48,7 @@ router.get(
 router.get(
     "/:id",
     Authenticated,
-    authorizeRoles("super_admin", "sch_admin", "parent"),
+    authorizeRoles("super_admin", "sch_admin", "teacher", "parent"),
     getParentById
 );
 

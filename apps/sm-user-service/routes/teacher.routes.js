@@ -16,13 +16,13 @@ const { getMenus } = require("../controllers/dashboard.controller");
 router.post("/", Authenticated, authorizeRoles("sch_admin"), createTeacher);
 
 // GET /api/school/:schoolId/teachers - Get all teachers
-router.get("/", Authenticated, authorizeRoles("sch_admin"), getAllTeachers);
+router.get("/", Authenticated, authorizeRoles("super_admin", "sch_admin", "teacher", "parent"), getAllTeachers);
 
 // GET /api/school/:schoolId/teachers/:id - Get teacher by ID
 router.get(
   "/:id",
   Authenticated,
-  authorizeRoles("sch_admin", "teacher"),
+  authorizeRoles("super_admin", "sch_admin", "teacher", "parent"),
   getTeacherById
 );
 

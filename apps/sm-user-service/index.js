@@ -90,18 +90,15 @@ app.get("/", (_req, res) => {
 // Start server
 const PORT = process.env.PORT || 5000;
 
-connectDB()
-    .then(() => {
-        app.listen(PORT, () => {
-            console.log(`Server is running on port ${PORT}`);
-            // Initialize cron jobs
-            initCronJobs();
-        });
-    })
-    .catch((error) => {
-        console.error('Failed to connect to database:', error.message);
-        process.exit(1);
-    });
+app.listen(PORT, async () => {
+    console.log(`🚀 sm-user-service running on port ${PORT}`);
+    try {
+        await connectDB();
+        initCronJobs();
+    } catch (error) {
+        console.error('⚠️ Initial database connection warning:', error.message);
+    }
+});
 
 module.exports = app;
 

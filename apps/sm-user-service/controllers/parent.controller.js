@@ -4,6 +4,7 @@ const {
   EmailRegistryModel: EmailRegistry,
   ParentSchema: parentSchema,
   StudentSchema: studentSchema,
+  ClassSchema: classSchema,
 } = require("@sms/shared");
 const {
   getPaginationParams,
@@ -337,20 +338,59 @@ const getAllParents = async (req, res) => {
       Parent.countDocuments(query),
     ]);
 
-    // Populate student names for each parent
-    const allStudentIds = [...new Set(parents.flatMap(p => p.studentIds || []))];
-    const studentNamesMap = {};
-    
+    // Populate student names and class details for each parent
+    const allStudentIds = [...new Set(parents.flatMap((p) => p.studentIds || []))];
+    const studentInfoMap = {};
+
     if (allStudentIds.length > 0) {
-      const students = await Student.find({ studentId: { $in: allStudentIds } }).select("studentId firstName lastName");
-      students.forEach(s => {
-        studentNamesMap[s.studentId] = `${s.firstName} ${s.lastName}`;
+      const students = await Student.find({ studentId: { $in: allStudentIds } }).select(
+        "studentId firstName lastName class section profileImage"
+      );
+
+      const classIds = [...new Set(students.map((s) => s.class).filter(Boolean))];
+      let classMap = {};
+      try {
+        const schoolDb = getSchoolDbConnection(schoolDbName);
+        const ClassModel = schoolDb.model("Class", classSchema);
+        const classDocs = await ClassModel.find({ classId: { $in: classIds } }).lean();
+        classDocs.forEach((c) => {
+          classMap[c.classId] = c;
+        });
+      } catch (e) {
+        console.warn("Class schema query warning:", e.message);
+      }
+
+      students.forEach((s) => {
+        const clsObj = classMap[s.class];
+        const className = clsObj ? clsObj.name : s.class || "";
+        let sectionName = "";
+        if (clsObj && clsObj.sections && Array.isArray(clsObj.sections)) {
+          const sec = clsObj.sections.find((sec) => sec.sectionId === s.section);
+          if (sec) sectionName = sec.name;
+        }
+        if (!sectionName && s.section && !s.section.startsWith("SEC-")) {
+          sectionName = s.section;
+        }
+
+        const classSectionStr = className ? `${className}${sectionName ? ` (${sectionName})` : ""}` : "";
+
+        studentInfoMap[s.studentId] = {
+          name: `${s.firstName} ${s.lastName}`,
+          classSection: classSectionStr,
+          profileImage: s.profileImage || "",
+        };
       });
     }
 
-    const parentsWithStudents = parents.map(p => {
+    const parentsWithStudents = parents.map((p) => {
       const parentObj = p.toObject();
-      parentObj.childrenNames = (p.studentIds || []).map(id => studentNamesMap[id] || id);
+      parentObj.childrenNames = (p.studentIds || []).map((id) => studentInfoMap[id]?.name || id);
+      parentObj.childrenDetails = (p.studentIds || []).map((id) => ({
+        studentId: id,
+        name: studentInfoMap[id]?.name || id,
+        classSection: studentInfoMap[id]?.classSection || "",
+        profileImage: studentInfoMap[id]?.profileImage || "",
+      }));
       return parentObj;
     });
 
