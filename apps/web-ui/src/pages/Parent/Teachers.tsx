@@ -29,7 +29,9 @@ import {
     Call as CallIcon,
     MenuBook as SubjectIcon,
     Badge as BadgeIcon,
+    Chat as ChatIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useChildSelector } from '../../context/ChildSelectorContext';
 import { useGetChildTeachers } from '../../queries/ParentPortal';
 import TokenService from '../../queries/token/tokenService';
@@ -44,6 +46,7 @@ const AVATAR_COLORS = [
 ];
 
 const ParentTeachers: React.FC = () => {
+    const navigate = useNavigate();
     const schoolId = TokenService.getSchoolId() || '';
     const { selectedChild, setSelectedChild, children: contextChildren, isLoading: loadingChild } = useChildSelector();
     const [searchQuery, setSearchQuery] = useState('');
@@ -380,27 +383,49 @@ const ParentTeachers: React.FC = () => {
                                         </Stack>
 
                                         {/* Action buttons */}
-                                        {teacher.email && (
+                                        <Stack direction="row" spacing={1} sx={{ mt: 2.5 }}>
                                             <Button
-                                                variant="outlined"
+                                                variant="contained"
                                                 size="small"
                                                 fullWidth
-                                                startIcon={<EmailIcon />}
-                                                component="a"
-                                                href={`mailto:${teacher.email}`}
+                                                startIcon={<ChatIcon />}
+                                                onClick={() =>
+                                                    navigate(
+                                                        `/parent/chat?partnerId=${teacher.teacherId}&studentId=${selectedChild?.studentId || ''}`
+                                                    )
+                                                }
                                                 sx={{
-                                                    mt: 2.5,
                                                     borderRadius: 2.5,
                                                     fontWeight: 700,
                                                     textTransform: 'none',
-                                                    borderColor: '#cbd5e1',
-                                                    color: '#475569',
-                                                    '&:hover': { borderColor: '#2563eb', bgcolor: '#eff6ff', color: '#2563eb' }
+                                                    bgcolor: '#2563eb',
+                                                    '&:hover': { bgcolor: '#1d4ed8' },
                                                 }}
                                             >
-                                                Send Email
+                                                Chat
                                             </Button>
-                                        )}
+
+                                            {teacher.email && (
+                                                <Button
+                                                    variant="outlined"
+                                                    size="small"
+                                                    fullWidth
+                                                    startIcon={<EmailIcon />}
+                                                    component="a"
+                                                    href={`mailto:${teacher.email}`}
+                                                    sx={{
+                                                        borderRadius: 2.5,
+                                                        fontWeight: 700,
+                                                        textTransform: 'none',
+                                                        borderColor: '#cbd5e1',
+                                                        color: '#475569',
+                                                        '&:hover': { borderColor: '#2563eb', bgcolor: '#eff6ff', color: '#2563eb' }
+                                                    }}
+                                                >
+                                                    Email
+                                                </Button>
+                                            )}
+                                        </Stack>
                                     </CardContent>
                                 </Card>
                             </Grid>

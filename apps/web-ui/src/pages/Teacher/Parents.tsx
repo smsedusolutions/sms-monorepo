@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Box, IconButton, Tooltip, TextField, FormControl, InputLabel, Select, MenuItem, Chip } from '@mui/material';
-import { Edit as EditIcon, Block as BlockIcon } from '@mui/icons-material';
+import { Edit as EditIcon, Block as BlockIcon, Chat as ChatIcon } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import DataTable, { StatusChip } from '../../components/Table/DataTable';
 import type { Column } from '../../components/Table/DataTable';
 import ParentDialog from '../../components/Dialogs/AddParentDialog';
@@ -12,6 +13,7 @@ import TokenService from '../../queries/token/tokenService';
 import { useAuth } from '../../context/AuthContext';
 
 const TeacherParentsPage = () => {
+    const navigate = useNavigate();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editData, setEditData] = useState<Parent | null>(null);
 
@@ -133,6 +135,18 @@ const TeacherParentsPage = () => {
             align: 'center',
             format: (_, row) => (
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                    <Tooltip title="Send Encrypted Message">
+                        <IconButton
+                            size="small"
+                            color="info"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/teacher/chat?partnerId=${row.parentId}`);
+                            }}
+                        >
+                            <ChatIcon fontSize="small" />
+                        </IconButton>
+                    </Tooltip>
                     <Tooltip title={isAdmin ? "Edit" : "Only Admin can edit"}>
                         <span>
                             <IconButton
@@ -184,7 +198,7 @@ const TeacherParentsPage = () => {
                         onChange={(e) => handleClassChange(e.target.value)}
                     >
                         <MenuItem value="">All Assigned Classes</MenuItem>
-                        {assignedClasses.map((cls) => (
+                        {assignedClasses.map((cls: Class) => (
                             <MenuItem key={cls.classId} value={cls.classId}>
                                 {cls.name}
                             </MenuItem>

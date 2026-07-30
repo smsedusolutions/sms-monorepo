@@ -119,6 +119,7 @@ const ParentTransport = lazy(() => import("../pages/Parent/Transport/ParentTrans
 
 // Shared Pages
 const NotificationsPage = lazy(() => import("../pages/Shared/Notifications"));
+const ChatPage = lazy(() => import("../pages/Shared/Chat/ChatPage"));
 
 const MainRouters = () => {
   const { getBasePath } = useRoleStore();
@@ -282,6 +283,9 @@ const MainRouters = () => {
           {/* Notifications */}
           <Route path="/teacher/notifications" element={<NotificationsPage />} />
 
+          {/* Chat Route */}
+          <Route path="/teacher/chat" element={<ChatPage />} />
+
           <Route path="/teacher/profile" element={<TeacherProfile />} />
         </Route>
 
@@ -325,6 +329,7 @@ const MainRouters = () => {
             <Route path="/parent/notifications" element={<NotificationsPage />} />
             <Route path="/parent/transport" element={<ParentTransport />} />
             <Route path="/parent/fees" element={<ParentFees />} />
+            <Route path="/parent/chat" element={<ChatPage />} />
           </Route>
         </Route>
 

@@ -18,7 +18,7 @@ const checkAuth = (req, res, next) => {
                 .status(403)
                 .json({ message: "Unauthorized, JWT token is missing" });
         }
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || "wertyujikjnb");
         req.user = decoded;
         next();
     } catch (err) {

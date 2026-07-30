@@ -349,12 +349,17 @@ const getAllTeachers = async (req, res) => {
           ? Class.find({ classId: { $in: allClassIds } }).select("classId name sections")
           : Promise.resolve([]),
         allSubjectIds.length > 0
-          ? Subject.find({ subjectId: { $in: allSubjectIds } }).select("subjectId name")
+          ? Subject.find({
+              $or: [{ subjectId: { $in: allSubjectIds } }, { code: { $in: allSubjectIds } }],
+            }).select("subjectId code name")
           : Promise.resolve([]),
       ]);
 
       classesDocs.forEach((c) => (classDocMap[c.classId] = c));
-      subjectsDocs.forEach((s) => (subjectMap[s.subjectId] = s.name));
+      subjectsDocs.forEach((s) => {
+        if (s.subjectId) subjectMap[s.subjectId] = s.name;
+        if (s.code) subjectMap[s.code] = s.name;
+      });
     }
 
     const teachersWithPopulatedData = teachers.map((t) => {
@@ -373,7 +378,7 @@ const getAllTeachers = async (req, res) => {
         return pair;
       }).filter(Boolean);
 
-      obj.subjectNames = (t.subjects || []).map((id) => subjectMap[id]).filter(Boolean);
+      obj.subjectNames = (t.subjects || []).map((id) => subjectMap[id] || id).filter(Boolean);
       return obj;
     });
 

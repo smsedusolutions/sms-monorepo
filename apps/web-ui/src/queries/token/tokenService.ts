@@ -31,6 +31,9 @@ interface DecodedToken {
   sectionName?: string;
   rollNumber?: string;
 
+  // Parent specific
+  parentId?: string;
+
   // Name fields
   firstName?: string;
   lastName?: string;

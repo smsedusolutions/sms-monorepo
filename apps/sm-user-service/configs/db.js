@@ -67,6 +67,12 @@ const connectDB = async () => {
     console.error("❌ MongoDB Connection Error:", error.message);
     cachedConnection = null;
     reconnecting = false;
+
+    if (error.code === "ENOTFOUND" || error.name === "MongoServerSelectionError") {
+      console.log("⏳ [sm-user-service] Retrying MongoDB connection in 3s...");
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      return connectDB();
+    }
     throw error;
   }
 };
