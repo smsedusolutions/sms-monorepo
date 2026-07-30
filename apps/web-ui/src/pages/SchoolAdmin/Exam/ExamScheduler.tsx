@@ -1212,7 +1212,11 @@ const ExamDetailView = ({ schoolId, exam, onBack }: { schoolId: string, exam: Ex
                                 <AppSelect
                                     label="Academic Subject"
                                     value={formData.subjectId}
-                                    options={subjects?.data?.map((s: any) => ({ value: s.subjectId, label: s.name })) || []}
+                                    options={
+                                        (subjects?.data || [])
+                                            .filter((s: any) => !s.isSubSubject)
+                                            .map((s: any) => ({ value: s.subjectId, label: s.name }))
+                                    }
                                     onChange={(e) => setFormData({ ...formData, subjectId: e.target.value as string })}
                                 />
                             </Grid>

@@ -30,6 +30,14 @@ const subjectSchema = new mongoose.Schema(
       enum: ["active", "inactive"],
       default: "active",
     },
+    isSubSubject: {
+      type: Boolean,
+      default: false,
+    },
+    parentSubjectId: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,

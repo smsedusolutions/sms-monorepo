@@ -74,7 +74,24 @@ const SubjectsPage = () => {
 
   const columns: Column<Subject>[] = [
     { id: "subjectId", label: "ID", minWidth: 100 },
-    { id: "name", label: "Subject Name", minWidth: 180 },
+    {
+      id: "name",
+      label: "Subject Name",
+      minWidth: 180,
+      format: (value, row) => (
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography variant="body2" sx={{ fontWeight: row.isSubSubject ? 400 : 600 }}>
+            {row.isSubSubject && <span style={{ color: '#888', marginRight: 4 }}>↳</span>}
+            {value as string}
+          </Typography>
+          {row.isSubSubject ? (
+            <Chip label="Sub-Subject" size="small" variant="outlined" sx={{ fontSize: '0.65rem', height: 18 }} />
+          ) : (
+            <Chip label="Main" size="small" color="primary" sx={{ fontSize: '0.65rem', height: 18 }} />
+          )}
+        </Box>
+      ),
+    },
     {
       id: "code",
       label: "Code",

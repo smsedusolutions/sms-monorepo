@@ -80,6 +80,7 @@ const ROUTE_LABELS: Record<string, string> = {
   '/teacher/timetable': 'My Timetable',
   '/teacher/exam': 'Exam',
   '/teacher/exam/marks': 'Marks Entry',
+  '/teacher/exam/scheduler': 'Exam Schedule',
   '/teacher/homework': 'Homework',
   '/teacher/homework/create': 'Create Homework',
   '/teacher/announcements': 'Announcements',

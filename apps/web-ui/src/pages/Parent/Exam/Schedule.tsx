@@ -59,11 +59,17 @@ const ParentExamSchedule: React.FC = () => {
     const { data: examsData, isLoading: examsLoading, error } = useGetExams(schoolId);
     const { data: subjectsData } = useGetSubjects(schoolId);
 
-    // Filter exams by status
+    // Filter & sort exams by startDate ascending (earliest exam top)
     const allExams = examsData?.data || [];
-    const upcomingExams = allExams.filter((e: any) => ['scheduled', 'draft'].includes(e.status));
-    const ongoingExams = allExams.filter((e: any) => e.status === 'ongoing');
-    const completedExams = allExams.filter((e: any) => e.status === 'completed');
+    const sortByStartDate = (a: any, b: any) => {
+        const dateA = a.startDate ? new Date(a.startDate).getTime() : 0;
+        const dateB = b.startDate ? new Date(b.startDate).getTime() : 0;
+        return dateA - dateB;
+    };
+
+    const upcomingExams = allExams.filter((e: any) => ['scheduled', 'draft'].includes(e.status)).sort(sortByStartDate);
+    const ongoingExams  = allExams.filter((e: any) => e.status === 'ongoing').sort(sortByStartDate);
+    const completedExams = allExams.filter((e: any) => e.status === 'completed').sort(sortByStartDate);
 
     // Helper to get subject name
     const getSubjectName = (subjectId: string): string => {

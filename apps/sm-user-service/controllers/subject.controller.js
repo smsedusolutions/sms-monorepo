@@ -45,7 +45,7 @@ const getSchoolDbName = async (schoolId) => {
 const createSubject = async (req, res) => {
   try {
     const { schoolId } = req.params;
-    const { name, code, description, classId, teacherIds } = req.body;
+    const { name, code, description, classId, teacherIds, isSubSubject, parentSubjectId } = req.body;
 
     // Validate required fields
     if (!name || !code) {
@@ -88,6 +88,8 @@ const createSubject = async (req, res) => {
       code: code.toUpperCase(),
       description,
       classId,
+      isSubSubject: isSubSubject || false,
+      parentSubjectId: parentSubjectId || null,
     });
 
     const savedSubject = await newSubject.save();

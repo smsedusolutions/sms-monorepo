@@ -11,9 +11,11 @@ import {
     Divider,
     Autocomplete,
     Chip,
+    FormControlLabel,
+    Switch,
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
-import { useCreateSubject, useUpdateSubject } from '../../queries/Subject';
+import { useCreateSubject, useUpdateSubject, useGetSubjects } from '../../queries/Subject';
 import { useGetClasses } from '../../queries/Class';
 import { useGetTeachers } from '../../queries/Teacher';
 import { useNotification } from '../../hooks/useNotification';
@@ -46,6 +48,8 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
         description: "",
         classId: "",
         teacherIds: [],
+        isSubSubject: false,
+        parentSubjectId: "",
     });
 
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -53,6 +57,10 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
     const createMutation = useCreateSubject(schoolId);
     const updateMutation = useUpdateSubject(schoolId);
     
+    // Fetch parent subjects for the dropdown
+    const { data: subjectsData } = useGetSubjects(schoolId, { limit: 9999 } as any);
+    const parentSubjects = (subjectsData?.data || []).filter(s => !s.isSubSubject);
+
     const { data: classesData } = useGetClasses(schoolId);
     const classes = classesData?.data || [];
 
@@ -67,6 +75,8 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
                 description: editData.description || "",
                 classId: editData.classId || "",
                 teacherIds: editData.assignedTeacherIds || (editData.assignedTeacherId ? [editData.assignedTeacherId] : []),
+                isSubSubject: editData.isSubSubject || false,
+                parentSubjectId: editData.parentSubjectId || "",
             });
         } else {
             setFormData({
@@ -75,13 +85,18 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
                 description: "",
                 classId: initialClassId || "",
                 teacherIds: [],
+                isSubSubject: false,
+                parentSubjectId: "",
             });
         }
     }, [editData, open, initialClassId]);
 
     const handleChange = (e: any) => {
-        const { name, value } = e.target;
-        setFormData((prev) => ({ ...prev, [name]: value }));
+        const { name, value, checked, type } = e.target;
+        setFormData((prev) => ({ 
+            ...prev, 
+            [name]: type === 'checkbox' ? checked : value 
+        }));
         if (errors[name]) {
             setErrors((prev) => ({ ...prev, [name]: "" }));
         }
@@ -102,6 +117,10 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
             newErrors.code = "Subject code is required";
         } else if (formData.code.length > 10) {
             newErrors.code = "Code must be 10 characters or less";
+        }
+
+        if (formData.isSubSubject && !formData.parentSubjectId) {
+            newErrors.parentSubjectId = "Parent Subject is required";
         }
 
         setErrors(newErrors);
@@ -216,6 +235,34 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
                                 }))
                             ]}
                         />
+
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    name="isSubSubject"
+                                    checked={formData.isSubSubject}
+                                    onChange={handleChange}
+                                    color="primary"
+                                />
+                            }
+                            label="Is this a Sub-Subject? (e.g. Physics under Science)"
+                        />
+
+                        {formData.isSubSubject && (
+                            <AppSelect
+                                label="Parent Subject"
+                                name="parentSubjectId"
+                                value={formData.parentSubjectId}
+                                onChange={handleChange}
+                                options={[
+                                    { value: "", label: "Select Parent Subject" },
+                                    ...parentSubjects.map((s: Subject) => ({
+                                        value: s.subjectId,
+                                        label: s.name
+                                    }))
+                                ]}
+                            />
+                        )}
 
                         <Divider sx={{ my: 0.5 }} />
 
