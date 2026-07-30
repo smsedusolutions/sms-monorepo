@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Box,
     Card,
@@ -187,10 +187,29 @@ const AdmitCardBlock = ({ schoolId, exam, studentId }: { schoolId: string, exam:
         return subjectInfo?.name || subjectId;
     };
 
-    // Get exam schedule for this student's class
-    const examSchedule = scheduleData?.data || [];
-
     const admitCardData = admitCard?.data;
+
+    // Filter and deduplicate exam schedule for this student's class
+    const studentClassId = student?.classId || student?.class || admitCardData?.classId || (decodedToken as any)?.classId || (decodedToken as any)?.class;
+
+    const examSchedule = useMemo(() => {
+        if (!scheduleData?.data) return [];
+        const classFiltered = scheduleData.data.filter((sch: any) => {
+            if (!studentClassId) return true;
+            return sch.classId === studentClassId;
+        });
+
+        // Deduplicate by subjectId + date + startTime
+        const uniqueMap = new Map();
+        classFiltered.forEach((sch: any) => {
+            const dateStr = sch.date ? new Date(sch.date).toISOString().split('T')[0] : '';
+            const key = `${sch.subjectId}_${dateStr}_${sch.startTime}`;
+            if (!uniqueMap.has(key)) {
+                uniqueMap.set(key, sch);
+            }
+        });
+        return Array.from(uniqueMap.values());
+    }, [scheduleData?.data, studentClassId]);
 
     // Student details from profile API
     const studentName = student?.firstName

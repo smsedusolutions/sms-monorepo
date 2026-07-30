@@ -28,6 +28,7 @@ import {
     Skeleton,
     InputAdornment,
     TextField,
+    Stack,
 } from '@mui/material';
 import { AppInput } from '../../../components/shared/AppInput';
 import { AppSelect } from '../../../components/shared/AppSelect';
@@ -539,6 +540,255 @@ const ExamListView = ({ schoolId, onSelect }: { schoolId: string, onSelect: (exa
 };
 
 // ==========================================
+// VIRTUALIZED INFINITE SCROLL ADMIT CARD GRID
+// ==========================================
+
+const AdmitCardTile = React.memo(({
+    reg,
+    getClassSectionName,
+    handleViewAdmitCard
+}: {
+    reg: any;
+    getClassSectionName: (classId: string, sectionId: string) => string;
+    handleViewAdmitCard: (reg: any) => void;
+}) => {
+    return (
+        <Card
+            elevation={0}
+            sx={{
+                borderRadius: 3,
+                overflow: 'hidden',
+                border: '1px solid #e2e8f0',
+                bgcolor: '#ffffff',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+                    transform: 'translateY(-4px)'
+                }
+            }}
+        >
+            {/* Card Header */}
+            <Box
+                sx={{
+                    background: reg.admitCardGenerated
+                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                        : 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
+                    color: reg.admitCardGenerated ? 'white' : 'text.secondary',
+                    p: 2,
+                    textAlign: 'center'
+                }}
+            >
+                <Avatar
+                    src={reg.student?.profileImage}
+                    sx={{
+                        width: 60,
+                        height: 60,
+                        mx: 'auto',
+                        mb: 1,
+                        border: '3px solid rgba(255,255,255,0.3)'
+                    }}
+                >
+                    {reg.student?.firstName?.[0] || 'S'}
+                </Avatar>
+                <Typography variant="subtitle1" fontWeight={600} noWrap>
+                    {reg.student?.firstName} {reg.student?.lastName}
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                    {reg.studentId}
+                </Typography>
+            </Box>
+
+            {/* Card Body */}
+            <Box sx={{ p: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="caption" color="text.secondary">Class</Typography>
+                    <Typography variant="body2" fontWeight={500}>
+                        {getClassSectionName(reg.classId, reg.sectionId)}
+                    </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="caption" color="text.secondary">Roll No</Typography>
+                    <Typography variant="body2" fontWeight={500}>{reg.rollNumber || 'N/A'}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                    <Chip
+                        label={reg.admitCardGenerated ? "Generated" : "Pending"}
+                        color={reg.admitCardGenerated ? "success" : "warning"}
+                        size="small"
+                        sx={{ fontWeight: 600 }}
+                    />
+                    <Chip
+                        label={reg.isEligible ? "Eligible" : "Not Eligible"}
+                        color={reg.isEligible ? "primary" : "error"}
+                        size="small"
+                        variant="outlined"
+                        sx={{ fontWeight: 600 }}
+                    />
+                </Box>
+
+                {reg.admitCardGenerated && (
+                    <Button
+                        fullWidth
+                        variant="contained"
+                        startIcon={<VisibilityIcon />}
+                        onClick={() => handleViewAdmitCard(reg)}
+                        sx={{
+                            borderRadius: 2,
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            fontWeight: 600
+                        }}
+                    >
+                        View Admit Card
+                    </Button>
+                )}
+            </Box>
+        </Card>
+    );
+});
+
+const VirtualizedAdmitCardGrid = ({
+    registrations,
+    total,
+    regLoading,
+    isFetching,
+    hasMore,
+    onLoadMore,
+    getClassSectionName,
+    handleViewAdmitCard
+}: {
+    registrations: any[];
+    total: number;
+    regLoading: boolean;
+    isFetching: boolean;
+    hasMore: boolean;
+    onLoadMore: () => void;
+    getClassSectionName: (classId: string, sectionId: string) => string;
+    handleViewAdmitCard: (reg: any) => void;
+}) => {
+    const observerTarget = React.useRef<HTMLDivElement>(null);
+
+    // IntersectionObserver triggers onLoadMore when user scrolls near bottom of grid
+    React.useEffect(() => {
+        const target = observerTarget.current;
+        if (!target || !hasMore || isFetching) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !isFetching) {
+                    onLoadMore();
+                }
+            },
+            { threshold: 0.1, rootMargin: '200px' }
+        );
+
+        observer.observe(target);
+        return () => observer.disconnect();
+    }, [hasMore, isFetching, onLoadMore]);
+
+    if (regLoading && registrations.length === 0) {
+        return (
+            <Grid container spacing={3}>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                    <Grid key={i} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                        <Skeleton variant="rounded" height={220} sx={{ borderRadius: 3 }} />
+                    </Grid>
+                ))}
+            </Grid>
+        );
+    }
+
+    if (!registrations || registrations.length === 0) {
+        return (
+            <Grid size={{ xs: 12 }}>
+                <Paper elevation={0} sx={{ p: 5, textAlign: 'center', borderRadius: 4, border: '1px solid #e2e8f0', bgcolor: '#ffffff' }}>
+                    <Typography variant="h6" fontWeight={700} color="#1e293b">No Admit Cards Found</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                        Admit cards will appear here once generated or matching your search filter.
+                    </Typography>
+                </Paper>
+            </Grid>
+        );
+    }
+
+    return (
+        <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Chip
+                    label={`Displaying ${registrations.length} of ${total || registrations.length} Admit Cards`}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                    sx={{ fontWeight: 700 }}
+                />
+            </Box>
+
+            {/* Scrollable Container for Card Grid ONLY */}
+            <Box
+                sx={{
+                    maxHeight: 'calc(100vh - 310px)',
+                    overflowY: 'auto',
+                    pr: 1,
+                    pt: 0.5,
+                    pb: 2,
+                    '&::-webkit-scrollbar': {
+                        width: '6px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                        background: '#f1f5f9',
+                        borderRadius: '10px',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                        background: '#cbd5e1',
+                        borderRadius: '10px',
+                        '&:hover': {
+                            background: '#94a3b8',
+                        },
+                    },
+                }}
+            >
+                <Grid container spacing={3}>
+                    {registrations.map((reg: any) => (
+                        <Grid key={reg._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                            <AdmitCardTile
+                                reg={reg}
+                                getClassSectionName={getClassSectionName}
+                                handleViewAdmitCard={handleViewAdmitCard}
+                            />
+                        </Grid>
+                    ))}
+                </Grid>
+
+                {/* Infinite Scroll Trigger Sentinel */}
+                <Box
+                    ref={observerTarget}
+                    sx={{
+                        py: 4,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: 80
+                    }}
+                >
+                    {hasMore ? (
+                        <Stack direction="row" spacing={1.5} alignItems="center">
+                            <CircularProgress size={24} color="primary" />
+                            <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                                Fetching next page from API... ({registrations.length} / {total})
+                            </Typography>
+                        </Stack>
+                    ) : total > 24 ? (
+                        <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                            ✓ All {total} admit cards loaded from API
+                        </Typography>
+                    ) : null}
+                </Box>
+            </Box>
+        </Box>
+    );
+};
+
+// ==========================================
 // VIEW 2: EXAM DETAIL / SCHEDULE
 // ==========================================
 
@@ -552,22 +802,59 @@ const ExamDetailView = ({ schoolId, exam, onBack }: { schoolId: string, exam: Ex
     const [downloading, setDownloading] = useState(false);
     const [searchInput, setSearchInput] = useState('');
     const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [accumulatedRegistrations, setAccumulatedRegistrations] = useState<any[]>([]);
+    const [totalRegistrations, setTotalRegistrations] = useState(0);
+
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({
         open: false,
         message: '',
         severity: 'info'
     });
 
-    // Debounce search input
+    // Debounce search input and reset pagination
     React.useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedSearch(searchInput);
+            setPage(1);
+            setAccumulatedRegistrations([]);
         }, 300);
         return () => clearTimeout(timer);
     }, [searchInput]);
 
     const { data: schedule, isLoading } = useGetExamSchedule(schoolId, exam.examId);
-    const { data: registrations, isLoading: regLoading } = useGetExamRegistrations(schoolId, exam.examId, undefined, debouncedSearch);
+    const { data: registrationsResponse, isLoading: regLoading, isFetching: regFetching } = useGetExamRegistrations(
+        schoolId,
+        exam.examId,
+        undefined,
+        debouncedSearch,
+        page,
+        24
+    );
+
+    React.useEffect(() => {
+        if (registrationsResponse?.data) {
+            if (page === 1) {
+                setAccumulatedRegistrations(registrationsResponse.data);
+            } else {
+                setAccumulatedRegistrations(prev => {
+                    const existingIds = new Set(prev.map((item: any) => item._id));
+                    const newItems = registrationsResponse.data.filter((item: any) => !existingIds.has(item._id));
+                    return [...prev, ...newItems];
+                });
+            }
+            if (typeof registrationsResponse.total === 'number') {
+                setTotalRegistrations(registrationsResponse.total);
+            }
+        }
+    }, [registrationsResponse, page]);
+
+    const hasMoreRegistrations = accumulatedRegistrations.length < totalRegistrations;
+    const handleLoadMore = () => {
+        if (hasMoreRegistrations && !regFetching) {
+            setPage(prev => prev + 1);
+        }
+    };
     const { data: schoolData } = useGetSchoolById(schoolId);
     const scheduleExam = useScheduleExam(schoolId);
     const generateAdmitCards = useBulkGenerateAdmitCards(schoolId);
@@ -590,6 +877,28 @@ const ExamDetailView = ({ schoolId, exam, onBack }: { schoolId: string, exam: Ex
     const schoolName = school?.schoolName || 'School Name';
     const schoolAddress = school?.schoolAddress || '';
     const schoolLogo = school?.schoolLogo || '';
+
+    // Filter and deduplicate exam schedule specifically for selected student's class
+    const filteredStudentSchedule = React.useMemo(() => {
+        if (!schedule?.data || !selectedStudent?.classId) return [];
+
+        // 1. Filter schedule items matching selected student's classId
+        const classSchedules = schedule.data.filter((sch: any) =>
+            sch.classId === selectedStudent.classId
+        );
+
+        // 2. Deduplicate by subjectId + date + startTime
+        const uniqueMap = new Map();
+        classSchedules.forEach((sch: any) => {
+            const dateStr = sch.date ? new Date(sch.date).toISOString().split('T')[0] : '';
+            const key = `${sch.subjectId}_${dateStr}_${sch.startTime}`;
+            if (!uniqueMap.has(key)) {
+                uniqueMap.set(key, sch);
+            }
+        });
+
+        return Array.from(uniqueMap.values());
+    }, [schedule?.data, selectedStudent?.classId]);
 
     const getClassSectionName = (classId: string, sectionId: string): string => {
         const classInfo = allClasses?.data?.find((c: any) => c.classId === classId);
@@ -738,7 +1047,7 @@ const ExamDetailView = ({ schoolId, exam, onBack }: { schoolId: string, exam: Ex
                     academicYear={exam.academicYear || '2025-2026'}
                     startDate={exam.startDate}
                     endDate={exam.endDate}
-                    examSchedule={(schedule?.data || []).map((sch: any) => ({
+                    examSchedule={(filteredStudentSchedule || []).map((sch: any) => ({
                         date: sch.date,
                         startTime: sch.startTime,
                         endTime: sch.endTime,
@@ -852,110 +1161,17 @@ const ExamDetailView = ({ schoolId, exam, onBack }: { schoolId: string, exam: Ex
                             }}
                         />
                     </Box>
-                    <Grid container spacing={3}>
-                        {regLoading ? (
-                            [1, 2, 3, 4].map((i) => (
-                                <Grid key={i} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-                                    <Skeleton variant="rounded" height={180} />
-                                </Grid>
-                            ))
-                        ) : registrations?.data?.length === 0 ? (
-                            <Grid size={{ xs: 12 }}>
-                                <Paper sx={{ p: 4, textAlign: 'center' }}>
-                                    <Typography color="text.secondary">No admit cards generated yet</Typography>
-                                </Paper>
-                            </Grid>
-                        ) : (
-                            registrations?.data?.map((reg: any) => (
-                                <Grid key={reg._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-                                    <Card
-                                        sx={{
-                                            borderRadius: 3,
-                                            overflow: 'hidden',
-                                            transition: 'all 0.3s ease',
-                                            '&:hover': {
-                                                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                                                transform: 'translateY(-4px)'
-                                            }
-                                        }}
-                                    >
-                                        {/* Card Header */}
-                                        <Box
-                                            sx={{
-                                                background: reg.admitCardGenerated
-                                                    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                                                    : 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
-                                                color: reg.admitCardGenerated ? 'white' : 'text.secondary',
-                                                p: 2,
-                                                textAlign: 'center'
-                                            }}
-                                        >
-                                            <Avatar
-                                                src={reg.student?.profileImage}
-                                                sx={{
-                                                    width: 60,
-                                                    height: 60,
-                                                    mx: 'auto',
-                                                    mb: 1,
-                                                    border: '3px solid rgba(255,255,255,0.3)'
-                                                }}
-                                            >
-                                                {reg.student?.firstName?.[0] || 'S'}
-                                            </Avatar>
-                                            <Typography variant="subtitle1" fontWeight={600}>
-                                                {reg.student?.firstName} {reg.student?.lastName}
-                                            </Typography>
-                                            <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                                                {reg.studentId}
-                                            </Typography>
-                                        </Box>
 
-                                        {/* Card Body */}
-                                        <Box sx={{ p: 2 }}>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                                <Typography variant="caption" color="text.secondary">Class</Typography>
-                                                <Typography variant="body2" fontWeight={500}>
-                                                    {getClassSectionName(reg.classId, reg.sectionId)}
-                                                </Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                                <Typography variant="caption" color="text.secondary">Roll No</Typography>
-                                                <Typography variant="body2" fontWeight={500}>{reg.rollNumber}</Typography>
-                                            </Box>
-                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                                                <Chip
-                                                    label={reg.admitCardGenerated ? "Generated" : "Pending"}
-                                                    color={reg.admitCardGenerated ? "success" : "warning"}
-                                                    size="small"
-                                                />
-                                                <Chip
-                                                    label={reg.isEligible ? "Eligible" : "Not Eligible"}
-                                                    color={reg.isEligible ? "primary" : "error"}
-                                                    size="small"
-                                                    variant="outlined"
-                                                />
-                                            </Box>
-
-                                            {reg.admitCardGenerated && (
-                                                <Button
-                                                    fullWidth
-                                                    variant="contained"
-                                                    startIcon={<VisibilityIcon />}
-                                                    onClick={() => handleViewAdmitCard(reg)}
-                                                    sx={{
-                                                        borderRadius: 2,
-                                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                    }}
-                                                >
-                                                    View Admit Card
-                                                </Button>
-                                            )}
-                                        </Box>
-                                    </Card>
-                                </Grid>
-                            ))
-                        )}
-                    </Grid>
+                    <VirtualizedAdmitCardGrid
+                        registrations={accumulatedRegistrations}
+                        total={totalRegistrations}
+                        regLoading={regLoading}
+                        isFetching={regFetching}
+                        hasMore={hasMoreRegistrations}
+                        onLoadMore={handleLoadMore}
+                        getClassSectionName={getClassSectionName}
+                        handleViewAdmitCard={handleViewAdmitCard}
+                    />
                 </Box>
             )}
 
@@ -1285,7 +1501,7 @@ const ExamDetailView = ({ schoolId, exam, onBack }: { schoolId: string, exam: Ex
                                 </Grid>
 
                                 {/* Exam Schedule Table */}
-                                {schedule?.data && schedule.data.length > 0 && (
+                                {filteredStudentSchedule.length > 0 && (
                                     <Box sx={{ mt: 3 }}>
                                         <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1, color: 'primary.main' }}>
                                             Exam Schedule
@@ -1301,7 +1517,7 @@ const ExamDetailView = ({ schoolId, exam, onBack }: { schoolId: string, exam: Ex
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>
-                                                    {schedule.data.map((sch: any, index: number) => (
+                                                    {filteredStudentSchedule.map((sch: any, index: number) => (
                                                         <TableRow key={sch._id || index}>
                                                             <TableCell>
                                                                 {new Date(sch.date).toLocaleDateString('en-IN', {

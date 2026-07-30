@@ -187,6 +187,7 @@ const ParentExamSchedule: React.FC = () => {
                                 key={exam.examId}
                                 exam={exam}
                                 schoolId={schoolId}
+                                selectedChild={selectedChild}
                                 getSubjectName={getSubjectName}
                             />
                         ))}
@@ -212,6 +213,7 @@ const ParentExamSchedule: React.FC = () => {
                                 key={exam.examId}
                                 exam={exam}
                                 schoolId={schoolId}
+                                selectedChild={selectedChild}
                                 getSubjectName={getSubjectName}
                             />
                         ))}
@@ -237,6 +239,7 @@ const ParentExamSchedule: React.FC = () => {
                                 key={exam.examId}
                                 exam={exam}
                                 schoolId={schoolId}
+                                selectedChild={selectedChild}
                                 getSubjectName={getSubjectName}
                             />
                         ))}
@@ -247,9 +250,48 @@ const ParentExamSchedule: React.FC = () => {
     );
 };
 
-const ExamScheduleCard = ({ exam, schoolId, getSubjectName }: { exam: any; schoolId: string; getSubjectName: (id: string) => string }) => {
+const ExamScheduleCard = ({
+    exam,
+    schoolId,
+    selectedChild,
+    getSubjectName
+}: {
+    exam: any;
+    schoolId: string;
+    selectedChild: any;
+    getSubjectName: (id: string) => string
+}) => {
     const { data: scheduleData, isLoading } = useGetExamSchedule(schoolId, exam.examId);
-    const examSchedule = scheduleData?.data || [];
+
+    // Filter and deduplicate exam schedule specifically for selected child's class
+    const examSchedule = React.useMemo(() => {
+        if (!scheduleData?.data) return [];
+
+        const childClass = selectedChild?.classId || selectedChild?.class || selectedChild?.className;
+
+        // Filter schedule matching selected child's class
+        const classFiltered = scheduleData.data.filter((sch: any) => {
+            if (!childClass) return true;
+            return (
+                sch.classId === childClass ||
+                sch.classId === selectedChild?.classId ||
+                sch.classId === selectedChild?.class ||
+                sch.classId === selectedChild?.className
+            );
+        });
+
+        // Deduplicate by subjectId + date + startTime
+        const uniqueMap = new Map();
+        classFiltered.forEach((sch: any) => {
+            const dateStr = sch.date ? new Date(sch.date).toISOString().split('T')[0] : '';
+            const key = `${sch.subjectId}_${dateStr}_${sch.startTime}`;
+            if (!uniqueMap.has(key)) {
+                uniqueMap.set(key, sch);
+            }
+        });
+
+        return Array.from(uniqueMap.values());
+    }, [scheduleData?.data, selectedChild]);
 
     return (
         <Grid size={{ xs: 12 }}>

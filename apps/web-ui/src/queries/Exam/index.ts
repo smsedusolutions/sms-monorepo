@@ -255,10 +255,10 @@ export const useGetAdmitCard = (schoolId: string, examId: string, studentId: str
     });
 };
 
-export const useGetExamRegistrations = (schoolId: string, examId: string, classId?: string, search?: string) => {
+export const useGetExamRegistrations = (schoolId: string, examId: string, classId?: string, search?: string, page?: number, limit?: number) => {
     return useQuery({
-        queryKey: [EXAM_KEYS.ADMIT_CARD, schoolId, examId, "list", classId, search],
-        queryFn: () => useApi<ApiResponse<any[]>>("GET", `/api/academics/school/${schoolId}/registration/${examId}/list`, undefined, { classId, search }),
+        queryKey: [EXAM_KEYS.ADMIT_CARD, schoolId, examId, "list", classId, search, page, limit],
+        queryFn: () => useApi<ApiResponse<any[]> & { total?: number }>("GET", `/api/academics/school/${schoolId}/registration/${examId}/list`, undefined, { classId, search, page, limit }),
         enabled: !!schoolId && !!examId
     });
 };
