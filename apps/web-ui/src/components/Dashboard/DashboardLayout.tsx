@@ -1,15 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
-import { Box, AppBar, Toolbar, IconButton, Typography, Avatar, Divider } from '@mui/material';
+import { Box, AppBar, Toolbar, IconButton, Typography, Avatar, Divider, Tooltip } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import SettingsIcon from '@mui/icons-material/Settings';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import CheckIcon from '@mui/icons-material/Check';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import Sidebar from '../../pages/Sidebar/Sidebar';
 import NotificationBell from '../NotificationBell/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../../stores/userStore';
 import { useRoleStore } from '../../stores/roleStore';
+import { useTimeSettingsStore } from '../../stores/timeSettingsStore';
 import LogoutConfirmDialog from '../../pages/Sidebar/LogoutConfirmDialog';
 import AppBreadcrumbs from '../shared/AppBreadcrumbs';
 
@@ -30,22 +36,28 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 900);
     const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900);
     const [profilePopupOpen, setProfilePopupOpen] = useState(false);
+    const [settingsPopupOpen, setSettingsPopupOpen] = useState(false);
+    const [settingsSubMenu, setSettingsSubMenu] = useState<string | null>(null);
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
     const profileAnchorRef = useRef<HTMLDivElement>(null);
     const popupRef = useRef<HTMLDivElement>(null);
+    const settingsAnchorRef = useRef<HTMLDivElement>(null);
+    const settingsPopupRef = useRef<HTMLDivElement>(null);
 
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
     const { user: userProfile, school, fetchProfile, clearStore } = useUserStore();
     const { fetchRoles, getRoleByCode } = useRoleStore();
+    const { timeFormat, setTimeFormat } = useTimeSettingsStore();
 
     useEffect(() => {
-        if (user) {
+        if (user?.userId) {
             fetchProfile();
             fetchRoles();
         }
-    }, [user, fetchProfile, fetchRoles]);
+    }, [user?.userId]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -59,10 +71,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         return () => window.removeEventListener('resize', handleResize);
     }, [sidebarOpen]);
 
-    // Close popup when clicking outside
+    // Close popups when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (
+                profilePopupOpen &&
                 popupRef.current &&
                 !popupRef.current.contains(event.target as Node) &&
                 profileAnchorRef.current &&
@@ -70,12 +83,22 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             ) {
                 setProfilePopupOpen(false);
             }
+            if (
+                settingsPopupOpen &&
+                settingsPopupRef.current &&
+                !settingsPopupRef.current.contains(event.target as Node) &&
+                settingsAnchorRef.current &&
+                !settingsAnchorRef.current.contains(event.target as Node)
+            ) {
+                setSettingsPopupOpen(false);
+                setSettingsSubMenu(null);
+            }
         };
-        if (profilePopupOpen) {
+        if (profilePopupOpen || settingsPopupOpen) {
             document.addEventListener('mousedown', handleClickOutside);
         }
         return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [profilePopupOpen]);
+    }, [profilePopupOpen, settingsPopupOpen]);
 
     const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -89,10 +112,42 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         ? `${userProfile.firstName} ${userProfile.lastName}`.trim()
         : user?.email || 'User';
 
-    const profileImage = userProfile?.profileImage || '';
-    const userRole = user?.role || '';
-    const roleName = userRole ? getRoleByCode(userRole)?.roleName || userRole.replace('_', ' ') : 'User';
-    const profilePath = roleProfilePaths[userRole] || null;
+    const userRole = user?.role || userProfile?.role || '';
+    const roleObj = userRole ? getRoleByCode(userRole) : undefined;
+    const roleName = roleObj?.roleName || (userRole ? userRole.replace('_', ' ') : '');
+    const profilePath = userRole ? roleProfilePaths[userRole] : undefined;
+    const profileImage = userProfile?.profileImage;
+
+    interface SettingsOption {
+        label: string;
+        value: string;
+    }
+
+    interface SettingsMenuItem {
+        id: string;
+        label: string;
+        icon: React.ReactNode;
+        currentValueLabel: string;
+        options: SettingsOption[];
+        selectedValue: string;
+        onSelect: (val: string) => void;
+    }
+
+    // Dynamic settings menu items (extensible for future options)
+    const settingsMenuItems: SettingsMenuItem[] = [
+        {
+            id: 'timeFormat',
+            label: 'Time Format',
+            icon: <AccessTimeIcon sx={{ fontSize: 18, color: '#3b82f6' }} />,
+            currentValueLabel: timeFormat === '12h' ? '12h (AM/PM)' : '24h',
+            options: [
+                { label: '12 Hours (AM/PM)', value: '12h' },
+                { label: '24 Hours', value: '24h' },
+            ],
+            selectedValue: timeFormat,
+            onSelect: (val: string) => setTimeFormat(val as '12h' | '24h'),
+        },
+    ];
 
     return (
         <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -139,7 +194,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                         display: 'flex',
                         alignItems: 'center',
                         flexGrow: 1,
-                        minWidth: 0,          // allow shrinking below content size
+                        minWidth: 0,
                         overflow: 'hidden',
                         gap: { xs: 1, sm: 2 },
                     }}>
@@ -162,12 +217,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                             />
                         )}
                         <Typography
+                            variant="h6"
                             noWrap
                             component="div"
                             sx={{
                                 fontWeight: 700,
                                 letterSpacing: '0.5px',
-                                fontSize: { xs: '0.9rem', sm: '1.25rem' },
+                                fontSize: { xs: '0.85rem', sm: '1.25rem' },
+                                maxWidth: { xs: '130px', sm: '280px', md: 'none' },
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 whiteSpace: 'nowrap',
@@ -180,6 +237,193 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
                     {/* Right-side icons — never shrink */}
                     <Box sx={{ display: 'flex', alignItems: 'center', flexShrink: 0, gap: 0.5 }}>
+                        {/* Dynamic Settings Icon with Nested Submenu */}
+                        <Box ref={settingsAnchorRef} sx={{ position: 'relative', flexShrink: 0 }}>
+                            <Tooltip title="Settings & Preferences">
+                                <IconButton
+                                    onClick={() => {
+                                        setSettingsPopupOpen((prev) => !prev);
+                                        setSettingsSubMenu(null);
+                                    }}
+                                    sx={{
+                                        color: settingsPopupOpen ? '#ffffff' : 'rgba(255, 255, 255, 0.85)',
+                                        bgcolor: settingsPopupOpen ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
+                                        transition: 'all 0.2s',
+                                        '&:hover': {
+                                            bgcolor: 'rgba(255, 255, 255, 0.12)',
+                                            color: '#ffffff',
+                                        },
+                                    }}
+                                >
+                                    <SettingsIcon />
+                                </IconButton>
+                            </Tooltip>
+
+                            {/* Main Settings Popup Menu */}
+                            {settingsPopupOpen && (
+                                <Box
+                                    ref={settingsPopupRef}
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 'calc(100% + 10px)',
+                                        right: { xs: '-30px', sm: 0 },
+                                        width: { xs: 220, sm: 240 },
+                                        bgcolor: '#1e293b',
+                                        borderRadius: '14px',
+                                        boxShadow: '0 20px 50px rgba(0,0,0,0.45)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        py: 1,
+                                        zIndex: 9999,
+                                        animation: 'settingsIn 0.18s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        '@keyframes settingsIn': {
+                                            from: { opacity: 0, transform: 'translateY(-6px) scale(0.97)' },
+                                            to: { opacity: 1, transform: 'translateY(0) scale(1)' },
+                                        },
+                                    }}
+                                >
+                                    <Typography
+                                        variant="caption"
+                                        sx={{
+                                            px: 2,
+                                            py: 0.5,
+                                            display: 'block',
+                                            color: '#94a3b8',
+                                            fontWeight: 700,
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px',
+                                            fontSize: '0.65rem'
+                                        }}
+                                    >
+                                        Settings & Preferences
+                                    </Typography>
+                                    <Divider sx={{ borderColor: 'rgba(255,255,255,0.08)', my: 0.8 }} />
+
+                                    {settingsMenuItems.map((item) => {
+                                        const isSubOpen = settingsSubMenu === item.id;
+                                        return (
+                                            <Box key={item.id} sx={{ position: isMobile ? 'static' : 'relative' }}>
+                                                <Box
+                                                    onClick={() => setSettingsSubMenu(isSubOpen ? null : item.id)}
+                                                    onMouseEnter={() => !isMobile && setSettingsSubMenu(item.id)}
+                                                    sx={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        px: 2,
+                                                        py: 1.2,
+                                                        cursor: 'pointer',
+                                                        bgcolor: isSubOpen ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                                                        color: isSubOpen ? '#ffffff' : 'rgba(255,255,255,0.9)',
+                                                        transition: 'background 0.15s',
+                                                        '&:hover': {
+                                                            bgcolor: 'rgba(255,255,255,0.08)',
+                                                            color: '#ffffff',
+                                                        },
+                                                    }}
+                                                >
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+                                                        {item.icon}
+                                                        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                                                            {item.label}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                        {!isMobile && (
+                                                            <ChevronLeftIcon sx={{
+                                                                fontSize: 16,
+                                                                color: isSubOpen ? '#60a5fa' : '#94a3b8',
+                                                                transform: isSubOpen ? 'translateX(-3px)' : 'none',
+                                                                transition: 'all 0.2s ease',
+                                                            }} />
+                                                        )}
+                                                        <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 500, fontSize: '0.75rem' }}>
+                                                            {item.currentValueLabel}
+                                                        </Typography>
+                                                        {isMobile && (
+                                                            <ChevronRightIcon sx={{
+                                                                fontSize: 16,
+                                                                color: '#94a3b8',
+                                                                transform: isSubOpen ? 'rotate(90deg)' : 'none',
+                                                                transition: 'transform 0.2s ease',
+                                                            }} />
+                                                        )}
+                                                    </Box>
+                                                </Box>
+
+                                                {/* Submenu Options - Side Flyout to the Left on Desktop, Inline Accordion on Mobile */}
+                                                {isSubOpen && (
+                                                    <Box
+                                                        sx={
+                                                            isMobile
+                                                                ? {
+                                                                      bgcolor: 'rgba(15, 23, 42, 0.6)',
+                                                                      borderTop: '1px solid rgba(255,255,255,0.05)',
+                                                                      borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                                                      py: 0.5,
+                                                                  }
+                                                                : {
+                                                                      position: 'absolute',
+                                                                      top: -6,
+                                                                      right: 'calc(100% + 8px)',
+                                                                      width: 190,
+                                                                      bgcolor: '#0f172a',
+                                                                      borderRadius: '12px',
+                                                                      boxShadow: '0 16px 36px rgba(0,0,0,0.5)',
+                                                                      border: '1px solid rgba(255,255,255,0.12)',
+                                                                      py: 0.8,
+                                                                      zIndex: 10000,
+                                                                      animation: 'flyoutIn 0.15s ease',
+                                                                      '@keyframes flyoutIn': {
+                                                                          from: { opacity: 0, transform: 'translateX(6px)' },
+                                                                          to: { opacity: 1, transform: 'translateX(0)' },
+                                                                      },
+                                                                  }
+                                                        }
+                                                    >
+                                                        {item.options.map((opt) => {
+                                                            const isSelected = item.selectedValue === opt.value;
+                                                            return (
+                                                                <Box
+                                                                    key={opt.value}
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        item.onSelect(opt.value);
+                                                                        setSettingsSubMenu(null);
+                                                                        setSettingsPopupOpen(false);
+                                                                    }}
+                                                                    sx={{
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'space-between',
+                                                                        px: 2,
+                                                                        pl: isMobile ? 4 : 2,
+                                                                        py: 0.9,
+                                                                        cursor: 'pointer',
+                                                                        bgcolor: isSelected ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                                                                        color: isSelected ? '#60a5fa' : 'rgba(255,255,255,0.85)',
+                                                                        transition: 'background 0.15s',
+                                                                        '&:hover': {
+                                                                            bgcolor: 'rgba(255,255,255,0.1)',
+                                                                            color: '#ffffff',
+                                                                        },
+                                                                    }}
+                                                                >
+                                                                    <Typography variant="body2" sx={{ fontWeight: isSelected ? 700 : 500, fontSize: '0.8rem' }}>
+                                                                        {opt.label}
+                                                                    </Typography>
+                                                                    {isSelected && <CheckIcon sx={{ fontSize: 16, color: '#3b82f6' }} />}
+                                                                </Box>
+                                                            );
+                                                        })}
+                                                    </Box>
+                                                )}
+                                            </Box>
+                                        );
+                                    })}
+                                </Box>
+                            )}
+                        </Box>
+
                         {user && <NotificationBell />}
 
                     {/* Profile Avatar Button */}
@@ -349,7 +593,6 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                             <OpenInNewIcon sx={{ fontSize: 14, opacity: 0.6 }} />
                                         </Box>
                                     )}
-
                                     <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)', my: 0.5 }} />
 
                                     {/* Logout */}

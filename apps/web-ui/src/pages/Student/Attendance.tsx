@@ -1,4 +1,8 @@
-import { Box, Typography, Paper, Grid, Card, CardContent, Button, CircularProgress, Chip, LinearProgress, Skeleton } from '@mui/material';
+import React, { useState, useMemo } from 'react';
+import {
+    Box, Typography, Paper, Grid, Card, CardContent, Button, ButtonGroup,
+    Chip, LinearProgress, Skeleton, Stack, Tooltip,
+} from '@mui/material';
 import {
     CheckCircle as PresentIcon,
     Cancel as AbsentIcon,
@@ -6,15 +10,48 @@ import {
     TrendingUp as TrendingUpIcon,
     History as HistoryIcon,
     CalendarMonth as CalendarIcon,
+    PictureAsPdf as PdfIcon,
+    TableChart as ExcelIcon,
+    LocalFireDepartment as StreakIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { Chart } from 'react-google-charts';
 import { useGetSimpleStudentAttendance } from '../../queries/Attendance';
 import TokenService from '../../queries/token/tokenService';
+import { exportAttendancePDF, exportAttendanceExcel } from '../../utils/attendanceExport';
+import type { AttendanceRecord, AttendanceSummaryData } from '../../utils/attendanceExport';
 
-const StudentAttendance = () => {
+const STATUS_COLORS: Record<string, string> = {
+    present: '#10b981',
+    absent: '#ef4444',
+    late: '#f59e0b',
+    half_day: '#3b82f6',
+    leave: '#8b5cf6',
+};
+
+const STATUS_BG: Record<string, string> = {
+    present: '#ecfdf5',
+    absent: '#fef2f2',
+    late: '#fffbeb',
+    half_day: '#eff6ff',
+    leave: '#f5f3ff',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+    present: 'Present',
+    absent: 'Absent',
+    late: 'Late',
+    half_day: 'Half Day',
+    leave: 'Leave',
+};
+
+const StudentAttendance: React.FC = () => {
     const navigate = useNavigate();
     const schoolId = TokenService.getSchoolId() || '';
     const studentId = TokenService.getStudentId() || '';
+    const user = TokenService.getUser();
+
+    const [exporting, setExporting] = useState<'pdf' | 'excel' | null>(null);
 
     // Get last 30 days of attendance
     const endDate = new Date().toISOString().split('T')[0];
@@ -28,27 +65,106 @@ const StudentAttendance = () => {
     );
 
     const summary = data?.data?.summary;
-    const attendance = data?.data?.attendance || [];
+    const rawAttendance = (data?.data?.attendance || []) as AttendanceRecord[];
 
-    // Calculate attendance percentage
+    // Calculate attendance statistics
     const totalDays = summary?.total || 0;
     const presentDays = (summary?.present || 0) + (summary?.late || 0);
-    const percentage = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(1) : 0;
+    const percentage = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(1) : '0';
+    const pctNumber = parseFloat(percentage);
 
-    // Get last 7 days attendance for mini chart
-    const last7Days = attendance.slice(0, 7).reverse();
+    // Last 7 days attendance
+    const last7Days = useMemo(() => {
+        return [...rawAttendance]
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+            .slice(-7);
+    }, [rawAttendance]);
 
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'present': return '#10b981';
-            case 'absent': return '#ef4444';
-            case 'late': return '#f59e0b';
-            case 'half_day': return '#3b82f6';
-            case 'leave': return '#6b7280';
-            default: return '#d1d5db';
+    // Streaks calculation
+    const { currentStreak, longestStreak } = useMemo(() => {
+        const sorted = [...rawAttendance].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        let cur = 0, longest = 0, streak = 0;
+        sorted.forEach(r => {
+            if (r.status === 'present' || r.status === 'late') {
+                streak++;
+                if (streak > longest) longest = streak;
+            } else {
+                streak = 0;
+            }
+        });
+        for (let i = sorted.length - 1; i >= 0; i--) {
+            if (sorted[i].status === 'present' || sorted[i].status === 'late') cur++;
+            else break;
+        }
+        return { currentStreak: cur, longestStreak: longest };
+    }, [rawAttendance]);
+
+    // Google Chart data for Donut
+    const donutData = useMemo(() => {
+        return [
+            ['Status', 'Days'],
+            ['Present', summary?.present || 0],
+            ['Absent', summary?.absent || 0],
+            ['Late', summary?.late || 0],
+            ['Half Day', summary?.halfDay || 0],
+            ['Leave', summary?.leave || 0],
+        ];
+    }, [summary]);
+
+    // Export handlers
+    const dateRangeLabel = 'Last 30 Days';
+
+    const handleExportPDF = () => {
+        setExporting('pdf');
+        try {
+            exportAttendancePDF(
+                rawAttendance,
+                {
+                    total: totalDays,
+                    present: summary?.present || 0,
+                    absent: summary?.absent || 0,
+                    late: summary?.late || 0,
+                    percentage,
+                } as AttendanceSummaryData,
+                {
+                    studentName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Student',
+                    className: user?.className,
+                    sectionName: user?.sectionName,
+                    rollNumber: user?.rollNumber,
+                    dateRangeLabel,
+                }
+            );
+        } finally {
+            setExporting(null);
         }
     };
 
+    const handleExportExcel = async () => {
+        setExporting('excel');
+        try {
+            await exportAttendanceExcel(
+                rawAttendance,
+                {
+                    total: totalDays,
+                    present: summary?.present || 0,
+                    absent: summary?.absent || 0,
+                    late: summary?.late || 0,
+                    percentage,
+                } as AttendanceSummaryData,
+                {
+                    studentName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Student',
+                    className: user?.className,
+                    sectionName: user?.sectionName,
+                    rollNumber: user?.rollNumber,
+                    dateRangeLabel,
+                }
+            );
+        } finally {
+            setExporting(null);
+        }
+    };
+
+    const getStatusColor = (status: string) => STATUS_COLORS[status] || '#64748b';
     const getStatusLabel = (status: string) => {
         switch (status) {
             case 'present': return 'P';
@@ -60,140 +176,158 @@ const StudentAttendance = () => {
         }
     };
 
+    const percentageColor = pctNumber >= 90 ? '#10b981' : pctNumber >= 75 ? '#f59e0b' : '#ef4444';
+
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 1300, mx: 'auto' }}>
             {/* Header */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-                <Box>
-                    <Typography
-                        variant="h4"
-                        fontWeight={600}
-                        color="#1e293b"
-                        sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}
-                    >
-                        My Attendance
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        Track your attendance records and statistics
-                    </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: '#eff6ff' }}>
+                        <CalendarIcon sx={{ color: '#2563eb', fontSize: 28 }} />
+                    </Box>
+                    <Box>
+                        <Typography
+                            variant="h4"
+                            fontWeight={800}
+                            color="#1e293b"
+                            sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}
+                        >
+                            My Attendance
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            Track your attendance records, streaks, and analytics
+                        </Typography>
+                    </Box>
                 </Box>
-                <Button
-                    variant="contained"
-                    startIcon={<HistoryIcon />}
-                    onClick={() => navigate('/student/attendance/history')}
-                    sx={{
-                        bgcolor: '#3b82f6',
-                        '&:hover': { bgcolor: '#2563eb' },
-                        borderRadius: 2,
-                        textTransform: 'none',
-                        fontWeight: 600,
-                    }}
-                >
-                    View Full History
-                </Button>
+                <Stack direction="row" spacing={1.5} flexWrap="wrap">
+                    <ButtonGroup variant="contained" size="small" disableElevation>
+                        <Button
+                            startIcon={<PdfIcon />}
+                            onClick={handleExportPDF}
+                            disabled={!rawAttendance.length || exporting === 'pdf'}
+                            sx={{ bgcolor: '#dc2626', '&:hover': { bgcolor: '#b91c1c' }, borderRadius: '8px 0 0 8px', fontWeight: 600 }}
+                        >
+                            {exporting === 'pdf' ? 'Generating…' : 'PDF'}
+                        </Button>
+                        <Button
+                            startIcon={<ExcelIcon />}
+                            onClick={handleExportExcel}
+                            disabled={!rawAttendance.length || exporting === 'excel'}
+                            sx={{ bgcolor: '#16a34a', '&:hover': { bgcolor: '#15803d' }, borderRadius: '0 8px 8px 0', fontWeight: 600 }}
+                        >
+                            {exporting === 'excel' ? 'Generating…' : 'Excel'}
+                        </Button>
+                    </ButtonGroup>
+                    <Button
+                        variant="contained"
+                        startIcon={<HistoryIcon />}
+                        onClick={() => navigate('/student/attendance/history')}
+                        sx={{
+                            bgcolor: '#3b82f6',
+                            '&:hover': { bgcolor: '#2563eb' },
+                            borderRadius: 2,
+                            textTransform: 'none',
+                            fontWeight: 700,
+                            px: 2.5,
+                        }}
+                    >
+                        View Full History
+                    </Button>
+                </Stack>
             </Box>
 
             {isLoading && (
                 <Grid container spacing={3}>
                     <Grid size={{ xs: 12, md: 4 }}>
-                        <Skeleton variant="rounded" height={280} />
+                        <Skeleton variant="rounded" height={340} sx={{ borderRadius: 3 }} />
                     </Grid>
                     <Grid size={{ xs: 12, md: 8 }}>
-                        <Skeleton variant="rounded" height={280} />
+                        <Skeleton variant="rounded" height={340} sx={{ borderRadius: 3 }} />
                     </Grid>
                 </Grid>
             )}
 
             {error && (
-                <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#fef2f2', border: '1px solid #fecaca' }}>
-                    <Typography color="error">Failed to load attendance data. Please try again.</Typography>
+                <Paper sx={{ p: 3, textAlign: 'center', bgcolor: '#fef2f2', border: '1px solid #fecaca', borderRadius: 3 }}>
+                    <Typography color="error" fontWeight={600}>Failed to load attendance data. Please try again later.</Typography>
                 </Paper>
             )}
 
             {!isLoading && !error && (
                 <Grid container spacing={3}>
-                    {/* Main Attendance Card */}
+                    {/* Main Attendance Rate Card */}
                     <Grid size={{ xs: 12, md: 4 }}>
                         <Paper
+                            elevation={0}
                             sx={{
                                 p: 3,
-                                borderRadius: 3,
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                borderRadius: 4,
+                                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
                                 color: 'white',
                                 height: '100%',
-                                minHeight: 320,
+                                minHeight: 340,
                                 position: 'relative',
                                 overflow: 'hidden',
                                 display: 'flex',
                                 flexDirection: 'column',
+                                boxShadow: '0 12px 30px -10px rgba(99, 102, 241, 0.4)',
                             }}
                         >
                             <Box sx={{
-                                position: 'absolute',
-                                top: -50,
-                                right: -50,
-                                width: 150,
-                                height: 150,
-                                borderRadius: '50%',
-                                background: 'rgba(255,255,255,0.1)'
+                                position: 'absolute', top: -40, right: -40, width: 140, height: 140,
+                                borderRadius: '50%', background: 'rgba(255,255,255,0.12)'
                             }} />
 
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                 <TrendingUpIcon />
-                                <Typography variant="h6" fontWeight={600}>Attendance Rate</Typography>
+                                <Typography variant="h6" fontWeight={700}>Attendance Rate</Typography>
                             </Box>
+                            <Typography variant="caption" sx={{ opacity: 0.85, mb: 2 }}>Based on last 30 days</Typography>
 
-                            {/* Circular Progress */}
-                            <Box sx={{ display: 'flex', justifyContent: 'center', flex: 1, alignItems: 'center' }}>
-                                <Box sx={{ position: 'relative', display: 'inline-flex' }}>
-                                    <CircularProgress
-                                        variant="determinate"
-                                        value={Number(percentage)}
-                                        size={150}
-                                        thickness={4}
-                                        sx={{
-                                            color: 'rgba(255,255,255,0.9)',
-                                            '& .MuiCircularProgress-circle': {
-                                                strokeLinecap: 'round',
-                                            },
-                                        }}
-                                    />
-                                    <Box
-                                        sx={{
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: 0,
-                                            bottom: 0,
-                                            right: 0,
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                        }}
-                                    >
-                                        <Typography variant="h4" fontWeight={700}>
-                                            {percentage}%
-                                        </Typography>
-                                        <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                                            Last 30 Days
-                                        </Typography>
-                                    </Box>
+                            {/* Chart / Circular Gauge */}
+                            <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', py: 1 }}>
+                                <Chart
+                                    chartType="PieChart"
+                                    data={donutData}
+                                    options={{
+                                        pieHole: 0.7,
+                                        colors: ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'],
+                                        legend: 'none',
+                                        chartArea: { width: '90%', height: '90%' },
+                                        backgroundColor: 'transparent',
+                                        pieSliceBorderColor: 'transparent',
+                                        tooltip: { trigger: 'focus' },
+                                    }}
+                                    width="190px"
+                                    height="190px"
+                                />
+                                <Box sx={{
+                                    position: 'absolute', display: 'flex', flexDirection: 'column',
+                                    alignItems: 'center', justifyContent: 'center', textAlign: 'center', pointerEvents: 'none'
+                                }}>
+                                    <Typography variant="h3" fontWeight={800} sx={{ lineHeight: 1 }}>
+                                        {percentage}%
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ opacity: 0.9, fontWeight: 600, mt: 0.5 }}>
+                                        Overall Rate
+                                    </Typography>
                                 </Box>
                             </Box>
 
-                            {/* Stats Summary */}
+                            {/* Stats Summary Chips */}
                             <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mt: 2, flexWrap: 'wrap' }}>
                                 <Chip
-                                    icon={<PresentIcon sx={{ color: 'white !important', fontSize: 16 }} />}
+                                    icon={<PresentIcon sx={{ color: '#10b981 !important', fontSize: 16 }} />}
                                     label={`${presentDays} Present`}
                                     size="small"
-                                    sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 600 }}
+                                    sx={{ bgcolor: 'rgba(255,255,255,0.9)', color: '#065f46', fontWeight: 700 }}
                                 />
                                 <Chip
-                                    icon={<AbsentIcon sx={{ color: 'white !important', fontSize: 16 }} />}
+                                    icon={<AbsentIcon sx={{ color: '#ef4444 !important', fontSize: 16 }} />}
                                     label={`${summary?.absent || 0} Absent`}
                                     size="small"
-                                    sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', fontWeight: 600 }}
+                                    sx={{ bgcolor: 'rgba(255,255,255,0.9)', color: '#991b1b', fontWeight: 700 }}
                                 />
                             </Box>
                         </Paper>
@@ -201,112 +335,111 @@ const StudentAttendance = () => {
 
                     {/* Right Side Content */}
                     <Grid size={{ xs: 12, md: 8 }}>
-                        {/* Stats Cards */}
-                        <Grid container spacing={2} sx={{ mb: 2 }}>
-                            <Grid size={{ xs: 6, sm: 3 }}>
-                                <Card sx={{ borderRadius: 2, bgcolor: '#ecfdf5', border: '1px solid #a7f3d0', height: '100%' }}>
-                                    <CardContent sx={{ textAlign: 'center', p: 2, '&:last-child': { pb: 2 } }}>
-                                        <PresentIcon sx={{ fontSize: 32, color: '#10b981', mb: 0.5 }} />
-                                        <Typography variant="h5" fontWeight={700} color="#10b981">
-                                            {summary?.present || 0}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">Present</Typography>
-                                    </CardContent>
+                        {/* Stat Cards Row */}
+                        <Grid container spacing={2} sx={{ mb: 2.5 }}>
+                            {[
+                                { label: 'Present', value: summary?.present || 0, color: '#10b981', bg: '#ecfdf5', icon: <PresentIcon /> },
+                                { label: 'Absent', value: summary?.absent || 0, color: '#ef4444', bg: '#fef2f2', icon: <AbsentIcon /> },
+                                { label: 'Late', value: summary?.late || 0, color: '#f59e0b', bg: '#fffbeb', icon: <LateIcon /> },
+                                { label: 'Leave', value: summary?.leave || 0, color: '#8b5cf6', bg: '#f5f3ff', icon: <CalendarIcon /> },
+                            ].map((stat) => (
+                                <Grid size={{ xs: 6, sm: 3 }} key={stat.label}>
+                                    <Card elevation={0} sx={{ borderRadius: 3, bgcolor: stat.bg, border: `1px solid ${stat.color}30`, height: '100%' }}>
+                                        <CardContent sx={{ textAlign: 'center', p: 2, '&:last-child': { pb: 2 } }}>
+                                            <Box sx={{ color: stat.color, display: 'flex', justifyContent: 'center', mb: 0.5 }}>
+                                                {React.cloneElement(stat.icon, { sx: { fontSize: 30 } })}
+                                            </Box>
+                                            <Typography variant="h4" fontWeight={800} sx={{ color: stat.color }}>
+                                                {stat.value}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary" fontWeight={600}>{stat.label}</Typography>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            ))}
+                        </Grid>
+
+                        {/* Streaks Banner */}
+                        <Grid container spacing={2} sx={{ mb: 2.5 }}>
+                            <Grid size={{ xs: 6 }}>
+                                <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #fde68a', bgcolor: '#fffbeb', p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: '#fef3c7', color: '#d97706' }}>
+                                        <StreakIcon sx={{ fontSize: 30 }} />
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="h5" fontWeight={800} color="#92400e">{currentStreak} Days</Typography>
+                                        <Typography variant="caption" fontWeight={700} color="#b45309">Current Attendance Streak</Typography>
+                                    </Box>
                                 </Card>
                             </Grid>
-                            <Grid size={{ xs: 6, sm: 3 }}>
-                                <Card sx={{ borderRadius: 2, bgcolor: '#fef2f2', border: '1px solid #fecaca', height: '100%' }}>
-                                    <CardContent sx={{ textAlign: 'center', p: 2, '&:last-child': { pb: 2 } }}>
-                                        <AbsentIcon sx={{ fontSize: 32, color: '#ef4444', mb: 0.5 }} />
-                                        <Typography variant="h5" fontWeight={700} color="#ef4444">
-                                            {summary?.absent || 0}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">Absent</Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                            <Grid size={{ xs: 6, sm: 3 }}>
-                                <Card sx={{ borderRadius: 2, bgcolor: '#fffbeb', border: '1px solid #fde68a', height: '100%' }}>
-                                    <CardContent sx={{ textAlign: 'center', p: 2, '&:last-child': { pb: 2 } }}>
-                                        <LateIcon sx={{ fontSize: 32, color: '#f59e0b', mb: 0.5 }} />
-                                        <Typography variant="h5" fontWeight={700} color="#f59e0b">
-                                            {summary?.late || 0}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">Late</Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                            <Grid size={{ xs: 6, sm: 3 }}>
-                                <Card sx={{ borderRadius: 2, bgcolor: '#f3f4f6', border: '1px solid #d1d5db', height: '100%' }}>
-                                    <CardContent sx={{ textAlign: 'center', p: 2, '&:last-child': { pb: 2 } }}>
-                                        <CalendarIcon sx={{ fontSize: 32, color: '#6b7280', mb: 0.5 }} />
-                                        <Typography variant="h5" fontWeight={700} color="#6b7280">
-                                            {summary?.leave || 0}
-                                        </Typography>
-                                        <Typography variant="caption" color="text.secondary">Leave</Typography>
-                                    </CardContent>
+                            <Grid size={{ xs: 6 }}>
+                                <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #bbf7d0', bgcolor: '#f0fdf4', p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: '#dcfce7', color: '#16a34a' }}>
+                                        <TrendingUpIcon sx={{ fontSize: 30 }} />
+                                    </Box>
+                                    <Box>
+                                        <Typography variant="h5" fontWeight={800} color="#065f46">{longestStreak} Days</Typography>
+                                        <Typography variant="caption" fontWeight={700} color="#047857">Best Streak in 30 Days</Typography>
+                                    </Box>
                                 </Card>
                             </Grid>
                         </Grid>
 
-                        {/* Last 7 Days */}
-                        <Card sx={{ borderRadius: 2, mb: 2 }}>
-                            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                                <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>
-                                    Last 7 Days
-                                </Typography>
+                        {/* Last 7 Days Activity */}
+                        <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', mb: 2.5 }}>
+                            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                    <Typography variant="subtitle1" fontWeight={700} color="#1e293b">
+                                        Last 7 Days Record
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                        Recent activity log
+                                    </Typography>
+                                </Box>
                                 <Box sx={{
                                     display: 'grid',
-                                    gridTemplateColumns: 'repeat(7, 1fr)',
-                                    gap: 1
+                                    gridTemplateColumns: { xs: 'repeat(4, 1fr)', sm: 'repeat(7, 1fr)' },
+                                    gap: 1.5
                                 }}>
-                                    {last7Days.length > 0 ? last7Days.map((day: { date: string; status: string }, idx: number) => (
-                                        <Box
-                                            key={idx}
-                                            sx={{
-                                                textAlign: 'center',
-                                                p: 1,
-                                                borderRadius: 2,
-                                                bgcolor: `${getStatusColor(day.status)}15`,
-                                                border: `2px solid ${getStatusColor(day.status)}`,
-                                                minWidth: 0,
-                                            }}
-                                        >
-                                            <Typography variant="caption" color="text.secondary" display="block" noWrap>
-                                                {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
-                                            </Typography>
-                                            <Typography
-                                                variant="h6"
-                                                fontWeight={700}
-                                                sx={{ color: getStatusColor(day.status), lineHeight: 1.2 }}
-                                            >
-                                                {getStatusLabel(day.status)}
-                                            </Typography>
-                                            <Typography variant="caption" color="text.secondary">
-                                                {new Date(day.date).getDate()}
-                                            </Typography>
-                                        </Box>
-                                    )) : (
+                                    {last7Days.length > 0 ? last7Days.map((day: AttendanceRecord, idx: number) => {
+                                        const color = getStatusColor(day.status);
+                                        const bg = STATUS_BG[day.status] || '#f8fafc';
+                                        const d = new Date(day.date);
+                                        return (
+                                            <Tooltip key={idx} title={`${d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}: ${STATUS_LABELS[day.status] || day.status}`}>
+                                                <Box
+                                                    sx={{
+                                                        textAlign: 'center',
+                                                        p: 1.5,
+                                                        borderRadius: 2.5,
+                                                        bgcolor: bg,
+                                                        border: `2px solid ${color}40`,
+                                                        transition: 'transform 0.2s',
+                                                        '&:hover': { transform: 'translateY(-2px)' }
+                                                    }}
+                                                >
+                                                    <Typography variant="caption" color="text.secondary" display="block" fontWeight={600} noWrap>
+                                                        {d.toLocaleDateString('en-US', { weekday: 'short' })}
+                                                    </Typography>
+                                                    <Typography
+                                                        variant="h5"
+                                                        fontWeight={800}
+                                                        sx={{ color, my: 0.5, lineHeight: 1 }}
+                                                    >
+                                                        {getStatusLabel(day.status)}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                                        {d.getDate()}
+                                                    </Typography>
+                                                </Box>
+                                            </Tooltip>
+                                        );
+                                    }) : (
                                         Array.from({ length: 7 }).map((_, idx) => (
-                                            <Box
-                                                key={idx}
-                                                sx={{
-                                                    textAlign: 'center',
-                                                    p: 1,
-                                                    borderRadius: 2,
-                                                    bgcolor: '#f3f4f6',
-                                                    border: '2px solid #d1d5db',
-                                                }}
-                                            >
-                                                <Typography variant="caption" color="text.secondary" display="block">
-                                                    -
-                                                </Typography>
-                                                <Typography variant="h6" fontWeight={700} color="text.disabled">
-                                                    -
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    -
-                                                </Typography>
+                                            <Box key={idx} sx={{ textAlign: 'center', p: 1.5, borderRadius: 2.5, bgcolor: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                                <Typography variant="caption" color="text.secondary">-</Typography>
+                                                <Typography variant="h5" fontWeight={700} color="text.disabled" sx={{ my: 0.5 }}>-</Typography>
+                                                <Typography variant="caption" color="text.secondary">-</Typography>
                                             </Box>
                                         ))
                                     )}
@@ -314,31 +447,35 @@ const StudentAttendance = () => {
                             </CardContent>
                         </Card>
 
-                        {/* Progress Bar */}
-                        <Card sx={{ borderRadius: 2 }}>
-                            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                        {/* Attendance Progress Bar */}
+                        <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0' }}>
+                            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                    <Typography variant="body2" color="text.secondary">
+                                    <Typography variant="body2" color="text.secondary" fontWeight={600}>
                                         Overall Attendance Progress
                                     </Typography>
-                                    <Typography variant="body2" fontWeight={600}>
-                                        {presentDays}/{totalDays} days
+                                    <Typography variant="body2" fontWeight={700} color="#1e293b">
+                                        {presentDays} / {totalDays} days ({percentage}%)
                                     </Typography>
                                 </Box>
                                 <LinearProgress
                                     variant="determinate"
-                                    value={Number(percentage)}
+                                    value={Math.min(pctNumber, 100)}
                                     sx={{
-                                        height: 10,
-                                        borderRadius: 5,
-                                        bgcolor: '#e5e7eb',
+                                        height: 12,
+                                        borderRadius: 6,
+                                        bgcolor: '#f1f5f9',
                                         '& .MuiLinearProgress-bar': {
-                                            borderRadius: 5,
-                                            bgcolor: Number(percentage) >= 75 ? '#10b981' :
-                                                Number(percentage) >= 50 ? '#f59e0b' : '#ef4444',
+                                            borderRadius: 6,
+                                            bgcolor: percentageColor,
                                         },
                                     }}
                                 />
+                                {pctNumber < 75 && pctNumber > 0 && (
+                                    <Typography variant="caption" color="error.main" fontWeight={600} sx={{ mt: 1, display: 'block' }}>
+                                        ⚠️ Attendance is below the required 75% threshold.
+                                    </Typography>
+                                )}
                             </CardContent>
                         </Card>
                     </Grid>

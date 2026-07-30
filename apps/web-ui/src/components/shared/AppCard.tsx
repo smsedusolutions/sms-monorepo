@@ -14,14 +14,17 @@ export const AppCard: React.FC<AppCardProps> = ({
   children, 
   hover = true, 
   sx, 
+  onClick,
   ...props 
 }) => {
   return (
     <MotionCard
       whileHover={hover ? { y: -4, boxShadow: '0 12px 24px -10px rgba(0,0,0,0.15)' } : {}}
       transition={{ duration: 0.2 }}
+      onClick={onClick}
       sx={{
         overflow: 'visible',
+        cursor: onClick ? 'pointer' : 'default',
         ...sx
       }}
       {...props as any}

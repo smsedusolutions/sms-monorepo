@@ -306,16 +306,25 @@ const getAllParents = async (req, res) => {
 
     const { page, limit, skip } = getPaginationParams(req.query);
 
-    // If teacher role, only get parents of students in their classes
-    if (userRole === "teacher" && userClasses && userClasses.length > 0) {
-      // First, find all students in teacher's classes
-      const studentsInClasses = await Student.find({
-        class: { $in: userClasses },
-      }).select("studentId");
-
+    const classFilter = req.query.class || req.query.classId;
+    if (classFilter) {
+      const studentQuery = { class: classFilter };
+      if (userRole === "teacher" && userClasses && userClasses.length > 0) {
+        const allowedCombinations = userClasses.map((uc) => {
+          const [cls, sec] = uc.split('#');
+          return sec ? { class: cls, section: sec } : { class: cls };
+        });
+        studentQuery.$or = allowedCombinations;
+      }
+      const matchingStudents = await Student.find(studentQuery).select("studentId");
+      query.studentIds = { $in: matchingStudents.map((s) => s.studentId) };
+    } else if (userRole === "teacher" && userClasses && userClasses.length > 0) {
+      const allowedCombinations = userClasses.map((uc) => {
+        const [cls, sec] = uc.split('#');
+        return sec ? { class: cls, section: sec } : { class: cls };
+      });
+      const studentsInClasses = await Student.find({ $or: allowedCombinations }).select("studentId");
       const studentIds = studentsInClasses.map((s) => s.studentId);
-
-      // Then, find parents who have these students
       query.studentIds = { $in: studentIds };
     }
 

@@ -6,7 +6,7 @@ import TokenService from '../queries/token/tokenService';
 
 export const useUserStore = create<UserStore>()(
     persist(
-        (set) => ({
+        (set, get) => ({
             // Initial state
             user: null,
             school: null,
@@ -18,7 +18,8 @@ export const useUserStore = create<UserStore>()(
 
             setSchool: (school) => set({ school }),
 
-            fetchProfile: async () => {
+            fetchProfile: async (force = false) => {
+                if (!force && (get().user || get().isLoading)) return;
                 set({ isLoading: true, error: null });
 
                 try {

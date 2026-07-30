@@ -179,6 +179,8 @@ export interface UpdateSchoolAdminPayload {
 
 // Teacher Types
 export interface Teacher {
+  _id?: string;
+  userId?: string;
   teacherId: string;
   schoolId: string;
   schoolName?: string;
@@ -364,6 +366,7 @@ export interface ParentFilters {
   status?: "active" | "inactive";
   relationship?: "father" | "mother" | "guardian" | "other";
   search?: string;
+  class?: string;
   page?: number;
   limit?: number;
 }
@@ -450,7 +453,6 @@ export interface ClassFilters {
   status?: "active" | "inactive";
 }
 
-// Subject Types
 export interface Subject {
   subjectId: string;
   schoolId: string;
@@ -462,16 +464,19 @@ export interface Subject {
   assignedTeacherId?: string;
   assignedTeacherIds?: string[];
   classId?: string;
+  isSubSubject?: boolean;
+  parentSubjectId?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
-
 
 export interface CreateSubjectPayload {
   name: string;
   code: string;
   description?: string;
   classId?: string;
+  isSubSubject?: boolean;
+  parentSubjectId?: string | null;
 }
 
 export interface UpdateSubjectPayload {
@@ -480,6 +485,8 @@ export interface UpdateSubjectPayload {
   description?: string;
   status?: "active" | "inactive";
   classId?: string;
+  isSubSubject?: boolean;
+  parentSubjectId?: string | null;
 }
 
 export interface SubjectFilters {

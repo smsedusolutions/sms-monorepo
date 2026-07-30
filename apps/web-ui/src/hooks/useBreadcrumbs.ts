@@ -73,12 +73,14 @@ const ROUTE_LABELS: Record<string, string> = {
   '/teacher/parents': 'Parents',
   '/teacher/attendance': 'Attendance',
   '/teacher/my-requests': 'My Requests',
-  '/teacher/leave': 'Leave Management',
+  '/teacher/leave': 'Leave',
   '/teacher/leave/apply': 'Apply Leave',
   '/teacher/leave/my': 'My Leaves',
   '/teacher/leave/students': 'Student Leaves',
   '/teacher/timetable': 'My Timetable',
+  '/teacher/exam': 'Exam',
   '/teacher/exam/marks': 'Marks Entry',
+  '/teacher/exam/scheduler': 'Exam Schedule',
   '/teacher/homework': 'Homework',
   '/teacher/homework/create': 'Create Homework',
   '/teacher/announcements': 'Announcements',
@@ -96,6 +98,7 @@ const ROUTE_LABELS: Record<string, string> = {
   '/student/leave/apply': 'Apply Leave',
   '/student/leave/my': 'My Leaves',
   '/student/timetable': 'My Timetable',
+  '/student/exam': 'Exam',
   '/student/exam/my-exams': 'My Exams',
   '/student/homework': 'Homework',
   '/student/announcements': 'Announcements',
@@ -114,6 +117,7 @@ const ROUTE_LABELS: Record<string, string> = {
   '/parent/leave': 'Leave',
   '/parent/leave/apply': 'Apply Leave',
   '/parent/leave/history': 'Leave History',
+  '/parent/exam': 'Exam',
   '/parent/exam/scheduler': 'Exam Schedule',
   '/parent/exam/results': 'Exam Results',
   '/parent/notifications': 'Notifications',
@@ -126,16 +130,27 @@ const ROUTE_LABELS: Record<string, string> = {
   '/driver/notifications': 'Notifications',
 };
 
-// Target links for intermediate parent path segments
-const ROUTE_PARENT_TARGETS: Record<string, string> = {
-  '/school-admin/timetable': '/school-admin/timetable/master',
-  '/school-admin/transport': '/school-admin/transport',
-  '/school-admin/exam': '/school-admin/exam/config',
-  '/school-admin/fees': '/school-admin/fees/dashboard',
-  '/teacher/leave': '/teacher/leave/my',
-  '/student/leave': '/student/leave/my',
-  '/parent/leave': '/parent/leave/history',
-};
+// Paths that are purely collapsible sidebar menu headers (not standalone page routes)
+const NON_LINKABLE_CATEGORY_PATHS = new Set([
+  // School Admin
+  '/school-admin/timetable',
+  '/school-admin/transport',
+  '/school-admin/exam',
+  '/school-admin/fees',
+
+  // Teacher
+  '/teacher/exam',
+  '/teacher/leave',
+  '/teacher/homework',
+
+  // Student
+  '/student/exam',
+  '/student/leave',
+
+  // Parent
+  '/parent/exam',
+  '/parent/leave',
+]);
 
 /**
  * Reusable hook to generate breadcrumbs dynamically based on the current location.
@@ -213,12 +228,13 @@ export const useBreadcrumbs = () => {
         .replace(/\b\w/g, (char) => char.toUpperCase());
     }
 
-    const targetPath =
-      ROUTE_PARENT_TARGETS[currentAccumulatedPath] || currentAccumulatedPath;
+    // If it's the current page (isLast) or a non-linkable menu folder (e.g. /teacher/exam), don't provide a clickable path
+    const isCategoryHeader = NON_LINKABLE_CATEGORY_PATHS.has(currentAccumulatedPath);
+    const itemPath = (isLast || isCategoryHeader) ? undefined : currentAccumulatedPath;
 
     items.push({
       label,
-      path: isLast ? undefined : targetPath,
+      path: itemPath,
       isCurrent: isLast,
     });
   }

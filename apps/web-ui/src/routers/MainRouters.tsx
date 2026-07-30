@@ -85,6 +85,7 @@ const TeacherMyLeaves = lazy(() => import("../pages/Teacher/Leave/MyLeaves"));
 const TeacherStudentLeaves = lazy(() => import("../pages/Teacher/Leave/StudentLeaves"));
 const TeacherTimetable = lazy(() => import("../pages/Teacher/Timetable/MyTimetable"));
 const MarksEntry = lazy(() => import("../pages/Teacher/Exam/MarksEntry"));
+const TeacherExamScheduler = lazy(() => import("../pages/Teacher/Exam/ExamScheduler"));
 
 // Student Pages
 const StudentDashboard = lazy(() => import("../pages/Student/Dashboard"));
@@ -269,6 +270,7 @@ const MainRouters = () => {
           <Route path="/teacher/leave/students" element={<TeacherStudentLeaves />} />
           <Route path="/teacher/timetable" element={<TeacherTimetable />} />
           <Route path="/teacher/exam/marks" element={<MarksEntry />} />
+          <Route path="/teacher/exam/scheduler" element={<TeacherExamScheduler />} />
 
           {/* Homework Routes (Teacher) */}
           <Route path="/teacher/homework" element={<TeacherHomework />} />

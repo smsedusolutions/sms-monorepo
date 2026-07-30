@@ -395,11 +395,20 @@ const getAllStudents = async (req, res) => {
     if (status) query.status = status;
     if (parentId) query.parentId = parentId;
 
-    // Search filter (firstName, lastName, or studentId)
+    // Search filter (firstName, lastName, studentId, email, or parentName)
     if (req.query.search) {
       const search = req.query.search.trim();
       const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const searchRegex = new RegExp(escapedSearch, "i");
+
+      // Find parent IDs matching the search term
+      const matchingParents = await Parent.find({
+        $or: [
+          { firstName: searchRegex },
+          { lastName: searchRegex },
+        ],
+      }).select("parentId");
+      const matchingParentIds = matchingParents.map((p) => p.parentId).filter(Boolean);
 
       const searchConditions = [
         { firstName: searchRegex },
@@ -407,6 +416,10 @@ const getAllStudents = async (req, res) => {
         { studentId: searchRegex },
         { email: searchRegex },
       ];
+
+      if (matchingParentIds.length > 0) {
+        searchConditions.push({ parentId: { $in: matchingParentIds } });
+      }
 
       // Handle full names if search contains space
       if (search.includes(" ")) {

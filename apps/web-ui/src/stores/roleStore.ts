@@ -13,7 +13,7 @@ interface RoleState {
   roles: Role[];
   isLoading: boolean;
   error: string | null;
-  fetchRoles: () => Promise<void>;
+  fetchRoles: (force?: boolean) => Promise<void>;
   getRoleByCode: (code: string) => Role | undefined;
   getPrefix: (code: string) => string;
   getBasePath: (code: string) => string;
@@ -27,7 +27,8 @@ export const useRoleStore = create<RoleState>()(
       isLoading: false,
       error: null,
 
-      fetchRoles: async () => {
+      fetchRoles: async (force = false) => {
+        if (!force && (get().roles.length > 0 || get().isLoading)) return;
         set({ isLoading: true, error: null });
         try {
           const response = await useApi<RolesResponse>("GET", "/api/roles", undefined, { activeOnly: "true" });

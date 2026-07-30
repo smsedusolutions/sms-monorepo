@@ -36,6 +36,7 @@ export const useGetParents = (schoolId: string, filters?: ParentFilters) => {
         if (filters.relationship)
           queryParams.append("relationship", filters.relationship);
         if (filters.search) queryParams.append("search", filters.search);
+        if (filters.class) queryParams.append("class", filters.class);
       }
 
       const queryString = queryParams.toString();

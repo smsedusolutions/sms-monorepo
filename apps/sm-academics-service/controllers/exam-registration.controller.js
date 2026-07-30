@@ -161,7 +161,7 @@ const bulkGenerateAdmitCards = async (req, res) => {
 const getExamRegistrations = async (req, res) => {
     try {
         const { schoolId, examId } = req.params;
-        const { classId, search } = req.query;
+        const { classId, search, page, limit } = req.query;
 
         const schoolDbName = await getSchoolDbName(schoolId);
         const schoolDb = getSchoolDbConnection(schoolDbName);
@@ -175,17 +175,26 @@ const getExamRegistrations = async (req, res) => {
         const query = { schoolId, examId };
         if (classId) query.classId = classId;
 
-        let registrations = await StudentExamRegistration.find(query).lean();
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+        const isPaginated = pageNum > 0 && limitNum > 0;
 
-        // Get all student IDs
+        let total = await StudentExamRegistration.countDocuments(query);
+        let registrationsQuery = StudentExamRegistration.find(query).lean();
+
+        if (isPaginated && (!search || !search.trim())) {
+            registrationsQuery = registrationsQuery.skip((pageNum - 1) * limitNum).limit(limitNum);
+        }
+
+        let registrations = await registrationsQuery;
         let studentIds = registrations.map(r => r.studentId);
 
         // If search query provided, filter students by name or ID
         let studentQuery = { studentId: { $in: studentIds } };
         if (search && search.trim()) {
             const searchRegex = new RegExp(search.trim(), 'i');
-            studentQuery = {
-                studentId: { $in: studentIds },
+            const searchStudentQuery = {
+                schoolId,
                 $or: [
                     { studentId: searchRegex },
                     { firstName: searchRegex },
@@ -194,21 +203,35 @@ const getExamRegistrations = async (req, res) => {
                     { rollNumber: searchRegex }
                 ]
             };
+
+            const matchingStudents = await Student.find(searchStudentQuery).select('studentId').lean();
+            const matchingStudentIds = matchingStudents.map(s => s.studentId);
+
+            query.studentId = { $in: matchingStudentIds };
+            total = await StudentExamRegistration.countDocuments(query);
+
+            let searchRegQuery = StudentExamRegistration.find(query).lean();
+            if (isPaginated) {
+                searchRegQuery = searchRegQuery.skip((pageNum - 1) * limitNum).limit(limitNum);
+            }
+            registrations = await searchRegQuery;
+            studentIds = registrations.map(r => r.studentId);
+            studentQuery = { studentId: { $in: studentIds } };
         }
 
-        // Enrich with student names and additional details
+        // Enrich only the paginated batch of students
         const students = await Student.find(studentQuery)
             .select('studentId firstName lastName email class section rollNumber profileImage dateOfBirth signature parentId')
             .lean();
 
-        // Get all parent IDs and fetch parent data
+        // Get parent IDs ONLY for this batch of students
         const parentIds = [...new Set(students.filter(s => s.parentId).map(s => s.parentId))];
-        const allParents = await Parent.find({
+        const allParents = (parentIds.length > 0 || studentIds.length > 0) ? await Parent.find({
             $or: [
                 { parentId: { $in: parentIds } },
                 { studentIds: { $in: studentIds } }
             ]
-        }).select('parentId firstName lastName relationship studentIds').lean();
+        }).select('parentId firstName lastName relationship studentIds').lean() : [];
 
         // Build parent map by parentId and by studentId
         const parentByIdMap = {};
@@ -216,7 +239,6 @@ const getExamRegistrations = async (req, res) => {
 
         allParents.forEach(p => {
             parentByIdMap[p.parentId] = p;
-            // Map parents by studentIds they're linked to
             (p.studentIds || []).forEach(sid => {
                 if (!parentsByStudentId[sid]) {
                     parentsByStudentId[sid] = [];
@@ -231,7 +253,6 @@ const getExamRegistrations = async (req, res) => {
             const studentParents = parentsByStudentId[s.studentId] || [];
             const primaryParent = s.parentId ? parentByIdMap[s.parentId] : null;
 
-            // Find father, mother, guardian from all parents linked to student
             const father = studentParents.find(p => p.relationship === 'father');
             const mother = studentParents.find(p => p.relationship === 'mother');
             const guardian = studentParents.find(p => p.relationship === 'guardian');
@@ -264,27 +285,17 @@ const getExamRegistrations = async (req, res) => {
             };
         });
 
-        // If search was applied, filter registrations to only include matching students
-        let enrichedRegistrations;
-        if (search && search.trim()) {
-            // Only return registrations for students that matched the search
-            enrichedRegistrations = registrations
-                .filter(r => studentMap[r.studentId])
-                .map(r => ({
-                    ...r,
-                    student: studentMap[r.studentId]
-                }));
-        } else {
-            enrichedRegistrations = registrations.map(r => ({
-                ...r,
-                student: studentMap[r.studentId] || null
-            }));
-        }
+        const enrichedRegistrations = registrations.map(r => ({
+            ...r,
+            student: studentMap[r.studentId] || null
+        }));
 
         res.status(200).json({
             success: true,
             data: enrichedRegistrations,
-            total: enrichedRegistrations.length
+            total,
+            page: pageNum || 1,
+            limit: limitNum || total
         });
     } catch (error) {
         console.error("Get exam registrations error:", error);

@@ -1,5 +1,17 @@
-import React from 'react';
-import { Box, Typography, Grid, Avatar, Stack, Skeleton, Alert, Chip } from '@mui/material';
+import React, { useMemo } from 'react';
+import {
+    Box,
+    Typography,
+    Grid,
+    Avatar,
+    Stack,
+    Skeleton,
+    Alert,
+    Chip,
+    Card,
+    CardContent,
+    Paper,
+} from '@mui/material';
 import { format } from 'date-fns';
 import {
     People as StudentsIcon,
@@ -7,33 +19,153 @@ import {
     Assessment as AttendanceIcon,
     EventAvailable as EventIcon,
     Add as AddIcon,
+    Class as ClassIcon,
+    Star as StarIcon,
+    School as SchoolIcon,
+    Groups as GroupsIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import TokenService from '../../queries/token/tokenService';
 import { useGetTeacherDashboardStats } from '../../queries/TeacherDashboard';
+import { useGetTeacherById } from '../../queries/Teacher';
+import { useGetClasses } from '../../queries/Class';
+import { useGetStudents } from '../../queries/Student';
+import { useTimeSettingsStore } from '../../stores/timeSettingsStore';
+import { formatTimeDisplay } from '../../utils/timeUtils';
 import { AppCard } from '../../components/shared/AppCard';
 import { AppButton } from '../../components/shared/AppButton';
 import { AppSection } from '../../components/shared/AppSection';
+import type { Class, Student } from '../../types';
 
 const TeacherDashboard: React.FC = () => {
     const navigate = useNavigate();
     const user = TokenService.getUser();
     const schoolId = TokenService.getSchoolId() || '';
+    const teacherId = user?.teacherId || user?.userId || '';
+    const { timeFormat } = useTimeSettingsStore();
 
     const { data, isLoading, error } = useGetTeacherDashboardStats(schoolId);
     const stats = data?.data;
 
+    // Fetch teacher profile, classes, and students for assigned class cards
+    const { data: teacherData } = useGetTeacherById(schoolId, teacherId);
+    const { data: classesData } = useGetClasses(schoolId);
+    const { data: studentsData } = useGetStudents(schoolId, { limit: 1000 });
+
+    const teacher = teacherData?.data;
+    const allClasses: Class[] = classesData?.data || [];
+    const allStudents: Student[] = studentsData?.data || [];
+
+    // Derive assigned class cards with exact section & student counts
+    const myClassCards = useMemo(() => {
+        const teacherClasses: string[] = teacher?.classes || [];
+        const teacherSections: string[] = (teacher as any)?.sections || [];
+        const classTeacherSectionId: string = teacher?.classTeacherSectionId || '';
+
+        // Collect assigned entries for each class
+        const classAssignedMap: Record<string, Set<string>> = {};
+
+        // Process teacher.classes (items like "CLS00001#SEC00001" or "CLS00001")
+        teacherClasses.forEach((item) => {
+            const [clsId, secId] = item.split('#');
+            if (!classAssignedMap[clsId]) classAssignedMap[clsId] = new Set();
+            if (secId) classAssignedMap[clsId].add(secId);
+        });
+
+        // Process teacher.sections
+        teacherSections.forEach((item) => {
+            const [clsId, secId] = item.split('#');
+            const classId = secId ? clsId : item;
+            const sectionId = secId || item;
+            if (classId) {
+                if (!classAssignedMap[classId]) classAssignedMap[classId] = new Set();
+                if (sectionId && sectionId !== classId) classAssignedMap[classId].add(sectionId);
+            }
+        });
+
+        // Process classTeacherSectionId
+        if (classTeacherSectionId) {
+            const [clsId, secId] = classTeacherSectionId.split('#');
+            if (clsId) {
+                if (!classAssignedMap[clsId]) classAssignedMap[clsId] = new Set();
+                if (secId) classAssignedMap[clsId].add(secId);
+            }
+        }
+
+        const assignedClassIds = Object.keys(classAssignedMap);
+        const targetClasses = assignedClassIds.length > 0
+            ? allClasses.filter((c) => assignedClassIds.includes(c.classId))
+            : allClasses;
+
+        return targetClasses.map((c) => {
+            const assignedSecSet = classAssignedMap[c.classId];
+            const hasSpecificSections = assignedSecSet && assignedSecSet.size > 0;
+
+            // Section count (only assigned sections for this teacher)
+            const sectionCount = hasSpecificSections ? assignedSecSet.size : (c.sections?.length || 1);
+
+            // Resolve assigned section names
+            let sectionNamesList: string[] = [];
+            if (hasSpecificSections) {
+                sectionNamesList = Array.from(assignedSecSet).map((secId) => {
+                    const secObj = c.sections?.find((s) => s.sectionId === secId || s.name === secId);
+                    return secObj?.name || secId;
+                });
+            } else if (c.sections && c.sections.length > 0) {
+                sectionNamesList = c.sections.map((s) => s.name);
+            }
+
+            const sectionLabel = sectionNamesList.length > 0
+                ? `Section - ${sectionNamesList.join(' | ')}`
+                : `${sectionCount} ${sectionCount === 1 ? 'Section' : 'Sections'}`;
+
+            // Student count: filter by class AND assigned section(s)
+            const studentCount = allStudents.filter((s) => {
+                if (s.class !== c.classId || s.status !== 'active') return false;
+                if (hasSpecificSections && s.section) {
+                    return assignedSecSet.has(s.section);
+                }
+                return true;
+            }).length;
+
+            const isClassTeacher = c.sections?.some(
+                (s) => classTeacherSectionId === `${c.classId}#${s.sectionId}`
+            );
+
+            return {
+                classId: c.classId,
+                className: c.name,
+                sectionCount,
+                sectionLabel,
+                studentCount,
+                isClassTeacher,
+            };
+        });
+    }, [teacher, allClasses, allStudents]);
+
+    const cardColors = [
+        { bg: '#ecfdf5', accent: '#10b981', iconBg: '#d1fae5' },
+        { bg: '#eff6ff', accent: '#3b82f6', iconBg: '#dbeafe' },
+        { bg: '#f5f3ff', accent: '#8b5cf6', iconBg: '#ede9fe' },
+        { bg: '#fdf2f8', accent: '#ec4899', iconBg: '#fce7f3' },
+        { bg: '#fffbeb', accent: '#f59e0b', iconBg: '#fef3c7' },
+    ];
+
+    const assignedTotalStudents = useMemo(() => {
+        return myClassCards.reduce((acc, c) => acc + c.studentCount, 0);
+    }, [myClassCards]);
+
     return (
         <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto' }}>
-            {/* Professional Greeting with improved typography */}
-            <Box sx={{ mb: { xs: 4, md: 6 }, mt: 2 }}>
+            {/* Professional Greeting */}
+            <Box sx={{ mb: { xs: 4, md: 5 }, mt: 2 }}>
                 {isLoading ? (
                     <>
                         <Skeleton variant="text" width="60%" height={80} sx={{ borderRadius: 2 }} />
                         <Skeleton variant="text" width="40%" height={32} sx={{ mt: 1 }} />
                     </>
                 ) : (
-                    <>
+                    <Box>
                         <Typography
                             variant="h3"
                             fontWeight={800}
@@ -50,7 +182,7 @@ const TeacherDashboard: React.FC = () => {
                         <Typography variant="h6" color="text.secondary" fontWeight={400} sx={{ opacity: 0.8 }}>
                             You have {stats?.periodsToday || 0} classes scheduled for today.
                         </Typography>
-                    </>
+                    </Box>
                 )}
             </Box>
 
@@ -61,7 +193,7 @@ const TeacherDashboard: React.FC = () => {
             )}
 
             {/* Quick Stats Grid */}
-            <Grid container spacing={3} sx={{ mb: 6 }} component="div">
+            <Grid container spacing={3} sx={{ mb: 5 }} component="div">
                 {isLoading ? (
                     [1, 2, 3].map((i) => (
                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i} component="div">
@@ -70,8 +202,8 @@ const TeacherDashboard: React.FC = () => {
                     ))
                 ) : (
                     [
-                        { label: 'Total Students', value: stats?.totalStudents || 0, icon: <StudentsIcon />, color: '#6366f1' },
-                        { label: 'Today\'s Attendance', value: stats?.attendancePercentage || '0%', icon: <AttendanceIcon />, color: '#10b981' },
+                        { label: 'Total Students', value: assignedTotalStudents > 0 ? assignedTotalStudents : (stats?.totalStudents || 0), icon: <StudentsIcon />, color: '#6366f1' },
+                        { label: 'Today\'s Attendance', value: stats?.attendancePercentage || 'Not Marked', icon: <AttendanceIcon />, color: '#10b981' },
                         { label: 'Pending Leaves', value: stats?.pendingLeaveRequests || 0, icon: <EventIcon />, color: '#f59e0b' },
                     ].map((stat) => (
                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={stat.label} component="div">
@@ -98,6 +230,118 @@ const TeacherDashboard: React.FC = () => {
                     ))
                 )}
             </Grid>
+
+            {/* Quick Attendance CTA Banner */}
+            <Paper
+                elevation={0}
+                onClick={() => navigate('/teacher/attendance')}
+                sx={{
+                    p: 2.5,
+                    mb: 4,
+                    borderRadius: 3.5,
+                    bgcolor: '#f0fdf4',
+                    border: '1px solid #a7f3d0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 2,
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 24px rgba(16, 185, 129, 0.15)',
+                    }
+                }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: '#10b981', color: '#fff' }}>
+                        <AttendanceIcon sx={{ fontSize: 28 }} />
+                    </Box>
+                    <Box>
+                        <Typography variant="subtitle1" fontWeight={700} color="#065f46">
+                            Record Today's Attendance
+                        </Typography>
+                        <Typography variant="caption" color="#047857">
+                            Quickly mark simple or period-wise student attendance for your assigned classes.
+                        </Typography>
+                    </Box>
+                </Box>
+                <AppButton
+                    variant="contained"
+                    onClick={(e) => { e.stopPropagation(); navigate('/teacher/attendance'); }}
+                    sx={{ bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, fontWeight: 700 }}
+                >
+                    Mark Attendance Now
+                </AppButton>
+            </Paper>
+
+            {/* My Assigned Classes Section */}
+            {myClassCards.length > 0 && (
+                <Box sx={{ mb: 5 }}>
+                    <AppSection title="My Assigned Classes">
+                        <Grid container spacing={3}>
+                            {myClassCards.map((c, index) => {
+                                const color = cardColors[index % cardColors.length];
+                                return (
+                                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={c.classId}>
+                                        <Card
+                                            onClick={() => navigate('/teacher/attendance')}
+                                            sx={{
+                                                borderRadius: 4,
+                                                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
+                                                border: `1px solid ${color.accent}25`,
+                                                bgcolor: 'background.paper',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s ease',
+                                                '&:hover': {
+                                                    transform: 'translateY(-3px)',
+                                                    boxShadow: `0 8px 25px ${color.accent}25`,
+                                                }
+                                            }}
+                                        >
+                                            <CardContent sx={{ p: 3 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                                                    <Avatar sx={{ bgcolor: color.iconBg, color: color.accent, width: 48, height: 48 }}>
+                                                        <ClassIcon />
+                                                    </Avatar>
+                                                    {c.isClassTeacher && (
+                                                        <Chip
+                                                            icon={<StarIcon sx={{ fontSize: '14px !important' }} />}
+                                                            label="Class Teacher"
+                                                            size="small"
+                                                            sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 700, fontSize: '0.7rem' }}
+                                                        />
+                                                    )}
+                                                </Box>
+
+                                                <Typography variant="h6" fontWeight={800} color="#1e293b" gutterBottom>
+                                                    {c.className}
+                                                </Typography>
+
+                                                <Box sx={{ display: 'flex', gap: 2.5, mt: 1.5 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                                                        <SchoolIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                                                        <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                                                            {c.sectionLabel}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                                                        <GroupsIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                                                        <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                                                            {c.studentCount} Students
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </CardContent>
+                                        </Card>
+                                    </Grid>
+                                );
+                            })}
+                        </Grid>
+                    </AppSection>
+                </Box>
+            )}
 
             <Grid container spacing={4}>
                 {/* Main Content: Schedule & Tasks */}
@@ -149,7 +393,7 @@ const TeacherDashboard: React.FC = () => {
                                                         {'Period'} <b>#{period.periodNumber}</b>
                                                     </Typography>
                                                     <Typography variant="caption" fontWeight={700} sx={{ mt: 0.5, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
-                                                        {period.time}
+                                                        {formatTimeDisplay(period.time, timeFormat)}
                                                     </Typography>
                                                 </Box>
                                                 <Box sx={{ flexGrow: 1 }}>
@@ -175,18 +419,28 @@ const TeacherDashboard: React.FC = () => {
                                 [1, 2, 3].map((i) => <Skeleton key={i} variant="rectangular" height={70} sx={{ borderRadius: 3 }} />)
                             ) : stats?.pendingTasks && stats.pendingTasks.length > 0 ? (
                                 stats.pendingTasks.map((task, i) => (
-                                    <Box key={i} sx={{
-                                        p: 2,
-                                        borderRadius: 3,
-                                        bgcolor: 'background.default',
-                                        border: '1px solid',
-                                        borderColor: 'divider',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center'
-                                    }}>
+                                    <Box
+                                        key={i}
+                                        onClick={() => {
+                                            if (task.task.includes('Attendance')) {
+                                                navigate('/teacher/attendance');
+                                            }
+                                        }}
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: 3,
+                                            bgcolor: 'background.default',
+                                            border: '1px solid',
+                                            borderColor: task.priority === 'high' ? 'error.light' : 'divider',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            cursor: task.task.includes('Attendance') ? 'pointer' : 'default',
+                                            '&:hover': task.task.includes('Attendance') ? { bgcolor: '#fef2f2' } : {}
+                                        }}
+                                    >
                                         <Box>
-                                            <Typography variant="body1" fontWeight={500}>{task.task}</Typography>
+                                            <Typography variant="body1" fontWeight={600}>{task.task}</Typography>
                                             <Typography variant="caption" color="text.secondary">
                                                 Due: {format(new Date(task.deadline), 'MMM dd, yyyy')}
                                             </Typography>
@@ -260,3 +514,4 @@ const TeacherDashboard: React.FC = () => {
 };
 
 export default TeacherDashboard;
+

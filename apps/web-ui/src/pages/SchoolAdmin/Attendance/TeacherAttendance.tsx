@@ -146,6 +146,7 @@ const TeacherAttendancePage = () => {
           <AppDatePicker
             label="Attendance Date"
             value={selectedDate ? new Date(selectedDate) : null}
+            maxDate={new Date()}
             onChange={(date) => setSelectedDate(date ? format(date, "yyyy-MM-dd") : "")}
           />
           <AppButton
