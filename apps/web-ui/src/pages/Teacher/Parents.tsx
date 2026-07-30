@@ -84,6 +84,9 @@ const TeacherParentsPage = () => {
         setEditData(null);
     };
 
+    const userRole = TokenService.getRole() || user?.role || '';
+    const isAdmin = userRole === 'sch_admin' || userRole === 'super_admin';
+
     const columns: Column<Parent>[] = [
         { id: 'parentId', label: 'ID', minWidth: 100 },
         {
@@ -130,20 +133,29 @@ const TeacherParentsPage = () => {
             align: 'center',
             format: (_, row) => (
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-                    <Tooltip title="Edit">
-                        <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); handleEdit(row); }}>
-                            <EditIcon fontSize="small" />
-                        </IconButton>
+                    <Tooltip title={isAdmin ? "Edit" : "Only Admin can edit"}>
+                        <span>
+                            <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={(e) => { e.stopPropagation(); if (isAdmin) handleEdit(row); }}
+                                disabled={!isAdmin}
+                            >
+                                <EditIcon fontSize="small" />
+                            </IconButton>
+                        </span>
                     </Tooltip>
-                    <Tooltip title={row.status === 'active' ? 'Deactivate' : 'Activate'}>
-                        <IconButton
-                            size="small"
-                            color={row.status === 'active' ? 'error' : 'success'}
-                            onClick={(e) => { e.stopPropagation(); handleToggleStatus(row); }}
-                            disabled={updateMutation.isPending}
-                        >
-                            <BlockIcon fontSize="small" />
-                        </IconButton>
+                    <Tooltip title={isAdmin ? (row.status === 'active' ? 'Deactivate' : 'Activate') : "Only Admin can deactivate"}>
+                        <span>
+                            <IconButton
+                                size="small"
+                                color={row.status === 'active' ? 'error' : 'success'}
+                                onClick={(e) => { e.stopPropagation(); if (isAdmin) handleToggleStatus(row); }}
+                                disabled={!isAdmin || updateMutation.isPending}
+                            >
+                                <BlockIcon fontSize="small" />
+                            </IconButton>
+                        </span>
                     </Tooltip>
                 </Box>
             ),
@@ -187,7 +199,7 @@ const TeacherParentsPage = () => {
                 data={parents}
                 isLoading={isLoading}
                 error={error ? (error as { message?: string })?.message || 'Failed to load parents' : null}
-                onAddClick={handleAdd}
+                onAddClick={isAdmin ? handleAdd : undefined}
                 addButtonLabel="Add Parent"
                 emptyMessage="No parents found. Click 'Add Parent' to create one."
                 getRowKey={(row) => row.parentId}

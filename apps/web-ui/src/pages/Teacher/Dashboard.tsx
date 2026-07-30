@@ -10,8 +10,7 @@ import {
     Chip,
     Card,
     CardContent,
-    ToggleButton,
-    ToggleButtonGroup,
+    Paper,
 } from '@mui/material';
 import { format } from 'date-fns';
 import {
@@ -20,7 +19,6 @@ import {
     Assessment as AttendanceIcon,
     EventAvailable as EventIcon,
     Add as AddIcon,
-    AccessTime as AccessTimeIcon,
     Class as ClassIcon,
     Star as StarIcon,
     School as SchoolIcon,
@@ -44,7 +42,7 @@ const TeacherDashboard: React.FC = () => {
     const user = TokenService.getUser();
     const schoolId = TokenService.getSchoolId() || '';
     const teacherId = user?.teacherId || user?.userId || '';
-    const { timeFormat, setTimeFormat } = useTimeSettingsStore();
+    const { timeFormat } = useTimeSettingsStore();
 
     const { data, isLoading, error } = useGetTeacherDashboardStats(schoolId);
     const stats = data?.data;
@@ -106,6 +104,21 @@ const TeacherDashboard: React.FC = () => {
             // Section count (only assigned sections for this teacher)
             const sectionCount = hasSpecificSections ? assignedSecSet.size : (c.sections?.length || 1);
 
+            // Resolve assigned section names
+            let sectionNamesList: string[] = [];
+            if (hasSpecificSections) {
+                sectionNamesList = Array.from(assignedSecSet).map((secId) => {
+                    const secObj = c.sections?.find((s) => s.sectionId === secId || s.name === secId);
+                    return secObj?.name || secId;
+                });
+            } else if (c.sections && c.sections.length > 0) {
+                sectionNamesList = c.sections.map((s) => s.name);
+            }
+
+            const sectionLabel = sectionNamesList.length > 0
+                ? `Section - ${sectionNamesList.join(' | ')}`
+                : `${sectionCount} ${sectionCount === 1 ? 'Section' : 'Sections'}`;
+
             // Student count: filter by class AND assigned section(s)
             const studentCount = allStudents.filter((s) => {
                 if (s.class !== c.classId || s.status !== 'active') return false;
@@ -123,6 +136,7 @@ const TeacherDashboard: React.FC = () => {
                 classId: c.classId,
                 className: c.name,
                 sectionCount,
+                sectionLabel,
                 studentCount,
                 isClassTeacher,
             };
@@ -137,10 +151,14 @@ const TeacherDashboard: React.FC = () => {
         { bg: '#fffbeb', accent: '#f59e0b', iconBg: '#fef3c7' },
     ];
 
+    const assignedTotalStudents = useMemo(() => {
+        return myClassCards.reduce((acc, c) => acc + c.studentCount, 0);
+    }, [myClassCards]);
+
     return (
         <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto' }}>
-            {/* Header Greeting + Time Format Selector */}
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', mb: { xs: 4, md: 5 }, mt: 2, gap: 2 }}>
+            {/* Professional Greeting */}
+            <Box sx={{ mb: { xs: 4, md: 5 }, mt: 2 }}>
                 {isLoading ? (
                     <>
                         <Skeleton variant="text" width="60%" height={80} sx={{ borderRadius: 2 }} />
@@ -166,52 +184,6 @@ const TeacherDashboard: React.FC = () => {
                         </Typography>
                     </Box>
                 )}
-
-                {/* Time Format Selector on Dashboard */}
-                <Box sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.5,
-                    bgcolor: 'background.paper',
-                    p: 1.5,
-                    borderRadius: 3,
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-                    border: '1px solid',
-                    borderColor: 'divider'
-                }}>
-                    <AccessTimeIcon sx={{ color: '#3b82f6', fontSize: 22 }} />
-                    <Typography variant="body2" fontWeight={700} color="text.primary">
-                        Time Format:
-                    </Typography>
-                    <ToggleButtonGroup
-                        value={timeFormat}
-                        exclusive
-                        onChange={(_, val) => { if (val) setTimeFormat(val); }}
-                        size="small"
-                        sx={{
-                            bgcolor: 'action.hover',
-                            p: 0.3,
-                            borderRadius: '8px',
-                            '& .MuiToggleButton-root': {
-                                border: 'none',
-                                borderRadius: '6px',
-                                px: 1.5,
-                                py: 0.4,
-                                fontSize: '0.75rem',
-                                fontWeight: 700,
-                                textTransform: 'none',
-                                '&.Mui-selected': {
-                                    bgcolor: '#3b82f6',
-                                    color: '#ffffff',
-                                    '&:hover': { bgcolor: '#2563eb' }
-                                }
-                            }
-                        }}
-                    >
-                        <ToggleButton value="12h">12 Hours (AM/PM)</ToggleButton>
-                        <ToggleButton value="24h">24 Hours</ToggleButton>
-                    </ToggleButtonGroup>
-                </Box>
             </Box>
 
             {error && (
@@ -230,7 +202,7 @@ const TeacherDashboard: React.FC = () => {
                     ))
                 ) : (
                     [
-                        { label: 'Total Students', value: stats?.totalStudents || 0, icon: <StudentsIcon />, color: '#6366f1' },
+                        { label: 'Total Students', value: assignedTotalStudents > 0 ? assignedTotalStudents : (stats?.totalStudents || 0), icon: <StudentsIcon />, color: '#6366f1' },
                         { label: 'Today\'s Attendance', value: stats?.attendancePercentage || 'Not Marked', icon: <AttendanceIcon />, color: '#10b981' },
                         { label: 'Pending Leaves', value: stats?.pendingLeaveRequests || 0, icon: <EventIcon />, color: '#f59e0b' },
                     ].map((stat) => (
@@ -259,6 +231,51 @@ const TeacherDashboard: React.FC = () => {
                 )}
             </Grid>
 
+            {/* Quick Attendance CTA Banner */}
+            <Paper
+                elevation={0}
+                onClick={() => navigate('/teacher/attendance')}
+                sx={{
+                    p: 2.5,
+                    mb: 4,
+                    borderRadius: 3.5,
+                    bgcolor: '#f0fdf4',
+                    border: '1px solid #a7f3d0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 2,
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 24px rgba(16, 185, 129, 0.15)',
+                    }
+                }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: '#10b981', color: '#fff' }}>
+                        <AttendanceIcon sx={{ fontSize: 28 }} />
+                    </Box>
+                    <Box>
+                        <Typography variant="subtitle1" fontWeight={700} color="#065f46">
+                            Record Today's Attendance
+                        </Typography>
+                        <Typography variant="caption" color="#047857">
+                            Quickly mark simple or period-wise student attendance for your assigned classes.
+                        </Typography>
+                    </Box>
+                </Box>
+                <AppButton
+                    variant="contained"
+                    onClick={(e) => { e.stopPropagation(); navigate('/teacher/attendance'); }}
+                    sx={{ bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, fontWeight: 700 }}
+                >
+                    Mark Attendance Now
+                </AppButton>
+            </Paper>
+
             {/* My Assigned Classes Section */}
             {myClassCards.length > 0 && (
                 <Box sx={{ mb: 5 }}>
@@ -269,11 +286,13 @@ const TeacherDashboard: React.FC = () => {
                                 return (
                                     <Grid size={{ xs: 12, sm: 6, md: 4 }} key={c.classId}>
                                         <Card
+                                            onClick={() => navigate('/teacher/attendance')}
                                             sx={{
                                                 borderRadius: 4,
                                                 boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
                                                 border: `1px solid ${color.accent}25`,
                                                 bgcolor: 'background.paper',
+                                                cursor: 'pointer',
                                                 transition: 'all 0.2s ease',
                                                 '&:hover': {
                                                     transform: 'translateY(-3px)',
@@ -304,7 +323,7 @@ const TeacherDashboard: React.FC = () => {
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
                                                         <SchoolIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                                                         <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                                                            {c.sectionCount} {c.sectionCount === 1 ? 'Section' : 'Sections'}
+                                                            {c.sectionLabel}
                                                         </Typography>
                                                     </Box>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>

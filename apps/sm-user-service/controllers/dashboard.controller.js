@@ -175,24 +175,79 @@ const getTeacherDashboardStats = async (req, res) => {
     const Announcement = schoolDb.models.Announcement || schoolDb.model("Announcement", require("@sms/shared").AnnouncementSchema);
 
     // 1. Get Teacher Classes & Students
-    const teacher = await Teacher.findOne({ teacherId }).select("classes sections");
+    const teacher = await Teacher.findOne({ teacherId }).select("classes sections classTeacherSectionId");
     const rawTeacherClasses = teacher?.classes || [];
-    const parsedTeacherClasses = rawTeacherClasses.map((c) => c.split('#')[0]);
-    
-    const classTeacherClasses = await Class.find({ "sections.classTeacherId": teacherId }).select("classId");
-    const classTeacherClassIds = classTeacherClasses.map((c) => c.classId);
+    const rawTeacherSections = teacher?.sections || [];
+    const classTeacherSectionId = teacher?.classTeacherSectionId || "";
 
-    // Get classes from timetable entries as well
-    const allTimetableEntries = await TimetableEntry.find({ schoolId, teacherId, status: "active" }).select("classId");
-    const timetableClassIds = allTimetableEntries.map((e) => e.classId);
+    const classTeacherClasses = await Class.find({ "sections.classTeacherId": teacherId }).select("classId sections");
+    const allTimetableEntries = await TimetableEntry.find({ schoolId, teacherId, status: "active" }).select("classId sectionId");
 
-    const allClassIds = [...new Set([...parsedTeacherClasses, ...classTeacherClassIds, ...timetableClassIds])].filter(Boolean);
-    const totalClasses = allClassIds.length;
-    
-    const totalStudents = await Student.countDocuments({
-      class: { $in: allClassIds },
-      status: "active",
+    // Collect assigned classes and their specific assigned sections (if any)
+    const classAssignedMap = {}; // classId -> Set of sectionIds
+
+    const addAssignment = (clsId, secId) => {
+      if (!clsId) return;
+      if (!classAssignedMap[clsId]) classAssignedMap[clsId] = new Set();
+      if (secId && secId !== clsId) {
+        classAssignedMap[clsId].add(secId);
+      }
+    };
+
+    // Process teacher.classes
+    rawTeacherClasses.forEach((item) => {
+      const [clsId, secId] = item.split('#');
+      addAssignment(clsId, secId);
     });
+
+    // Process teacher.sections
+    rawTeacherSections.forEach((item) => {
+      const [clsId, secId] = item.split('#');
+      addAssignment(clsId || item, secId || item);
+    });
+
+    // Process classTeacherSectionId
+    if (classTeacherSectionId) {
+      const [clsId, secId] = classTeacherSectionId.split('#');
+      addAssignment(clsId, secId);
+    }
+
+    // Process classTeacherClasses
+    classTeacherClasses.forEach((c) => {
+      c.sections?.forEach((s) => {
+        if (s.classTeacherId === teacherId) {
+          addAssignment(c.classId, s.sectionId);
+        }
+      });
+    });
+
+    // Process timetableEntries (only if sectionId exists)
+    allTimetableEntries.forEach((e) => {
+      if (e.classId && e.sectionId) {
+        addAssignment(e.classId, e.sectionId);
+      }
+    });
+
+    const allClassIds = Object.keys(classAssignedMap);
+    const totalClasses = allClassIds.length;
+
+    // Build precise query for Student count matching teacher's assigned classes & sections
+    const studentQueryConditions = [];
+    allClassIds.forEach((clsId) => {
+      const secSet = classAssignedMap[clsId];
+      if (secSet && secSet.size > 0) {
+        studentQueryConditions.push({ class: clsId, section: { $in: Array.from(secSet) } });
+      } else {
+        studentQueryConditions.push({ class: clsId });
+      }
+    });
+
+    const totalStudents = studentQueryConditions.length > 0
+      ? await Student.countDocuments({
+          status: "active",
+          $or: studentQueryConditions,
+        })
+      : 0;
 
     // 2. Today's Schedule (Timetable)
     const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -249,12 +304,24 @@ const getTeacherDashboardStats = async (req, res) => {
     // 3. Today's Attendance Stats
     const todayDate = new Date();
     todayDate.setHours(0, 0, 0, 0);
-    
-    const attendanceRecords = await Attendance.find({
-      schoolId,
-      classId: { $in: allClassIds },
-      date: todayDate
+
+    const attendanceQueryConditions = [];
+    allClassIds.forEach((clsId) => {
+      const secSet = classAssignedMap[clsId];
+      if (secSet && secSet.size > 0) {
+        attendanceQueryConditions.push({ classId: clsId, sectionId: { $in: Array.from(secSet) } });
+      } else {
+        attendanceQueryConditions.push({ classId: clsId });
+      }
     });
+
+    const attendanceRecords = attendanceQueryConditions.length > 0
+      ? await Attendance.find({
+          schoolId,
+          date: todayDate,
+          $or: attendanceQueryConditions,
+        })
+      : [];
 
     let attendancePercentage = "Not Marked";
     if (attendanceRecords.length > 0) {
