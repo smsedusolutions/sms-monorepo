@@ -50,7 +50,7 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
       fetchProfile();
     }
     fetchRoles();
-  }, [user, fetchProfile, fetchRoles]);
+  }, []);
 
   useEffect(() => {
     if (closingItem) {

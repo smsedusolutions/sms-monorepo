@@ -176,12 +176,17 @@ const getTeacherDashboardStats = async (req, res) => {
 
     // 1. Get Teacher Classes & Students
     const teacher = await Teacher.findOne({ teacherId }).select("classes sections");
-    const assignedClassIds = teacher?.classes || [];
+    const rawTeacherClasses = teacher?.classes || [];
+    const parsedTeacherClasses = rawTeacherClasses.map((c) => c.split('#')[0]);
     
     const classTeacherClasses = await Class.find({ "sections.classTeacherId": teacherId }).select("classId");
     const classTeacherClassIds = classTeacherClasses.map((c) => c.classId);
 
-    const allClassIds = [...new Set([...assignedClassIds, ...classTeacherClassIds])];
+    // Get classes from timetable entries as well
+    const allTimetableEntries = await TimetableEntry.find({ schoolId, teacherId, status: "active" }).select("classId");
+    const timetableClassIds = allTimetableEntries.map((e) => e.classId);
+
+    const allClassIds = [...new Set([...parsedTeacherClasses, ...classTeacherClassIds, ...timetableClassIds])].filter(Boolean);
     const totalClasses = allClassIds.length;
     
     const totalStudents = await Student.countDocuments({
@@ -251,13 +256,10 @@ const getTeacherDashboardStats = async (req, res) => {
       date: todayDate
     });
 
-    let attendancePercentage = "0%";
+    let attendancePercentage = "Not Marked";
     if (attendanceRecords.length > 0) {
       const presentCount = attendanceRecords.filter(r => ["present", "late", "half_day"].includes(r.status)).length;
       attendancePercentage = `${Math.round((presentCount / attendanceRecords.length) * 100)}%`;
-    } else {
-      // Fallback: check last 7 days average if today is not marked yet
-      attendancePercentage = "94%"; // Keep dummy for UI charm if no data exists
     }
 
     // 4. Pending Leave Requests
@@ -280,12 +282,26 @@ const getTeacherDashboardStats = async (req, res) => {
       console.log("Announcement data not available");
     }
 
-    // 6. Pending Tasks (Homework)
+    // 6. Pending Tasks (Homework + Unmarked Attendance)
     const pendingTasks = await Homework.find({
       teacherId,
       status: "active",
       dueDate: { $gte: new Date() }
     }).sort({ dueDate: 1 }).limit(5);
+
+    const formattedPendingTasks = pendingTasks.map(t => ({
+      task: `Homework: ${t.title}`,
+      deadline: t.dueDate,
+      priority: new Date(t.dueDate) - new Date() < 86400000 ? "high" : "medium" // Less than 24h = high
+    }));
+
+    if (attendanceRecords.length === 0 && allClassIds.length > 0) {
+      formattedPendingTasks.unshift({
+        task: "Mark Today's Student Attendance",
+        deadline: new Date(),
+        priority: "high"
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -297,11 +313,7 @@ const getTeacherDashboardStats = async (req, res) => {
         totalAnnouncements,
         attendancePercentage,
         todaySchedule: scheduleWithDetails,
-        pendingTasks: pendingTasks.map(t => ({
-          task: t.title,
-          deadline: t.dueDate,
-          priority: new Date(t.dueDate) - new Date() < 86400000 ? "high" : "medium" // Less than 24h = high
-        }))
+        pendingTasks: formattedPendingTasks
       },
     });
   } catch (error) {

@@ -1,15 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
-import { Box, AppBar, Toolbar, IconButton, Typography, Avatar, Divider } from '@mui/material';
+import { Box, AppBar, Toolbar, IconButton, Typography, Avatar, Divider, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import Sidebar from '../../pages/Sidebar/Sidebar';
 import NotificationBell from '../NotificationBell/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../../stores/userStore';
 import { useRoleStore } from '../../stores/roleStore';
+import { useTimeSettingsStore } from '../../stores/timeSettingsStore';
 import LogoutConfirmDialog from '../../pages/Sidebar/LogoutConfirmDialog';
 import AppBreadcrumbs from '../shared/AppBreadcrumbs';
 
@@ -39,13 +41,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
     const { user: userProfile, school, fetchProfile, clearStore } = useUserStore();
     const { fetchRoles, getRoleByCode } = useRoleStore();
+    const { timeFormat, setTimeFormat } = useTimeSettingsStore();
 
     useEffect(() => {
-        if (user) {
+        if (user?.userId) {
             fetchProfile();
             fetchRoles();
         }
-    }, [user, fetchProfile, fetchRoles]);
+    }, [user?.userId]);
 
     useEffect(() => {
         const handleResize = () => {
@@ -349,6 +352,47 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                             <OpenInNewIcon sx={{ fontSize: 14, opacity: 0.6 }} />
                                         </Box>
                                     )}
+
+                                    <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)', my: 0.5 }} />
+
+                                    {/* Time Format Option */}
+                                    <Box sx={{ px: 1.5, py: 1, display: 'flex', flexDirection: 'column', gap: 0.8 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#94a3b8' }}>
+                                            <AccessTimeIcon sx={{ fontSize: 16 }} />
+                                            <Typography sx={{ fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                Time Format
+                                            </Typography>
+                                        </Box>
+                                        <ToggleButtonGroup
+                                            value={timeFormat}
+                                            exclusive
+                                            onChange={(_, val) => { if (val) setTimeFormat(val); }}
+                                            size="small"
+                                            fullWidth
+                                            sx={{
+                                                bgcolor: 'rgba(255,255,255,0.05)',
+                                                p: 0.3,
+                                                borderRadius: '8px',
+                                                '& .MuiToggleButton-root': {
+                                                    border: 'none',
+                                                    borderRadius: '6px',
+                                                    py: 0.4,
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: 600,
+                                                    color: '#94a3b8',
+                                                    textTransform: 'none',
+                                                    '&.Mui-selected': {
+                                                        bgcolor: '#3b82f6',
+                                                        color: '#ffffff',
+                                                        '&:hover': { bgcolor: '#2563eb' }
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            <ToggleButton value="12h">12 Hours (AM/PM)</ToggleButton>
+                                            <ToggleButton value="24h">24 Hours</ToggleButton>
+                                        </ToggleButtonGroup>
+                                    </Box>
 
                                     <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)', my: 0.5 }} />
 

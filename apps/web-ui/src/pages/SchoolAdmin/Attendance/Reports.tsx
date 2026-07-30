@@ -148,6 +148,7 @@ const AttendanceReports = () => {
                         <AppDatePicker
                             label="Report Date"
                             value={selectedDate ? new Date(selectedDate) : null}
+                            maxDate={new Date()}
                             fullWidth={false}
                             onChange={(date) => setSelectedDate(date ? format(date, 'yyyy-MM-dd') : '')}
                             sx={{ mb: 0 }}

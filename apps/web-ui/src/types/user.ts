@@ -58,6 +58,6 @@ export interface UserStore {
   // Actions
   setUser: (user: UserProfile | null) => void;
   setSchool: (school: SchoolInfo | null) => void;
-  fetchProfile: () => Promise<void>;
+  fetchProfile: (force?: boolean) => Promise<void>;
   clearStore: () => void;
 }

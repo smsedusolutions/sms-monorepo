@@ -31,7 +31,6 @@ import type { Student, Class, Subject } from '../../../types';
 import TokenService from '../../../queries/token/tokenService';
 import { AppSelect } from '../../../components/shared/AppSelect';
 import { AppButton } from '../../../components/shared/AppButton';
-import { AppDatePicker } from '../../../components/shared/AppDatePicker';
 import { format } from 'date-fns';
 
 type PeriodStatus = "present" | "absent" | "late";
@@ -48,7 +47,7 @@ const PeriodAttendance = () => {
 
     const [selectedClass, setSelectedClass] = useState('');
     const [selectedSection, setSelectedSection] = useState('');
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [selectedPeriod, setSelectedPeriod] = useState<number>(1);
     const [selectedSubject, setSelectedSubject] = useState('');
     const [isSubstitute] = useState(false);
@@ -157,14 +156,17 @@ const PeriodAttendance = () => {
             <Paper sx={{ p: 2, mb: 3 }}>
                 <Grid container spacing={2} alignItems="center">
                     <Grid size={{ xs: 12, sm: 6, md: 2.5 }}>
-                        <AppDatePicker
-                            label="Attendance Date"
-                            value={selectedDate ? new Date(selectedDate) : null}
-                            onChange={(date) => {
-                                setSelectedDate(date ? format(date, 'yyyy-MM-dd') : '');
-                                setAttendance({});
-                            }}
-                        />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                                Attendance Date
+                            </Typography>
+                            <Chip
+                                label={`Today: ${format(new Date(), 'dd-MM-yyyy')}`}
+                                color="primary"
+                                variant="filled"
+                                sx={{ fontWeight: 600, borderRadius: 1.5, py: 2 }}
+                            />
+                        </Box>
                     </Grid>
                     <Grid size={{ xs: 6, sm: 3, md: 2 }}>
                         <AppSelect

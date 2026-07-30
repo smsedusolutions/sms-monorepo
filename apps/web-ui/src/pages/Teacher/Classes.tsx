@@ -54,17 +54,16 @@ const TeacherClasses = () => {
     const allClasses = classesData?.data || [];
     const allStudents = studentsData?.data || [];
 
-    // Filter classes to only the teacher's assigned classes
-    const myClasses = teacherClasses.length > 0
-        ? allClasses.filter((c: Class) => teacherClasses.includes(c.classId))
-        : [];
-
-    // Also include classes where teacher is class teacher but not in assigned list
+    // Parse class IDs from teacherClasses (handling CLASS#SEC notation)
+    const parsedTeacherClassIds = teacherClasses.map((c: string) => c.split('#')[0]);
+    const sectionClassIds = teacherSections.map((s: string) => s.split('#')[0]);
     const classTeacherClassId = classTeacherSectionId?.split('#')[0];
-    if (classTeacherClassId && !myClasses.find((c: Class) => c.classId === classTeacherClassId)) {
-        const ctClass = allClasses.find((c: Class) => c.classId === classTeacherClassId);
-        if (ctClass) myClasses.push(ctClass);
-    }
+
+    const allAssignedIds = [...new Set([...parsedTeacherClassIds, ...sectionClassIds, classTeacherClassId].filter(Boolean))];
+
+    const myClasses = allAssignedIds.length > 0
+        ? allClasses.filter((c: Class) => allAssignedIds.includes(c.classId))
+        : allClasses;
 
     const isLoading = loadingTeacher || loadingClasses || loadingStudents;
 

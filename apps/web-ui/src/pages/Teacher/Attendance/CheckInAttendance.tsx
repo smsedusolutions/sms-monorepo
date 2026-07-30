@@ -27,14 +27,13 @@ import type { Student, Class, AttendanceCheckin } from '../../../types';
 import TokenService from '../../../queries/token/tokenService';
 import { AppSelect } from '../../../components/shared/AppSelect';
 import { AppButton } from '../../../components/shared/AppButton';
-import { AppDatePicker } from '../../../components/shared/AppDatePicker';
 import { format } from 'date-fns';
 
 const CheckInAttendance = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const [selectedClass, setSelectedClass] = useState('');
     const [selectedSection, setSelectedSection] = useState('');
-    const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' });
 
     // Fetch data
@@ -118,11 +117,17 @@ const CheckInAttendance = () => {
             <Paper sx={{ p: 2, mb: 3 }}>
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
-                        <AppDatePicker
-                            label="Check-In Date"
-                            value={selectedDate ? new Date(selectedDate) : null}
-                            onChange={(date) => setSelectedDate(date ? format(date, 'yyyy-MM-dd') : '')}
-                        />
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                                Check-In Date
+                            </Typography>
+                            <Chip
+                                label={`Today: ${format(new Date(), 'dd-MM-yyyy')}`}
+                                color="primary"
+                                variant="filled"
+                                sx={{ fontWeight: 600, borderRadius: 1.5, py: 2 }}
+                            />
+                        </Box>
                         <AppSelect
                             label="Class"
                             value={selectedClass}

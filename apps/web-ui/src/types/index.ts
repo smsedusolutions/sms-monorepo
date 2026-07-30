@@ -364,6 +364,7 @@ export interface ParentFilters {
   status?: "active" | "inactive";
   relationship?: "father" | "mother" | "guardian" | "other";
   search?: string;
+  class?: string;
   page?: number;
   limit?: number;
 }
