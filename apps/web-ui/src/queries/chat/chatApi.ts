@@ -1,6 +1,6 @@
 import TokenService from "../token/tokenService";
 
-const CHAT_SERVICE_URL = "http://localhost:5007/api/chat";
+const CHAT_SERVICE_URL = `${import.meta.env.VITE_CHAT_API_URL || "http://localhost:5007"}/api/chat`;
 
 const getHeaders = () => {
   const token = TokenService.getToken();

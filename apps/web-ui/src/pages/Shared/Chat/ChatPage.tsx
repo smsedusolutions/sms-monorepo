@@ -791,9 +791,10 @@ export const ChatPage: React.FC = () => {
         return;
       }
 
+      const chatBaseUrl = import.meta.env.VITE_CHAT_API_URL || "http://localhost:5007";
       const fullUrl = msg.attachmentUrl.startsWith("http")
         ? msg.attachmentUrl
-        : `http://localhost:5007${msg.attachmentUrl}`;
+        : `${chatBaseUrl}${msg.attachmentUrl}`;
 
       const token = TokenService.getToken();
       const response = await fetch(fullUrl, {

@@ -17,7 +17,8 @@ class ChatSocketService {
     if (!token) return;
 
     this.isConnecting = true;
-    const wsUrl = `ws://localhost:5007?token=${encodeURIComponent(token)}`;
+    const baseWsUrl = import.meta.env.VITE_CHAT_WS_URL || "ws://localhost:5007";
+    const wsUrl = `${baseWsUrl}?token=${encodeURIComponent(token)}`;
 
     try {
       this.socket = new WebSocket(wsUrl);
