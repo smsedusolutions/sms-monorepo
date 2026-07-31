@@ -10,7 +10,7 @@ const registerKeys = async (req, res) => {
   try {
     const userId = extractUserId(req.user);
     const role = req.user.role || req.user.userType;
-    const { identityPublicKey, signedPreKey, oneTimePreKeys } = req.body;
+    const { identityPublicKey, privateKeyBase64, signedPreKey, oneTimePreKeys } = req.body;
 
     if (!identityPublicKey) {
       return res.status(400).json({
@@ -19,15 +19,21 @@ const registerKeys = async (req, res) => {
       });
     }
 
+    const updatePayload = {
+      userId,
+      role: role.toLowerCase(),
+      identityPublicKey,
+      signedPreKey: signedPreKey || null,
+      oneTimePreKeys: Array.isArray(oneTimePreKeys) ? oneTimePreKeys : [],
+    };
+
+    if (privateKeyBase64) {
+      updatePayload.privateKeyBase64 = privateKeyBase64;
+    }
+
     const keyDoc = await UserE2EEKeys.findOneAndUpdate(
       { userId },
-      {
-        userId,
-        role: role.toLowerCase(),
-        identityPublicKey,
-        signedPreKey: signedPreKey || null,
-        oneTimePreKeys: Array.isArray(oneTimePreKeys) ? oneTimePreKeys : [],
-      },
+      updatePayload,
       { upsert: true, new: true, runValidators: true }
     );
 
@@ -54,6 +60,8 @@ const registerKeys = async (req, res) => {
 const getUserKeys = async (req, res) => {
   try {
     const { targetUserId } = req.params;
+    const requesterUserId = extractUserId(req.user);
+    const isOwnKeys = requesterUserId === targetUserId;
 
     const keyDoc = await UserE2EEKeys.findOne({ userId: targetUserId });
 
@@ -73,6 +81,7 @@ const getUserKeys = async (req, res) => {
         userId: keyDoc.userId,
         role: keyDoc.role,
         identityPublicKey: keyDoc.identityPublicKey,
+        privateKeyBase64: isOwnKeys ? keyDoc.privateKeyBase64 : undefined,
         signedPreKey: keyDoc.signedPreKey,
         oneTimePreKeys: keyDoc.oneTimePreKeys,
       },

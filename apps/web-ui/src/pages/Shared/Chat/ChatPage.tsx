@@ -53,6 +53,7 @@ import { chatSocket } from "../../../services/chatSocket";
 import useApi from "../../../queries/useApi";
 import {
   getOrInitializeUserKeys,
+  restoreUserKeysFromRaw,
   importPublicKey,
   deriveSharedKey,
   encryptText,
@@ -155,6 +156,7 @@ export const ChatPage: React.FC = () => {
 
   // E2EE Keys Cache
   const ownKeyPairRef = useRef<CryptoKeyPair | null>(null);
+  const ownPublicKeyBase64Ref = useRef<string | null>(null);
   const sharedKeyCacheRef = useRef<Map<string, CryptoKey>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -367,11 +369,28 @@ export const ChatPage: React.FC = () => {
 
     async function initKeys() {
       try {
-        console.log(`🔐 [E2EE] Initializing & registering keys for currentUserId: ${currentUserId}`);
-        const { keyPair, publicKeyBase64 } = await getOrInitializeUserKeys(currentUserId);
-        ownKeyPairRef.current = keyPair;
-        await chatApi.registerKeys(publicKeyBase64);
-        console.log(`🔐 [E2EE] Public Keys for ${currentUserId} Registered Successfully`);
+        console.log(`🔐 [E2EE] Initializing keys for currentUserId: ${currentUserId}`);
+        let keyData = await getOrInitializeUserKeys(currentUserId);
+
+        // Check if backend has synced key pair for this user account (e.g. logging in on a new device)
+        try {
+          const res = await chatApi.getUserKeys(currentUserId);
+          if (res.success && res.data?.privateKeyBase64 && res.data?.identityPublicKey) {
+            console.log(`📱 [E2EE Device Sync] Restoring account E2EE key pair from backend onto device/browser`);
+            keyData = await restoreUserKeysFromRaw(
+              currentUserId,
+              res.data.identityPublicKey,
+              res.data.privateKeyBase64
+            );
+          }
+        } catch (syncErr) {
+          // No pre-existing synced keys on backend, continue with local keyData
+        }
+
+        ownKeyPairRef.current = keyData.keyPair;
+        ownPublicKeyBase64Ref.current = keyData.publicKeyBase64;
+        await chatApi.registerKeys(keyData.publicKeyBase64, keyData.privateKeyBase64);
+        console.log(`🔐 [E2EE] Public & Private Keys for ${currentUserId} Registered & Synced Successfully`);
         setKeysReady(true); // Signal that keys are ready for decryption
       } catch (err) {
         console.error("❌ E2EE Key Initialization Error:", err);
@@ -432,6 +451,12 @@ export const ChatPage: React.FC = () => {
             const res = await useApi<any>("GET", `/api/school/${schoolId}/teachers/${partnerId}`);
             if (res?.success && res.data) {
               const t = res.data;
+              const teacherDetails = [
+                t.department ? `Dept: ${t.department}` : null,
+                t.subjectNames && t.subjectNames.length > 0 ? `Subjects: ${t.subjectNames.join(", ")}` : null,
+                t.classNames && t.classNames.length > 0 ? `Classes: ${t.classNames.join(", ")}` : null,
+              ].filter(Boolean).join(" • ") || "Teacher Contact";
+
               setExtraContacts((prev) => {
                 if (prev.has(partnerId)) return prev;
                 const next = new Map(prev);
@@ -442,7 +467,7 @@ export const ChatPage: React.FC = () => {
                   phone: t.phone,
                   profileImage: t.profileImage,
                   role: "Teacher",
-                  info: t.department ? `Department: ${t.department}` : "Teacher Contact",
+                  info: teacherDetails,
                 });
                 return next;
               });
@@ -584,6 +609,16 @@ export const ChatPage: React.FC = () => {
     for (const msg of rawMessages) {
       let text = "[Encrypted Message]";
       let activeKey = sharedKey;
+
+      // Message-level key derivation from ephemeralPublicKey if attached
+      if (msg.ephemeralPublicKey && ownKeyPairRef.current) {
+        try {
+          const senderPubKey = await importPublicKey(msg.ephemeralPublicKey);
+          activeKey = await deriveSharedKey(ownKeyPairRef.current.privateKey, senderPubKey);
+        } catch (e) {
+          // Fallback to room partner key
+        }
+      }
 
       if (msg.encryptedPayload) {
         if (!activeKey) {
@@ -901,6 +936,7 @@ export const ChatPage: React.FC = () => {
               roomId: selectedRoom._id,
               recipientId: partnerId,
               encryptedPayload,
+              ephemeralPublicKey: ownPublicKeyBase64Ref.current || undefined,
               messageType: "text",
             });
           } catch (err) {
@@ -939,6 +975,7 @@ export const ChatPage: React.FC = () => {
         roomId: selectedRoom._id,
         recipientId: partnerId,
         encryptedPayload,
+        ephemeralPublicKey: ownPublicKeyBase64Ref.current || undefined,
         messageType: "text",
       });
 

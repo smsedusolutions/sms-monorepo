@@ -17,6 +17,10 @@ const UserE2EEKeysSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    privateKeyBase64: {
+      type: String,
+      default: "",
+    },
     signedPreKey: {
       type: String,
       default: null,

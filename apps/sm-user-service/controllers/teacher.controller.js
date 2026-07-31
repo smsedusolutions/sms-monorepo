@@ -184,7 +184,16 @@ const getTeacherById = async (req, res) => {
     }
 
     const Teacher = getTeacherModel(schoolDbName);
-    const teacher = await Teacher.findOne({ teacherId }).select("-password");
+    const query = {
+      $or: [
+        { teacherId },
+        { userId: teacherId },
+      ],
+    };
+    if (require("mongoose").isValidObjectId(teacherId)) {
+      query.$or.push({ _id: teacherId });
+    }
+    const teacher = await Teacher.findOne(query).select("-password");
 
     if (!teacher) {
       return res.status(404).json({
