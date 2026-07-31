@@ -23,6 +23,7 @@ import {
   DialogActions,
   Fade,
   Fab,
+  Alert,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -106,6 +107,7 @@ export const ChatPage: React.FC = () => {
 
   const schoolId = TokenService.getSchoolId() || "";
   const currentUser = TokenService.getUser();
+  const currentUserName = `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() || currentUser?.username || "";
   const currentUserId = (
     currentUser?.parentId ||
     currentUser?.teacherId ||
@@ -186,6 +188,35 @@ export const ChatPage: React.FC = () => {
       next.set(userId, { isOnline: false, lastSeen });
       return next;
     });
+  };
+
+  // Invitation & Partner Key Registration State
+  const [isSendingInvite, setIsSendingInvite] = useState(false);
+  const [inviteSentPartnerId, setInviteSentPartnerId] = useState<string | null>(null);
+  const [registeredKeysMap, setRegisteredKeysMap] = useState<Map<string, boolean>>(new Map());
+
+  const handleSendChatInvite = async () => {
+    if (!selectedRoom || !schoolId) return;
+    const partnerId = getPartnerId(selectedRoom);
+    const partnerInfo = getPartnerDisplayInfo(selectedRoom);
+    try {
+      setIsSendingInvite(true);
+      const inviterName = currentUserName || (isParent ? "Parent" : "Teacher");
+      const inviterRole = isParent ? "Parent" : "Teacher";
+      await chatApi.sendChatInvite(schoolId, {
+        recipientId: partnerId,
+        recipientRole: partnerInfo.role,
+        inviterName,
+        inviterRole,
+        inviterId: currentUserId,
+        roomId: selectedRoom._id,
+      });
+      setInviteSentPartnerId(partnerId);
+    } catch (err) {
+      console.error("❌ Failed to send chat invite:", err);
+    } finally {
+      setIsSendingInvite(false);
+    }
   };
 
   const getPartnerPresence = (partnerId: string) => {
@@ -610,6 +641,14 @@ export const ChatPage: React.FC = () => {
       if (res?.success && res.data) {
         if (res.data.isOnline) setUserOnline(partnerId);
         else setUserOffline(partnerId, res.data.lastSeen || null);
+      }
+    }).catch(() => { });
+
+    chatApi.getUserKeys(partnerId).then((res) => {
+      if (res?.success && res.data?.identityPublicKey) {
+        setRegisteredKeysMap((prev) => new Map(prev).set(partnerId, true));
+      } else {
+        setRegisteredKeysMap((prev) => new Map(prev).set(partnerId, false));
       }
     }).catch(() => { });
 
@@ -1811,6 +1850,51 @@ export const ChatPage: React.FC = () => {
                   </Box>
                 </Box>
 
+                {/* Invitation Prompt Banner (Only shown if room is empty AND partner is NOT registered yet) */}
+                {selectedRoom && (() => {
+                  const partnerId = getPartnerId(selectedRoom);
+                  const isPartnerRegistered = registeredKeysMap.get(partnerId);
+                  const hasMessages = messages.length > 0;
+
+                  // Do NOT show invite banner if messages already exist OR if partner is already registered
+                  if (hasMessages || isPartnerRegistered) {
+                    return null;
+                  }
+
+                  if (inviteSentPartnerId === partnerId) {
+                    return (
+                      <Box sx={{ display: "flex", justifyContent: "center", width: "100%", px: 2 }}>
+                        <Alert severity="success" sx={{ borderRadius: "12px", fontSize: "12.5px", width: "100%", maxWidth: "520px" }}>
+                          Invitation sent! <strong>{getPartnerDisplayInfo(selectedRoom).name}</strong> will receive an in-app notification to join the chat.
+                        </Alert>
+                      </Box>
+                    );
+                  }
+
+                  return (
+                    <Box sx={{ display: "flex", justifyContent: "center", width: "100%", px: 2 }}>
+                      <Alert
+                        severity="info"
+                        action={
+                          <Button
+                            color="primary"
+                            size="small"
+                            variant="contained"
+                            onClick={handleSendChatInvite}
+                            disabled={isSendingInvite}
+                            sx={{ borderRadius: "8px", textTransform: "none", fontWeight: 600, fontSize: "12px", boxShadow: "none" }}
+                          >
+                            {isSendingInvite ? "Sending..." : "Send Chat Invite 📩"}
+                          </Button>
+                        }
+                        sx={{ borderRadius: "12px", fontSize: "12.5px", alignItems: "center", width: "100%", maxWidth: "520px" }}
+                      >
+                        Invite <strong>{getPartnerDisplayInfo(selectedRoom).name}</strong> to join secure chat & receive an in-app notification!
+                      </Alert>
+                    </Box>
+                  );
+                })()}
+
                 {/* Messages grouped by date with dynamic dividers */}
                 {isLoadingMessages ? (
                   <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
@@ -2081,6 +2165,29 @@ export const ChatPage: React.FC = () => {
                 })()}
                 <div ref={messagesEndRef} />
               </Box>
+
+              {/* Quick Conversation Starter Chips */}
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ px: { xs: 2, md: 5 }, py: 1.25, bgcolor: "#ffffff", borderTop: "1px solid #f1f5f9", overflowX: "auto" }}>
+                <Typography variant="caption" color="#94a3b8" fontWeight={700} sx={{ fontSize: "11px", whiteSpace: "nowrap", mr: 0.5 }}>
+                  Quick Start:
+                </Typography>
+                {["👋 Hi!", "Hello! Glad to connect.", "Good day!", "Can we discuss student progress?"].map((chipText) => (
+                  <Chip
+                    key={chipText}
+                    label={chipText}
+                    clickable
+                    onClick={() => setInputText(chipText)}
+                    sx={{
+                      bgcolor: "#f8fafc",
+                      color: "#475569",
+                      fontWeight: 600,
+                      fontSize: "12px",
+                      border: "1px solid #e2e8f0",
+                      "&:hover": { bgcolor: "#e0e7ff", color: "#3730a3", borderColor: "#c7d2fe" },
+                    }}
+                  />
+                ))}
+              </Stack>
 
               {/* Chat Input Bar Footer */}
               <Box

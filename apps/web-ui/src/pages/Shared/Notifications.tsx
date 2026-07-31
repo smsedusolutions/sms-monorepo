@@ -28,6 +28,7 @@ import {
     School as SchoolIcon,
     Delete as DeleteIcon,
     MarkEmailRead as MarkReadIcon,
+    Chat as ChatIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useGetMyNotifications, useMarkAsRead, useMarkAllAsRead, useDeleteNotification } from '../../queries/Notification';
@@ -49,6 +50,9 @@ const getNotificationIcon = (type: NotificationType) => {
             return <EventNoteIcon color="info" />;
         case 'result_published':
             return <SchoolIcon color="success" />;
+        case 'chat_invite':
+        case 'chat_accepted':
+            return <ChatIcon sx={{ color: '#6366f1' }} />;
         default:
             return <NotificationsIcon color="action" />;
     }
@@ -110,6 +114,12 @@ const NotificationsPage: React.FC = () => {
             case 'leave_status':
                 path = role === 'parent' ? '/parent/leave/history' : `${prefix}/leave/my`;
                 break;
+            case 'chat_invite':
+            case 'chat_accepted': {
+                const partnerId = notification.metadata?.inviterId || notification.metadata?.partnerId;
+                path = `${prefix}/chat${partnerId ? `?partnerId=${partnerId}` : ''}`;
+                break;
+            }
             default:
                 return; // Don't navigate for general notifications
         }

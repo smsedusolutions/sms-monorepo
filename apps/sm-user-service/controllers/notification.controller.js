@@ -272,6 +272,66 @@ const createBulkNotifications = async (schoolDbName, notifications) => {
     }
 };
 
+// ==========================================
+// SEND CHAT INVITE NOTIFICATION
+// POST /api/school/:schoolId/notifications/chat-invite
+// ==========================================
+const sendChatInviteNotification = async (req, res) => {
+    try {
+        const { schoolId } = req.params;
+        const { recipientId, recipientRole, inviterName, inviterRole, inviterId, roomId } = req.body;
+
+        if (!recipientId) {
+            return res.status(400).json({
+                success: false,
+                message: "recipientId is required"
+            });
+        }
+
+        const schoolDbName = await getSchoolDbName(schoolId);
+        const Notification = getNotificationModel(schoolDbName);
+
+        const targetRole = (recipientRole || (recipientId.startsWith("PAR") ? "parent" : "teacher")).toLowerCase();
+
+        const newNotification = new Notification({
+            notificationId: generateNotificationId(),
+            schoolId,
+            userId: recipientId,
+            userRole: targetRole,
+            type: "chat_invite",
+            title: "New Chat Invitation 💬",
+            message: `${inviterName || "A contact"} (${inviterRole || "Contact"}) invited you to start a secure end-to-end encrypted chat.`,
+            referenceId: roomId || recipientId,
+            referenceType: "chat",
+            isRead: false,
+            metadata: {
+                inviterId: inviterId || req.user?.userId || req.user?.teacherId || req.user?.parentId,
+                inviterName: inviterName || "Contact",
+                inviterRole: inviterRole || "Contact",
+                partnerId: inviterId || req.user?.userId || req.user?.teacherId || req.user?.parentId,
+                roomId,
+            }
+        });
+
+        await newNotification.save();
+
+        console.log(`📩 [notification-controller] Chat invite notification sent to ${recipientId} by ${inviterName}`);
+
+        return res.status(201).json({
+            success: true,
+            message: "Chat invitation notification sent successfully",
+            data: newNotification
+        });
+    } catch (error) {
+        console.error("❌ Send Chat Invite Notification Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to send chat invite notification",
+            error: error.message
+        });
+    }
+};
+
 module.exports = {
     getMyNotifications,
     getUnreadCount,
@@ -280,5 +340,6 @@ module.exports = {
     deleteNotification,
     createNotification,
     createBulkNotifications,
+    sendChatInviteNotification,
     generateNotificationId,
 };
