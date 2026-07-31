@@ -194,6 +194,7 @@ export const ChatPage: React.FC = () => {
   const [isSendingInvite, setIsSendingInvite] = useState(false);
   const [inviteSentPartnerId, setInviteSentPartnerId] = useState<string | null>(null);
   const [registeredKeysMap, setRegisteredKeysMap] = useState<Map<string, boolean>>(new Map());
+  const [inviteDialogPartner, setInviteDialogPartner] = useState<ContactInfo | null>(null);
 
   const handleSendChatInvite = async () => {
     if (!selectedRoom || !schoolId) return;
@@ -976,12 +977,8 @@ export const ChatPage: React.FC = () => {
     let sharedKey = await getSharedKeyForPartner(partnerId);
 
     if (!sharedKey) {
-      await new Promise((r) => setTimeout(r, 1000));
-      sharedKey = await getSharedKeyForPartner(partnerId);
-    }
-
-    if (!sharedKey) {
-      alert("Recipient encryption keys are initializing on server. Please click send again.");
+      setInputText(textToSend);
+      setInviteDialogPartner(getPartnerDisplayInfo(selectedRoom));
       return;
     }
 
@@ -2466,6 +2463,93 @@ export const ChatPage: React.FC = () => {
               Message Now
             </Button>
           )}
+        </DialogActions>
+      </Dialog>
+
+      {/* ---------------------------------------------------- */}
+      {/* UNREGISTERED RECIPIENT INVITATION DIALOG */}
+      {/* ---------------------------------------------------- */}
+      <Dialog
+        open={Boolean(inviteDialogPartner)}
+        onClose={() => setInviteDialogPartner(null)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "20px",
+            p: 1,
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+          },
+        }}
+      >
+        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1.5, pb: 1 }}>
+          <Box
+            sx={{
+              width: 42,
+              height: 42,
+              borderRadius: "12px",
+              bgcolor: "#e0e7ff",
+              color: "#4f46e5",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <ChatIcon sx={{ fontSize: 22 }} />
+          </Box>
+          <Box>
+            <Typography variant="h6" fontWeight={700} color="#0f172a" sx={{ fontSize: "17px", lineHeight: 1.2 }}>
+              Send Chat Invite?
+            </Typography>
+            <Typography variant="caption" color="#64748b" fontWeight={500}>
+              Notify contact to start chatting
+            </Typography>
+          </Box>
+        </DialogTitle>
+
+        <DialogContent sx={{ pt: 1 }}>
+          <Typography variant="body2" color="#334155" sx={{ lineHeight: 1.6, fontSize: "14px" }}>
+            <strong>{inviteDialogPartner?.name || "This contact"}</strong> has not joined the chat feature yet.
+          </Typography>
+          <Typography variant="body2" color="#64748b" sx={{ mt: 1.5, fontSize: "13px" }}>
+            Would you like to send them an in-app invitation? They will receive a notification to join this conversation.
+          </Typography>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 2, pt: 1, gap: 1 }}>
+          <Button
+            onClick={() => setInviteDialogPartner(null)}
+            sx={{
+              borderRadius: "10px",
+              textTransform: "none",
+              fontWeight: 600,
+              color: "#64748b",
+              px: 2,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={async () => {
+              await handleSendChatInvite();
+              setInviteDialogPartner(null);
+            }}
+            disabled={isSendingInvite}
+            sx={{
+              borderRadius: "10px",
+              textTransform: "none",
+              fontWeight: 600,
+              bgcolor: "#4f46e5",
+              color: "#ffffff",
+              px: 2.5,
+              py: 1,
+              boxShadow: "0 4px 6px -1px rgba(79, 70, 229, 0.2)",
+              "&:hover": { bgcolor: "#4338ca" },
+            }}
+          >
+            {isSendingInvite ? "Sending..." : "Send Invitation 📩"}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>
