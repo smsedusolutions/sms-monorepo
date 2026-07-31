@@ -50,6 +50,7 @@ import { useSearchParams } from "react-router-dom";
 import TokenService from "../../../queries/token/tokenService";
 import { chatApi } from "../../../queries/chat/chatApi";
 import { chatSocket } from "../../../services/chatSocket";
+import useApi from "../../../queries/useApi";
 import {
   getOrInitializeUserKeys,
   importPublicKey,
@@ -138,6 +139,10 @@ export const ChatPage: React.FC = () => {
   const [directorySearch, setDirectorySearch] = useState<string>("");
   const [selectedChildId, setSelectedChildId] = useState<string>("");
 
+  // Dynamic Contact Info Cache for room partners not in initial directory lists
+  const [extraContacts, setExtraContacts] = useState<Map<string, ContactInfo>>(new Map());
+
+
   // E2EE keys initialization gate — prevents decrypting before private key is loaded
   const [keysReady, setKeysReady] = useState(false);
 
@@ -147,6 +152,13 @@ export const ChatPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimerRef = useRef<any>(null);
+
+  // Infinite Scroll & Pagination State
+  const [chatPage, setChatPage] = useState<number>(1);
+  const [hasMoreMessages, setHasMoreMessages] = useState<boolean>(false);
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const viewportRef = useRef<HTMLDivElement>(null);
+
 
   // Online / Last-seen State: Map of userId -> { isOnline, lastSeen }
   const [onlineStatusMap, setOnlineStatusMap] = useState<Map<string, { isOnline: boolean; lastSeen: string | null }>>(new Map());
@@ -309,8 +321,13 @@ export const ChatPage: React.FC = () => {
       });
     });
 
+    extraContacts.forEach((contact, partnerId) => {
+      map.set(partnerId, contact);
+    });
+
     return map;
-  }, [allTeachersList, parentDirectory, teacherDirectory, myChildren, allSubjectsList]);
+  }, [allTeachersList, parentDirectory, teacherDirectory, myChildren, allSubjectsList, extraContacts]);
+
 
   const handleCopyField = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -368,6 +385,68 @@ export const ChatPage: React.FC = () => {
   useEffect(() => {
     fetchRooms();
   }, [initialPartnerId]);
+
+  // Dynamically resolve contact details for room partners missing from directory
+  useEffect(() => {
+    if (!schoolId || !rooms || rooms.length === 0) return;
+
+    rooms.forEach(async (room) => {
+      const partnerId = getPartnerId(room);
+      if (!partnerId) return;
+
+      if (!contactsMap.has(partnerId)) {
+        try {
+          if (currentUserRole === "teacher" || currentUserRole === "admin" || currentUserRole === "superadmin") {
+            const res = await useApi<any>("GET", `/api/school/${schoolId}/parents/${partnerId}`);
+            if (res?.success && res.data) {
+              const p = res.data;
+              const childrenNamesList = p.childrenNames || [];
+              const childrenDetails = p.childrenDetails || childrenNamesList.map((n: string) => ({ name: n }));
+              const childrenStr = childrenNamesList.join(", ");
+              setExtraContacts((prev) => {
+                if (prev.has(partnerId)) return prev;
+                const next = new Map(prev);
+                next.set(partnerId, {
+                  id: partnerId,
+                  name: `${p.firstName || ""} ${p.lastName || ""}`.trim() || `Parent (${partnerId})`,
+                  email: p.email,
+                  phone: p.phone,
+                  profileImage: p.profileImage,
+                  relationship: p.relationship,
+                  info: childrenStr ? `Parent of ${childrenStr}` : "Parent Contact",
+                  role: "Parent",
+                  childrenDetails,
+                });
+                return next;
+              });
+            }
+          } else if (currentUserRole === "parent") {
+            const res = await useApi<any>("GET", `/api/school/${schoolId}/teachers/${partnerId}`);
+            if (res?.success && res.data) {
+              const t = res.data;
+              setExtraContacts((prev) => {
+                if (prev.has(partnerId)) return prev;
+                const next = new Map(prev);
+                next.set(partnerId, {
+                  id: partnerId,
+                  name: `${t.firstName || ""} ${t.lastName || ""}`.trim() || `Teacher (${partnerId})`,
+                  email: t.email,
+                  phone: t.phone,
+                  profileImage: t.profileImage,
+                  role: "Teacher",
+                  info: t.department ? `Department: ${t.department}` : "Teacher Contact",
+                });
+                return next;
+              });
+            }
+          }
+        } catch (err) {
+          console.warn(`Could not fetch extra contact info for ${partnerId}:`, err);
+        }
+      }
+    });
+  }, [rooms, schoolId, currentUserRole, contactsMap]);
+
 
   const fetchRooms = async () => {
     setIsLoadingRooms(true);
@@ -486,46 +565,54 @@ export const ChatPage: React.FC = () => {
   }, [keysReady]); // <-- does NOT depend on selectedRoom
 
 
+  const decryptMessageList = async (rawMessages: any[], sharedKey: CryptoKey | null): Promise<DecryptedMessage[]> => {
+    const decryptedList: DecryptedMessage[] = [];
+    for (const msg of rawMessages) {
+      let text = "[Encrypted Message]";
+      if (sharedKey && msg.encryptedPayload) {
+        try {
+          text = await decryptText(msg.encryptedPayload, sharedKey);
+        } catch (e) {
+          text = "🔒 [Encrypted Message - Unable to decrypt]";
+        }
+      }
+
+      const rawFileUrl = msg.attachmentId?.fileUrl;
+      const rawFileName = text.includes("Attached file:")
+        ? text.split("Attached file:")[1]?.trim()
+        : "encrypted_attachment";
+
+      decryptedList.push({
+        _id: msg._id,
+        roomId: msg.roomId,
+        senderId: msg.senderId,
+        senderRole: msg.senderRole,
+        recipientId: msg.recipientId,
+        text,
+        status: msg.status,
+        messageType: msg.messageType,
+        attachmentUrl: rawFileUrl,
+        attachmentName: rawFileName,
+        attachmentIv: msg.attachmentId?.iv,
+        createdAt: msg.createdAt,
+      });
+    }
+    return decryptedList;
+  };
+
   const loadRoomMessages = async (roomId: string, partnerId: string) => {
     setIsLoadingMessages(true);
+    setChatPage(1);
+    setHasMoreMessages(false);
     try {
-      const res = await chatApi.getRoomMessages(roomId);
+      const res = await chatApi.getRoomMessages(roomId, 1, 50);
       if (res.success && Array.isArray(res.data)) {
         const sharedKey = await getSharedKeyForPartner(partnerId);
-        const decryptedList: DecryptedMessage[] = [];
-
-        for (const msg of res.data) {
-          let text = "[Encrypted Message]";
-          if (sharedKey && msg.encryptedPayload) {
-            try {
-              text = await decryptText(msg.encryptedPayload, sharedKey);
-            } catch (e) {
-              text = "🔒 [Encrypted Message - Unable to decrypt]";
-            }
-          }
-
-          const rawFileUrl = msg.attachmentId?.fileUrl;
-          const rawFileName = text.includes("Attached file:")
-            ? text.split("Attached file:")[1]?.trim()
-            : "encrypted_attachment";
-
-          decryptedList.push({
-            _id: msg._id,
-            roomId: msg.roomId,
-            senderId: msg.senderId,
-            senderRole: msg.senderRole,
-            recipientId: msg.recipientId,
-            text,
-            status: msg.status,
-            messageType: msg.messageType,
-            attachmentUrl: rawFileUrl,
-            attachmentName: rawFileName,
-            attachmentIv: msg.attachmentId?.iv,
-            createdAt: msg.createdAt,
-          });
-        }
-
+        const decryptedList = await decryptMessageList(res.data, sharedKey);
         setMessages(decryptedList);
+        if (res.pagination) {
+          setHasMoreMessages(res.pagination.page < res.pagination.pages);
+        }
       }
     } catch (err) {
       console.error("❌ Error loading messages:", err);
@@ -534,6 +621,56 @@ export const ChatPage: React.FC = () => {
       scrollToBottom();
     }
   };
+
+  const loadMoreMessages = async () => {
+    if (!selectedRoom || isLoadingMore || !hasMoreMessages || isLoadingMessages) return;
+
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const oldScrollHeight = viewport.scrollHeight;
+    const oldScrollTop = viewport.scrollTop;
+
+    setIsLoadingMore(true);
+    const partnerId = getPartnerId(selectedRoom);
+    const nextPage = chatPage + 1;
+
+    try {
+      const res = await chatApi.getRoomMessages(selectedRoom._id, nextPage, 50);
+      if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+        const sharedKey = await getSharedKeyForPartner(partnerId);
+        const decryptedList = await decryptMessageList(res.data, sharedKey);
+
+        setMessages((prev) => [...decryptedList, ...prev]);
+        setChatPage(nextPage);
+        if (res.pagination) {
+          setHasMoreMessages(res.pagination.page < res.pagination.pages);
+        }
+
+        // Restore scroll position after prepend so viewport does not jump
+        requestAnimationFrame(() => {
+          if (viewport) {
+            const newScrollHeight = viewport.scrollHeight;
+            viewport.scrollTop = newScrollHeight - oldScrollHeight + oldScrollTop;
+          }
+        });
+      } else {
+        setHasMoreMessages(false);
+      }
+    } catch (err) {
+      console.error("❌ Error loading older messages:", err);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  const handleViewportScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    if (target.scrollTop < 60 && hasMoreMessages && !isLoadingMore && !isLoadingMessages) {
+      loadMoreMessages();
+    }
+  };
+
 
   // ----------------------------------------------------
   // 4. Real-time WebSocket Listeners
@@ -938,8 +1075,8 @@ export const ChatPage: React.FC = () => {
             flexDirection: "column",
             p: { xs: 2.5, sm: 3 },
             gap: 2,
-            borderRight: "1px solid #f1f5f9",
-            bgcolor: "rgba(248, 250, 252, 0.5)",
+            borderRight: "1px solid #e2e8f0",
+            bgcolor: "#f8fafc",
             position: "relative",
             overflow: "hidden",
           }}
@@ -981,8 +1118,9 @@ export const ChatPage: React.FC = () => {
             sx={{
               "& .MuiOutlinedInput-root": {
                 borderRadius: "16px",
-                bgcolor: "rgba(241, 245, 249, 0.8)",
+                bgcolor: "#ffffff",
                 fontSize: "0.875rem",
+                border: "1px solid #e2e8f0",
                 "& fieldset": { border: "none" },
                 "&:hover fieldset": { border: "none" },
                 "&.Mui-focused fieldset": { border: "1px solid #6366f1" },
@@ -1091,13 +1229,14 @@ export const ChatPage: React.FC = () => {
                         display: "flex",
                         alignItems: "center",
                         cursor: "pointer",
-                        bgcolor: "#ffffff",
-                        border: isSelected ? "1px solid #e0e7ff" : "1px solid #f1f5f9",
-                        boxShadow: isSelected ? "0 1px 3px rgba(0,0,0,0.05)" : "none",
+                        bgcolor: isSelected ? "#ffffff" : "rgba(255, 255, 255, 0.7)",
+                        border: isSelected ? "2px solid #6366f1" : "1px solid #e2e8f0",
+                        boxShadow: isSelected ? "0 4px 14px rgba(99, 102, 241, 0.15)" : "0 1px 3px rgba(0,0,0,0.02)",
                         transition: "all 0.2s ease",
                         "&:hover": {
-                          borderColor: "#e0e7ff",
+                          borderColor: "#6366f1",
                           bgcolor: "#ffffff",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
                         },
                       }}
                     >
@@ -1410,7 +1549,7 @@ export const ChatPage: React.FC = () => {
             flex: 1,
             display: { xs: selectedRoom ? "flex" : "none", md: "flex" },
             flexDirection: "column",
-            bgcolor: "rgba(248, 250, 252, 0.2)",
+            bgcolor: "#f5f7ff",
           }}
         >
           {selectedRoom ? (
@@ -1422,7 +1561,7 @@ export const ChatPage: React.FC = () => {
                   height: "56px",
                   px: 2,
                   bgcolor: "#ffffff",
-                  borderBottom: "1px solid #f1f5f9",
+                  borderBottom: "1px solid #e2e8f0",
                   alignItems: "center",
                   justifyContent: "space-between",
                 }}
@@ -1453,7 +1592,7 @@ export const ChatPage: React.FC = () => {
                 sx={{
                   height: { xs: "72px", md: "96px" },
                   px: { xs: 2, md: 5 },
-                  borderBottom: "1px solid #f1f5f9",
+                  borderBottom: "1px solid #e2e8f0",
                   display: "flex",
                   alignItems: "center",
                   bgcolor: "rgba(255, 255, 255, 0.8)",
@@ -1546,6 +1685,8 @@ export const ChatPage: React.FC = () => {
 
               {/* Message Viewport */}
               <Box
+                ref={viewportRef}
+                onScroll={handleViewportScroll}
                 sx={{
                   flex: 1,
                   overflowY: "auto",
@@ -1558,6 +1699,13 @@ export const ChatPage: React.FC = () => {
                   "&::-webkit-scrollbar-thumb": { background: "#e2e8f0", borderRadius: "10px" },
                 }}
               >
+                {/* Infinite Scroll Up Loader */}
+                {isLoadingMore && (
+                  <Box sx={{ display: "flex", justifyContent: "center", py: 1 }}>
+                    <CircularProgress size={22} sx={{ color: "#4f46e5" }} />
+                  </Box>
+                )}
+
                 {/* Discrete Encryption Notice */}
                 <Box sx={{ display: "flex", justifyContent: "center" }}>
                   <Box
@@ -1636,85 +1784,163 @@ export const ChatPage: React.FC = () => {
                       >
                         {isAttachment ? (
                           // FILE BUBBLE
-                          <Box
-                            sx={{
-                              p: 0.5,
-                              boxShadow: "0 20px 25px -5px rgba(238, 242, 255, 0.5)",
-                              width: "100%",
-                              maxWidth: "440px",
-                              background: "linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)",
-                              borderRadius: "16px 16px 2px 16px",
-                            }}
-                          >
+                          isOwn ? (
+                            // OUTGOING ATTACHMENT BUBBLE (Right-aligned, Indigo theme, with ticks)
                             <Box
                               sx={{
-                                bgcolor: "rgba(255, 255, 255, 0.05)",
-                                borderRadius: "15px",
-                                p: 1.75,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
+                                p: 0.5,
+                                boxShadow: "0 10px 20px -3px rgba(79, 70, 229, 0.3)",
+                                width: "100%",
+                                maxWidth: "440px",
+                                background: "linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)",
+                                borderRadius: "16px 16px 2px 16px",
                               }}
                             >
-                              <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0, flex: 1 }}>
-                                <Box
-                                  sx={{
-                                    width: 44,
-                                    height: 44,
-                                    bgcolor: "rgba(255, 255, 255, 0.15)",
-                                    borderRadius: "12px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    backdropFilter: "blur(12px)",
-                                    border: "1px solid rgba(255, 255, 255, 0.2)",
-                                    color: "#ffffff",
-                                  }}
-                                >
-                                  <FileIcon sx={{ fontSize: 22 }} />
-                                </Box>
-                                <Box sx={{ minWidth: 0, flex: 1 }}>
-                                  <Typography variant="subtitle2" fontWeight={600} color="#ffffff" noWrap sx={{ fontSize: "13px" }}>
-                                    {msg.attachmentName || "classwise_attendance_2026.xlsx"}
-                                  </Typography>
-                                  <Typography variant="caption" color="rgba(224, 231, 255, 0.8)" fontWeight={700} sx={{ fontSize: "10px", display: "block" }}>
-                                    DOCUMENT • END-TO-END ENCRYPTED
-                                  </Typography>
-                                </Box>
-                              </Stack>
-
-                              <IconButton
-                                onClick={() => handleDownloadAttachment(msg)}
-                                disabled={downloadingFileId === msg._id}
+                              <Box
                                 sx={{
-                                  p: 1.25,
-                                  bgcolor: "#ffffff",
-                                  color: "#3730a3",
-                                  borderRadius: "12px",
-                                  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                                  "&:hover": { bgcolor: "#e0e7ff" },
+                                  bgcolor: "rgba(255, 255, 255, 0.05)",
+                                  borderRadius: "15px",
+                                  p: 1.75,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  border: "1px solid rgba(255, 255, 255, 0.1)",
                                 }}
                               >
-                                {downloadingFileId === msg._id ? (
-                                  <CircularProgress size={18} color="inherit" />
-                                ) : (
-                                  <DownloadIcon sx={{ fontSize: 18 }} />
-                                )}
-                              </IconButton>
-                            </Box>
+                                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0, flex: 1 }}>
+                                  <Box
+                                    sx={{
+                                      width: 44,
+                                      height: 44,
+                                      bgcolor: "rgba(255, 255, 255, 0.15)",
+                                      borderRadius: "12px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      backdropFilter: "blur(12px)",
+                                      border: "1px solid rgba(255, 255, 255, 0.2)",
+                                      color: "#ffffff",
+                                    }}
+                                  >
+                                    <FileIcon sx={{ fontSize: 22 }} />
+                                  </Box>
+                                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Typography variant="subtitle2" fontWeight={600} color="#ffffff" noWrap sx={{ fontSize: "13px" }}>
+                                      {msg.attachmentName || "attachment"}
+                                    </Typography>
+                                    <Typography variant="caption" color="rgba(224, 231, 255, 0.8)" fontWeight={700} sx={{ fontSize: "10px", display: "block" }}>
+                                      DOCUMENT • END-TO-END ENCRYPTED
+                                    </Typography>
+                                  </Box>
+                                </Stack>
 
-                            <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={0.75} sx={{ px: 2, py: 0.75 }}>
-                              <Typography variant="caption" color="#e0e7ff" fontWeight={500} sx={{ fontSize: "10px" }}>
-                                {formatSingleTime(msg.createdAt, timeFormat)}
-                              </Typography>
-                              {msg.status === "read" ? (
-                                <DoneAllIcon sx={{ fontSize: 14, color: "#c7d2fe" }} />
-                              ) : (
-                                <CheckIcon sx={{ fontSize: 14, color: "#c7d2fe" }} />
-                              )}
-                            </Stack>
-                          </Box>
+                                <IconButton
+                                  onClick={() => handleDownloadAttachment(msg)}
+                                  disabled={downloadingFileId === msg._id}
+                                  sx={{
+                                    p: 1.25,
+                                    bgcolor: "#ffffff",
+                                    color: "#3730a3",
+                                    borderRadius: "12px",
+                                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                                    "&:hover": { bgcolor: "#e0e7ff" },
+                                  }}
+                                >
+                                  {downloadingFileId === msg._id ? (
+                                    <CircularProgress size={18} color="inherit" />
+                                  ) : (
+                                    <DownloadIcon sx={{ fontSize: 18 }} />
+                                  )}
+                                </IconButton>
+                              </Box>
+
+                              <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={0.75} sx={{ px: 2, py: 0.75 }}>
+                                <Typography variant="caption" color="#e0e7ff" fontWeight={500} sx={{ fontSize: "10px" }}>
+                                  {formatSingleTime(msg.createdAt, timeFormat)}
+                                </Typography>
+                                {msg.status === "read" ? (
+                                  <DoneAllIcon sx={{ fontSize: 14, color: "#c7d2fe" }} />
+                                ) : (
+                                  <CheckIcon sx={{ fontSize: 14, color: "#c7d2fe" }} />
+                                )}
+                              </Stack>
+                            </Box>
+                          ) : (
+                            // INCOMING ATTACHMENT BUBBLE (Left-aligned, White theme, NO ticks)
+                            <Box
+                              sx={{
+                                p: 0.5,
+                                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                                width: "100%",
+                                maxWidth: "440px",
+                                bgcolor: "#ffffff",
+                                border: "1px solid #e2e8f0",
+                                borderRadius: "16px 16px 16px 2px",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  bgcolor: "#f8fafc",
+                                  borderRadius: "15px",
+                                  p: 1.75,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  border: "1px solid #e2e8f0",
+                                }}
+                              >
+                                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0, flex: 1 }}>
+                                  <Box
+                                    sx={{
+                                      width: 44,
+                                      height: 44,
+                                      bgcolor: "#e0e7ff",
+                                      borderRadius: "12px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      color: "#4f46e5",
+                                    }}
+                                  >
+                                    <FileIcon sx={{ fontSize: 22 }} />
+                                  </Box>
+                                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Typography variant="subtitle2" fontWeight={700} color="#0f172a" noWrap sx={{ fontSize: "13px" }}>
+                                      {msg.attachmentName || "attachment"}
+                                    </Typography>
+                                    <Typography variant="caption" color="#64748b" fontWeight={700} sx={{ fontSize: "10px", display: "block" }}>
+                                      DOCUMENT • END-TO-END ENCRYPTED
+                                    </Typography>
+                                  </Box>
+                                </Stack>
+
+                                <IconButton
+                                  onClick={() => handleDownloadAttachment(msg)}
+                                  disabled={downloadingFileId === msg._id}
+                                  sx={{
+                                    p: 1.25,
+                                    bgcolor: "#4f46e5",
+                                    color: "#ffffff",
+                                    borderRadius: "12px",
+                                    boxShadow: "0 2px 4px rgba(79, 70, 229, 0.2)",
+                                    "&:hover": { bgcolor: "#4338ca" },
+                                  }}
+                                >
+                                  {downloadingFileId === msg._id ? (
+                                    <CircularProgress size={18} color="inherit" />
+                                  ) : (
+                                    <DownloadIcon sx={{ fontSize: 18 }} />
+                                  )}
+                                </IconButton>
+                              </Box>
+
+                              <Stack direction="row" alignItems="center" justifyContent="flex-start" spacing={0.75} sx={{ px: 2, py: 0.75 }}>
+                                <Typography variant="caption" color="#94a3b8" fontWeight={500} sx={{ fontSize: "10px" }}>
+                                  {formatSingleTime(msg.createdAt, timeFormat)}
+                                </Typography>
+                              </Stack>
+                            </Box>
+                          )
                         ) : isOwn ? (
                           // OUTGOING TEXT BUBBLE
                           <Box
@@ -1746,14 +1972,14 @@ export const ChatPage: React.FC = () => {
                           // INCOMING TEXT BUBBLE
                           <Box
                             sx={{
-                              bgcolor: "#f1f5f9",
-                              border: "1px solid rgba(226, 232, 240, 0.5)",
-                              color: "#1e293b",
+                              bgcolor: "#ffffff",
+                              border: "1px solid #e2e8f0",
+                              color: "#0f172a",
                               px: 2.5,
                               py: 1.5,
                               maxWidth: "85%",
                               borderRadius: "12px 12px 12px 2px",
-                              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                              boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
                             }}
                           >
                             <Typography variant="body1" sx={{ fontSize: "15px", lineHeight: "1.6" }}>
@@ -1781,7 +2007,7 @@ export const ChatPage: React.FC = () => {
                   px: { xs: 2, md: 5 },
                   py: { xs: 2, md: 3 },
                   bgcolor: "#ffffff",
-                  borderTop: "1px solid #f1f5f9",
+                  borderTop: "1px solid #e2e8f0",
                   display: "flex",
                   alignItems: "center",
                   gap: 1.5,

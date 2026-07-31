@@ -1,68 +1,42 @@
+import useApi from "../useApi";
 import TokenService from "../token/tokenService";
 
 const CHAT_SERVICE_URL = `${import.meta.env.VITE_CHAT_API_URL || "http://localhost:5007"}/api/chat`;
 
-const getHeaders = () => {
-  const token = TokenService.getToken();
-  return {
-    "Content-Type": "application/json",
-    Authorization: token ? `Bearer ${token}` : "",
-  };
-};
-
 export const chatApi = {
   // 1. Register client E2EE Public Keys
   registerKeys: async (identityPublicKey: string) => {
-    const res = await fetch(`${CHAT_SERVICE_URL}/keys`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify({ identityPublicKey }),
-    });
-    return res.json();
+    return useApi<any>("POST", "/api/chat/keys", { identityPublicKey });
   },
 
   // 2. Fetch target user's public key bundle
   getUserKeys: async (targetUserId: string) => {
-    const res = await fetch(`${CHAT_SERVICE_URL}/keys/${targetUserId}`, {
-      headers: getHeaders(),
-    });
-    return res.json();
+    return useApi<any>("GET", `/api/chat/keys/${targetUserId}`);
   },
 
   // 3. Get all chat rooms for authenticated user
   getRooms: async () => {
-    const res = await fetch(`${CHAT_SERVICE_URL}/rooms`, {
-      headers: getHeaders(),
-    });
-    return res.json();
+    return useApi<any>("GET", "/api/chat/rooms");
   },
 
   // 4. Create or retrieve Parent-Teacher conversation room
   getOrCreateRoom: async (partnerUserId: string, studentId?: string) => {
-    const res = await fetch(`${CHAT_SERVICE_URL}/rooms`, {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify({ partnerUserId, studentId }),
-    });
-    return res.json();
+    return useApi<any>("POST", "/api/chat/rooms", { partnerUserId, studentId });
   },
 
   // 5. Fetch encrypted message history
   getRoomMessages: async (roomId: string, page = 1, limit = 50) => {
-    const res = await fetch(
-      `${CHAT_SERVICE_URL}/rooms/${roomId}/messages?page=${page}&limit=${limit}`,
-      { headers: getHeaders() }
+    return useApi<any>(
+      "GET",
+      `/api/chat/rooms/${roomId}/messages`,
+      undefined,
+      { page, limit }
     );
-    return res.json();
   },
 
   // 6. Mark messages in room as read
   markAsRead: async (roomId: string) => {
-    const res = await fetch(`${CHAT_SERVICE_URL}/rooms/${roomId}/read`, {
-      method: "PUT",
-      headers: getHeaders(),
-    });
-    return res.json();
+    return useApi<any>("PUT", `/api/chat/rooms/${roomId}/read`);
   },
 
   // 7. Upload encrypted file attachment
@@ -85,9 +59,6 @@ export const chatApi = {
 
   // 8. Check online status of a target user (real-time presence)
   getOnlineStatus: async (targetUserId: string) => {
-    const res = await fetch(`${CHAT_SERVICE_URL}/keys/status/${targetUserId}`, {
-      headers: getHeaders(),
-    });
-    return res.json();
+    return useApi<any>("GET", `/api/chat/keys/status/${targetUserId}`);
   },
 };
