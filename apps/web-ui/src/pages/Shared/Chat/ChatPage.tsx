@@ -23,6 +23,7 @@ import {
   DialogActions,
   Fade,
   Fab,
+  Alert,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -106,6 +107,7 @@ export const ChatPage: React.FC = () => {
 
   const schoolId = TokenService.getSchoolId() || "";
   const currentUser = TokenService.getUser();
+  const currentUserName = `${currentUser?.firstName || ""} ${currentUser?.lastName || ""}`.trim() || currentUser?.username || "";
   const currentUserId = (
     currentUser?.parentId ||
     currentUser?.teacherId ||
@@ -186,6 +188,36 @@ export const ChatPage: React.FC = () => {
       next.set(userId, { isOnline: false, lastSeen });
       return next;
     });
+  };
+
+  // Invitation & Partner Key Registration State
+  const [isSendingInvite, setIsSendingInvite] = useState(false);
+  const [inviteSentPartnerId, setInviteSentPartnerId] = useState<string | null>(null);
+  const [registeredKeysMap, setRegisteredKeysMap] = useState<Map<string, boolean>>(new Map());
+  const [inviteDialogPartner, setInviteDialogPartner] = useState<ContactInfo | null>(null);
+
+  const handleSendChatInvite = async () => {
+    if (!selectedRoom || !schoolId) return;
+    const partnerId = getPartnerId(selectedRoom);
+    const partnerInfo = getPartnerDisplayInfo(selectedRoom);
+    try {
+      setIsSendingInvite(true);
+      const inviterName = currentUserName || (isParent ? "Parent" : "Teacher");
+      const inviterRole = isParent ? "Parent" : "Teacher";
+      await chatApi.sendChatInvite(schoolId, {
+        recipientId: partnerId,
+        recipientRole: partnerInfo.role,
+        inviterName,
+        inviterRole,
+        inviterId: currentUserId,
+        roomId: selectedRoom._id,
+      });
+      setInviteSentPartnerId(partnerId);
+    } catch (err) {
+      console.error("❌ Failed to send chat invite:", err);
+    } finally {
+      setIsSendingInvite(false);
+    }
   };
 
   const getPartnerPresence = (partnerId: string) => {
@@ -413,72 +445,99 @@ export const ChatPage: React.FC = () => {
     fetchRooms();
   }, [initialPartnerId]);
 
+  // Track in-flight or completed extra contact queries to prevent duplicate requests & 404 loops
+  const fetchingExtraRef = useRef<Set<string>>(new Set());
+
   // Dynamically resolve contact details for room partners missing from directory
   useEffect(() => {
     if (!schoolId || !rooms || rooms.length === 0) return;
 
-    rooms.forEach(async (room) => {
-      const partnerId = getPartnerId(room);
-      if (!partnerId) return;
+    const unmappedIds = rooms
+      .map((r) => getPartnerId(r))
+      .filter((id): id is string => Boolean(id) && !fetchingExtraRef.current.has(id));
 
-      if (!contactsMap.has(partnerId)) {
-        try {
-          if (currentUserRole === "teacher" || currentUserRole === "admin" || currentUserRole === "superadmin") {
-            const res = await useApi<any>("GET", `/api/school/${schoolId}/parents/${partnerId}`);
-            if (res?.success && res.data) {
-              const p = res.data;
-              const childrenNamesList = p.childrenNames || [];
-              const childrenDetails = p.childrenDetails || childrenNamesList.map((n: string) => ({ name: n }));
-              const childrenStr = childrenNamesList.join(", ");
-              setExtraContacts((prev) => {
-                if (prev.has(partnerId)) return prev;
-                const next = new Map(prev);
-                next.set(partnerId, {
-                  id: partnerId,
-                  name: `${p.firstName || ""} ${p.lastName || ""}`.trim() || `Parent (${partnerId})`,
-                  email: p.email,
-                  phone: p.phone,
-                  profileImage: p.profileImage,
-                  relationship: p.relationship,
-                  info: childrenStr ? `Parent of ${childrenStr}` : "Parent Contact",
-                  role: "Parent",
-                  childrenDetails,
-                });
-                return next;
-              });
-            }
-          } else if (currentUserRole === "parent") {
-            const res = await useApi<any>("GET", `/api/school/${schoolId}/teachers/${partnerId}`);
-            if (res?.success && res.data) {
-              const t = res.data;
-              const teacherDetails = [
-                t.department ? `Dept: ${t.department}` : null,
-                t.subjectNames && t.subjectNames.length > 0 ? `Subjects: ${t.subjectNames.join(", ")}` : null,
-                t.classNames && t.classNames.length > 0 ? `Classes: ${t.classNames.join(", ")}` : null,
-              ].filter(Boolean).join(" • ") || "Teacher Contact";
+    if (unmappedIds.length === 0) return;
 
-              setExtraContacts((prev) => {
-                if (prev.has(partnerId)) return prev;
-                const next = new Map(prev);
-                next.set(partnerId, {
-                  id: partnerId,
-                  name: `${t.firstName || ""} ${t.lastName || ""}`.trim() || `Teacher (${partnerId})`,
-                  email: t.email,
-                  phone: t.phone,
-                  profileImage: t.profileImage,
-                  role: "Teacher",
-                  info: teacherDetails,
-                });
-                return next;
+    // Synchronously mark as fetching before initiating async HTTP requests
+    unmappedIds.forEach((id) => fetchingExtraRef.current.add(id));
+
+    unmappedIds.forEach(async (partnerId) => {
+      try {
+        if (currentUserRole === "teacher" || currentUserRole === "admin" || currentUserRole === "superadmin") {
+          const res = await useApi<any>("GET", `/api/school/${schoolId}/parents/${partnerId}`);
+          if (res?.success && res.data) {
+            const p = res.data;
+            const childrenNamesList = p.childrenNames || [];
+            const childrenDetails = p.childrenDetails || childrenNamesList.map((n: string) => ({ name: n }));
+            const childrenStr = childrenNamesList.join(", ");
+            setExtraContacts((prev) => {
+              const next = new Map(prev);
+              next.set(partnerId, {
+                id: partnerId,
+                name: `${p.firstName || ""} ${p.lastName || ""}`.trim() || `Parent (${partnerId})`,
+                email: p.email,
+                phone: p.phone,
+                profileImage: p.profileImage,
+                relationship: p.relationship,
+                info: childrenStr ? `Parent of ${childrenStr}` : "Parent Contact",
+                role: "Parent",
+                childrenDetails,
               });
-            }
+              return next;
+            });
+          } else {
+            setExtraContacts((prev) => {
+              const next = new Map(prev);
+              next.set(partnerId, {
+                id: partnerId,
+                name: `Parent (${partnerId})`,
+                info: "Parent Contact",
+                role: "Parent",
+              });
+              return next;
+            });
           }
-        } catch (err) {
-          console.warn(`Could not fetch extra contact info for ${partnerId}:`, err);
+        } else if (currentUserRole === "parent") {
+          const res = await useApi<any>("GET", `/api/school/${schoolId}/teachers/${partnerId}`);
+          if (res?.success && res.data) {
+            const t = res.data;
+            const teacherDetails = [
+              t.department ? `Dept: ${t.department}` : null,
+              t.subjectNames && t.subjectNames.length > 0 ? `Subjects: ${t.subjectNames.join(", ")}` : null,
+              t.classNames && t.classNames.length > 0 ? `Classes: ${t.classNames.join(", ")}` : null,
+            ].filter(Boolean).join(" • ") || "Teacher Contact";
+
+            setExtraContacts((prev) => {
+              const next = new Map(prev);
+              next.set(partnerId, {
+                id: partnerId,
+                name: `${t.firstName || ""} ${t.lastName || ""}`.trim() || `Teacher (${partnerId})`,
+                email: t.email,
+                phone: t.phone,
+                profileImage: t.profileImage,
+                role: "Teacher",
+                info: teacherDetails,
+              });
+              return next;
+            });
+          } else {
+            setExtraContacts((prev) => {
+              const next = new Map(prev);
+              next.set(partnerId, {
+                id: partnerId,
+                name: `Teacher (${partnerId})`,
+                info: "Teacher Contact",
+                role: "Teacher",
+              });
+              return next;
+            });
+          }
         }
+      } catch (err) {
+        console.warn(`Could not fetch extra contact info for ${partnerId}:`, err);
       }
     });
-  }, [rooms, schoolId, currentUserRole, contactsMap]);
+  }, [rooms, schoolId, currentUserRole]);
 
 
   const fetchRooms = async () => {
@@ -534,22 +593,27 @@ export const ChatPage: React.FC = () => {
 
     try {
       console.log(`🔑 [E2EE] Fetching public key for partner: ${partnerId}...`);
-      const res = await chatApi.getUserKeys(partnerId);
-      if (!res.success || !res.data?.identityPublicKey) {
-        console.warn(`⚠️ [E2EE] Partner ${partnerId} has not registered public keys yet on backend.`);
-        return null;
+      let res = await chatApi.getUserKeys(partnerId);
+
+      // If server is pre-generating key bundle, retry once after 1 second
+      if (!res?.success || !res.data?.identityPublicKey) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        res = await chatApi.getUserKeys(partnerId);
       }
 
-      console.log(`🔑 [E2EE] Partner ${partnerId} public key retrieved. Deriving shared AES key...`);
-      const partnerPublicKey = await importPublicKey(res.data.identityPublicKey);
-      const sharedKey = await deriveSharedKey(ownKeyPairRef.current.privateKey, partnerPublicKey);
-      sharedKeyCacheRef.current.set(partnerId, sharedKey);
-      console.log(`✅ [E2EE] Shared key derived successfully for partner: ${partnerId}`);
-      return sharedKey;
+      if (res?.success && res.data?.identityPublicKey) {
+        console.log(`🔑 [E2EE] Partner ${partnerId} public key retrieved. Deriving shared AES key...`);
+        const partnerPublicKey = await importPublicKey(res.data.identityPublicKey);
+        const sharedKey = await deriveSharedKey(ownKeyPairRef.current.privateKey, partnerPublicKey);
+        sharedKeyCacheRef.current.set(partnerId, sharedKey);
+        console.log(`✅ [E2EE] Shared key derived successfully for partner: ${partnerId}`);
+        return sharedKey;
+      }
     } catch (e) {
-      console.error(`❌ [E2EE] Error deriving shared key for partner ${partnerId}:`, e);
-      return null;
+      console.warn(`⚠️ [E2EE] Error fetching key for partner ${partnerId}:`, e);
     }
+
+    return null;
   };
 
   // Ref to track if a room was selected before keys were ready
@@ -578,6 +642,14 @@ export const ChatPage: React.FC = () => {
       if (res?.success && res.data) {
         if (res.data.isOnline) setUserOnline(partnerId);
         else setUserOffline(partnerId, res.data.lastSeen || null);
+      }
+    }).catch(() => { });
+
+    chatApi.getUserKeys(partnerId).then((res) => {
+      if (res?.success && res.data?.identityPublicKey) {
+        setRegisteredKeysMap((prev) => new Map(prev).set(partnerId, true));
+      } else {
+        setRegisteredKeysMap((prev) => new Map(prev).set(partnerId, false));
       }
     }).catch(() => { });
 
@@ -905,50 +977,8 @@ export const ChatPage: React.FC = () => {
     let sharedKey = await getSharedKeyForPartner(partnerId);
 
     if (!sharedKey) {
-      // Partner hasn't registered E2EE keys yet — show a pending message and retry for up to 30s
-      const tempId = `pending_${Date.now()}`;
-      const pendingMsg: DecryptedMessage = {
-        _id: tempId,
-        roomId: selectedRoom._id,
-        senderId: currentUserId,
-        senderRole: currentUserRole,
-        recipientId: partnerId,
-        text: textToSend,
-        status: "sent",
-        messageType: "text",
-        createdAt: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, pendingMsg]);
-      scrollToBottom();
-
-      // Retry key fetch for up to 30 seconds (recipient may be loading)
-      let retries = 0;
-      const maxRetries = 6;
-      const retryInterval = setInterval(async () => {
-        retries++;
-        sharedKeyCacheRef.current.delete(partnerId); // clear cache to force re-fetch
-        sharedKey = await getSharedKeyForPartner(partnerId);
-        if (sharedKey) {
-          clearInterval(retryInterval);
-          try {
-            const encryptedPayload = await encryptText(textToSend, sharedKey);
-            chatSocket.sendEncryptedMessage({
-              roomId: selectedRoom._id,
-              recipientId: partnerId,
-              encryptedPayload,
-              ephemeralPublicKey: ownPublicKeyBase64Ref.current || undefined,
-              messageType: "text",
-            });
-          } catch (err) {
-            console.error("❌ Send after key-retry error:", err);
-          }
-        } else if (retries >= maxRetries) {
-          clearInterval(retryInterval);
-          // Remove the pending message if key never arrived
-          setMessages((prev) => prev.filter((m) => m._id !== tempId));
-          console.warn("⚠️ Recipient E2EE keys unavailable after retries. Message not sent.");
-        }
-      }, 5000);
+      setInputText(textToSend);
+      setInviteDialogPartner(getPartnerDisplayInfo(selectedRoom));
       return;
     }
 
@@ -1817,6 +1847,51 @@ export const ChatPage: React.FC = () => {
                   </Box>
                 </Box>
 
+                {/* Invitation Prompt Banner (Only shown if room is empty AND partner is NOT registered yet) */}
+                {selectedRoom && (() => {
+                  const partnerId = getPartnerId(selectedRoom);
+                  const isPartnerRegistered = registeredKeysMap.get(partnerId);
+                  const hasMessages = messages.length > 0;
+
+                  // Do NOT show invite banner if messages already exist OR if partner is already registered
+                  if (hasMessages || isPartnerRegistered) {
+                    return null;
+                  }
+
+                  if (inviteSentPartnerId === partnerId) {
+                    return (
+                      <Box sx={{ display: "flex", justifyContent: "center", width: "100%", px: 2 }}>
+                        <Alert severity="success" sx={{ borderRadius: "12px", fontSize: "12.5px", width: "100%", maxWidth: "520px" }}>
+                          Invitation sent! <strong>{getPartnerDisplayInfo(selectedRoom).name}</strong> will receive an in-app notification to join the chat.
+                        </Alert>
+                      </Box>
+                    );
+                  }
+
+                  return (
+                    <Box sx={{ display: "flex", justifyContent: "center", width: "100%", px: 2 }}>
+                      <Alert
+                        severity="info"
+                        action={
+                          <Button
+                            color="primary"
+                            size="small"
+                            variant="contained"
+                            onClick={handleSendChatInvite}
+                            disabled={isSendingInvite}
+                            sx={{ borderRadius: "8px", textTransform: "none", fontWeight: 600, fontSize: "12px", boxShadow: "none" }}
+                          >
+                            {isSendingInvite ? "Sending..." : "Send Chat Invite 📩"}
+                          </Button>
+                        }
+                        sx={{ borderRadius: "12px", fontSize: "12.5px", alignItems: "center", width: "100%", maxWidth: "520px" }}
+                      >
+                        Invite <strong>{getPartnerDisplayInfo(selectedRoom).name}</strong> to join secure chat & receive an in-app notification!
+                      </Alert>
+                    </Box>
+                  );
+                })()}
+
                 {/* Messages grouped by date with dynamic dividers */}
                 {isLoadingMessages ? (
                   <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
@@ -2087,6 +2162,29 @@ export const ChatPage: React.FC = () => {
                 })()}
                 <div ref={messagesEndRef} />
               </Box>
+
+              {/* Quick Conversation Starter Chips */}
+              <Stack direction="row" spacing={1} alignItems="center" sx={{ px: { xs: 2, md: 5 }, py: 1.25, bgcolor: "#ffffff", borderTop: "1px solid #f1f5f9", overflowX: "auto" }}>
+                <Typography variant="caption" color="#94a3b8" fontWeight={700} sx={{ fontSize: "11px", whiteSpace: "nowrap", mr: 0.5 }}>
+                  Quick Start:
+                </Typography>
+                {["👋 Hi!", "Hello! Glad to connect.", "Good day!", "Can we discuss student progress?"].map((chipText) => (
+                  <Chip
+                    key={chipText}
+                    label={chipText}
+                    clickable
+                    onClick={() => setInputText(chipText)}
+                    sx={{
+                      bgcolor: "#f8fafc",
+                      color: "#475569",
+                      fontWeight: 600,
+                      fontSize: "12px",
+                      border: "1px solid #e2e8f0",
+                      "&:hover": { bgcolor: "#e0e7ff", color: "#3730a3", borderColor: "#c7d2fe" },
+                    }}
+                  />
+                ))}
+              </Stack>
 
               {/* Chat Input Bar Footer */}
               <Box
@@ -2365,6 +2463,93 @@ export const ChatPage: React.FC = () => {
               Message Now
             </Button>
           )}
+        </DialogActions>
+      </Dialog>
+
+      {/* ---------------------------------------------------- */}
+      {/* UNREGISTERED RECIPIENT INVITATION DIALOG */}
+      {/* ---------------------------------------------------- */}
+      <Dialog
+        open={Boolean(inviteDialogPartner)}
+        onClose={() => setInviteDialogPartner(null)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: "20px",
+            p: 1,
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+          },
+        }}
+      >
+        <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1.5, pb: 1 }}>
+          <Box
+            sx={{
+              width: 42,
+              height: 42,
+              borderRadius: "12px",
+              bgcolor: "#e0e7ff",
+              color: "#4f46e5",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <ChatIcon sx={{ fontSize: 22 }} />
+          </Box>
+          <Box>
+            <Typography variant="h6" fontWeight={700} color="#0f172a" sx={{ fontSize: "17px", lineHeight: 1.2 }}>
+              Send Chat Invite?
+            </Typography>
+            <Typography variant="caption" color="#64748b" fontWeight={500}>
+              Notify contact to start chatting
+            </Typography>
+          </Box>
+        </DialogTitle>
+
+        <DialogContent sx={{ pt: 1 }}>
+          <Typography variant="body2" color="#334155" sx={{ lineHeight: 1.6, fontSize: "14px" }}>
+            <strong>{inviteDialogPartner?.name || "This contact"}</strong> has not joined the chat feature yet.
+          </Typography>
+          <Typography variant="body2" color="#64748b" sx={{ mt: 1.5, fontSize: "13px" }}>
+            Would you like to send them an in-app invitation? They will receive a notification to join this conversation.
+          </Typography>
+        </DialogContent>
+
+        <DialogActions sx={{ p: 2, pt: 1, gap: 1 }}>
+          <Button
+            onClick={() => setInviteDialogPartner(null)}
+            sx={{
+              borderRadius: "10px",
+              textTransform: "none",
+              fontWeight: 600,
+              color: "#64748b",
+              px: 2,
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={async () => {
+              await handleSendChatInvite();
+              setInviteDialogPartner(null);
+            }}
+            disabled={isSendingInvite}
+            sx={{
+              borderRadius: "10px",
+              textTransform: "none",
+              fontWeight: 600,
+              bgcolor: "#4f46e5",
+              color: "#ffffff",
+              px: 2.5,
+              py: 1,
+              boxShadow: "0 4px 6px -1px rgba(79, 70, 229, 0.2)",
+              "&:hover": { bgcolor: "#4338ca" },
+            }}
+          >
+            {isSendingInvite ? "Sending..." : "Send Invitation 📩"}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

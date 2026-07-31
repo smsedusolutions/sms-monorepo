@@ -988,6 +988,8 @@ export type NotificationType =
   | "homework_due"
   | "exam_scheduled"
   | "result_published"
+  | "chat_invite"
+  | "chat_accepted"
   | "general";
 
 export type NotificationReferenceType =
@@ -997,6 +999,7 @@ export type NotificationReferenceType =
   | "attendance"
   | "exam"
   | "result"
+  | "chat"
   | null;
 
 export interface Notification {

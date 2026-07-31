@@ -7,6 +7,7 @@ const {
     markAsRead,
     markAllAsRead,
     deleteNotification,
+    sendChatInviteNotification,
 } = require('../controllers/notification.controller');
 
 // Get my notifications (All authenticated users)
@@ -35,6 +36,13 @@ router.put(
     '/:notificationId/read',
     Authenticated,
     markAsRead
+);
+
+// Send chat invitation notification
+router.post(
+    '/chat-invite',
+    Authenticated,
+    sendChatInviteNotification
 );
 
 // Delete notification

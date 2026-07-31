@@ -38,6 +38,8 @@ const NotificationSchema = new Schema({
             'bus_reached_school', // Bus arrived at school
             'bus_delayed',        // Bus delay alert
             'transport_update',   // General transport update
+            'chat_invite',        // Chat invitation alert
+            'chat_accepted',      // Chat invitation accepted alert
         ],
         required: true
     },
@@ -54,7 +56,7 @@ const NotificationSchema = new Schema({
     },
     referenceType: {
         type: String,
-        enum: ['announcement', 'homework', 'leave', 'attendance', 'exam', 'result', 'transport', null]
+        enum: ['announcement', 'homework', 'leave', 'attendance', 'exam', 'result', 'transport', 'chat', null]
     },
     isRead: {
         type: Boolean,

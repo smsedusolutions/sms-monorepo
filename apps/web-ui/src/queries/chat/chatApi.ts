@@ -69,4 +69,19 @@ export const chatApi = {
   getOnlineStatus: async (targetUserId: string) => {
     return useApi<any>("GET", `/api/chat/keys/status/${targetUserId}`);
   },
+
+  // 9. Send Chat Invitation In-App Notification to partner
+  sendChatInvite: async (
+    schoolId: string,
+    payload: {
+      recipientId: string;
+      recipientRole?: string;
+      inviterName: string;
+      inviterRole: string;
+      inviterId: string;
+      roomId?: string;
+    }
+  ) => {
+    return useApi<any>("POST", `/api/school/${schoolId}/notifications/chat-invite`, payload);
+  },
 };
