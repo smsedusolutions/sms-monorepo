@@ -56,7 +56,7 @@ const initWebSocketGateway = (server) => {
       return;
     }
 
-    const userId = (user.userId || user.id || user._id || user.teacherId || user.studentId || user.adminId || "").toString();
+    const userId = (user.parentId || user.teacherId || user.studentId || user.userId || user.id || user._id || user.adminId || "").toString();
     if (!userId) {
       console.log("❌ [WebSocket] Connection rejected: Missing User ID in token payload");
       ws.close(4001, "Unauthorized: User ID missing in token payload");
@@ -270,6 +270,8 @@ const handleSendMessage = async (ws, payload, clientMessageId) => {
     room.unreadCountParent += 1;
   }
   await room.save();
+
+  console.log(`✉️ [sm-chat-service] Created message _id="${chatMessage._id}" from sender="${senderId}" (${senderRole}) to recipient="${recipientId}" in room="${roomId}"`);
 
   // Send ACK to sender
   ws.send(
