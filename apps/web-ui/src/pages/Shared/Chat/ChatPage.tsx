@@ -1075,8 +1075,8 @@ export const ChatPage: React.FC = () => {
             flexDirection: "column",
             p: { xs: 2.5, sm: 3 },
             gap: 2,
-            borderRight: "1px solid #f1f5f9",
-            bgcolor: "rgba(248, 250, 252, 0.5)",
+            borderRight: "1px solid #e2e8f0",
+            bgcolor: "#f8fafc",
             position: "relative",
             overflow: "hidden",
           }}
@@ -1118,8 +1118,9 @@ export const ChatPage: React.FC = () => {
             sx={{
               "& .MuiOutlinedInput-root": {
                 borderRadius: "16px",
-                bgcolor: "rgba(241, 245, 249, 0.8)",
+                bgcolor: "#ffffff",
                 fontSize: "0.875rem",
+                border: "1px solid #e2e8f0",
                 "& fieldset": { border: "none" },
                 "&:hover fieldset": { border: "none" },
                 "&.Mui-focused fieldset": { border: "1px solid #6366f1" },
@@ -1228,13 +1229,14 @@ export const ChatPage: React.FC = () => {
                         display: "flex",
                         alignItems: "center",
                         cursor: "pointer",
-                        bgcolor: "#ffffff",
-                        border: isSelected ? "1px solid #e0e7ff" : "1px solid #f1f5f9",
-                        boxShadow: isSelected ? "0 1px 3px rgba(0,0,0,0.05)" : "none",
+                        bgcolor: isSelected ? "#ffffff" : "rgba(255, 255, 255, 0.7)",
+                        border: isSelected ? "2px solid #6366f1" : "1px solid #e2e8f0",
+                        boxShadow: isSelected ? "0 4px 14px rgba(99, 102, 241, 0.15)" : "0 1px 3px rgba(0,0,0,0.02)",
                         transition: "all 0.2s ease",
                         "&:hover": {
-                          borderColor: "#e0e7ff",
+                          borderColor: "#6366f1",
                           bgcolor: "#ffffff",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
                         },
                       }}
                     >
@@ -1547,7 +1549,7 @@ export const ChatPage: React.FC = () => {
             flex: 1,
             display: { xs: selectedRoom ? "flex" : "none", md: "flex" },
             flexDirection: "column",
-            bgcolor: "rgba(248, 250, 252, 0.2)",
+            bgcolor: "#f5f7ff",
           }}
         >
           {selectedRoom ? (
@@ -1559,7 +1561,7 @@ export const ChatPage: React.FC = () => {
                   height: "56px",
                   px: 2,
                   bgcolor: "#ffffff",
-                  borderBottom: "1px solid #f1f5f9",
+                  borderBottom: "1px solid #e2e8f0",
                   alignItems: "center",
                   justifyContent: "space-between",
                 }}
@@ -1590,7 +1592,7 @@ export const ChatPage: React.FC = () => {
                 sx={{
                   height: { xs: "72px", md: "96px" },
                   px: { xs: 2, md: 5 },
-                  borderBottom: "1px solid #f1f5f9",
+                  borderBottom: "1px solid #e2e8f0",
                   display: "flex",
                   alignItems: "center",
                   bgcolor: "rgba(255, 255, 255, 0.8)",
@@ -1782,85 +1784,163 @@ export const ChatPage: React.FC = () => {
                       >
                         {isAttachment ? (
                           // FILE BUBBLE
-                          <Box
-                            sx={{
-                              p: 0.5,
-                              boxShadow: "0 20px 25px -5px rgba(238, 242, 255, 0.5)",
-                              width: "100%",
-                              maxWidth: "440px",
-                              background: "linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)",
-                              borderRadius: "16px 16px 2px 16px",
-                            }}
-                          >
+                          isOwn ? (
+                            // OUTGOING ATTACHMENT BUBBLE (Right-aligned, Indigo theme, with ticks)
                             <Box
                               sx={{
-                                bgcolor: "rgba(255, 255, 255, 0.05)",
-                                borderRadius: "15px",
-                                p: 1.75,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
+                                p: 0.5,
+                                boxShadow: "0 10px 20px -3px rgba(79, 70, 229, 0.3)",
+                                width: "100%",
+                                maxWidth: "440px",
+                                background: "linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)",
+                                borderRadius: "16px 16px 2px 16px",
                               }}
                             >
-                              <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0, flex: 1 }}>
-                                <Box
-                                  sx={{
-                                    width: 44,
-                                    height: 44,
-                                    bgcolor: "rgba(255, 255, 255, 0.15)",
-                                    borderRadius: "12px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    backdropFilter: "blur(12px)",
-                                    border: "1px solid rgba(255, 255, 255, 0.2)",
-                                    color: "#ffffff",
-                                  }}
-                                >
-                                  <FileIcon sx={{ fontSize: 22 }} />
-                                </Box>
-                                <Box sx={{ minWidth: 0, flex: 1 }}>
-                                  <Typography variant="subtitle2" fontWeight={600} color="#ffffff" noWrap sx={{ fontSize: "13px" }}>
-                                    {msg.attachmentName || "classwise_attendance_2026.xlsx"}
-                                  </Typography>
-                                  <Typography variant="caption" color="rgba(224, 231, 255, 0.8)" fontWeight={700} sx={{ fontSize: "10px", display: "block" }}>
-                                    DOCUMENT • END-TO-END ENCRYPTED
-                                  </Typography>
-                                </Box>
-                              </Stack>
-
-                              <IconButton
-                                onClick={() => handleDownloadAttachment(msg)}
-                                disabled={downloadingFileId === msg._id}
+                              <Box
                                 sx={{
-                                  p: 1.25,
-                                  bgcolor: "#ffffff",
-                                  color: "#3730a3",
-                                  borderRadius: "12px",
-                                  boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                                  "&:hover": { bgcolor: "#e0e7ff" },
+                                  bgcolor: "rgba(255, 255, 255, 0.05)",
+                                  borderRadius: "15px",
+                                  p: 1.75,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  border: "1px solid rgba(255, 255, 255, 0.1)",
                                 }}
                               >
-                                {downloadingFileId === msg._id ? (
-                                  <CircularProgress size={18} color="inherit" />
-                                ) : (
-                                  <DownloadIcon sx={{ fontSize: 18 }} />
-                                )}
-                              </IconButton>
-                            </Box>
+                                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0, flex: 1 }}>
+                                  <Box
+                                    sx={{
+                                      width: 44,
+                                      height: 44,
+                                      bgcolor: "rgba(255, 255, 255, 0.15)",
+                                      borderRadius: "12px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      backdropFilter: "blur(12px)",
+                                      border: "1px solid rgba(255, 255, 255, 0.2)",
+                                      color: "#ffffff",
+                                    }}
+                                  >
+                                    <FileIcon sx={{ fontSize: 22 }} />
+                                  </Box>
+                                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Typography variant="subtitle2" fontWeight={600} color="#ffffff" noWrap sx={{ fontSize: "13px" }}>
+                                      {msg.attachmentName || "attachment"}
+                                    </Typography>
+                                    <Typography variant="caption" color="rgba(224, 231, 255, 0.8)" fontWeight={700} sx={{ fontSize: "10px", display: "block" }}>
+                                      DOCUMENT • END-TO-END ENCRYPTED
+                                    </Typography>
+                                  </Box>
+                                </Stack>
 
-                            <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={0.75} sx={{ px: 2, py: 0.75 }}>
-                              <Typography variant="caption" color="#e0e7ff" fontWeight={500} sx={{ fontSize: "10px" }}>
-                                {formatSingleTime(msg.createdAt, timeFormat)}
-                              </Typography>
-                              {msg.status === "read" ? (
-                                <DoneAllIcon sx={{ fontSize: 14, color: "#c7d2fe" }} />
-                              ) : (
-                                <CheckIcon sx={{ fontSize: 14, color: "#c7d2fe" }} />
-                              )}
-                            </Stack>
-                          </Box>
+                                <IconButton
+                                  onClick={() => handleDownloadAttachment(msg)}
+                                  disabled={downloadingFileId === msg._id}
+                                  sx={{
+                                    p: 1.25,
+                                    bgcolor: "#ffffff",
+                                    color: "#3730a3",
+                                    borderRadius: "12px",
+                                    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                                    "&:hover": { bgcolor: "#e0e7ff" },
+                                  }}
+                                >
+                                  {downloadingFileId === msg._id ? (
+                                    <CircularProgress size={18} color="inherit" />
+                                  ) : (
+                                    <DownloadIcon sx={{ fontSize: 18 }} />
+                                  )}
+                                </IconButton>
+                              </Box>
+
+                              <Stack direction="row" alignItems="center" justifyContent="flex-end" spacing={0.75} sx={{ px: 2, py: 0.75 }}>
+                                <Typography variant="caption" color="#e0e7ff" fontWeight={500} sx={{ fontSize: "10px" }}>
+                                  {formatSingleTime(msg.createdAt, timeFormat)}
+                                </Typography>
+                                {msg.status === "read" ? (
+                                  <DoneAllIcon sx={{ fontSize: 14, color: "#c7d2fe" }} />
+                                ) : (
+                                  <CheckIcon sx={{ fontSize: 14, color: "#c7d2fe" }} />
+                                )}
+                              </Stack>
+                            </Box>
+                          ) : (
+                            // INCOMING ATTACHMENT BUBBLE (Left-aligned, White theme, NO ticks)
+                            <Box
+                              sx={{
+                                p: 0.5,
+                                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                                width: "100%",
+                                maxWidth: "440px",
+                                bgcolor: "#ffffff",
+                                border: "1px solid #e2e8f0",
+                                borderRadius: "16px 16px 16px 2px",
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  bgcolor: "#f8fafc",
+                                  borderRadius: "15px",
+                                  p: 1.75,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  border: "1px solid #e2e8f0",
+                                }}
+                              >
+                                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0, flex: 1 }}>
+                                  <Box
+                                    sx={{
+                                      width: 44,
+                                      height: 44,
+                                      bgcolor: "#e0e7ff",
+                                      borderRadius: "12px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      color: "#4f46e5",
+                                    }}
+                                  >
+                                    <FileIcon sx={{ fontSize: 22 }} />
+                                  </Box>
+                                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Typography variant="subtitle2" fontWeight={700} color="#0f172a" noWrap sx={{ fontSize: "13px" }}>
+                                      {msg.attachmentName || "attachment"}
+                                    </Typography>
+                                    <Typography variant="caption" color="#64748b" fontWeight={700} sx={{ fontSize: "10px", display: "block" }}>
+                                      DOCUMENT • END-TO-END ENCRYPTED
+                                    </Typography>
+                                  </Box>
+                                </Stack>
+
+                                <IconButton
+                                  onClick={() => handleDownloadAttachment(msg)}
+                                  disabled={downloadingFileId === msg._id}
+                                  sx={{
+                                    p: 1.25,
+                                    bgcolor: "#4f46e5",
+                                    color: "#ffffff",
+                                    borderRadius: "12px",
+                                    boxShadow: "0 2px 4px rgba(79, 70, 229, 0.2)",
+                                    "&:hover": { bgcolor: "#4338ca" },
+                                  }}
+                                >
+                                  {downloadingFileId === msg._id ? (
+                                    <CircularProgress size={18} color="inherit" />
+                                  ) : (
+                                    <DownloadIcon sx={{ fontSize: 18 }} />
+                                  )}
+                                </IconButton>
+                              </Box>
+
+                              <Stack direction="row" alignItems="center" justifyContent="flex-start" spacing={0.75} sx={{ px: 2, py: 0.75 }}>
+                                <Typography variant="caption" color="#94a3b8" fontWeight={500} sx={{ fontSize: "10px" }}>
+                                  {formatSingleTime(msg.createdAt, timeFormat)}
+                                </Typography>
+                              </Stack>
+                            </Box>
+                          )
                         ) : isOwn ? (
                           // OUTGOING TEXT BUBBLE
                           <Box
@@ -1892,14 +1972,14 @@ export const ChatPage: React.FC = () => {
                           // INCOMING TEXT BUBBLE
                           <Box
                             sx={{
-                              bgcolor: "#f1f5f9",
-                              border: "1px solid rgba(226, 232, 240, 0.5)",
-                              color: "#1e293b",
+                              bgcolor: "#ffffff",
+                              border: "1px solid #e2e8f0",
+                              color: "#0f172a",
                               px: 2.5,
                               py: 1.5,
                               maxWidth: "85%",
                               borderRadius: "12px 12px 12px 2px",
-                              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                              boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
                             }}
                           >
                             <Typography variant="body1" sx={{ fontSize: "15px", lineHeight: "1.6" }}>
@@ -1927,7 +2007,7 @@ export const ChatPage: React.FC = () => {
                   px: { xs: 2, md: 5 },
                   py: { xs: 2, md: 3 },
                   bgcolor: "#ffffff",
-                  borderTop: "1px solid #f1f5f9",
+                  borderTop: "1px solid #e2e8f0",
                   display: "flex",
                   alignItems: "center",
                   gap: 1.5,
