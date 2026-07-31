@@ -569,11 +569,32 @@ export const ChatPage: React.FC = () => {
     const decryptedList: DecryptedMessage[] = [];
     for (const msg of rawMessages) {
       let text = "[Encrypted Message]";
-      if (sharedKey && msg.encryptedPayload) {
-        try {
-          text = await decryptText(msg.encryptedPayload, sharedKey);
-        } catch (e) {
-          text = "🔒 [Encrypted Message - Unable to decrypt]";
+      let activeKey = sharedKey;
+
+      if (msg.encryptedPayload) {
+        if (!activeKey) {
+          const partnerId = msg.senderId === currentUserId ? msg.recipientId : msg.senderId;
+          activeKey = await getSharedKeyForPartner(partnerId);
+        }
+
+        if (activeKey) {
+          try {
+            text = await decryptText(msg.encryptedPayload, activeKey);
+          } catch (e) {
+            // Attempt key cache invalidation and re-fetch partner's latest public key
+            const partnerId = msg.senderId === currentUserId ? msg.recipientId : msg.senderId;
+            sharedKeyCacheRef.current.delete(partnerId);
+            const freshKey = await getSharedKeyForPartner(partnerId);
+            if (freshKey) {
+              try {
+                text = await decryptText(msg.encryptedPayload, freshKey);
+              } catch (retryErr) {
+                text = "🔒 [Encrypted Message - Key mismatch]";
+              }
+            } else {
+              text = "🔒 [Encrypted Message - Key unavailable]";
+            }
+          }
         }
       }
 
@@ -679,14 +700,25 @@ export const ChatPage: React.FC = () => {
     const unsubNewMsg = chatSocket.on("new_message", async ({ payload }) => {
       if (selectedRoom && payload.roomId === selectedRoom._id) {
         const partnerId = getPartnerId(selectedRoom);
-        const sharedKey = await getSharedKeyForPartner(partnerId);
+        let sharedKey = await getSharedKeyForPartner(partnerId);
         let text = "[Encrypted Message]";
 
-        if (sharedKey && payload.encryptedPayload) {
-          try {
-            text = await decryptText(payload.encryptedPayload, sharedKey);
-          } catch (e) {
-            text = "🔒 [Encrypted Message]";
+        if (payload.encryptedPayload) {
+          if (sharedKey) {
+            try {
+              text = await decryptText(payload.encryptedPayload, sharedKey);
+            } catch (e) {
+              // Retry with fresh key fetch if first attempt fails
+              sharedKeyCacheRef.current.delete(partnerId);
+              sharedKey = await getSharedKeyForPartner(partnerId);
+              if (sharedKey) {
+                try {
+                  text = await decryptText(payload.encryptedPayload, sharedKey);
+                } catch (err2) {
+                  text = "🔒 [Encrypted Message]";
+                }
+              }
+            }
           }
         }
 
@@ -954,7 +986,11 @@ export const ChatPage: React.FC = () => {
         return;
       }
 
-      const chatBaseUrl = import.meta.env.VITE_CHAT_API_URL || "http://localhost:5007";
+      const rawBaseUrl = import.meta.env.VITE_CHAT_API_URL || "http://localhost:5007";
+      const normalizedBase = rawBaseUrl.startsWith("http://") || rawBaseUrl.startsWith("https://")
+        ? rawBaseUrl
+        : `https://${rawBaseUrl}`;
+      const chatBaseUrl = normalizedBase.endsWith("/") ? normalizedBase.slice(0, -1) : normalizedBase;
       const fullUrl = msg.attachmentUrl.startsWith("http")
         ? msg.attachmentUrl
         : `${chatBaseUrl}${msg.attachmentUrl}`;

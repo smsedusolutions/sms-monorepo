@@ -2,6 +2,18 @@ import TokenService from "../queries/token/tokenService";
 
 export type EventCallback = (data: any) => void;
 
+const normalizeWsUrl = (url: string): string => {
+  let trimmed = url.trim();
+  if (trimmed.startsWith("https://")) {
+    trimmed = trimmed.replace("https://", "wss://");
+  } else if (trimmed.startsWith("http://")) {
+    trimmed = trimmed.replace("http://", "ws://");
+  } else if (!trimmed.startsWith("ws://") && !trimmed.startsWith("wss://")) {
+    trimmed = `wss://${trimmed}`;
+  }
+  return trimmed.endsWith("/") ? trimmed.slice(0, -1) : trimmed;
+};
+
 class ChatSocketService {
   private socket: WebSocket | null = null;
   private listeners: Map<string, Set<EventCallback>> = new Map();
@@ -17,7 +29,8 @@ class ChatSocketService {
     if (!token) return;
 
     this.isConnecting = true;
-    const baseWsUrl = import.meta.env.VITE_CHAT_WS_URL || "ws://localhost:5007";
+    const rawWsUrl = import.meta.env.VITE_CHAT_WS_URL || import.meta.env.VITE_CHAT_API_URL || "ws://localhost:5007";
+    const baseWsUrl = normalizeWsUrl(rawWsUrl);
     const wsUrl = `${baseWsUrl}?token=${encodeURIComponent(token)}`;
 
     try {

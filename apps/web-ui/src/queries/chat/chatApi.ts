@@ -1,7 +1,15 @@
 import useApi from "../useApi";
 import TokenService from "../token/tokenService";
 
-const CHAT_SERVICE_URL = `${import.meta.env.VITE_CHAT_API_URL || "http://localhost:5007"}/api/chat`;
+const normalizeHttpUrl = (url: string): string => {
+  let trimmed = url.trim();
+  if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+    trimmed = `https://${trimmed}`;
+  }
+  return trimmed.endsWith("/") ? trimmed.slice(0, -1) : trimmed;
+};
+
+const CHAT_SERVICE_URL = `${normalizeHttpUrl(import.meta.env.VITE_CHAT_API_URL || "http://localhost:5007")}/api/chat`;
 
 export const chatApi = {
   // 1. Register client E2EE Public Keys
