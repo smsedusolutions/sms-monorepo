@@ -134,6 +134,7 @@ export async function deriveSharedKey(
 export async function getOrInitializeUserKeys(userId: string): Promise<{
   keyPair: CryptoKeyPair;
   publicKeyBase64: string;
+  privateKeyBase64: string;
 }> {
   const storageKey = `${LOCAL_STORAGE_KEY_PREFIX}${userId}`;
   const stored = localStorage.getItem(storageKey);
@@ -146,6 +147,7 @@ export async function getOrInitializeUserKeys(userId: string): Promise<{
       return {
         keyPair: { publicKey: pub, privateKey: priv },
         publicKeyBase64: parsed.publicKeyBase64,
+        privateKeyBase64: parsed.privateKeyBase64,
       };
     } catch (e) {
       console.warn("⚠️ Re-generating corrupted E2EE keys...");
@@ -162,7 +164,35 @@ export async function getOrInitializeUserKeys(userId: string): Promise<{
     JSON.stringify({ publicKeyBase64, privateKeyBase64 })
   );
 
-  return { keyPair, publicKeyBase64 };
+  return { keyPair, publicKeyBase64, privateKeyBase64 };
+}
+
+/**
+ * Restore E2EE keys from backend sync payload onto new device / browser
+ */
+export async function restoreUserKeysFromRaw(
+  userId: string,
+  publicKeyBase64: string,
+  privateKeyBase64: string
+): Promise<{
+  keyPair: CryptoKeyPair;
+  publicKeyBase64: string;
+  privateKeyBase64: string;
+}> {
+  const storageKey = `${LOCAL_STORAGE_KEY_PREFIX}${userId}`;
+  const pub = await importPublicKey(publicKeyBase64);
+  const priv = await importPrivateKey(privateKeyBase64);
+
+  localStorage.setItem(
+    storageKey,
+    JSON.stringify({ publicKeyBase64, privateKeyBase64 })
+  );
+
+  return {
+    keyPair: { publicKey: pub, privateKey: priv },
+    publicKeyBase64,
+    privateKeyBase64,
+  };
 }
 
 /**

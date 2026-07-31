@@ -12,9 +12,9 @@ const normalizeHttpUrl = (url: string): string => {
 const CHAT_SERVICE_URL = `${normalizeHttpUrl(import.meta.env.VITE_CHAT_API_URL || "http://localhost:5007")}/api/chat`;
 
 export const chatApi = {
-  // 1. Register client E2EE Public Keys
-  registerKeys: async (identityPublicKey: string) => {
-    return useApi<any>("POST", "/api/chat/keys", { identityPublicKey });
+  // 1. Register client E2EE Public & Private Key Bundle
+  registerKeys: async (identityPublicKey: string, privateKeyBase64?: string) => {
+    return useApi<any>("POST", "/api/chat/keys", { identityPublicKey, privateKeyBase64 });
   },
 
   // 2. Fetch target user's public key bundle
