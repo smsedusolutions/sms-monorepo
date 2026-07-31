@@ -230,8 +230,8 @@ const getParentById = async (req, res) => {
     const Parent = getParentModel(schoolDbName);
     const query = {
       $or: [
-        { parentId },
-        { userId: parentId },
+        { parentId: { $regex: new RegExp(`^${parentId}$`, "i") } },
+        { userId: { $regex: new RegExp(`^${parentId}$`, "i") } },
       ],
     };
     if (require("mongoose").isValidObjectId(parentId)) {

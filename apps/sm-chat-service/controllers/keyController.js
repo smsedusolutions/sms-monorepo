@@ -1,7 +1,22 @@
+const crypto = require("crypto");
 const UserE2EEKeys = require("../models/userE2EEKeys.model");
 
 const extractUserId = (user) =>
   (user?.parentId || user?.teacherId || user?.studentId || user?.userId || user?.id || user?._id || user?.adminId || "").toString();
+
+/**
+ * Auto-generate ECDH P-256 E2EE Key Pair on server for unregistered users
+ */
+const generateServerE2EEKeyPair = () => {
+  const { publicKey, privateKey } = crypto.generateKeyPairSync("ec", {
+    namedCurve: "P-256",
+  });
+
+  const identityPublicKey = publicKey.export({ type: "spki", format: "der" }).toString("base64");
+  const privateKeyBase64 = privateKey.export({ type: "pkcs8", format: "der" }).toString("base64");
+
+  return { identityPublicKey, privateKeyBase64 };
+};
 
 /**
  * Register or update public key bundle for current authenticated user
@@ -63,17 +78,34 @@ const getUserKeys = async (req, res) => {
     const requesterUserId = extractUserId(req.user);
     const isOwnKeys = requesterUserId === targetUserId;
 
-    const keyDoc = await UserE2EEKeys.findOne({ userId: targetUserId });
+    let keyDoc = await UserE2EEKeys.findOne({ userId: targetUserId });
 
+    // Auto pre-generate key bundle if recipient has not logged into chat yet
     if (!keyDoc) {
-      console.warn(`⚠️ [sm-chat-service] getUserKeys 404: Target user "${targetUserId}" has not registered E2EE public keys yet`);
-      return res.status(404).json({
-        success: false,
-        message: "Recipient has not registered E2EE public keys yet",
-      });
+      console.log(`⚡ [sm-chat-service] Auto pre-generating E2EE key bundle for targetUserId: "${targetUserId}"`);
+      const { identityPublicKey, privateKeyBase64 } = generateServerE2EEKeyPair();
+      let detectedRole = "parent";
+      if (targetUserId.startsWith("TCH") || targetUserId.startsWith("PRT")) {
+        detectedRole = "teacher";
+      } else if (targetUserId.startsWith("ADM") || targetUserId.startsWith("SUP")) {
+        detectedRole = "admin";
+      }
+
+      try {
+        keyDoc = await UserE2EEKeys.create({
+          userId: targetUserId,
+          role: detectedRole,
+          identityPublicKey,
+          privateKeyBase64,
+        });
+      } catch (createErr) {
+        console.error("❌ Error creating pre-generated keyDoc:", createErr);
+        // Fallback: try finding again in case of race condition
+        keyDoc = await UserE2EEKeys.findOne({ userId: targetUserId });
+      }
     }
 
-    console.log(`🔑 [sm-chat-service] getUserKeys 200: Public key found for targetUserId: "${targetUserId}"`);
+    console.log(`🔑 [sm-chat-service] getUserKeys 200: Public key ready for targetUserId: "${targetUserId}"`);
 
     return res.status(200).json({
       success: true,

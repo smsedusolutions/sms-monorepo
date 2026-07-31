@@ -10,8 +10,7 @@ const UserE2EEKeysSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["parent", "teacher", "admin", "superadmin"],
-      required: true,
+      default: "parent",
     },
     identityPublicKey: {
       type: String,

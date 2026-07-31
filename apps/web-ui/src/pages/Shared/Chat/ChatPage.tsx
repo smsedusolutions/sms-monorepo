@@ -413,72 +413,99 @@ export const ChatPage: React.FC = () => {
     fetchRooms();
   }, [initialPartnerId]);
 
+  // Track in-flight or completed extra contact queries to prevent duplicate requests & 404 loops
+  const fetchingExtraRef = useRef<Set<string>>(new Set());
+
   // Dynamically resolve contact details for room partners missing from directory
   useEffect(() => {
     if (!schoolId || !rooms || rooms.length === 0) return;
 
-    rooms.forEach(async (room) => {
-      const partnerId = getPartnerId(room);
-      if (!partnerId) return;
+    const unmappedIds = rooms
+      .map((r) => getPartnerId(r))
+      .filter((id): id is string => Boolean(id) && !fetchingExtraRef.current.has(id));
 
-      if (!contactsMap.has(partnerId)) {
-        try {
-          if (currentUserRole === "teacher" || currentUserRole === "admin" || currentUserRole === "superadmin") {
-            const res = await useApi<any>("GET", `/api/school/${schoolId}/parents/${partnerId}`);
-            if (res?.success && res.data) {
-              const p = res.data;
-              const childrenNamesList = p.childrenNames || [];
-              const childrenDetails = p.childrenDetails || childrenNamesList.map((n: string) => ({ name: n }));
-              const childrenStr = childrenNamesList.join(", ");
-              setExtraContacts((prev) => {
-                if (prev.has(partnerId)) return prev;
-                const next = new Map(prev);
-                next.set(partnerId, {
-                  id: partnerId,
-                  name: `${p.firstName || ""} ${p.lastName || ""}`.trim() || `Parent (${partnerId})`,
-                  email: p.email,
-                  phone: p.phone,
-                  profileImage: p.profileImage,
-                  relationship: p.relationship,
-                  info: childrenStr ? `Parent of ${childrenStr}` : "Parent Contact",
-                  role: "Parent",
-                  childrenDetails,
-                });
-                return next;
-              });
-            }
-          } else if (currentUserRole === "parent") {
-            const res = await useApi<any>("GET", `/api/school/${schoolId}/teachers/${partnerId}`);
-            if (res?.success && res.data) {
-              const t = res.data;
-              const teacherDetails = [
-                t.department ? `Dept: ${t.department}` : null,
-                t.subjectNames && t.subjectNames.length > 0 ? `Subjects: ${t.subjectNames.join(", ")}` : null,
-                t.classNames && t.classNames.length > 0 ? `Classes: ${t.classNames.join(", ")}` : null,
-              ].filter(Boolean).join(" • ") || "Teacher Contact";
+    if (unmappedIds.length === 0) return;
 
-              setExtraContacts((prev) => {
-                if (prev.has(partnerId)) return prev;
-                const next = new Map(prev);
-                next.set(partnerId, {
-                  id: partnerId,
-                  name: `${t.firstName || ""} ${t.lastName || ""}`.trim() || `Teacher (${partnerId})`,
-                  email: t.email,
-                  phone: t.phone,
-                  profileImage: t.profileImage,
-                  role: "Teacher",
-                  info: teacherDetails,
-                });
-                return next;
+    // Synchronously mark as fetching before initiating async HTTP requests
+    unmappedIds.forEach((id) => fetchingExtraRef.current.add(id));
+
+    unmappedIds.forEach(async (partnerId) => {
+      try {
+        if (currentUserRole === "teacher" || currentUserRole === "admin" || currentUserRole === "superadmin") {
+          const res = await useApi<any>("GET", `/api/school/${schoolId}/parents/${partnerId}`);
+          if (res?.success && res.data) {
+            const p = res.data;
+            const childrenNamesList = p.childrenNames || [];
+            const childrenDetails = p.childrenDetails || childrenNamesList.map((n: string) => ({ name: n }));
+            const childrenStr = childrenNamesList.join(", ");
+            setExtraContacts((prev) => {
+              const next = new Map(prev);
+              next.set(partnerId, {
+                id: partnerId,
+                name: `${p.firstName || ""} ${p.lastName || ""}`.trim() || `Parent (${partnerId})`,
+                email: p.email,
+                phone: p.phone,
+                profileImage: p.profileImage,
+                relationship: p.relationship,
+                info: childrenStr ? `Parent of ${childrenStr}` : "Parent Contact",
+                role: "Parent",
+                childrenDetails,
               });
-            }
+              return next;
+            });
+          } else {
+            setExtraContacts((prev) => {
+              const next = new Map(prev);
+              next.set(partnerId, {
+                id: partnerId,
+                name: `Parent (${partnerId})`,
+                info: "Parent Contact",
+                role: "Parent",
+              });
+              return next;
+            });
           }
-        } catch (err) {
-          console.warn(`Could not fetch extra contact info for ${partnerId}:`, err);
+        } else if (currentUserRole === "parent") {
+          const res = await useApi<any>("GET", `/api/school/${schoolId}/teachers/${partnerId}`);
+          if (res?.success && res.data) {
+            const t = res.data;
+            const teacherDetails = [
+              t.department ? `Dept: ${t.department}` : null,
+              t.subjectNames && t.subjectNames.length > 0 ? `Subjects: ${t.subjectNames.join(", ")}` : null,
+              t.classNames && t.classNames.length > 0 ? `Classes: ${t.classNames.join(", ")}` : null,
+            ].filter(Boolean).join(" • ") || "Teacher Contact";
+
+            setExtraContacts((prev) => {
+              const next = new Map(prev);
+              next.set(partnerId, {
+                id: partnerId,
+                name: `${t.firstName || ""} ${t.lastName || ""}`.trim() || `Teacher (${partnerId})`,
+                email: t.email,
+                phone: t.phone,
+                profileImage: t.profileImage,
+                role: "Teacher",
+                info: teacherDetails,
+              });
+              return next;
+            });
+          } else {
+            setExtraContacts((prev) => {
+              const next = new Map(prev);
+              next.set(partnerId, {
+                id: partnerId,
+                name: `Teacher (${partnerId})`,
+                info: "Teacher Contact",
+                role: "Teacher",
+              });
+              return next;
+            });
+          }
         }
+      } catch (err) {
+        console.warn(`Could not fetch extra contact info for ${partnerId}:`, err);
       }
     });
-  }, [rooms, schoolId, currentUserRole, contactsMap]);
+  }, [rooms, schoolId, currentUserRole]);
 
 
   const fetchRooms = async () => {
@@ -534,22 +561,27 @@ export const ChatPage: React.FC = () => {
 
     try {
       console.log(`🔑 [E2EE] Fetching public key for partner: ${partnerId}...`);
-      const res = await chatApi.getUserKeys(partnerId);
-      if (!res.success || !res.data?.identityPublicKey) {
-        console.warn(`⚠️ [E2EE] Partner ${partnerId} has not registered public keys yet on backend.`);
-        return null;
+      let res = await chatApi.getUserKeys(partnerId);
+
+      // If server is pre-generating key bundle, retry once after 1 second
+      if (!res?.success || !res.data?.identityPublicKey) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        res = await chatApi.getUserKeys(partnerId);
       }
 
-      console.log(`🔑 [E2EE] Partner ${partnerId} public key retrieved. Deriving shared AES key...`);
-      const partnerPublicKey = await importPublicKey(res.data.identityPublicKey);
-      const sharedKey = await deriveSharedKey(ownKeyPairRef.current.privateKey, partnerPublicKey);
-      sharedKeyCacheRef.current.set(partnerId, sharedKey);
-      console.log(`✅ [E2EE] Shared key derived successfully for partner: ${partnerId}`);
-      return sharedKey;
+      if (res?.success && res.data?.identityPublicKey) {
+        console.log(`🔑 [E2EE] Partner ${partnerId} public key retrieved. Deriving shared AES key...`);
+        const partnerPublicKey = await importPublicKey(res.data.identityPublicKey);
+        const sharedKey = await deriveSharedKey(ownKeyPairRef.current.privateKey, partnerPublicKey);
+        sharedKeyCacheRef.current.set(partnerId, sharedKey);
+        console.log(`✅ [E2EE] Shared key derived successfully for partner: ${partnerId}`);
+        return sharedKey;
+      }
     } catch (e) {
-      console.error(`❌ [E2EE] Error deriving shared key for partner ${partnerId}:`, e);
-      return null;
+      console.warn(`⚠️ [E2EE] Error fetching key for partner ${partnerId}:`, e);
     }
+
+    return null;
   };
 
   // Ref to track if a room was selected before keys were ready
@@ -905,50 +937,12 @@ export const ChatPage: React.FC = () => {
     let sharedKey = await getSharedKeyForPartner(partnerId);
 
     if (!sharedKey) {
-      // Partner hasn't registered E2EE keys yet — show a pending message and retry for up to 30s
-      const tempId = `pending_${Date.now()}`;
-      const pendingMsg: DecryptedMessage = {
-        _id: tempId,
-        roomId: selectedRoom._id,
-        senderId: currentUserId,
-        senderRole: currentUserRole,
-        recipientId: partnerId,
-        text: textToSend,
-        status: "sent",
-        messageType: "text",
-        createdAt: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, pendingMsg]);
-      scrollToBottom();
+      await new Promise((r) => setTimeout(r, 1000));
+      sharedKey = await getSharedKeyForPartner(partnerId);
+    }
 
-      // Retry key fetch for up to 30 seconds (recipient may be loading)
-      let retries = 0;
-      const maxRetries = 6;
-      const retryInterval = setInterval(async () => {
-        retries++;
-        sharedKeyCacheRef.current.delete(partnerId); // clear cache to force re-fetch
-        sharedKey = await getSharedKeyForPartner(partnerId);
-        if (sharedKey) {
-          clearInterval(retryInterval);
-          try {
-            const encryptedPayload = await encryptText(textToSend, sharedKey);
-            chatSocket.sendEncryptedMessage({
-              roomId: selectedRoom._id,
-              recipientId: partnerId,
-              encryptedPayload,
-              ephemeralPublicKey: ownPublicKeyBase64Ref.current || undefined,
-              messageType: "text",
-            });
-          } catch (err) {
-            console.error("❌ Send after key-retry error:", err);
-          }
-        } else if (retries >= maxRetries) {
-          clearInterval(retryInterval);
-          // Remove the pending message if key never arrived
-          setMessages((prev) => prev.filter((m) => m._id !== tempId));
-          console.warn("⚠️ Recipient E2EE keys unavailable after retries. Message not sent.");
-        }
-      }, 5000);
+    if (!sharedKey) {
+      alert("Recipient encryption keys are initializing on server. Please click send again.");
       return;
     }
 

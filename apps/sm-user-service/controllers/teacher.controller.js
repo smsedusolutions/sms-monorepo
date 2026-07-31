@@ -186,8 +186,8 @@ const getTeacherById = async (req, res) => {
     const Teacher = getTeacherModel(schoolDbName);
     const query = {
       $or: [
-        { teacherId },
-        { userId: teacherId },
+        { teacherId: { $regex: new RegExp(`^${teacherId}$`, "i") } },
+        { userId: { $regex: new RegExp(`^${teacherId}$`, "i") } },
       ],
     };
     if (require("mongoose").isValidObjectId(teacherId)) {
