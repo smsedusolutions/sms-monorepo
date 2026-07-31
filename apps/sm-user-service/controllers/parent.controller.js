@@ -228,7 +228,16 @@ const getParentById = async (req, res) => {
     }
 
     const Parent = getParentModel(schoolDbName);
-    const parent = await Parent.findOne({ parentId }).select("-password");
+    const query = {
+      $or: [
+        { parentId },
+        { userId: parentId },
+      ],
+    };
+    if (require("mongoose").isValidObjectId(parentId)) {
+      query.$or.push({ _id: parentId });
+    }
+    const parent = await Parent.findOne(query).select("-password");
 
     if (!parent) {
       return res.status(404).json({
@@ -237,10 +246,30 @@ const getParentById = async (req, res) => {
       });
     }
 
+    const parentObj = parent.toObject();
+
+    if (parent.studentIds && parent.studentIds.length > 0) {
+      const Student = getStudentModel(schoolDbName);
+      const students = await Student.find({ studentId: { $in: parent.studentIds } }).select(
+        "studentId firstName lastName class section profileImage"
+      );
+
+      parentObj.childrenNames = students.map((s) => `${s.firstName} ${s.lastName}`);
+      parentObj.childrenDetails = students.map((s) => ({
+        studentId: s.studentId,
+        name: `${s.firstName} ${s.lastName}`,
+        classSection: `${s.class || ""}${s.section ? ` (${s.section})` : ""}`,
+        profileImage: s.profileImage || "",
+      }));
+    } else {
+      parentObj.childrenNames = [];
+      parentObj.childrenDetails = [];
+    }
+
     return res.status(200).json({
       success: true,
       message: "Parent fetched successfully",
-      data: parent,
+      data: parentObj,
     });
   } catch (error) {
     console.error("Error fetching parent:", error);
