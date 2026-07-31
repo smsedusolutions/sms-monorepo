@@ -1,11 +1,14 @@
 const UserE2EEKeys = require("../models/userE2EEKeys.model");
 
+const extractUserId = (user) =>
+  (user?.parentId || user?.teacherId || user?.studentId || user?.userId || user?.id || user?._id || user?.adminId || "").toString();
+
 /**
  * Register or update public key bundle for current authenticated user
  */
 const registerKeys = async (req, res) => {
   try {
-    const userId = (req.user.userId || req.user.id || req.user._id || req.user.teacherId || req.user.studentId || req.user.adminId || "").toString();
+    const userId = extractUserId(req.user);
     const role = req.user.role || req.user.userType;
     const { identityPublicKey, signedPreKey, oneTimePreKeys } = req.body;
 
@@ -27,6 +30,8 @@ const registerKeys = async (req, res) => {
       },
       { upsert: true, new: true, runValidators: true }
     );
+
+    console.log(`🔐 [sm-chat-service] Registered public key for userId: "${userId}", role: "${role}"`);
 
     return res.status(200).json({
       success: true,
@@ -53,11 +58,14 @@ const getUserKeys = async (req, res) => {
     const keyDoc = await UserE2EEKeys.findOne({ userId: targetUserId });
 
     if (!keyDoc) {
+      console.warn(`⚠️ [sm-chat-service] getUserKeys 404: Target user "${targetUserId}" has not registered E2EE public keys yet`);
       return res.status(404).json({
         success: false,
         message: "Recipient has not registered E2EE public keys yet",
       });
     }
+
+    console.log(`🔑 [sm-chat-service] getUserKeys 200: Public key found for targetUserId: "${targetUserId}"`);
 
     return res.status(200).json({
       success: true,

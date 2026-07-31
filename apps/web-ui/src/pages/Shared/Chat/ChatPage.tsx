@@ -105,7 +105,14 @@ export const ChatPage: React.FC = () => {
 
   const schoolId = TokenService.getSchoolId() || "";
   const currentUser = TokenService.getUser();
-  const currentUserId = (TokenService.getUserId() || currentUser?.userId || "").toString();
+  const currentUserId = (
+    currentUser?.parentId ||
+    currentUser?.teacherId ||
+    currentUser?.studentId ||
+    TokenService.getUserId() ||
+    currentUser?.userId ||
+    ""
+  ).toString();
   const currentUserRole = (TokenService.getRole() || currentUser?.role || "").toLowerCase();
   const isTeacher = currentUserRole === "teacher";
   const isParent = currentUserRole === "parent";
@@ -360,10 +367,11 @@ export const ChatPage: React.FC = () => {
 
     async function initKeys() {
       try {
+        console.log(`🔐 [E2EE] Initializing & registering keys for currentUserId: ${currentUserId}`);
         const { keyPair, publicKeyBase64 } = await getOrInitializeUserKeys(currentUserId);
         ownKeyPairRef.current = keyPair;
         await chatApi.registerKeys(publicKeyBase64);
-        console.log("🔐 [E2EE] Client Public Keys Registered Successfully");
+        console.log(`🔐 [E2EE] Public Keys for ${currentUserId} Registered Successfully`);
         setKeysReady(true); // Signal that keys are ready for decryption
       } catch (err) {
         console.error("❌ E2EE Key Initialization Error:", err);
@@ -494,21 +502,27 @@ export const ChatPage: React.FC = () => {
       return sharedKeyCacheRef.current.get(partnerId)!;
     }
 
-    if (!ownKeyPairRef.current) return null;
+    if (!ownKeyPairRef.current) {
+      console.warn(`⚠️ [E2EE] Cannot derive shared key: ownKeyPairRef is null for currentUserId: ${currentUserId}`);
+      return null;
+    }
 
     try {
+      console.log(`🔑 [E2EE] Fetching public key for partner: ${partnerId}...`);
       const res = await chatApi.getUserKeys(partnerId);
       if (!res.success || !res.data?.identityPublicKey) {
-        console.warn(`⚠️ Partner ${partnerId} has not registered public keys yet.`);
+        console.warn(`⚠️ [E2EE] Partner ${partnerId} has not registered public keys yet on backend.`);
         return null;
       }
 
+      console.log(`🔑 [E2EE] Partner ${partnerId} public key retrieved. Deriving shared AES key...`);
       const partnerPublicKey = await importPublicKey(res.data.identityPublicKey);
       const sharedKey = await deriveSharedKey(ownKeyPairRef.current.privateKey, partnerPublicKey);
       sharedKeyCacheRef.current.set(partnerId, sharedKey);
+      console.log(`✅ [E2EE] Shared key derived successfully for partner: ${partnerId}`);
       return sharedKey;
     } catch (e) {
-      console.error("❌ Error deriving shared key:", e);
+      console.error(`❌ [E2EE] Error deriving shared key for partner ${partnerId}:`, e);
       return null;
     }
   };
@@ -618,6 +632,8 @@ export const ChatPage: React.FC = () => {
         createdAt: msg.createdAt,
       });
     }
+    const decryptedCount = decryptedList.filter((m) => !m.text.includes("[Encrypted Message")).length;
+    console.log(`🔓 [E2EE Client] Decrypted ${decryptedCount}/${decryptedList.length} messages successfully`);
     return decryptedList;
   };
 

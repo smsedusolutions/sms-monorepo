@@ -2,7 +2,7 @@ const ChatRoom = require("../models/chatRoom.model");
 const ChatMessage = require("../models/chatMessage.model");
 
 const extractUserId = (user) =>
-  (user?.userId || user?.id || user?._id || user?.teacherId || user?.studentId || user?.adminId || "").toString();
+  (user?.parentId || user?.teacherId || user?.studentId || user?.userId || user?.id || user?._id || user?.adminId || "").toString();
 
 /**
  * Get all active chat rooms for the authenticated parent or teacher
@@ -25,6 +25,8 @@ const getRooms = async (req, res) => {
     const rooms = await ChatRoom.find(query)
       .sort({ lastMessageAt: -1 })
       .lean();
+
+    console.log(`💬 [sm-chat-service] getRooms: userId="${userId}", role="${role}" -> found ${rooms.length} rooms`);
 
     return res.status(200).json({
       success: true,
