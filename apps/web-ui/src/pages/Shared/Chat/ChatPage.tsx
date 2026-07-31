@@ -138,6 +138,9 @@ export const ChatPage: React.FC = () => {
   const [directorySearch, setDirectorySearch] = useState<string>("");
   const [selectedChildId, setSelectedChildId] = useState<string>("");
 
+  // E2EE keys initialization gate — prevents decrypting before private key is loaded
+  const [keysReady, setKeysReady] = useState(false);
+
   // E2EE Keys Cache
   const ownKeyPairRef = useRef<CryptoKeyPair | null>(null);
   const sharedKeyCacheRef = useRef<Map<string, CryptoKey>>(new Map());
@@ -344,6 +347,7 @@ export const ChatPage: React.FC = () => {
         ownKeyPairRef.current = keyPair;
         await chatApi.registerKeys(publicKeyBase64);
         console.log("🔐 [E2EE] Client Public Keys Registered Successfully");
+        setKeysReady(true); // Signal that keys are ready for decryption
       } catch (err) {
         console.error("❌ E2EE Key Initialization Error:", err);
       }
@@ -356,6 +360,7 @@ export const ChatPage: React.FC = () => {
       chatSocket.disconnect();
     };
   }, [currentUserId]);
+
 
   // ----------------------------------------------------
   // 2. Fetch Rooms & Auto-Select Room if Partner ID Provided
@@ -429,8 +434,11 @@ export const ChatPage: React.FC = () => {
     }
   };
 
+  // Ref to track if a room was selected before keys were ready
+  const pendingRoomLoadRef = useRef<{ roomId: string; partnerId: string } | null>(null);
+
   // ----------------------------------------------------
-  // 3. Load & Decrypt Room Messages & Reset Unread Count
+  // 3a. Room Selected Effect — fires ONLY when room changes
   // ----------------------------------------------------
   useEffect(() => {
     if (!selectedRoom) return;
@@ -438,6 +446,7 @@ export const ChatPage: React.FC = () => {
     const roomId = selectedRoom._id;
     const partnerId = getPartnerId(selectedRoom);
 
+    // Always: reset unread, mark read, fetch presence
     setRooms((prevRooms) =>
       prevRooms.map((r) =>
         r._id === roomId
@@ -445,19 +454,36 @@ export const ChatPage: React.FC = () => {
           : r
       )
     );
-
-    loadRoomMessages(roomId, partnerId);
     chatApi.markAsRead(roomId);
     chatSocket.sendMarkRead(roomId);
-
-    // Fetch initial online status for this partner via REST
     chatApi.getOnlineStatus(partnerId).then((res) => {
       if (res?.success && res.data) {
         if (res.data.isOnline) setUserOnline(partnerId);
         else setUserOffline(partnerId, res.data.lastSeen || null);
       }
     }).catch(() => { });
-  }, [selectedRoom?._id]);
+
+    if (keysReady) {
+      // Keys already available — load messages immediately for THIS room only
+      loadRoomMessages(roomId, partnerId);
+    } else {
+      // Keys not ready yet — store as pending; will load once keys finish
+      pendingRoomLoadRef.current = { roomId, partnerId };
+    }
+  }, [selectedRoom?._id]); // <-- does NOT depend on keysReady
+
+  // ----------------------------------------------------
+  // 3b. Keys Ready Effect — fires ONLY when keysReady transitions to true
+  // ----------------------------------------------------
+  useEffect(() => {
+    if (!keysReady) return;
+    // If a room was waiting for keys, load it now
+    if (pendingRoomLoadRef.current) {
+      const { roomId, partnerId } = pendingRoomLoadRef.current;
+      pendingRoomLoadRef.current = null;
+      loadRoomMessages(roomId, partnerId);
+    }
+  }, [keysReady]); // <-- does NOT depend on selectedRoom
 
 
   const loadRoomMessages = async (roomId: string, partnerId: string) => {
@@ -1554,21 +1580,52 @@ export const ChatPage: React.FC = () => {
                   </Box>
                 </Box>
 
-                {/* Date Divider (Matches Mobile Screenshot 2) */}
-                <Typography variant="caption" fontWeight={700} color="#94a3b8" textAlign="center" sx={{ fontSize: "10px", tracking: "0.1em", my: 0.5 }}>
-                  TODAY
-                </Typography>
-
+                {/* Messages grouped by date with dynamic dividers */}
                 {isLoadingMessages ? (
                   <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
                     <CircularProgress size={32} sx={{ color: "#4f46e5" }} />
                   </Box>
-                ) : (
-                  messages.map((msg) => {
+                ) : (() => {
+                  // Helper: get YYYY-MM-DD local date string from ISO timestamp
+                  const getLocalDateStr = (iso: string) => {
+                    const d = new Date(iso);
+                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                  };
+
+                  const todayStr = getLocalDateStr(new Date().toISOString());
+                  const yesterdayStr = getLocalDateStr(new Date(Date.now() - 86400000).toISOString());
+
+                  const getDateLabel = (iso: string) => {
+                    const dateStr = getLocalDateStr(iso);
+                    if (dateStr === todayStr) return "TODAY";
+                    if (dateStr === yesterdayStr) return "YESTERDAY";
+                    const d = new Date(iso);
+                    return d.toLocaleDateString("en-US", { weekday: "short", day: "2-digit", month: "short" }).toUpperCase();
+                  };
+
+                  let lastDateStr = "";
+                  const elements: React.ReactNode[] = [];
+
+                  messages.forEach((msg) => {
+                    const msgDateStr = getLocalDateStr(msg.createdAt);
+                    if (msgDateStr !== lastDateStr) {
+                      lastDateStr = msgDateStr;
+                      elements.push(
+                        <Box key={`divider-${msgDateStr}`} sx={{ display: "flex", alignItems: "center", gap: 1.5, my: 1.5 }}>
+                          <Box sx={{ flex: 1, height: "1px", bgcolor: "#e2e8f0" }} />
+                          <Typography variant="caption" fontWeight={700} color="#94a3b8" sx={{ fontSize: "10px", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>
+                            {getDateLabel(msg.createdAt)}
+                          </Typography>
+                          <Box sx={{ flex: 1, height: "1px", bgcolor: "#e2e8f0" }} />
+                        </Box>
+                      );
+                    }
+
                     const isOwn = msg.senderId.toString() === currentUserId;
                     const isAttachment = msg.messageType === "attachment" || !!msg.attachmentUrl;
 
-                    return (
+                    elements.push(
+
                       <Box
                         key={msg._id}
                         sx={{
@@ -1708,9 +1765,11 @@ export const ChatPage: React.FC = () => {
                           </Box>
                         )}
                       </Box>
-                    );
-                  })
-                )}
+                    ); // end elements.push
+                  }); // end messages.forEach
+
+                  return elements;
+                })()}
                 <div ref={messagesEndRef} />
               </Box>
 
