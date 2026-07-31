@@ -68,10 +68,18 @@ const detectServiceFromPath = (path: string): ServiceType => {
     return "platform";
 };
 
+// URL Normalizer — ensures valid protocol to prevent relative URL requests in production (e.g. Vercel)
+const normalizeUrl = (url: string): string => {
+    let trimmed = url.trim();
+    if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+        trimmed = `https://${trimmed}`;
+    }
+    return trimmed.endsWith("/") ? trimmed.slice(0, -1) : trimmed;
+};
+
 // Create axios instance with interceptor
 const createApiInstance = (baseURL: string): AxiosInstance => {
-    // Ensure baseURL doesn't end with slash to avoid double slashes when invalid paths are used
-    const normalizedBaseUrl = baseURL.endsWith("/") ? baseURL.slice(0, -1) : baseURL;
+    const normalizedBaseUrl = normalizeUrl(baseURL);
 
     const instance = axios.create({
         baseURL: normalizedBaseUrl,
