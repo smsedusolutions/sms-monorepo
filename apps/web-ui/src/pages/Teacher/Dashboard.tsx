@@ -23,6 +23,7 @@ import {
     Star as StarIcon,
     School as SchoolIcon,
     Groups as GroupsIcon,
+    Chat as ChatIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import TokenService from '../../queries/token/tokenService';
@@ -276,6 +277,51 @@ const TeacherDashboard: React.FC = () => {
                 </AppButton>
             </Paper>
 
+            {/* Chat with Parents CTA Banner */}
+            <Paper
+                elevation={0}
+                onClick={() => navigate('/teacher/chat')}
+                sx={{
+                    p: 2.5,
+                    mb: 4,
+                    borderRadius: 3.5,
+                    bgcolor: '#f5f3ff',
+                    border: '1px solid #c4b5fd',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 2,
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 8px 24px rgba(139, 92, 246, 0.18)',
+                    }
+                }}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: '#7c3aed', color: '#fff' }}>
+                        <ChatIcon sx={{ fontSize: 28 }} />
+                    </Box>
+                    <Box>
+                        <Typography variant="subtitle1" fontWeight={700} color="#4c1d95">
+                            Chat with Parents
+                        </Typography>
+                        <Typography variant="caption" color="#6d28d9">
+                            Send secure, end-to-end encrypted messages to parents about student progress.
+                        </Typography>
+                    </Box>
+                </Box>
+                <AppButton
+                    variant="contained"
+                    onClick={(e) => { e.stopPropagation(); navigate('/teacher/chat'); }}
+                    sx={{ bgcolor: '#7c3aed', '&:hover': { bgcolor: '#6d28d9' }, fontWeight: 700 }}
+                >
+                    Open Chat
+                </AppButton>
+            </Paper>
+
             {/* My Assigned Classes Section */}
             {myClassCards.length > 0 && (
                 <Box sx={{ mb: 5 }}>
@@ -485,6 +531,21 @@ const TeacherDashboard: React.FC = () => {
                             sx={{ py: 2 }}
                         >
                             Book Exam
+                        </AppButton>
+                        <AppButton
+                            variant="outlined"
+                            fullWidth
+                            size="large"
+                            startIcon={<ChatIcon />}
+                            onClick={() => navigate('/teacher/chat')}
+                            sx={{
+                                py: 2,
+                                borderColor: '#7c3aed',
+                                color: '#7c3aed',
+                                '&:hover': { borderColor: '#6d28d9', bgcolor: '#f5f3ff' }
+                            }}
+                        >
+                            Chat with Parents
                         </AppButton>
                         <AppButton
                             variant="text"

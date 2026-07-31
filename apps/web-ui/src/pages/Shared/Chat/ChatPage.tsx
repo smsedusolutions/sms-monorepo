@@ -1554,21 +1554,52 @@ export const ChatPage: React.FC = () => {
                   </Box>
                 </Box>
 
-                {/* Date Divider (Matches Mobile Screenshot 2) */}
-                <Typography variant="caption" fontWeight={700} color="#94a3b8" textAlign="center" sx={{ fontSize: "10px", tracking: "0.1em", my: 0.5 }}>
-                  TODAY
-                </Typography>
-
+                {/* Messages grouped by date with dynamic dividers */}
                 {isLoadingMessages ? (
                   <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
                     <CircularProgress size={32} sx={{ color: "#4f46e5" }} />
                   </Box>
-                ) : (
-                  messages.map((msg) => {
+                ) : (() => {
+                  // Helper: get YYYY-MM-DD local date string from ISO timestamp
+                  const getLocalDateStr = (iso: string) => {
+                    const d = new Date(iso);
+                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                  };
+
+                  const todayStr = getLocalDateStr(new Date().toISOString());
+                  const yesterdayStr = getLocalDateStr(new Date(Date.now() - 86400000).toISOString());
+
+                  const getDateLabel = (iso: string) => {
+                    const dateStr = getLocalDateStr(iso);
+                    if (dateStr === todayStr) return "TODAY";
+                    if (dateStr === yesterdayStr) return "YESTERDAY";
+                    const d = new Date(iso);
+                    return d.toLocaleDateString("en-US", { weekday: "short", day: "2-digit", month: "short" }).toUpperCase();
+                  };
+
+                  let lastDateStr = "";
+                  const elements: React.ReactNode[] = [];
+
+                  messages.forEach((msg) => {
+                    const msgDateStr = getLocalDateStr(msg.createdAt);
+                    if (msgDateStr !== lastDateStr) {
+                      lastDateStr = msgDateStr;
+                      elements.push(
+                        <Box key={`divider-${msgDateStr}`} sx={{ display: "flex", alignItems: "center", gap: 1.5, my: 1.5 }}>
+                          <Box sx={{ flex: 1, height: "1px", bgcolor: "#e2e8f0" }} />
+                          <Typography variant="caption" fontWeight={700} color="#94a3b8" sx={{ fontSize: "10px", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>
+                            {getDateLabel(msg.createdAt)}
+                          </Typography>
+                          <Box sx={{ flex: 1, height: "1px", bgcolor: "#e2e8f0" }} />
+                        </Box>
+                      );
+                    }
+
                     const isOwn = msg.senderId.toString() === currentUserId;
                     const isAttachment = msg.messageType === "attachment" || !!msg.attachmentUrl;
 
-                    return (
+                    elements.push(
+
                       <Box
                         key={msg._id}
                         sx={{
@@ -1708,9 +1739,11 @@ export const ChatPage: React.FC = () => {
                           </Box>
                         )}
                       </Box>
-                    );
-                  })
-                )}
+                    ); // end elements.push
+                  }); // end messages.forEach
+
+                  return elements;
+                })()}
                 <div ref={messagesEndRef} />
               </Box>
 

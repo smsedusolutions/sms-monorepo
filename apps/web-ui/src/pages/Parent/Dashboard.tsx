@@ -16,6 +16,7 @@ import {
     ReceiptLong as FeeIcon,
     People as TeachersIcon,
     Schedule as TimetableIcon,
+    Chat as ChatIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Chart } from 'react-google-charts';
@@ -498,6 +499,7 @@ const ParentDashboard = () => {
                             { label: 'Teachers', icon: <TeachersIcon />, path: '/parent/teachers', color: '#8b5cf6' },
                             { label: 'Homework', icon: <AssignmentIcon />, path: '/parent/homework', color: '#ec4899' },
                             { label: 'Announcements', icon: <AnnouncementIcon />, path: '/parent/announcements', color: '#06b6d4' },
+                            { label: 'Chat Teachers', icon: <ChatIcon />, path: '/parent/chat', color: '#4f46e5' },
                         ].map((action) => (
                             <Grid size={{ xs: 6 }} key={action.label}>
                                 <AppCard
@@ -556,6 +558,41 @@ const ParentDashboard = () => {
                             sx={{ bgcolor: '#7c3aed', '&:hover': { bgcolor: '#6d28d9' }, borderRadius: 2, fontWeight: 700, textTransform: 'none' }}
                         >
                             Manage & Pay Fees
+                        </Button>
+                    </Paper>
+
+                    {/* Chat with Teachers CTA Card */}
+                    <Paper
+                        elevation={0}
+                        onClick={() => navigate('/parent/chat')}
+                        sx={{
+                            mt: 3,
+                            p: 2.5,
+                            borderRadius: 3.5,
+                            border: '1px solid #c7d2fe',
+                            bgcolor: '#eef2ff',
+                            cursor: 'pointer',
+                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                            '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(79, 70, 229, 0.15)' }
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+                            <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#4f46e5', color: '#fff' }}>
+                                <ChatIcon fontSize="small" />
+                            </Box>
+                            <Typography variant="subtitle2" fontWeight={700} color="#312e81">Chat with Teachers</Typography>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                            Send secure messages to your child's teachers — get updates on progress, homework, and behaviour.
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            fullWidth
+                            onClick={(e) => { e.stopPropagation(); navigate('/parent/chat'); }}
+                            sx={{ bgcolor: '#4f46e5', '&:hover': { bgcolor: '#4338ca' }, borderRadius: 2, fontWeight: 700, textTransform: 'none' }}
+                            startIcon={<ChatIcon />}
+                        >
+                            Open Secure Chat
                         </Button>
                     </Paper>
 
