@@ -73,7 +73,13 @@ const login = async (req, res) => {
         } else if (role === "sch_admin") {
             // School Admin - stored in Users collection (SuperAdmin DB)
             const { UserModel: User } = require("@sms/shared");
-            user = await User.findOne({ email: normalizedEmail });
+
+            // Parallel fetch: user + school lookup (schoolId known from EmailRegistry)
+            const [schAdminUser, school] = await Promise.all([
+                User.findOne({ email: normalizedEmail }),
+                School.findOne({ schoolId }),
+            ]);
+            user = schAdminUser;
 
             if (!user || user.status !== "active") {
                 return res.status(401).json({
@@ -83,7 +89,6 @@ const login = async (req, res) => {
             }
 
             // Verify school is active
-            const school = await School.findOne({ schoolId: user.schoolId });
             if (!school || school.status !== "active") {
                 return res.status(403).json({
                     success: false,
@@ -108,7 +113,9 @@ const login = async (req, res) => {
             };
 
         } else {
-            // Teacher, Student, Parent - stored in school-specific database
+            // Teacher, Student, Parent, Driver - stored in school-specific database
+            // We need the school to get schoolDbName, but we can resolve the model
+            // schema early and fetch school + user in parallel once we have schoolDb.
             const school = await School.findOne({ schoolId });
 
             if (!school || school.status !== "active") {
@@ -175,14 +182,14 @@ const login = async (req, res) => {
                 lastName: user.lastName,
             };
 
-            // Add role-specific fields
+            // Add role-specific fields — enrichment queries run in parallel where possible
             if (role === "teacher") {
                 tokenPayload.teacherId = user.teacherId;
                 tokenPayload.classes = user.classes || [];
                 tokenPayload.subjects = user.subjects || [];
                 tokenPayload.department = user.department;
 
-                // Fetch subject names
+                // Fetch subject names (non-blocking — failure is acceptable)
                 try {
                     const Subject = schoolDb.model("Subject", subjectSchema);
                     const subjectDocs = await Subject.find({ subjectId: { $in: user.subjects || [] } }).lean();

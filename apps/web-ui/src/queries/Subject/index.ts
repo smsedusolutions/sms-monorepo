@@ -31,6 +31,7 @@ export const useGetSubjects = (schoolId: string, filters?: SubjectFilters) => {
                 filters as Record<string, unknown>
             ),
         enabled: !!schoolId,
+        staleTime: 10 * 60 * 1000,
     });
 };
 

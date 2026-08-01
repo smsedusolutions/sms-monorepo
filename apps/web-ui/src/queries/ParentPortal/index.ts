@@ -42,6 +42,7 @@ export const useGetParentDashboard = (schoolId: string) => {
             `/api/school/${schoolId}/parent-portal/dashboard`
         ),
         enabled: !!schoolId,
+        staleTime: 5 * 60 * 1000,
     });
 };
 
@@ -54,6 +55,7 @@ export const useGetMyChildren = (schoolId: string) => {
             `/api/school/${schoolId}/parent-portal/children`
         ),
         enabled: !!schoolId,
+        staleTime: 10 * 60 * 1000,
     });
 };
 
@@ -66,6 +68,7 @@ export const useGetChildProfile = (schoolId: string, studentId: string) => {
             `/api/school/${schoolId}/parent-portal/children/${studentId}`
         ),
         enabled: !!schoolId && !!studentId,
+        staleTime: 10 * 60 * 1000,
     });
 };
 
@@ -78,6 +81,7 @@ export const useGetChildClassTeacher = (schoolId: string, studentId: string) => 
             `/api/school/${schoolId}/parent-portal/children/${studentId}/class-teacher`
         ),
         enabled: !!schoolId && !!studentId,
+        staleTime: 10 * 60 * 1000,
     });
 };
 
@@ -90,6 +94,7 @@ export const useGetChildTeachers = (schoolId: string, studentId: string) => {
             `/api/school/${schoolId}/parent-portal/children/${studentId}/teachers`
         ),
         enabled: !!schoolId && !!studentId,
+        staleTime: 10 * 60 * 1000,
     });
 };
 

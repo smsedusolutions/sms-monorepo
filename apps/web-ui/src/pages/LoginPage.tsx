@@ -113,10 +113,10 @@ const LoginPage: React.FC = () => {
     loginMutation.mutate(
       { ...formData, rememberMe },
       {
-        onSuccess: async (res: any) => {
+        onSuccess: (res: any) => {
           if (res?.data?.token) {
             login(res.data.token);
-            await fetchProfile();
+            fetchProfile(); // fire-and-forget — don't block navigation
             navigate(getRedirectPath(TokenService.getRole() || 'super_admin'));
           } else {
             setLoginError('Invalid server response - no token received');
@@ -139,10 +139,10 @@ const LoginPage: React.FC = () => {
     loginMutation.mutate(
       { ...payload, rememberMe },
       {
-        onSuccess: async (res: any) => {
+        onSuccess: (res: any) => {
           if (res?.data?.token) {
             login(res.data.token);
-            await fetchProfile();
+            fetchProfile(); // fire-and-forget — don't block navigation
             navigate(
               getRedirectPath(TokenService.getRole() || 'super_admin')
             );

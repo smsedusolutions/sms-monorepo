@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Box, AppBar, Toolbar, IconButton, Typography, Avatar, Divider, Tooltip } from '@mui/material';
+import { Box, AppBar, Toolbar, IconButton, Typography, Avatar, Divider, Tooltip, LinearProgress } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -12,7 +12,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import Sidebar from '../../pages/Sidebar/Sidebar';
 import NotificationBell from '../NotificationBell/NotificationBell';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useUserStore } from '../../stores/userStore';
 import { useRoleStore } from '../../stores/roleStore';
 import { useTimeSettingsStore } from '../../stores/timeSettingsStore';
@@ -39,6 +39,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     const [settingsPopupOpen, setSettingsPopupOpen] = useState(false);
     const [settingsSubMenu, setSettingsSubMenu] = useState<string | null>(null);
     const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+    const [isNavigating, setIsNavigating] = useState(false);
 
     const profileAnchorRef = useRef<HTMLDivElement>(null);
     const popupRef = useRef<HTMLDivElement>(null);
@@ -47,10 +48,18 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
 
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const { user: userProfile, school, fetchProfile, clearStore } = useUserStore();
     const { fetchRoles, getRoleByCode } = useRoleStore();
     const { timeFormat, setTimeFormat } = useTimeSettingsStore();
+
+    // Trigger brief top progress indicator when location changes
+    useEffect(() => {
+        setIsNavigating(true);
+        const timer = setTimeout(() => setIsNavigating(false), 350);
+        return () => clearTimeout(timer);
+    }, [location.pathname]);
 
     useEffect(() => {
         if (user?.userId) {
@@ -179,6 +188,22 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                 }}
             >
+                {isNavigating && (
+                    <LinearProgress
+                        sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            height: 3,
+                            zIndex: 1300,
+                            backgroundColor: 'transparent',
+                            '& .MuiLinearProgress-bar': {
+                                backgroundColor: '#3b82f6',
+                            },
+                        }}
+                    />
+                )}
                 <Toolbar sx={{ gap: 0 }}>
                     <IconButton
                         color="inherit"

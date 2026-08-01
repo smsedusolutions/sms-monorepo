@@ -48,8 +48,11 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
 
+const compression = require('compression');
+
 // Middleware
 app.use(cors(corsOptions));
+app.use(compression());
 app.use(commonRateLimiter);
 
 app.use(express.json());

@@ -9,6 +9,7 @@ export const useGetSuperAdminMenus = (role: string) => {
     queryFn: () =>
       useApi<ApiResponse<Menu[]>>("GET", `/api/admin/dashboard/menus/${role}`),
     enabled: !!role,
+    staleTime: 30 * 60 * 1000,
   });
 };
 
@@ -22,6 +23,7 @@ export const useGetSchoolAdminMenus = (schoolId: string, role: string) => {
         `/api/auth/${schoolId}/dashboard/menus/${role}`,
       ),
     enabled: !!schoolId && !!role,
+    staleTime: 30 * 60 * 1000,
   });
 };
 
@@ -35,6 +37,7 @@ export const useGetUserMenus = (schoolId: string, role: string) => {
         `/api/school/${schoolId}/dashboard/menus/${role}`,
       ),
     enabled: !!schoolId && !!role,
+    staleTime: 30 * 60 * 1000,
   });
 };
 

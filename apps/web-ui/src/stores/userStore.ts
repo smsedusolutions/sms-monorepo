@@ -54,10 +54,20 @@ export const useUserStore = create<UserStore>()(
                         return;
                     }
 
-                    const response = await useApi<{
+                    // Fetch user profile and school info in parallel
+                    const profilePromise = useApi<{
                         success: boolean;
                         data: any;
                     }>('GET', path);
+
+                    const schoolPromise = schoolId
+                        ? useApi<{ success: boolean; data: any }>('GET', `/api/admin/school/get-school/${schoolId}`).catch((err) => {
+                            console.warn('Failed to fetch full school details:', err);
+                            return null;
+                        })
+                        : Promise.resolve(null);
+
+                    const [response, schoolResponse] = await Promise.all([profilePromise, schoolPromise]);
 
                     if (response.success && response.data) {
                         const userData = response.data;
@@ -75,10 +85,9 @@ export const useUserStore = create<UserStore>()(
                             profileImage: userData.profileImage,
                         };
 
-                        // Fetch detailed school info if schoolId is available
+                        // Build school info from aggregated data + full school details
                         let schoolInfo: SchoolInfo | null = null;
 
-                        // Default school info from aggregated data
                         if (userData.schoolName || effectiveSchoolId) {
                             schoolInfo = {
                                 schoolId: effectiveSchoolId || '',
@@ -88,19 +97,21 @@ export const useUserStore = create<UserStore>()(
                             };
                         }
 
-                        // Try to get full school details from platform API
-                        if (effectiveSchoolId) {
+                        // Merge full school details if available
+                        if (schoolResponse && schoolResponse.success && schoolResponse.data) {
+                            schoolInfo = {
+                                ...schoolInfo,
+                                ...schoolResponse.data,
+                            };
+                        } else if (effectiveSchoolId && !schoolId) {
+                            // schoolId wasn't available initially, try fetching now
                             try {
-                                const schoolResponse = await useApi<{
+                                const lateFetchSchool = await useApi<{
                                     success: boolean;
                                     data: any;
                                 }>('GET', `/api/admin/school/get-school/${effectiveSchoolId}`);
-
-                                if (schoolResponse.success && schoolResponse.data) {
-                                    schoolInfo = {
-                                        ...schoolInfo,
-                                        ...schoolResponse.data
-                                    };
+                                if (lateFetchSchool.success && lateFetchSchool.data) {
+                                    schoolInfo = { ...schoolInfo, ...lateFetchSchool.data };
                                 }
                             } catch (schoolError) {
                                 console.warn('Failed to fetch full school details, using aggregated data:', schoolError);
