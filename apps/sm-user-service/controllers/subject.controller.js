@@ -197,7 +197,7 @@ const getAllSubjects = async (req, res) => {
       classMap[c.classId] = c.name;
     });
 
-    response.data = subjects.map((s) => {
+    const mappedSubjects = subjects.map((s) => {
       const subjectObj = s.toObject();
       
       // Populate className
@@ -225,6 +225,50 @@ const getAllSubjects = async (req, res) => {
 
       return subjectObj;
     });
+
+    // Organize hierarchically: main subjects sorted alphabetically, each followed immediately by its sub-subjects
+    const mainSubjects = [];
+    const subSubjectsMap = new Map();
+
+    mappedSubjects.forEach((s) => {
+      if (s.isSubSubject && s.parentSubjectId) {
+        const pId = s.parentSubjectId;
+        if (!subSubjectsMap.has(pId)) {
+          subSubjectsMap.set(pId, []);
+        }
+        subSubjectsMap.get(pId).push(s);
+      } else {
+        mainSubjects.push(s);
+      }
+    });
+
+    mainSubjects.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+    const organizedSubjects = [];
+    mainSubjects.forEach((main) => {
+      organizedSubjects.push(main);
+      const subBySubjectId = subSubjectsMap.get(main.subjectId) || [];
+      const subByMongoId = main._id ? subSubjectsMap.get(main._id.toString()) || [] : [];
+      const combinedSubs = Array.from(new Set([...subBySubjectId, ...subByMongoId]));
+
+      combinedSubs.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+      combinedSubs.forEach((sub) => {
+        organizedSubjects.push(sub);
+      });
+
+      subSubjectsMap.delete(main.subjectId);
+      if (main._id) subSubjectsMap.delete(main._id.toString());
+    });
+
+    subSubjectsMap.forEach((subs) => {
+      subs.forEach((orphan) => {
+        if (!organizedSubjects.includes(orphan)) {
+          organizedSubjects.push(orphan);
+        }
+      });
+    });
+
+    response.data = organizedSubjects;
 
     return res.status(200).json(response);
   } catch (error) {
