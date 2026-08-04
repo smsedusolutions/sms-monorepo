@@ -1,5 +1,6 @@
+const mongoose = require("mongoose");
 const { getSchoolDbConnection } = require("../configs/db");
-const { SchoolModel: School, ClassSchema: classSchema } = require("@sms/shared");
+const { SchoolModel: School, ClassSchema: classSchema, TeacherSchema: teacherSchema } = require("@sms/shared");
 const { logActivity } = require("@sms/shared/utils");
 
 /**
@@ -8,6 +9,11 @@ const { logActivity } = require("@sms/shared/utils");
 const getClassModel = (schoolDbName) => {
     const schoolDb = getSchoolDbConnection(schoolDbName);
     return schoolDb.model("Class", classSchema);
+};
+
+const getTeacherModel = (schoolDbName) => {
+    const schoolDb = getSchoolDbConnection(schoolDbName);
+    return schoolDb.models.Teacher || schoolDb.model("Teacher", teacherSchema);
 };
 
 /**
@@ -155,6 +161,7 @@ const getAllClasses = async (req, res) => {
         }
 
         const ClassModel = getClassModel(schoolDbName);
+        const TeacherModel = getTeacherModel(schoolDbName);
 
         // Build query filters
         const query = {};
@@ -162,11 +169,52 @@ const getAllClasses = async (req, res) => {
 
         const classes = await ClassModel.find(query).sort({ name: 1 });
 
+        // Collect all class teacher IDs across sections
+        const teacherIds = [];
+        classes.forEach((c) => {
+            (c.sections || []).forEach((s) => {
+                if (s.classTeacherId) teacherIds.push(s.classTeacherId);
+                if (s.classTeacher) teacherIds.push(s.classTeacher);
+            });
+        });
+        const uniqueTeacherIds = [...new Set(teacherIds.filter(Boolean))];
+
+        const teachers = await TeacherModel.find({
+            $or: [
+                { teacherId: { $in: uniqueTeacherIds } },
+                { _id: { $in: uniqueTeacherIds.filter(id => mongoose.isValidObjectId(id)) } },
+                { userId: { $in: uniqueTeacherIds } }
+            ]
+        });
+
+        const teacherMap = new Map();
+        teachers.forEach((t) => {
+            const name = t.name || `${t.firstName || ''} ${t.lastName || ''}`.trim() || t.teacherId;
+            if (t.teacherId) teacherMap.set(t.teacherId, name);
+            if (t._id) teacherMap.set(t._id.toString(), name);
+            if (t.userId) teacherMap.set(t.userId, name);
+        });
+
+        const populatedClasses = classes.map((c) => {
+            const cObj = c.toObject();
+            if (cObj.sections && Array.isArray(cObj.sections)) {
+                cObj.sections = cObj.sections.map((s) => {
+                    const tId = s.classTeacherId || s.classTeacher;
+                    const tName = tId ? (teacherMap.get(tId) || tId) : null;
+                    return {
+                        ...s,
+                        classTeacherName: tName,
+                    };
+                });
+            }
+            return cObj;
+        });
+
         return res.status(200).json({
             success: true,
             message: "Classes fetched successfully",
-            data: classes,
-            count: classes.length,
+            data: populatedClasses,
+            count: populatedClasses.length,
         });
     } catch (error) {
         console.error("Error fetching classes:", error);

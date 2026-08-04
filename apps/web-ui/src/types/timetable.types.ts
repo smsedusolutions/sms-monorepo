@@ -139,7 +139,9 @@ export interface TimetableEntry {
   // Populated fields
   teacher?: {
     teacherId: string;
-    name: string;
+    name?: string;
+    firstName?: string;
+    lastName?: string;
   };
   subject?: {
     subjectId: string;

@@ -64,7 +64,7 @@ const TeacherClasses = () => {
 
     const uniqueClassIds = Array.from(new Set([
         ...teacherClassesList,
-        ...allSubjects.filter(s => s.assignedTeacherId === teacherId).map(s => s.classId),
+        ...allSubjects.filter(s => s.assignedTeacherId === teacherId || (s as any).assignedTeacherIds?.includes(teacherId)).flatMap(s => s.classes || []),
         ...(classIdFromCT ? [classIdFromCT] : [])
     ])).filter(Boolean);
 
@@ -78,7 +78,7 @@ const TeacherClasses = () => {
 
         // Subjects sections
         allSubjects
-            .filter(s => s.assignedTeacherId === teacherId && s.classId === cls.classId)
+            .filter(s => (s.assignedTeacherId === teacherId || (s as any).assignedTeacherIds?.includes(teacherId)) && s.classes?.includes(cls.classId))
             .forEach(s => {
                 const sId = (s as any).sectionId;
                 if (sId) relevantSectionIds.add(sId);
@@ -97,7 +97,7 @@ const TeacherClasses = () => {
         cls.sections.filter(s => relevantSectionIds.has(s.sectionId)).forEach(section => {
             const key = `${cls.classId}-${section.sectionId}`;
             const subjects = allSubjects
-                .filter(s => s.assignedTeacherId === teacherId && s.classId === cls.classId && 
+                .filter(s => (s.assignedTeacherId === teacherId || (s as any).assignedTeacherIds?.includes(teacherId)) && s.classes?.includes(cls.classId) && 
                              (!(s as any).sectionId || (s as any).sectionId === section.sectionId))
                 .map(s => s.name);
 

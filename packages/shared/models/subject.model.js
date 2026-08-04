@@ -19,8 +19,9 @@ const subjectSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    classId: {
-      type: String,
+    classes: {
+      type: [String],
+      default: [],
     },
     description: {
       type: String,

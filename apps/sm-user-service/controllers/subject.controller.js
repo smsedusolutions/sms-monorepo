@@ -45,7 +45,7 @@ const getSchoolDbName = async (schoolId) => {
 const createSubject = async (req, res) => {
   try {
     const { schoolId } = req.params;
-    const { name, code, description, classId, teacherIds, isSubSubject, parentSubjectId } = req.body;
+    const { name, code, description, classes, teacherIds, isSubSubject, parentSubjectId } = req.body;
 
     // Validate required fields
     if (!name || !code) {
@@ -78,6 +78,9 @@ const createSubject = async (req, res) => {
       });
     }
 
+    // Determine target classes list
+    const targetClasses = Array.isArray(classes) ? classes : [];
+
     // Generate subjectId
     const subjectId = await generateSubjectId(SubjectModel);
 
@@ -87,7 +90,7 @@ const createSubject = async (req, res) => {
       name,
       code: code.toUpperCase(),
       description,
-      classId,
+      classes: targetClasses,
       isSubSubject: isSubSubject || false,
       parentSubjectId: parentSubjectId || null,
     });
@@ -97,10 +100,20 @@ const createSubject = async (req, res) => {
     // Bidirectional sync: Update teachers' subjects array
     if (teacherIds && Array.isArray(teacherIds) && teacherIds.length > 0) {
       const { TeacherSchema: teacherSchema } = require("@sms/shared");
-      const TeacherModel = schoolDb.model("Teacher", teacherSchema);
+      const TeacherModel = schoolDb.models.Teacher || schoolDb.model("Teacher", teacherSchema);
       
       await TeacherModel.updateMany(
         { teacherId: { $in: teacherIds } },
+        { $addToSet: { subjects: savedSubject.subjectId } }
+      );
+    }
+
+    // Bidirectional sync: Update classes' subjects array
+    const { ClassSchema: classSchema } = require("@sms/shared");
+    const ClassModel = schoolDb.models.Class || schoolDb.model("Class", classSchema);
+    if (targetClasses.length > 0) {
+      await ClassModel.updateMany(
+        { classId: { $in: targetClasses } },
         { $addToSet: { subjects: savedSubject.subjectId } }
       );
     }
@@ -390,7 +403,7 @@ const updateSubjectById = async (req, res) => {
     // Bidirectional sync: Update teachers' subjects array
     if (teacherIds && Array.isArray(teacherIds)) {
       const { TeacherSchema: teacherSchema } = require("@sms/shared");
-      const TeacherModel = schoolDb.model("Teacher", teacherSchema);
+      const TeacherModel = schoolDb.models.Teacher || schoolDb.model("Teacher", teacherSchema);
       
       // 1. Remove subjectId from all teachers who had it but are not in teacherIds
       await TeacherModel.updateMany(
@@ -403,6 +416,26 @@ const updateSubjectById = async (req, res) => {
         { teacherId: { $in: teacherIds } },
         { $addToSet: { subjects: subjectId } }
       );
+    }
+
+    // Bidirectional sync: Update classes' subjects array
+    if (updateData.classes && Array.isArray(updateData.classes)) {
+      const { ClassSchema: classSchema } = require("@sms/shared");
+      const ClassModel = schoolDb.models.Class || schoolDb.model("Class", classSchema);
+
+      // 1. Remove subjectId from classes no longer in updateData.classes
+      await ClassModel.updateMany(
+        { subjects: subjectId, classId: { $nin: updateData.classes } },
+        { $pull: { subjects: subjectId } }
+      );
+
+      // 2. Add subjectId to classes in updateData.classes
+      if (updateData.classes.length > 0) {
+        await ClassModel.updateMany(
+          { classId: { $in: updateData.classes } },
+          { $addToSet: { subjects: subjectId } }
+        );
+      }
     }
 
     const response = res.status(200).json({

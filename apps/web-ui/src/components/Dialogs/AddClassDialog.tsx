@@ -59,8 +59,8 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
     const { data: allClassesData } = useGetClasses(schoolId);
     const allClasses = allClassesData?.data || [];
 
-    // Fetch teachers for autocomplete (all active, no pagination limit)
-    const { data: teachersData } = useGetTeachers(schoolId, { status: 'active', limit: 9999 } as any);
+    // Fetch teachers for autocomplete (active teachers)
+    const { data: teachersData } = useGetTeachers(schoolId, { status: 'active' });
     const teachers: Teacher[] = teachersData?.data || [];
     const teacherOptions = teachers.map((t) => ({
         id: t.teacherId,

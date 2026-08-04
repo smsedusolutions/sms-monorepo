@@ -125,6 +125,14 @@ router.post(
     aiController.validateAITimetable
 );
 
+// Suggest AI Rules (priority-based auto-suggest)
+router.post(
+    "/ai/suggest-rules",
+    Authenticated,
+    authorizeRoles("sch_admin"),
+    aiController.suggestRules
+);
+
 // Generate AI Timetable
 router.post(
     "/ai/generate",

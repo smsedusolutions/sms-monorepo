@@ -186,6 +186,7 @@ export interface Teacher {
   schoolName?: string;
   firstName: string;
   lastName: string;
+  name?: string;
   email: string;
   phone?: string;
   phoneNumber?: string;
@@ -430,6 +431,7 @@ export interface Class {
   name: string;
   description?: string;
   sections: Section[];
+  subjects?: string[];
   status: "active" | "inactive";
   createdAt?: string;
   updatedAt?: string;
@@ -471,7 +473,7 @@ export interface Subject {
   assignedTeacherName?: string;
   assignedTeacherId?: string;
   assignedTeacherIds?: string[];
-  classId?: string;
+  classes?: string[];
   isSubSubject?: boolean;
   parentSubjectId?: string | null;
   createdAt?: string;
@@ -482,7 +484,7 @@ export interface CreateSubjectPayload {
   name: string;
   code: string;
   description?: string;
-  classId?: string;
+  classes?: string[];
   isSubSubject?: boolean;
   parentSubjectId?: string | null;
 }
@@ -492,14 +494,13 @@ export interface UpdateSubjectPayload {
   code?: string;
   description?: string;
   status?: "active" | "inactive";
-  classId?: string;
+  classes?: string[];
   isSubSubject?: boolean;
   parentSubjectId?: string | null;
 }
 
 export interface SubjectFilters {
   status?: "active" | "inactive";
-  classId?: string;
   sectionId?: string;
   search?: string;
 }

@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const { getSchoolDbConnection } = require("../configs/db");
 const { getSchoolDbName } = require("../utils/schoolDbHelper");
 const {
@@ -362,19 +363,94 @@ const getClassTimetable = async (req, res) => {
             isActive: true,
         });
 
-        // Populate teacher and subject details
-        const populatedEntries = await Promise.all(
-            entries.map(async (entry) => {
-                const teacher = await Teacher.findOne({ teacherId: entry.teacherId });
-                const subject = await Subject.findOne({ subjectId: entry.subjectId });
-                return {
-                    ...entry.toObject(),
-                    displayPeriodNumber: periodMap.get(entry.periodNumber) || entry.periodNumber,
-                    teacher: teacher ? { teacherId: teacher.teacherId, name: `${teacher.firstName} ${teacher.lastName}` } : null,
-                    subject: subject ? { subjectId: subject.subjectId, name: subject.name, code: subject.code } : null,
-                };
-            })
-        );
+        const teachers = await Teacher.find({ schoolId });
+        const subjects = await Subject.find({ schoolId });
+
+        const teacherMap = new Map();
+        teachers.forEach(t => {
+            const fullName = `${t.firstName || ''} ${t.lastName || ''}`.trim();
+            const name = fullName || t.name || t.teacherId || t._id.toString();
+            const tObj = {
+                teacherId: t.teacherId || t._id.toString(),
+                name,
+                firstName: t.firstName || '',
+                lastName: t.lastName || ''
+            };
+
+            if (t.teacherId) {
+                teacherMap.set(String(t.teacherId).trim(), tObj);
+                teacherMap.set(String(t.teacherId).trim().toLowerCase(), tObj);
+            }
+            if (t._id) {
+                teacherMap.set(String(t._id).trim(), tObj);
+                teacherMap.set(String(t._id).trim().toLowerCase(), tObj);
+            }
+            if (t.userId) {
+                teacherMap.set(String(t.userId).trim(), tObj);
+                teacherMap.set(String(t.userId).trim().toLowerCase(), tObj);
+            }
+        });
+
+        const subjectMap = new Map();
+        subjects.forEach(s => {
+            const info = { subjectId: s.subjectId || s._id.toString(), name: s.name, code: s.code };
+            if (s.subjectId) {
+                subjectMap.set(String(s.subjectId).trim(), info);
+                subjectMap.set(String(s.subjectId).trim().toLowerCase(), info);
+            }
+            if (s._id) {
+                subjectMap.set(String(s._id).trim(), info);
+                subjectMap.set(String(s._id).trim().toLowerCase(), info);
+            }
+        });
+
+        const populatedEntries = entries.map((entry) => {
+            const rawTId = String(entry.teacherId || "").trim();
+            let tInfo = teacherMap.get(rawTId) || teacherMap.get(rawTId.toLowerCase());
+
+            if (!tInfo && rawTId) {
+                const found = teachers.find(t => {
+                    const ids = [t.teacherId, t._id, t.id, t.userId, t.employeeId, t.staffId, t.code]
+                        .filter(Boolean)
+                        .map(id => String(id).trim().toLowerCase());
+                    return ids.includes(rawTId.toLowerCase());
+                });
+                if (found) {
+                    const fn = `${found.firstName || ''} ${found.lastName || ''}`.trim();
+                    tInfo = {
+                        teacherId: found.teacherId || found._id.toString(),
+                        name: fn || found.name || rawTId,
+                        firstName: found.firstName || '',
+                        lastName: found.lastName || ''
+                    };
+                } else {
+                    tInfo = { teacherId: rawTId, name: rawTId, firstName: '', lastName: '' };
+                }
+            }
+
+            const rawSId = String(entry.subjectId || "").trim();
+            let sInfo = subjectMap.get(rawSId) || subjectMap.get(rawSId.toLowerCase());
+            if (!sInfo && rawSId) {
+                const foundS = subjects.find(s => {
+                    const ids = [s.subjectId, s._id, s.id, s.code]
+                        .filter(Boolean)
+                        .map(id => String(id).trim().toLowerCase());
+                    return ids.includes(rawSId.toLowerCase());
+                });
+                if (foundS) {
+                    sInfo = { subjectId: foundS.subjectId || foundS._id.toString(), name: foundS.name, code: foundS.code };
+                } else {
+                    sInfo = { subjectId: rawSId, name: rawSId, code: '' };
+                }
+            }
+
+            return {
+                ...entry.toObject(),
+                displayPeriodNumber: periodMap.get(entry.periodNumber) || entry.periodNumber,
+                teacher: tInfo,
+                subject: sInfo,
+            };
+        });
 
         let processedConfig = config ? config.toObject() : null;
         if (processedConfig && processedConfig.periods) {

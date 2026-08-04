@@ -9,8 +9,6 @@ import {
     Box,
     Typography,
     Divider,
-    Autocomplete,
-    Chip,
     FormControlLabel,
     Switch,
 } from '@mui/material';
@@ -19,10 +17,11 @@ import { useCreateSubject, useUpdateSubject, useGetSubjects } from '../../querie
 import { useGetClasses } from '../../queries/Class';
 import { useGetTeachers } from '../../queries/Teacher';
 import { useNotification } from '../../hooks/useNotification';
-import type { Subject, CreateSubjectPayload, Teacher, Class } from '../../types';
+import type { Subject, Teacher, Class } from '../../types';
 import { AppInput } from '../shared/AppInput';
 import { AppSelect } from '../shared/AppSelect';
 import { AppButton } from '../shared/AppButton';
+import { AppMultiSelect } from '../shared/AppMultiSelect';
 
 interface SubjectDialogProps {
     open: boolean;
@@ -32,7 +31,7 @@ interface SubjectDialogProps {
     initialClassId?: string;
 }
 
-const SubjectDialog: React.FC<SubjectDialogProps> = ({
+export const AddSubjectDialog: React.FC<SubjectDialogProps> = ({
     open,
     onClose,
     schoolId,
@@ -42,29 +41,28 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
     const isEditMode = !!editData;
     const notification = useNotification();
 
-    const [formData, setFormData] = useState<CreateSubjectPayload & { teacherIds?: string[] }>({
+    const [formData, setFormData] = useState({
         name: "",
         code: "",
         description: "",
-        classId: "",
-        teacherIds: [],
+        classes: [] as string[],
+        teacherIds: [] as string[],
         isSubSubject: false,
         parentSubjectId: "",
     });
-
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const createMutation = useCreateSubject(schoolId);
     const updateMutation = useUpdateSubject(schoolId);
     
     // Fetch parent subjects for the dropdown
-    const { data: subjectsData } = useGetSubjects(schoolId, { limit: 9999 } as any);
+    const { data: subjectsData } = useGetSubjects(schoolId);
     const parentSubjects = (subjectsData?.data || []).filter(s => !s.isSubSubject);
 
     const { data: classesData } = useGetClasses(schoolId);
     const classes = classesData?.data || [];
 
-    const { data: teachersData } = useGetTeachers(schoolId, { limit: 9999 } as any);
+    const { data: teachersData } = useGetTeachers(schoolId);
     const teachers = (teachersData?.data || []) as Teacher[];
 
     useEffect(() => {
@@ -73,17 +71,18 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
                 name: editData.name || "",
                 code: editData.code || "",
                 description: editData.description || "",
-                classId: editData.classId || "",
+                classes: editData.classes || [],
                 teacherIds: editData.assignedTeacherIds || (editData.assignedTeacherId ? [editData.assignedTeacherId] : []),
                 isSubSubject: editData.isSubSubject || false,
                 parentSubjectId: editData.parentSubjectId || "",
             });
         } else {
+            const initialClasses = initialClassId ? [initialClassId] : [];
             setFormData({
                 name: "",
                 code: "",
                 description: "",
-                classId: initialClassId || "",
+                classes: initialClasses,
                 teacherIds: [],
                 isSubSubject: false,
                 parentSubjectId: "",
@@ -102,12 +101,6 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
         }
     };
 
-    const handleTeacherChange = (_: any, newValue: Teacher[]) => {
-        setFormData((prev) => ({
-            ...prev,
-            teacherIds: newValue.map(t => t.teacherId)
-        }));
-    };
 
     const validate = (): boolean => {
         const newErrors: Record<string, string> = {};
@@ -153,8 +146,10 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
             name: "",
             code: "",
             description: "",
-            classId: "",
+            classes: [],
             teacherIds: [],
+            isSubSubject: false,
+            parentSubjectId: "",
         });
         setErrors({});
         createMutation.reset();
@@ -169,8 +164,14 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
         (updateMutation.error as { message?: string })?.message ||
         "Operation failed";
 
-    // Prepare selected teachers for Autocomplete
-    const selectedTeachers = teachers.filter(t => formData.teacherIds?.includes(t.teacherId));
+    // Build option arrays for AppMultiSelect
+    const classOptions = classes
+        .filter((c: Class) => c.status === 'active')
+        .map((c: Class) => ({ id: c.classId, label: c.name }));
+
+    const teacherOptions = teachers
+        .filter((t: Teacher) => t.status === 'active')
+        .map((t: Teacher) => ({ id: t.teacherId, label: `${t.firstName} ${t.lastName}` }));
 
     return (
         <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -222,18 +223,14 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
                             placeholder="MATH01"
                         />
 
-                        <AppSelect
-                            label="Assign to Class"
-                            name="classId"
-                            value={formData.classId}
-                            onChange={handleChange}
-                            options={[
-                                { value: "", label: "General (No Specific Class)" },
-                                ...classes.filter((c: Class) => c.status === 'active').map((c: Class) => ({
-                                    value: c.classId,
-                                    label: c.name
-                                }))
-                            ]}
+                        <AppMultiSelect
+                            label="Assign to Classes"
+                            placeholder="Select classes (Leave empty for General / All Classes)"
+                            helperText="Select target classes, or leave empty for General / All Classes"
+                            options={classOptions}
+                            value={formData.classes}
+                            onChange={(ids) => setFormData(prev => ({ ...prev, classes: ids }))}
+                            chipColor="primary"
                         />
 
                         <FormControlLabel
@@ -270,30 +267,13 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
                             Faculty Assignment
                         </Typography>
 
-                        <Autocomplete
-                            multiple
-                            options={teachers.filter(t => t.status === 'active')}
-                            value={selectedTeachers}
-                            onChange={handleTeacherChange}
-                            getOptionLabel={(option) => `${option.firstName} ${option.lastName}`}
-                            renderTags={(value, getTagProps) =>
-                                value.map((option, index) => (
-                                    <Chip
-                                        label={`${option.firstName} ${option.lastName}`}
-                                        {...getTagProps({ index })}
-                                        size="small"
-                                        color="primary"
-                                        variant="outlined"
-                                    />
-                                ))
-                            }
-                            renderInput={(params) => (
-                                <AppInput
-                                    {...params}
-                                    label="Assigned Teachers"
-                                    placeholder="Search and select faculty members..."
-                                />
-                            )}
+                        <AppMultiSelect
+                            label="Assigned Teachers"
+                            placeholder="Search and select faculty members..."
+                            options={teacherOptions}
+                            value={formData.teacherIds || []}
+                            onChange={(ids) => setFormData(prev => ({ ...prev, teacherIds: ids }))}
+                            chipColor="primary"
                         />
 
                         <Divider sx={{ my: 0.5 }} />
@@ -330,4 +310,4 @@ const SubjectDialog: React.FC<SubjectDialogProps> = ({
     );
 };
 
-export default SubjectDialog;
+export default AddSubjectDialog;

@@ -16,6 +16,7 @@ import {
   IconButton,
   Alert,
   Chip,
+  FormHelperText,
 } from "@mui/material";
 import {
   Publish as PublishIcon,
@@ -148,12 +149,118 @@ const TimetableDraftPreview = () => {
     }
   };
 
+  // Helpers for robust teacher & subject resolution
+  const getTeacherCanonicalId = (t: any): string => {
+    if (!t) return "";
+    return t.teacherId || t._id || t.id || t.userId || t.employeeId || "";
+  };
+
+  const getSubjectCanonicalId = (s: any): string => {
+    if (!s) return "";
+    return s.subjectId || s._id || s.id || s.code || "";
+  };
+
+  const findMatchingTeacher = (rawTeacherId: string): any => {
+    if (!rawTeacherId) return null;
+    const target = String(rawTeacherId).trim().toLowerCase();
+    return teachers.find((t: any) => {
+      if (!t) return false;
+      const ids = [
+        t.teacherId,
+        t._id,
+        t.id,
+        t.userId,
+        t.employeeId,
+        t.staffId,
+        t.code,
+        `${t.firstName || ''} ${t.lastName || ''}`.trim(),
+        t.name,
+      ]
+        .filter(Boolean)
+        .map((id: any) => String(id).trim().toLowerCase());
+      return ids.includes(target);
+    });
+  };
+
+  const findMatchingSubject = (rawSubjectId: string): any => {
+    if (!rawSubjectId) return null;
+    const target = String(rawSubjectId).trim().toLowerCase();
+    return subjects.find((s: any) => {
+      if (!s) return false;
+      const ids = [s.subjectId, s._id, s.id, s.code, s.name]
+        .filter(Boolean)
+        .map((id: any) => String(id).trim().toLowerCase());
+      return ids.includes(target);
+    });
+  };
+
+  const isTeacherQualifiedForSubject = (t: any, targetSubjectId: string): boolean => {
+    if (!targetSubjectId) return true;
+    if (!t.subjects || !Array.isArray(t.subjects) || t.subjects.length === 0) return true;
+
+    const targetSub = findMatchingSubject(targetSubjectId);
+    const validIds = new Set<string>();
+    validIds.add(String(targetSubjectId).trim().toLowerCase());
+    if (targetSub) {
+      if (targetSub.subjectId) validIds.add(String(targetSub.subjectId).trim().toLowerCase());
+      if (targetSub._id) validIds.add(String(targetSub._id).trim().toLowerCase());
+      if (targetSub.id) validIds.add(String(targetSub.id).trim().toLowerCase());
+      if (targetSub.code) validIds.add(String(targetSub.code).trim().toLowerCase());
+      if (targetSub.name) validIds.add(String(targetSub.name).trim().toLowerCase());
+    }
+
+    return t.subjects.some((sub: any) => validIds.has(String(sub).trim().toLowerCase()));
+  };
+
+  // Filter teachers who can teach the selected subject in draft edit modal
+  const draftSubjectTeachers = useMemo(() => {
+    if (!editData?.subjectId) return teachers;
+    const qualified = teachers.filter((t: any) =>
+      isTeacherQualifiedForSubject(t, editData.subjectId)
+    );
+    return qualified.length > 0 ? qualified : teachers;
+  }, [editData?.subjectId, teachers, subjects]);
+
+  const handleSubjectChange = (newSubjectId: string) => {
+    const eligibleTeachers = teachers.filter((t: any) =>
+      isTeacherQualifiedForSubject(t, newSubjectId)
+    );
+    const validTeachers = eligibleTeachers.length > 0 ? eligibleTeachers : teachers;
+    const currentTeacherObj = findMatchingTeacher(editData?.teacherId || "");
+    const isCurrentValid = currentTeacherObj
+      ? validTeachers.some((t: any) => getTeacherCanonicalId(t) === getTeacherCanonicalId(currentTeacherObj))
+      : false;
+
+    setEditData({
+      ...editData!,
+      subjectId: newSubjectId,
+      teacherId: isCurrentValid && editData?.teacherId
+        ? editData.teacherId
+        : getTeacherCanonicalId(validTeachers[0]),
+    });
+  };
+
   const handleOpenEdit = (dayOfWeek: string, periodNumber: number, existingEntry: any) => {
+    const rawSubId = existingEntry?.subjectId || (subjects[0] ? getSubjectCanonicalId(subjects[0]) : "");
+    const matchedSub = findMatchingSubject(rawSubId);
+    const canonicalSubId = matchedSub ? getSubjectCanonicalId(matchedSub) : rawSubId;
+
+    const rawTId = existingEntry?.teacherId || "";
+    const matchedT = findMatchingTeacher(rawTId);
+    const canonicalTId = matchedT
+      ? getTeacherCanonicalId(matchedT)
+      : rawTId;
+
+    // Verify qualified teachers for this subject
+    const qualified = teachers.filter((t: any) => isTeacherQualifiedForSubject(t, canonicalSubId));
+    const validTeachers = qualified.length > 0 ? qualified : teachers;
+    const finalTId = canonicalTId || (validTeachers[0] ? getTeacherCanonicalId(validTeachers[0]) : "");
+
     setEditData({
       dayOfWeek,
       periodNumber,
-      subjectId: existingEntry ? existingEntry.subjectId : "",
-      teacherId: existingEntry ? existingEntry.teacherId : "",
+      subjectId: canonicalSubId,
+      teacherId: finalTId,
     });
     setEditDialogOpen(true);
   };
@@ -392,8 +499,30 @@ const TimetableDraftPreview = () => {
                                 {subjects.find((s: any) => s.subjectId === entry.subjectId)?.name || "Unknown Subject"}
                               </Typography>
                               <Typography variant="caption" sx={{ color: "#4a148c" }}>
-                                {teachers.find((t: any) => t.teacherId === entry.teacherId)?.firstName}{" "}
-                                {teachers.find((t: any) => t.teacherId === entry.teacherId)?.lastName}
+                                {(() => {
+                                  const rawTId = String(entry.teacherId || "").trim();
+                                  if (entry.teacher?.name && entry.teacher.name !== rawTId && !entry.teacher.name.startsWith("TCH-") && !entry.teacher.name.startsWith("TEA_")) {
+                                    return entry.teacher.name;
+                                  }
+                                  if (entry.teacher?.firstName || entry.teacher?.lastName) {
+                                    const fn = `${entry.teacher.firstName || ''} ${entry.teacher.lastName || ''}`.trim();
+                                    if (fn) return fn;
+                                  }
+                                  if (!rawTId) return "";
+                                  const t = teachers.find((t: any) => {
+                                    if (!t) return false;
+                                    const ids = [t.teacherId, t._id, t.id, t.userId, t.employeeId, t.staffId, t.code]
+                                      .filter(Boolean)
+                                      .map((id: any) => String(id).trim().toLowerCase());
+                                    return ids.includes(rawTId.toLowerCase());
+                                  });
+                                  if (t) {
+                                    const fn = `${t.firstName || ''} ${t.lastName || ''}`.trim();
+                                    if (fn) return fn;
+                                    if (t.name && !t.name.startsWith("TCH-")) return t.name;
+                                  }
+                                  return rawTId;
+                                })()}
                               </Typography>
                             </Box>
                             <Box className="action-btns" sx={{ opacity: 0, transition: 'opacity 0.2s', position: 'absolute', top: 2, right: 2, display: 'flex', gap: 0.5, bgcolor: 'rgba(255,255,255,0.8)', borderRadius: 1 }}>
@@ -439,24 +568,41 @@ const TimetableDraftPreview = () => {
                 <Select
                   value={editData.subjectId}
                   label="Subject"
-                  onChange={(e) => setEditData({ ...editData, subjectId: e.target.value as string })}
+                  onChange={(e) => handleSubjectChange(e.target.value as string)}
                 >
-                  {subjects.map((s: any) => (
-                    <MenuItem key={s.subjectId} value={s.subjectId}>{s.name}</MenuItem>
-                  ))}
+                  {subjects.map((s: any) => {
+                    const sId = getSubjectCanonicalId(s);
+                    return (
+                      <MenuItem key={sId || s.name} value={sId}>{s.name}</MenuItem>
+                    );
+                  })}
                 </Select>
               </FormControl>
-              <FormControl fullWidth size="small">
+
+              {editData.subjectId && draftSubjectTeachers.length === 0 && (
+                <Alert severity="warning" sx={{ fontSize: '0.8rem' }}>
+                  No teachers are assigned to teach this subject. Please assign a teacher to this subject in Subject configuration.
+                </Alert>
+              )}
+
+              <FormControl fullWidth size="small" disabled={!editData.subjectId || draftSubjectTeachers.length === 0}>
                 <InputLabel>Teacher</InputLabel>
                 <Select
                   value={editData.teacherId}
                   label="Teacher"
                   onChange={(e) => setEditData({ ...editData, teacherId: e.target.value as string })}
                 >
-                  {teachers.map((t: any) => (
-                    <MenuItem key={t.teacherId} value={t.teacherId}>{t.firstName} {t.lastName}</MenuItem>
-                  ))}
+                  {draftSubjectTeachers.map((t: any) => {
+                    const tId = getTeacherCanonicalId(t);
+                    const tName = `${t.firstName || ''} ${t.lastName || ''}`.trim() || t.name || tId;
+                    return (
+                      <MenuItem key={tId} value={tId}>{tName}</MenuItem>
+                    );
+                  })}
                 </Select>
+                {!editData.subjectId && (
+                  <FormHelperText>Select a subject first to view assigned teachers</FormHelperText>
+                )}
               </FormControl>
             </>
           )}

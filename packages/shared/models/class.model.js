@@ -40,6 +40,10 @@ const classSchema = new mongoose.Schema(
             type: [sectionSchema],
             default: [],
         },
+        subjects: {
+            type: [String],
+            default: [],
+        },
         status: {
             type: String,
             enum: ["active", "inactive"],

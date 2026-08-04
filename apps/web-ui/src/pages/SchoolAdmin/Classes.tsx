@@ -38,18 +38,16 @@ const ClassesPage = () => {
 
     const schoolId = TokenService.getSchoolId() || '';
     const { data, isLoading, error } = useGetClasses(schoolId);
-    const { data: teachersData } = useGetTeachers(schoolId, { limit: 9999 } as any);
 
     const updateMutation = useUpdateClass(schoolId);
     const removeSectionMutation = useRemoveSection(schoolId);
 
     const classes = data?.data || [];
-    const teachers = teachersData?.data || [];
 
-    const getTeacherName = (teacherId: string | undefined): string => {
-        if (!teacherId) return '-';
-        const teacher = teachers.find((t: Teacher) => t.teacherId === teacherId);
-        return teacher ? `${teacher.firstName} ${teacher.lastName}` : '-';
+    const getTeacherName = (section: any): string => {
+        if (!section) return '-';
+        if (section.classTeacherName) return section.classTeacherName;
+        return section.classTeacherId || section.classTeacher || '-';
     };
 
     const handleAdd = () => {
@@ -246,7 +244,7 @@ const ClassesPage = () => {
                                                                     <TableRow key={section.sectionId} sx={{ '& td': { py: 0.5 } }}>
                                                                         <TableCell>{section.sectionId}</TableCell>
                                                                         <TableCell>{section.name}</TableCell>
-                                                                        <TableCell>{getTeacherName(section.classTeacherId)}</TableCell>
+                                                                        <TableCell>{getTeacherName(section)}</TableCell>
                                                                         <TableCell align="center">
                                                                             <Tooltip title="Remove Section">
                                                                                 <Switch
