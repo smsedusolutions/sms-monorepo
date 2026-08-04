@@ -171,11 +171,11 @@ const ClassesPage = () => {
                         ) : (
                             classes.map((classItem: Class) => (
                                 <>
-                                <TableRow 
-                                    hover 
-                                    key={classItem.classId}
-                                    sx={{ '& td': { py: 1 } }} // Keep row height stable
-                                >
+                                    <TableRow
+                                        hover
+                                        key={classItem.classId}
+                                        sx={{ '& td': { py: 1 } }} // Keep row height stable
+                                    >
                                         <TableCell>
                                             <IconButton
                                                 size="small"
