@@ -25,8 +25,7 @@ import {
 import { StatusChip } from '../../components/Table/DataTable';
 import ClassDialog from '../../components/Dialogs/AddClassDialog';
 import { useGetClasses, useUpdateClass, useRemoveSection } from '../../queries/Class';
-import { useGetTeachers } from '../../queries/Teacher';
-import type { Class, Teacher } from '../../types';
+import type { Class } from '../../types';
 import TokenService from '../../queries/token/tokenService';
 import { useNotificationStore } from '../../stores/notificationStore';
 
