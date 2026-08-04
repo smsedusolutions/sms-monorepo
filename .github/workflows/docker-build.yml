@@ -1,0 +1,112 @@
+name: Docker Build Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  docker-build:
+    name: docker-build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Detect changed files
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            web-ui:
+              - 'apps/web-ui/**'
+              - 'packages/shared/**'
+            user-service:
+              - 'apps/sm-user-service/**'
+              - 'packages/shared/**'
+            academics-service:
+              - 'apps/sm-academics-service/**'
+              - 'packages/shared/**'
+            auth-service:
+              - 'apps/sm-auth-services/**'
+              - 'packages/shared/**'
+            platform-service:
+              - 'apps/sm-platform-service/**'
+              - 'packages/shared/**'
+            transport-service:
+              - 'apps/sm-transport-service/**'
+              - 'packages/shared/**'
+
+      - name: Set up Docker Buildx
+        if: steps.changes.outputs.web-ui == 'true' || steps.changes.outputs.user-service == 'true' || steps.changes.outputs.academics-service == 'true' || steps.changes.outputs.auth-service == 'true' || steps.changes.outputs.platform-service == 'true' || steps.changes.outputs.transport-service == 'true' || github.event_name == 'push'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Web UI Docker image
+        if: steps.changes.outputs.web-ui == 'true' || github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/web-ui/Dockerfile
+          push: false
+          tags: web-ui:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build User Service Docker image
+        if: steps.changes.outputs.user-service == 'true' || github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/sm-user-service/Dockerfile
+          push: false
+          tags: sm-user-service:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Academics Service Docker image
+        if: steps.changes.outputs.academics-service == 'true' || github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/sm-academics-service/Dockerfile
+          push: false
+          tags: sm-academics-service:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Auth Service Docker image
+        if: steps.changes.outputs.auth-service == 'true' || github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/sm-auth-services/Dockerfile
+          push: false
+          tags: sm-auth-services:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Platform Service Docker image
+        if: steps.changes.outputs.platform-service == 'true' || github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/sm-platform-service/Dockerfile
+          push: false
+          tags: sm-platform-service:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build Transport Service Docker image
+        if: steps.changes.outputs.transport-service == 'true' || github.event_name == 'push'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: apps/sm-transport-service/Dockerfile
+          push: false
+          tags: sm-transport-service:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build status
+        run: echo "✅ Docker build check completed successfully!"
