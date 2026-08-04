@@ -29,8 +29,11 @@ const corsOptions = {
     optionsSuccessStatus: 200
 };
 
+const compression = require('compression');
+
 // Middleware
 app.use(cors(corsOptions));
+app.use(compression());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

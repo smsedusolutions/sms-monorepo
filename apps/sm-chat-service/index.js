@@ -13,8 +13,11 @@ const { initWebSocketGateway } = require("./websocket/wsGateway");
 
 const app = express();
 
+const compression = require("compression");
+
 // Middlewares
 app.use(cors());
+app.use(compression());
 app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 

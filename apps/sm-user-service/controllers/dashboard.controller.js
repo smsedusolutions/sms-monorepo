@@ -40,15 +40,19 @@ const getSchoolDashboardStats = async (req, res) => {
     const Student = await getModel(schoolDbName, "Student", studentSchema);
     const Parent = await getModel(schoolDbName, "Parent", parentSchema);
 
-    // Get counts
-    const totalTeachers = await Teacher.countDocuments();
-    const activeTeachers = await Teacher.countDocuments({ status: "active" });
-
-    const totalStudents = await Student.countDocuments();
-    const activeStudents = await Student.countDocuments({ status: "active" });
-
-    const totalParents = await Parent.countDocuments();
-    const activeParents = await Parent.countDocuments({ status: "active" });
+    // Get counts — all independent, run in parallel
+    const [
+      totalTeachers, activeTeachers,
+      totalStudents, activeStudents,
+      totalParents, activeParents
+    ] = await Promise.all([
+      Teacher.countDocuments(),
+      Teacher.countDocuments({ status: "active" }),
+      Student.countDocuments(),
+      Student.countDocuments({ status: "active" }),
+      Parent.countDocuments(),
+      Parent.countDocuments({ status: "active" }),
+    ]);
 
     res.status(200).json({
       success: true,
@@ -283,25 +287,38 @@ const getTeacherDashboardStats = async (req, res) => {
       status: "active"
     }).sort({ periodNumber: 1 });
 
-    const scheduleWithDetails = await Promise.all(timetableEntries.map(async (entry) => {
-      const subject = await Subject.findOne({ subjectId: entry.subjectId }).select("name");
-      const classInfo = await Class.findOne({ classId: entry.classId }).select("name sections");
+    // Batch-fetch all subjects and classes referenced by today's timetable entries
+    // to avoid N+1 queries inside the map loop
+    const entrySubjectIds = [...new Set(timetableEntries.map(e => e.subjectId))];
+    const entryClassIds = [...new Set(timetableEntries.map(e => e.classId))];
+
+    const [subjectDocs, classDocs] = await Promise.all([
+      Subject.find({ subjectId: { $in: entrySubjectIds } }).select("subjectId name").lean(),
+      Class.find({ classId: { $in: entryClassIds } }).select("classId name sections").lean(),
+    ]);
+
+    const subjectMap = Object.fromEntries(subjectDocs.map(s => [s.subjectId, s.name]));
+    const classMap = Object.fromEntries(classDocs.map(c => [c.classId, c]));
+
+    const scheduleWithDetails = timetableEntries.map((entry) => {
+      const subjectName = subjectMap[entry.subjectId] || "Subject";
+      const classInfo = classMap[entry.classId];
       const sectionName = classInfo?.sections?.find(s => s.sectionId === entry.sectionId)?.name || "";
       
       const periodInfo = periodMap[entry.periodNumber];
       
       return {
         time: periodInfo?.time || `${entry.periodNumber}:00`,
-        subject: subject?.name || "Subject",
+        subject: subjectName,
         class: `${classInfo?.name || "Class"}-${sectionName || "Section"}`,
         periodNumber: periodInfo?.displayNumber || entry.periodNumber,
         periodName: periodInfo?.name || "Period"
       };
-    }));
+    });
 
     const periodsToday = scheduleWithDetails.length;
 
-    // 3. Today's Attendance Stats
+    // 3-6: Run independent queries in parallel
     const todayDate = new Date();
     todayDate.setHours(0, 0, 0, 0);
 
@@ -315,13 +332,35 @@ const getTeacherDashboardStats = async (req, res) => {
       }
     });
 
-    const attendanceRecords = attendanceQueryConditions.length > 0
-      ? await Attendance.find({
-          schoolId,
-          date: todayDate,
-          $or: attendanceQueryConditions,
-        })
-      : [];
+    const [
+      attendanceRecords,
+      pendingLeaveRequests,
+      totalAnnouncements,
+      pendingTasks
+    ] = await Promise.all([
+      // Attendance
+      attendanceQueryConditions.length > 0
+        ? Attendance.find({
+            schoolId,
+            date: todayDate,
+            $or: attendanceQueryConditions,
+          })
+        : Promise.resolve([]),
+      // Leave Requests
+      LeaveRequest.countDocuments({
+        status: "pending",
+        approverType: "teacher",
+        approverId: teacherId,
+      }).catch(() => 0),
+      // Announcements
+      Announcement.countDocuments({ createdBy: teacherId }).catch(() => 0),
+      // Homework
+      Homework.find({
+        teacherId,
+        status: "active",
+        dueDate: { $gte: new Date() }
+      }).sort({ dueDate: 1 }).limit(5),
+    ]);
 
     let attendancePercentage = "Not Marked";
     if (attendanceRecords.length > 0) {
@@ -329,37 +368,10 @@ const getTeacherDashboardStats = async (req, res) => {
       attendancePercentage = `${Math.round((presentCount / attendanceRecords.length) * 100)}%`;
     }
 
-    // 4. Pending Leave Requests
-    let pendingLeaveRequests = 0;
-    try {
-      pendingLeaveRequests = await LeaveRequest.countDocuments({
-        status: "pending",
-        approverType: "teacher",
-        approverId: teacherId,
-      });
-    } catch (error) {
-      console.log("Leave data not available");
-    }
-
-    // 5. Total Announcements
-    let totalAnnouncements = 0;
-    try {
-      totalAnnouncements = await Announcement.countDocuments({ createdBy: teacherId });
-    } catch (error) {
-      console.log("Announcement data not available");
-    }
-
-    // 6. Pending Tasks (Homework + Unmarked Attendance)
-    const pendingTasks = await Homework.find({
-      teacherId,
-      status: "active",
-      dueDate: { $gte: new Date() }
-    }).sort({ dueDate: 1 }).limit(5);
-
     const formattedPendingTasks = pendingTasks.map(t => ({
       task: `Homework: ${t.title}`,
       deadline: t.dueDate,
-      priority: new Date(t.dueDate) - new Date() < 86400000 ? "high" : "medium" // Less than 24h = high
+      priority: new Date(t.dueDate) - new Date() < 86400000 ? "high" : "medium"
     }));
 
     if (attendanceRecords.length === 0 && allClassIds.length > 0) {

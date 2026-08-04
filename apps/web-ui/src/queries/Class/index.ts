@@ -33,7 +33,7 @@ export const useGetClasses = (schoolId: string, filters?: ClassFilters) => {
                 filters as Record<string, unknown>
             ),
         enabled: !!schoolId,
-        staleTime: 0, // Always refetch — section classTeacherId must be current
+        staleTime: 5 * 60 * 1000,
     });
 };
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Box,
   IconButton,
@@ -41,7 +41,72 @@ const SubjectsPage = () => {
   } as any);
   const updateMutation = useUpdateSubject(schoolId);
 
-  const subjects = data?.data || [];
+  const rawSubjects = data?.data || [];
+
+  // Map for looking up parent subject names by ID
+  const subjectMap = useMemo(() => {
+    const map = new Map<string, string>();
+    rawSubjects.forEach((s) => {
+      if (s.subjectId) map.set(s.subjectId, s.name);
+      if (s._id) map.set(s._id, s.name);
+    });
+    return map;
+  }, [rawSubjects]);
+
+  // Organize subjects so each sub-subject appears directly beneath its parent main subject
+  const subjects = useMemo(() => {
+    if (!rawSubjects || rawSubjects.length === 0) return [];
+
+    const mainSubjects: Subject[] = [];
+    const subSubjectsMap = new Map<string, Subject[]>();
+
+    rawSubjects.forEach((s) => {
+      if (s.isSubSubject && s.parentSubjectId) {
+        const pId = s.parentSubjectId;
+        if (!subSubjectsMap.has(pId)) {
+          subSubjectsMap.set(pId, []);
+        }
+        subSubjectsMap.get(pId)!.push(s);
+      } else {
+        mainSubjects.push(s);
+      }
+    });
+
+    // Sort main subjects alphabetically
+    mainSubjects.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+    const result: Subject[] = [];
+
+    mainSubjects.forEach((main) => {
+      result.push(main);
+
+      // Retrieve sub-subjects by subjectId or _id
+      const subBySubjectId = subSubjectsMap.get(main.subjectId) || [];
+      const subByMongoId = main._id ? subSubjectsMap.get(main._id) || [] : [];
+      const combinedSubs = Array.from(new Set([...subBySubjectId, ...subByMongoId]));
+
+      combinedSubs.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+      combinedSubs.forEach((sub) => {
+        result.push(sub);
+      });
+
+      // Clear processed parent IDs
+      subSubjectsMap.delete(main.subjectId);
+      if (main._id) subSubjectsMap.delete(main._id);
+    });
+
+    // Append any orphan sub-subjects whose parent isn't in mainSubjects (e.g. filtered)
+    subSubjectsMap.forEach((subs) => {
+      subs.forEach((orphanSub) => {
+        if (!result.includes(orphanSub)) {
+          result.push(orphanSub);
+        }
+      });
+    });
+
+    return result;
+  }, [rawSubjects]);
 
   const handleAdd = () => {
     setEditData(null);
@@ -77,17 +142,28 @@ const SubjectsPage = () => {
     {
       id: "name",
       label: "Subject Name",
-      minWidth: 180,
+      minWidth: 200,
       format: (value, row) => (
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Typography variant="body2" sx={{ fontWeight: row.isSubSubject ? 400 : 600 }}>
-            {row.isSubSubject && <span style={{ color: '#888', marginRight: 4 }}>↳</span>}
-            {value as string}
-          </Typography>
-          {row.isSubSubject ? (
-            <Chip label="Sub-Subject" size="small" variant="outlined" sx={{ fontSize: '0.65rem', height: 18 }} />
-          ) : (
-            <Chip label="Main" size="small" color="primary" sx={{ fontSize: '0.65rem', height: 18 }} />
+        <Box sx={{ display: "flex", flexDirection: "column", pl: row.isSubSubject ? 3 : 0, py: 0.5 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Typography variant="body2" sx={{ fontWeight: row.isSubSubject ? 500 : 600 }}>
+              {row.isSubSubject && (
+                <span style={{ color: '#6c757d', marginRight: 6, fontWeight: 700, fontSize: '1.1rem' }}>
+                  ↳
+                </span>
+              )}
+              {value as string}
+            </Typography>
+            {row.isSubSubject ? (
+              <Chip label="Sub-Subject" size="small" variant="outlined" sx={{ fontSize: '0.65rem', height: 18 }} />
+            ) : (
+              <Chip label="Main" size="small" color="primary" sx={{ fontSize: '0.65rem', height: 18, fontWeight: 600 }} />
+            )}
+          </Box>
+          {row.isSubSubject && row.parentSubjectId && subjectMap.get(row.parentSubjectId) && (
+            <Typography variant="caption" sx={{ color: 'text.secondary', pl: 2.5, fontSize: '0.72rem' }}>
+              Parent: {subjectMap.get(row.parentSubjectId)}
+            </Typography>
           )}
         </Box>
       ),

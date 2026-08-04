@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
     Box,
     Typography,
@@ -416,15 +416,26 @@ const TeacherExamScheduler: React.FC = () => {
 
     const tabExams = [ongoingExams, upcomingExams, pastExams][selectedTab] ?? [];
 
-    const getSubjectName = (id: string) => {
-        const s = subjectsData?.data?.find((x: any) => x.subjectId === id || x._id === id);
-        return s?.name || id;
-    };
+    const subjectMap = useMemo(() => {
+        const map = new Map<string, string>();
+        subjectsData?.data?.forEach((s: any) => {
+            if (s.subjectId) map.set(s.subjectId, s.name);
+            if (s._id) map.set(s._id, s.name);
+        });
+        return map;
+    }, [subjectsData]);
 
-    const getClassName = (id: string) => {
-        const c = classesData?.data?.find((x: any) => x.classId === id || x._id === id);
-        return c?.name || id;
-    };
+    const classMap = useMemo(() => {
+        const map = new Map<string, string>();
+        classesData?.data?.forEach((c: any) => {
+            if (c.classId) map.set(c.classId, c.name);
+            if (c._id) map.set(c._id, c.name);
+        });
+        return map;
+    }, [classesData]);
+
+    const getSubjectName = useCallback((id: string) => subjectMap.get(id) || id, [subjectMap]);
+    const getClassName = useCallback((id: string) => classMap.get(id) || id, [classMap]);
 
     // ── summary stats ───────────────────────────────────────────────────────
     const StatCard = ({ label, value, color, icon }: { label: string; value: number; color: string; icon: React.ReactNode }) => (

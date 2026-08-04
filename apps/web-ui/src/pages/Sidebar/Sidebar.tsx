@@ -23,6 +23,7 @@ import TokenService from "../../queries/token/tokenService";
 import { useUserStore } from "../../stores/userStore";
 import { useRoleStore } from "../../stores/roleStore";
 import LogoutConfirmDialog from "./LogoutConfirmDialog";
+import { preloadRoute } from "../../utils/routePreloader";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -138,6 +139,18 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
 
   const menuItems = getMenuItems();
 
+  // Eagerly preload all route chunks for current user's menu items
+  useEffect(() => {
+    if (menuItems && menuItems.length > 0) {
+      menuItems.forEach((item) => {
+        if (item.path) preloadRoute(item.path);
+        item.subItems?.forEach((sub) => {
+          if (sub.path) preloadRoute(sub.path);
+        });
+      });
+    }
+  }, [menuItems.length, role]);
+
 
 
   return (
@@ -238,7 +251,10 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
                           handleSelect();
                         }
                       }}
-                      onMouseEnter={() => setHoveredItem(item.name)}
+                      onMouseEnter={() => {
+                        setHoveredItem(item.name);
+                        if (item.path) preloadRoute(item.path);
+                      }}
                       onMouseLeave={() => setHoveredItem(null)}
                       className={`menu-item ${isSelected ? "selected" : ""}`}
                       style={{
@@ -336,11 +352,10 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
                                   }
                                   handleSelect();
                                 }}
-                                onMouseEnter={() =>
-                                  setHoveredSubItem(
-                                    `${item.name}-${subItem.name}`,
-                                  )
-                                }
+                                onMouseEnter={() => {
+                                  setHoveredSubItem(`${item.name}-${subItem.name}`);
+                                  if (subItem.path) preloadRoute(subItem.path);
+                                }}
                                 onMouseLeave={() => setHoveredSubItem(null)}
                                 style={{
                                   display: "flex",

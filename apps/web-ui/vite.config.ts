@@ -40,6 +40,37 @@ export default defineConfig({
       "zustand/middleware",
     ],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (
+              id.includes("react-router") ||
+              id.includes("react-dom") ||
+              id.includes("/react/")
+            ) {
+              return "vendor-react";
+            }
+            if (id.includes("@mui") || id.includes("@emotion")) {
+              return "vendor-mui";
+            }
+            if (id.includes("react-google-charts")) {
+              return "vendor-charts";
+            }
+            if (
+              id.includes("date-fns") ||
+              id.includes("axios") ||
+              id.includes("zustand") ||
+              id.includes("exceljs")
+            ) {
+              return "vendor-utils";
+            }
+          }
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: "jsdom",

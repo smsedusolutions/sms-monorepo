@@ -593,13 +593,7 @@ export const ChatPage: React.FC = () => {
 
     try {
       console.log(`🔑 [E2EE] Fetching public key for partner: ${partnerId}...`);
-      let res = await chatApi.getUserKeys(partnerId);
-
-      // If server is pre-generating key bundle, retry once after 1 second
-      if (!res?.success || !res.data?.identityPublicKey) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        res = await chatApi.getUserKeys(partnerId);
-      }
+      const res = await chatApi.getUserKeys(partnerId);
 
       if (res?.success && res.data?.identityPublicKey) {
         console.log(`🔑 [E2EE] Partner ${partnerId} public key retrieved. Deriving shared AES key...`);
@@ -610,7 +604,7 @@ export const ChatPage: React.FC = () => {
         return sharedKey;
       }
     } catch (e) {
-      console.warn(`⚠️ [E2EE] Error fetching key for partner ${partnerId}:`, e);
+      console.warn(`⚠️ [E2EE] Recipient ${partnerId} has not registered public keys yet.`);
     }
 
     return null;

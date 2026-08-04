@@ -1,7 +1,61 @@
 /**
  * Timetable AI Generation Service
- * A core constraint-satisfaction heuristic algorithm to generate a timetable.
+ * 
+ * A robust scheduler using Greedy Slot-Filling with Global Teacher Balancing.
+ * 
+ * Algorithm Overview:
+ * 1. Build a "demand table": for each section, how many periods of each subject are still needed
+ * 2. Process ALL slots (day × period) across ALL sections together
+ * 3. For each slot, pick the best subject to assign using a scoring heuristic:
+ *    - Subjects with fewer eligible teachers are prioritized (MCV)
+ *    - Subjects with higher remaining demand are prioritized  
+ *    - Morning-priority subjects get a bonus for morning slots
+ *    - Teachers with lower workload are preferred (load balancing)
+ * 4. If a slot can't be filled (all subjects' teachers are busy), skip it and retry later
+ * 5. Multiple passes to fill remaining gaps
+ * 6. Randomized restarts with different orderings if any jobs remain unplaced
+ * 
+ * Why this works for real schools:
+ * - No exponential search tree — each slot is filled greedily
+ * - Global teacher pool management prevents bottlenecks
+ * - MCV scoring ensures scarce-teacher subjects are placed first
+ * - Multi-pass filling handles edge cases
+ * - Randomized restarts handle unlucky orderings
+ * 
+ * Guarantees:
+ * - No teacher double-booking (same day+period for two classes)
+ * - No class/section double-booking (by construction — one subject per slot)
+ * - maxPeriodsPerDay respected
+ * - dayLimits (half-day Saturday) respected
+ * - Morning priority used as scoring preference
  */
+
+/**
+ * Helper to check if a subject is assigned to a class (two-way interlinked check).
+ */
+function isSubjectAssignedToClass(subjectObj, classObj) {
+  if (!subjectObj || !classObj) return true;
+
+  // 1. Check subject.classes
+  const subjectClasses = subjectObj.classes && Array.isArray(subjectObj.classes) ? subjectObj.classes : [];
+
+  if (subjectClasses.length > 0) {
+    const matchesClassId = subjectClasses.includes(classObj.classId) || (classObj._id && subjectClasses.includes(classObj._id.toString()));
+    if (!matchesClassId) {
+      return false;
+    }
+  }
+
+  // 2. Check classObj.subjects
+  if (classObj.subjects && Array.isArray(classObj.subjects) && classObj.subjects.length > 0) {
+    const matchesSubjectId = classObj.subjects.includes(subjectObj.subjectId) || (subjectObj._id && classObj.subjects.includes(subjectObj._id.toString()));
+    if (!matchesSubjectId) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 /**
  * Validate if the requested generation is mathematically possible given the teachers.
@@ -11,63 +65,116 @@ function validateConstraints(config, classes, teachers, rules, subjects = [], op
   const instructionalPeriods = config.periods.filter(p => !['break', 'lunch', 'assembly'].includes(p.type));
   const periodsPerDay = instructionalPeriods.length;
 
-  // Calculate effective max periods per teacher considering day limits
-  const teacherMaxPeriods = config.workingDays.reduce((total, day) => {
+  const totalSlotsPerTeacher = config.workingDays.reduce((total, day) => {
     const dayLimit = options.dayLimits?.[day.toLowerCase()];
     const effectivePeriods = dayLimit && dayLimit > 0 ? Math.min(dayLimit, periodsPerDay) : periodsPerDay;
     return total + effectivePeriods;
   }, 0);
 
-  // Create subject map for names
   const subjectMap = {};
   subjects.forEach(s => (subjectMap[s.subjectId] = s.name || s.subjectId));
 
-  const subjectNeeds = {};
-  const subjectAvailability = {};
+  const parentIdsWithChildren = new Set();
+  subjects.forEach(s => {
+    if (s.isSubSubject && s.parentSubjectId) {
+      parentIdsWithChildren.add(s.parentSubjectId);
+    }
+  });
 
-  // 1. Calculate needs
+  const effectiveRules = rules.filter(rule => {
+    if (rule.periodsPerWeek <= 0) return false;
+    if (parentIdsWithChildren.has(rule.subjectId)) return false;
+    return true;
+  });
+
+  let totalSections = 0;
+  classes.forEach(cls => { totalSections += (cls.sections || []).length; });
+
+  // 1. Per-subject availability check (respecting class-subject assignment)
+  const subjectNeeds = {};
   classes.forEach(cls => {
-    cls.sections.forEach(() => {
-      rules.forEach(rule => {
-        if (!subjectNeeds[rule.subjectId]) subjectNeeds[rule.subjectId] = 0;
-        subjectNeeds[rule.subjectId] += rule.periodsPerWeek;
-      });
+    const secCount = (cls.sections || []).length;
+    if (secCount === 0) return;
+
+    effectiveRules.forEach(rule => {
+      const subObj = subjects.find(s => s.subjectId === rule.subjectId || s._id === rule.subjectId);
+      if (isSubjectAssignedToClass(subObj, cls)) {
+        subjectNeeds[rule.subjectId] = (subjectNeeds[rule.subjectId] || 0) + (rule.periodsPerWeek * secCount);
+      }
     });
   });
 
-  // 2. Count teacher availability
+  const subjectAvailability = {};
   teachers.forEach(teacher => {
-    const teacherSubjects =
-      teacher.subjects && teacher.subjects.length > 0 ? teacher.subjects : [];
+    const teacherSubjects = teacher.subjects && teacher.subjects.length > 0 ? teacher.subjects : [];
+    if (teacherSubjects.length === 0) return;
     teacherSubjects.forEach(sub => {
       if (!subjectAvailability[sub]) subjectAvailability[sub] = 0;
-      subjectAvailability[sub] += teacherMaxPeriods;
+      subjectAvailability[sub] += totalSlotsPerTeacher;
     });
   });
 
-  // 3. Verify
   Object.keys(subjectNeeds).forEach(subjectId => {
     const needed = subjectNeeds[subjectId];
     const available = subjectAvailability[subjectId] || 0;
     if (available < needed) {
       const subjectName = subjectMap[subjectId] || subjectId;
       errors.push(
-        `Shortage for ${subjectName}: Needs ${needed} periods/week across all classes, ` +
+        `Shortage for ${subjectName}: Needs ${needed} periods/week across assigned classes/sections, ` +
         `but available teachers can only provide at most ${available}. ` +
         `Please assign more teachers to this subject.`
       );
     }
   });
 
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
+  // 2. Shared-teacher bottleneck check
+  teachers.forEach(teacher => {
+    const teacherSubjects = teacher.subjects && teacher.subjects.length > 0 ? teacher.subjects : [];
+    if (teacherSubjects.length <= 1) return;
+
+    const soleSubjects = teacherSubjects.filter(subId => {
+      const count = teachers.filter(t => t.subjects && t.subjects.includes(subId)).length;
+      return count === 1;
+    });
+
+    if (soleSubjects.length > 1) {
+      const soleNeeds = soleSubjects.reduce((sum, subId) => sum + (subjectNeeds[subId] || 0), 0);
+      if (soleNeeds > totalSlotsPerTeacher) {
+        const teacherName = teacher.name || `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim() || teacher.teacherId;
+        const subNames = soleSubjects.map(sId => subjectMap[sId] || sId).join(', ');
+        errors.push(
+          `Teacher bottleneck: Teacher ${teacherName} is the ONLY teacher for multiple subjects (${subNames}). ` +
+          `Together, these subjects require ${soleNeeds} periods/week, but a teacher can teach at most ${totalSlotsPerTeacher} periods/week. ` +
+          `Please assign another teacher to at least one of these subjects.`
+        );
+      }
+    }
+  });
+
+  // 3. Per-section weekly capacity check
+  classes.forEach(cls => {
+    let sectionPeriodsRequested = 0;
+    effectiveRules.forEach(rule => {
+      const subObj = subjects.find(s => s.subjectId === rule.subjectId || s._id === rule.subjectId);
+      if (isSubjectAssignedToClass(subObj, cls)) {
+        sectionPeriodsRequested += rule.periodsPerWeek;
+      }
+    });
+
+    const sectionCapacity = totalSlotsPerTeacher;
+    if (sectionPeriodsRequested > sectionCapacity) {
+      errors.push(
+        `Section Capacity Exceeded for Class ${cls.name}: Requested ${sectionPeriodsRequested} periods/week total, ` +
+        `but weekly timetable only has ${sectionCapacity} period slots available per section. ` +
+        `Please reduce periods/week for some subjects.`
+      );
+    }
+  });
+
+  return { isValid: errors.length === 0, errors };
 }
 
-/**
- * Shuffles an array using the Fisher-Yates algorithm.
- */
+/** Shuffles an array using the Fisher-Yates algorithm. */
 function shuffleArray(array) {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -78,279 +185,290 @@ function shuffleArray(array) {
 }
 
 /**
- * The core algorithm logic (internal).
+ * Core scheduling algorithm: Greedy Slot-Filling with Global Teacher Balancing.
  */
 function attemptGeneration(config, classes, teachers, subjects, rules, options = {}) {
-  const schedule = [];
   const subjectMap = {};
   subjects.forEach(s => (subjectMap[s.subjectId] = s.name || s.subjectId));
+
+  const parentIdsWithChildren = new Set();
+  subjects.forEach(s => {
+    if (s.isSubSubject && s.parentSubjectId) {
+      parentIdsWithChildren.add(s.parentSubjectId);
+    }
+  });
+
+  const effectiveRules = rules.filter(rule => {
+    if (rule.periodsPerWeek <= 0) return false;
+    if (parentIdsWithChildren.has(rule.subjectId)) return false;
+    return true;
+  });
 
   const workingDays = config.workingDays;
   const instructionalPeriods = config.periods
     .filter(p => !['break', 'lunch', 'assembly'].includes(p.type))
     .sort((a, b) => a.periodNumber - b.periodNumber);
 
-  // Teacher status and workload tracking
-  const teacherStatus = {};
-  const teacherWorkload = {};
-
-  // sectionKey -> day -> subjectId -> count
-  const sectionDailyCounts = {};
-
-  teachers.forEach(t => {
-    teacherWorkload[t.teacherId] = 0;
-    teacherStatus[t.teacherId] = {};
-    workingDays.forEach(d => {
-      teacherStatus[t.teacherId][d] = {};
-      instructionalPeriods.forEach(p => {
-        teacherStatus[t.teacherId][d][p.periodNumber] = false;
-      });
-    });
+  // Available periods per day (respecting dayLimits)
+  const dayPeriods = {};
+  workingDays.forEach(day => {
+    const dayLimit = options.dayLimits?.[day.toLowerCase()];
+    dayPeriods[day] = dayLimit && dayLimit > 0
+      ? instructionalPeriods.slice(0, dayLimit)
+      : [...instructionalPeriods];
   });
 
+  // Morning periods per day (first half)
+  const morningPeriods = {};
+  workingDays.forEach(day => {
+    const periods = dayPeriods[day];
+    const midpoint = Math.ceil(periods.length / 2);
+    morningPeriods[day] = new Set(periods.slice(0, midpoint).map(p => p.periodNumber));
+  });
+
+  // Teacher eligibility: subjectId -> [teachers] (excluding teachers with no subjects)
+  const eligibleTeachersMap = {};
+  effectiveRules.forEach(rule => {
+    eligibleTeachersMap[rule.subjectId] = teachers.filter(
+      t => t.subjects && t.subjects.length > 0 && t.subjects.includes(rule.subjectId)
+    );
+  });
+
+  // All sections
   const allSections = [];
   classes.forEach(c => {
-    c.sections.forEach(s => {
-      const sectionKey = `${c.classId}-${s.sectionId}`;
+    (c.sections || []).forEach(s => {
       allSections.push({
-        ...s,
         classId: c.classId,
+        sectionId: s.sectionId,
         className: c.name,
         sectionName: s.name,
-        sectionKey
+        sectionKey: `${c.classId}|${s.sectionId}`
       });
-      sectionDailyCounts[sectionKey] = {};
-      workingDays.forEach(d => (sectionDailyCounts[sectionKey][d] = {}));
     });
   });
 
-  // Flatten ALL needed periods into a single job list to break section bias
-  const jobs = [];
-  const shuffledSections = shuffleArray(allSections);
+  // ========== STATE ==========
+  // teacherSlots: "teacherId|day|periodNum" -> true
+  const teacherSlots = {};
+  // sectionSlots: "sectionKey|day|periodNum" -> true (O(1) section busy check)
+  const sectionSlots = {};
+  // teacherWorkload: teacherId -> count
+  const teacherWorkload = {};
+  // sectionDailySubjectCount: "sectionKey|day|subjectId" -> count
+  const sectionDailySubjectCount = {};
+  // remaining demand: "sectionKey|subjectId" -> remaining periods to place
+  const remainingDemand = {};
+  // schedule array
+  const schedule = [];
 
-    for (const section of shuffledSections) {
-      const sortedRules = [...rules].sort((a, b) => {
-        const aTeachers = teachers.filter(t => t.subjects?.includes(a.subjectId) || t.subjects?.length === 0).length;
-        const bTeachers = teachers.filter(t => t.subjects?.includes(b.subjectId) || t.subjects?.length === 0).length;
-        if (aTeachers !== bTeachers) return aTeachers - bTeachers; // fewer teachers first
-        if (b.periodsPerWeek !== a.periodsPerWeek) return b.periodsPerWeek - a.periodsPerWeek;
-        if ((b.morningPriority ? 1 : 0) !== (a.morningPriority ? 1 : 0)) {
-          return (b.morningPriority ? 1 : 0) - (a.morningPriority ? 1 : 0);
-        }
-        return Math.random() - 0.5;
-      });
+  teachers.forEach(t => { teacherWorkload[t.teacherId] = 0; });
 
-    for (const rule of sortedRules) {
-      for (let pIter = 0; pIter < rule.periodsPerWeek; pIter++) {
-        jobs.push({ section, rule });
-      }
-    }
-  }
-
-  // Shuffle all jobs globally to resolve teacher bottlenecks
-  const shuffledJobs = shuffleArray(jobs);
-
-  for (const job of shuffledJobs) {
-    const { section, rule } = job;
-    const { sectionKey } = section;
-    const maxPerDay = rule.maxPeriodsPerDay || 99;
-
-    const eligibleTeachers = teachers.filter(
-      t => t.subjects?.includes(rule.subjectId) || t.subjects?.length === 0
-    );
-
-    if (eligibleTeachers.length === 0) {
-      throw new Error(
-        `Failed to generate: No teacher found for ${subjectMap[rule.subjectId] || rule.subjectId}`
-      );
-    }
-
-    let placed = false;
-
-    // Primary pass: search days in random order with all constraints
-    const shuffledDays = shuffleArray(workingDays);
-
-    for (const day of shuffledDays) {
-      const currentDayCount = sectionDailyCounts[sectionKey][day][rule.subjectId] || 0;
-      if (currentDayCount >= maxPerDay) continue;
-
-      let searchPeriods = [...instructionalPeriods];
-
-      const dayLimit = options.dayLimits?.[day.toLowerCase()];
-      if (dayLimit && dayLimit > 0) {
-        searchPeriods = searchPeriods.slice(0, dayLimit);
-      }
-
-      if (rule.morningPriority) {
-        const morningCount = Math.ceil(searchPeriods.length / 2);
-        const morning = shuffleArray(searchPeriods.slice(0, morningCount));
-        const afternoon = shuffleArray(searchPeriods.slice(morningCount));
-        searchPeriods = [...morning, ...afternoon];
+  // Initialize demand for each section (respecting class-subject interlink)
+  allSections.forEach(section => {
+    const classObj = classes.find(c => c.classId === section.classId);
+    effectiveRules.forEach(rule => {
+      const subObj = subjects.find(s => s.subjectId === rule.subjectId || s._id === rule.subjectId);
+      if (isSubjectAssignedToClass(subObj, classObj)) {
+        remainingDemand[`${section.sectionKey}|${rule.subjectId}`] = rule.periodsPerWeek;
       } else {
-        searchPeriods = shuffleArray(searchPeriods);
+        remainingDemand[`${section.sectionKey}|${rule.subjectId}`] = 0;
       }
+    });
+  });
 
-      for (const period of searchPeriods) {
-        const pNum = period.periodNumber;
-        const classBusy = schedule.some(
-          e =>
-            e.classId === section.classId &&
-            e.sectionId === section.sectionId &&
-            e.dayOfWeek === day &&
-            e.periodNumber === pNum
+  // Helpers
+  function isTeacherBusy(teacherId, day, pNum) {
+    return !!teacherSlots[`${teacherId}|${day}|${pNum}`];
+  }
+  function isSectionBusy(sectionKey, day, pNum) {
+    return !!sectionSlots[`${sectionKey}|${day}|${pNum}`];
+  }
+  function getDailyCount(sectionKey, day, subjectId) {
+    return sectionDailySubjectCount[`${sectionKey}|${day}|${subjectId}`] || 0;
+  }
+  function getRemainingDemand(sectionKey, subjectId) {
+    return remainingDemand[`${sectionKey}|${subjectId}`] || 0;
+  }
+
+  function placeEntry(classId, sectionId, sectionKey, subjectId, teacherId, day, pNum) {
+    teacherSlots[`${teacherId}|${day}|${pNum}`] = true;
+    sectionSlots[`${sectionKey}|${day}|${pNum}`] = true;
+    teacherWorkload[teacherId] = (teacherWorkload[teacherId] || 0) + 1;
+    const dcKey = `${sectionKey}|${day}|${subjectId}`;
+    sectionDailySubjectCount[dcKey] = (sectionDailySubjectCount[dcKey] || 0) + 1;
+    remainingDemand[`${sectionKey}|${subjectId}`] = (remainingDemand[`${sectionKey}|${subjectId}`] || 0) - 1;
+    schedule.push({ classId, sectionId, subjectId, teacherId, dayOfWeek: day, periodNumber: pNum });
+  }
+
+  // ========== BUILD JOBS LIST ==========
+  // Each job = one period to place for one section of one subject
+  const jobs = [];
+  for (const section of allSections) {
+    const classObj = classes.find(c => c.classId === section.classId);
+    for (const rule of effectiveRules) {
+      const subObj = subjects.find(s => s.subjectId === rule.subjectId || s._id === rule.subjectId);
+      if (!isSubjectAssignedToClass(subObj, classObj)) {
+        continue; // Skip creating jobs if subject is not assigned to this class
+      }
+      const eligible = eligibleTeachersMap[rule.subjectId] || [];
+      if (eligible.length === 0) {
+        throw new Error(
+          `No teacher assigned for ${subjectMap[rule.subjectId] || rule.subjectId}. ` +
+          `Please assign at least one teacher to this subject.`
         );
-        if (classBusy) continue;
-
-        // HEURISTIC: Pick the teacher with the least current workload
-        const availableTeachers = eligibleTeachers
-          .filter(t => !teacherStatus[t.teacherId][day][pNum])
-          .sort((a, b) => teacherWorkload[a.teacherId] - teacherWorkload[b.teacherId]);
-
-        const assignedTeacher = availableTeachers[0];
-
-        if (assignedTeacher) {
-          schedule.push({
-            classId: section.classId,
-            sectionId: section.sectionId,
-            subjectId: rule.subjectId,
-            teacherId: assignedTeacher.teacherId,
-            dayOfWeek: day,
-            periodNumber: pNum
-          });
-          teacherStatus[assignedTeacher.teacherId][day][pNum] = true;
-          teacherWorkload[assignedTeacher.teacherId]++;
-          sectionDailyCounts[sectionKey][day][rule.subjectId] =
-            (sectionDailyCounts[sectionKey][day][rule.subjectId] || 0) + 1;
-          placed = true;
-          break;
-        }
       }
-
-      if (placed) break;
-    }
-
-    // Fallback pass: search everything without morning priority
-    if (!placed) {
-      const fallbackDays = shuffleArray(workingDays);
-
-      for (const day of fallbackDays) {
-        const currentDayCount = sectionDailyCounts[sectionKey][day][rule.subjectId] || 0;
-        if (currentDayCount >= maxPerDay) continue;
-
-        let fallbackPeriods = [...instructionalPeriods];
-        const dayLimit = options.dayLimits?.[day.toLowerCase()];
-        if (dayLimit && dayLimit > 0) {
-          fallbackPeriods = fallbackPeriods.slice(0, dayLimit);
-        }
-        fallbackPeriods = shuffleArray(fallbackPeriods);
-
-        for (const period of fallbackPeriods) {
-          const pNum = period.periodNumber;
-          const classBusy = schedule.some(
-            e =>
-              e.classId === section.classId &&
-              e.sectionId === section.sectionId &&
-              e.dayOfWeek === day &&
-              e.periodNumber === pNum
-          );
-          if (classBusy) continue;
-
-          const availableTeachers = eligibleTeachers
-            .filter(t => !teacherStatus[t.teacherId][day][pNum])
-            .sort((a, b) => teacherWorkload[a.teacherId] - teacherWorkload[b.teacherId]);
-
-          const assignedTeacher = availableTeachers[0];
-
-          if (assignedTeacher) {
-            schedule.push({
-              classId: section.classId,
-              sectionId: section.sectionId,
-              subjectId: rule.subjectId,
-              teacherId: assignedTeacher.teacherId,
-              dayOfWeek: day,
-              periodNumber: pNum
-            });
-            teacherStatus[assignedTeacher.teacherId][day][pNum] = true;
-            teacherWorkload[assignedTeacher.teacherId]++;
-            sectionDailyCounts[sectionKey][day][rule.subjectId] =
-              (sectionDailyCounts[sectionKey][day][rule.subjectId] || 0) + 1;
-            placed = true;
-            break;
-          }
-        }
-
-        if (placed) break;
+      for (let i = 0; i < rule.periodsPerWeek; i++) {
+        jobs.push({
+          section,
+          rule,
+          eligibleCount: eligible.length,
+        });
       }
-    }
-
-    // Final fallback: ignore dayLimits if still not placed
-    if (!placed) {
-      const finalDays = shuffleArray(workingDays);
-
-      for (const day of finalDays) {
-        const currentDayCount = sectionDailyCounts[sectionKey][day][rule.subjectId] || 0;
-        if (currentDayCount >= maxPerDay) continue;
-
-        const finalPeriods = shuffleArray(instructionalPeriods);
-
-        for (const period of finalPeriods) {
-          const pNum = period.periodNumber;
-          const classBusy = schedule.some(
-            e =>
-              e.classId === section.classId &&
-              e.sectionId === section.sectionId &&
-              e.dayOfWeek === day &&
-              e.periodNumber === pNum
-          );
-          if (classBusy) continue;
-
-          const availableTeachers = eligibleTeachers
-            .filter(t => !teacherStatus[t.teacherId][day][pNum])
-            .sort((a, b) => teacherWorkload[a.teacherId] - teacherWorkload[b.teacherId]);
-
-          const assignedTeacher = availableTeachers[0];
-
-          if (assignedTeacher) {
-            schedule.push({
-              classId: section.classId,
-              sectionId: section.sectionId,
-              subjectId: rule.subjectId,
-              teacherId: assignedTeacher.teacherId,
-              dayOfWeek: day,
-              periodNumber: pNum
-            });
-            teacherStatus[assignedTeacher.teacherId][day][pNum] = true;
-            teacherWorkload[assignedTeacher.teacherId]++;
-            sectionDailyCounts[sectionKey][day][rule.subjectId] =
-              (sectionDailyCounts[sectionKey][day][rule.subjectId] || 0) + 1;
-            placed = true;
-            break;
-          }
-        }
-
-        if (placed) break;
-      }
-    }
-
-    if (!placed) {
-      const subjectName = subjectMap[rule.subjectId] || rule.subjectId;
-      const eligibleCount = teachers.filter(
-        t => t.subjects?.includes(rule.subjectId) || t.subjects?.length === 0
-      ).length;
-      throw new Error(
-        `Failed to place period for ${subjectName} in Class ${section.className}-${section.sectionName}. ` +
-        `Eligible teachers: ${eligibleCount}, Periods needed per week: ${rule.periodsPerWeek}, ` +
-        `Max per day: ${rule.maxPeriodsPerDay}, Morning priority: ${rule.morningPriority}`
-      );
     }
   }
 
-  return schedule; // ✅ Inside attemptGeneration
+  // ========== SORT JOBS: MCV + Priority ==========
+  // Sort by: fewest eligible teachers first, then most periods/week, then morning priority
+  // Within same constraint level, shuffle for randomization
+  jobs.sort((a, b) => {
+    if (a.eligibleCount !== b.eligibleCount) return a.eligibleCount - b.eligibleCount;
+    if (b.rule.periodsPerWeek !== a.rule.periodsPerWeek) return b.rule.periodsPerWeek - a.rule.periodsPerWeek;
+    if ((b.rule.morningPriority ? 1 : 0) !== (a.rule.morningPriority ? 1 : 0)) {
+      return (b.rule.morningPriority ? 1 : 0) - (a.rule.morningPriority ? 1 : 0);
+    }
+    return 0;
+  });
+
+  // Shuffle within same constraint groups
+  const sortedJobs = [];
+  let gStart = 0;
+  for (let i = 1; i <= jobs.length; i++) {
+    const same = i < jobs.length &&
+      jobs[i].eligibleCount === jobs[gStart].eligibleCount &&
+      jobs[i].rule.subjectId === jobs[gStart].rule.subjectId;
+    if (!same) {
+      sortedJobs.push(...shuffleArray(jobs.slice(gStart, i)));
+      gStart = i;
+    }
+  }
+
+  // ========== GREEDY PLACEMENT ==========
+  // For each job, find the best (day, period, teacher) slot
+  
+  let unplacedJobs = [...sortedJobs];
+
+  // Multiple passes — first pass is strict, later passes relax morning priority
+  for (let pass = 0; pass < 3 && unplacedJobs.length > 0; pass++) {
+    const stillUnplaced = [];
+
+    for (const job of unplacedJobs) {
+      const { section, rule } = job;
+      const maxPerDay = rule.maxPeriodsPerDay || 99;
+      const eligible = eligibleTeachersMap[rule.subjectId] || [];
+
+      // Check if we still need this period
+      if (getRemainingDemand(section.sectionKey, rule.subjectId) <= 0) continue;
+
+      let bestSlot = null;
+      let bestScore = -Infinity;
+
+      // Try all (day, period) combinations
+      const shuffledDays = shuffleArray(workingDays);
+      
+      for (const day of shuffledDays) {
+        // Check maxPerDay
+        if (getDailyCount(section.sectionKey, day, rule.subjectId) >= maxPerDay) continue;
+
+        // Sort periods in natural ascending order (1, 2, 3...) to fill sequentially
+        const sortedPeriods = [...dayPeriods[day]].sort((a, b) => a.periodNumber - b.periodNumber);
+
+        for (const period of sortedPeriods) {
+          const pNum = period.periodNumber;
+
+          // Check section slot: is there already a class in this slot? (O(1))
+          if (isSectionBusy(section.sectionKey, day, pNum)) continue;
+
+          // Find available teachers
+          const availableTeachers = eligible
+            .filter(t => !isTeacherBusy(t.teacherId, day, pNum))
+            .sort((a, b) => (teacherWorkload[a.teacherId] || 0) - (teacherWorkload[b.teacherId] || 0));
+
+          if (availableTeachers.length === 0) continue;
+
+          const teacher = availableTeachers[0];
+
+          // Calculate placement score
+          let score = 0;
+
+          // Morning priority bonus (pass 0 = strict, pass 1+ = relaxed)
+          if (rule.morningPriority && morningPeriods[day].has(pNum)) {
+            score += 10;
+          }
+
+          // Compactness heuristic: prefer filling contiguous periods (adjacent to already filled slot)
+          const hasPrev = isSectionBusy(section.sectionKey, day, pNum - 1);
+          const hasNext = isSectionBusy(section.sectionKey, day, pNum + 1);
+          if (hasPrev || hasNext) {
+            score += 12; // Contiguity bonus for building solid blocks of classes
+          }
+
+          // Anti-gap heuristic: penalize creating an isolated gap slot (pNum-1 empty, but pNum-2 busy)
+          if (pass === 0 && !hasPrev && isSectionBusy(section.sectionKey, day, pNum - 2)) {
+            score -= 10;
+          }
+
+          // Sequential packing: prefer earlier periods in the day to minimize empty gaps
+          score += (10 - pNum) * 1.2;
+
+          // Prefer days where this subject has fewer periods (spread evenly across days)
+          const currentDayCount = getDailyCount(section.sectionKey, day, rule.subjectId);
+          score -= currentDayCount * 5;
+
+          // Prefer teachers with less workload (balance)
+          score -= (teacherWorkload[teacher.teacherId] || 0) * 0.1;
+
+          // Prefer slots with more available teacher options (less constraining for others)
+          score += availableTeachers.length * 2;
+
+          // Small random factor to break ties
+          score += Math.random() * 0.5;
+
+          if (score > bestScore) {
+            bestScore = score;
+            bestSlot = { day, pNum, teacherId: teacher.teacherId };
+          }
+        }
+      }
+
+      if (bestSlot) {
+        placeEntry(
+          section.classId, section.sectionId, section.sectionKey,
+          rule.subjectId, bestSlot.teacherId, bestSlot.day, bestSlot.pNum
+        );
+      } else {
+        stillUnplaced.push(job);
+      }
+    }
+
+    unplacedJobs = stillUnplaced;
+  }
+
+  if (unplacedJobs.length > 0) {
+    const failedJob = unplacedJobs[0];
+    const subjectName = subjectMap[failedJob.rule.subjectId] || failedJob.rule.subjectId;
+    throw new Error(
+      `Could not place ${unplacedJobs.length} periods. ` +
+      `First failure: ${subjectName} for ${failedJob.section.className}-${failedJob.section.sectionName}. ` +
+      `Eligible teachers: ${failedJob.eligibleCount}, P/Week: ${failedJob.rule.periodsPerWeek}`
+    );
+  }
+
+  return schedule;
 }
 
 /**
- * The core algorithm to generate the timetable.
- * Uses a robust heuristic approach with randomization and retries.
+ * Main entry point. Wraps the greedy solver with randomized restarts.
  */
 function generateTimetable(config, classes, teachers, subjects, rules, options = {}) {
   const maxRetries = 200;
@@ -358,12 +476,34 @@ function generateTimetable(config, classes, teachers, subjects, rules, options =
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      return attemptGeneration(config, classes, teachers, subjects, rules, options);
+      const schedule = attemptGeneration(config, classes, teachers, subjects, rules, options);
+
+      // Post-generation validation: verify no conflicts
+      const teacherCheck = new Set();
+      const classCheck = new Set();
+      for (const entry of schedule) {
+        const tKey = `${entry.teacherId}|${entry.dayOfWeek}|${entry.periodNumber}`;
+        const cKey = `${entry.classId}|${entry.sectionId}|${entry.dayOfWeek}|${entry.periodNumber}`;
+        if (teacherCheck.has(tKey)) {
+          throw new Error(`Internal error: teacher double-booking detected for ${entry.teacherId}`);
+        }
+        if (classCheck.has(cKey)) {
+          throw new Error(`Internal error: class double-booking detected for ${entry.classId}-${entry.sectionId}`);
+        }
+        teacherCheck.add(tKey);
+        classCheck.add(cKey);
+      }
+
+      return schedule;
     } catch (error) {
       lastError = error;
-      console.warn(
-        `Timetable Generation Attempt ${attempt} failed: ${error.message}. Retrying...`
-      );
+      if (attempt < maxRetries && attempt <= 5) {
+        console.warn(
+          `Timetable Generation Attempt ${attempt}/${maxRetries} failed: ${error.message}. Retrying...`
+        );
+      } else if (attempt === 6) {
+        console.warn(`Continuing retries silently...`);
+      }
     }
   }
 

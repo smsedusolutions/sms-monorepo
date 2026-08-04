@@ -68,26 +68,48 @@ const getDashboardStats = async (req, res) => {
             };
         });
 
-        // Get attendance stats for last 30 days for each child
+        // Get attendance stats for last 30 days for ALL children in a single query
         const endDate = new Date();
         const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const allStudentIds = children.map(c => c.studentId);
 
-        const childrenWithStats = await Promise.all(children.map(async (child) => {
-            // Get attendance
-            const attendanceRecords = await Attendance.find({
-                studentId: child.studentId,
+        // Batch-fetch: attendance records, pending leaves, and recent absences — all in parallel
+        const [allAttendanceRecords, allPendingLeaveCounts, allRecentAbsences] = await Promise.all([
+            // All attendance for all children in last 30 days
+            Attendance.find({
+                studentId: { $in: allStudentIds },
                 date: { $gte: startDate, $lte: endDate }
-            });
+            }).lean(),
+            // Pending leave counts for all children
+            LeaveRequest.aggregate([
+                { $match: { applicantId: { $in: allStudentIds }, status: 'pending' } },
+                { $group: { _id: '$applicantId', count: { $sum: 1 } } }
+            ]),
+            // Recent absences (last 7 days) for all children
+            Attendance.find({
+                studentId: { $in: allStudentIds },
+                status: 'absent',
+                date: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
+            }).sort({ date: -1 }).lean(),
+        ]);
 
+        // Group attendance by studentId
+        const attendanceByStudent = {};
+        allAttendanceRecords.forEach(a => {
+            if (!attendanceByStudent[a.studentId]) attendanceByStudent[a.studentId] = [];
+            attendanceByStudent[a.studentId].push(a);
+        });
+
+        // Map pending leaves by studentId
+        const pendingLeaveMap = {};
+        allPendingLeaveCounts.forEach(l => { pendingLeaveMap[l._id] = l.count; });
+
+        const childrenWithStats = children.map((child) => {
+            const attendanceRecords = attendanceByStudent[child.studentId] || [];
             const totalDays = attendanceRecords.length;
             const presentDays = attendanceRecords.filter(a => ['present', 'late'].includes(a.status)).length;
             const percentage = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(1) : 0;
-
-            // Get pending leaves
-            const pendingLeaves = await LeaveRequest.countDocuments({
-                applicantId: child.studentId,
-                status: 'pending'
-            });
+            const pendingLeaves = pendingLeaveMap[child.studentId] || 0;
 
             const classInfo = classMap[child.class] || {};
             const sectionInfo = classInfo.sections?.find(s => s.sectionId === child.section);
@@ -108,26 +130,18 @@ const getDashboardStats = async (req, res) => {
                 totalDays,
                 presentDays
             };
+        });
+
+        // Build recent absences from the batch query
+        const childNameMap = {};
+        children.forEach(c => { childNameMap[c.studentId] = `${c.firstName} ${c.lastName}`; });
+
+        const recentAbsences = allRecentAbsences.map(a => ({
+            studentId: a.studentId,
+            studentName: childNameMap[a.studentId] || a.studentId,
+            date: a.date,
+            status: a.status
         }));
-
-        // Get recent absences (last 7 days)
-        const recentAbsences = [];
-        for (const child of children) {
-            const absences = await Attendance.find({
-                studentId: child.studentId,
-                status: 'absent',
-                date: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) }
-            }).sort({ date: -1 }).limit(3);
-
-            absences.forEach(a => {
-                recentAbsences.push({
-                    studentId: child.studentId,
-                    studentName: `${child.firstName} ${child.lastName}`,
-                    date: a.date,
-                    status: a.status
-                });
-            });
-        }
 
         // Count total pending leaves
         const totalPendingLeaves = childrenWithStats.reduce((sum, c) => sum + c.pendingLeaves, 0);
@@ -524,21 +538,30 @@ const getChildAbsentHistory = async (req, res) => {
             status: 'absent'
         });
 
-        // Check if leave was applied for each absence
-        const absencesWithLeaveStatus = await Promise.all(absences.map(async (absence) => {
+        // Batch-fetch all leave requests for this student that overlap with the absence dates
+        // instead of N individual queries
+        const absenceDates = absences.map(a => new Date(a.date));
+        const minDate = absenceDates.length > 0 ? new Date(Math.min(...absenceDates)) : new Date();
+        const maxDate = absenceDates.length > 0 ? new Date(Math.max(...absenceDates)) : new Date();
+
+        const relevantLeaves = await LeaveRequest.find({
+            applicantId: studentId,
+            startDate: { $lte: maxDate },
+            endDate: { $gte: minDate }
+        }).lean();
+
+        const absencesWithLeaveStatus = absences.map((absence) => {
             const date = new Date(absence.date);
-            const leave = await LeaveRequest.findOne({
-                applicantId: studentId,
-                startDate: { $lte: date },
-                endDate: { $gte: date }
-            });
+            const leave = relevantLeaves.find(l =>
+                new Date(l.startDate) <= date && new Date(l.endDate) >= date
+            );
 
             return {
                 ...absence.toObject(),
                 leaveApplied: !!leave,
                 leaveStatus: leave?.status
             };
-        }));
+        });
 
         res.status(200).json({
             success: true,

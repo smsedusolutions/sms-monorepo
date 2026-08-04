@@ -6,8 +6,6 @@ import {
   DialogActions,
   Alert,
   IconButton,
-  Autocomplete,
-  Chip,
   Typography,
   Divider,
   Box,
@@ -29,6 +27,7 @@ import { AppInput } from "../shared/AppInput";
 import { AppSelect } from "../shared/AppSelect";
 import { AppButton } from "../shared/AppButton";
 import { PhoneInput } from "../shared/PhoneInput";
+import { AppMultiSelect } from "../shared/AppMultiSelect";
 
 interface TeacherDialogProps {
   open: boolean;
@@ -267,72 +266,28 @@ const TeacherDialog: React.FC<TeacherDialogProps> = ({
 
             {/* Assigned Classes & Sections — hidden when all sections are already taken */}
             {classOptions.length > 0 && (
-              <Autocomplete
-                multiple
+              <AppMultiSelect
+                label="Assigned Classes & Sections"
+                placeholder="Select class & section"
                 options={classOptions}
-                getOptionLabel={(option) => option.label}
-                value={classOptions.filter((opt) => formData.classes?.includes(opt.id))}
-                onChange={(_, newValue) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    classes: newValue.map((v) => v.id),
-                  }))
+                value={formData.classes || []}
+                onChange={(ids) =>
+                  setFormData((prev) => ({ ...prev, classes: ids }))
                 }
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                renderInput={(params) => (
-                  <AppInput
-                    {...params}
-                    label="Assigned Classes & Sections"
-                    placeholder="Select class & section"
-                  />
-                )}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip
-                      label={option.label}
-                      {...getTagProps({ index })}
-                      key={option.id}
-                      color="primary"
-                      variant="outlined"
-                      size="small"
-                    />
-                  ))
-                }
+                chipColor="primary"
               />
             )}
 
             {/* Assigned Subjects */}
-            <Autocomplete
-              multiple
+            <AppMultiSelect
+              label="Assigned Subjects"
+              placeholder="Select subjects"
               options={subjectOptions}
-              getOptionLabel={(option) => option.label}
-              value={subjectOptions.filter((opt) => formData.subjects?.includes(opt.id))}
-              onChange={(_, newValue) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  subjects: newValue.map((v) => v.id),
-                }))
+              value={formData.subjects || []}
+              onChange={(ids) =>
+                setFormData((prev) => ({ ...prev, subjects: ids }))
               }
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-              renderInput={(params) => (
-                <AppInput
-                  {...params}
-                  label="Assigned Subjects"
-                  placeholder="Select subjects"
-                />
-              )}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    label={option.label}
-                    {...getTagProps({ index })}
-                    key={option.id}
-                    color="info"
-                    variant="outlined"
-                    size="small"
-                  />
-                ))
-              }
+              chipColor="info"
             />
 
             <Divider sx={{ my: 1 }} />

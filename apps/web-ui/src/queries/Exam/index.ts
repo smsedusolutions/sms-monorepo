@@ -46,7 +46,8 @@ export const useGetExamTerms = (schoolId: string, academicYear?: string) => {
     return useQuery({
         queryKey: [EXAM_KEYS.TERMS, schoolId, academicYear],
         queryFn: () => useApi<ApiResponse<ExamTerm[]>>("GET", `/api/academics/school/${schoolId}/exam-config/terms`, undefined, { academicYear }),
-        enabled: !!schoolId
+        enabled: !!schoolId,
+        staleTime: 30 * 60 * 1000,
     });
 };
 
@@ -86,7 +87,8 @@ export const useGetExamTypes = (schoolId: string) => {
     return useQuery({
         queryKey: [EXAM_KEYS.TYPES, schoolId],
         queryFn: () => useApi<ApiResponse<ExamType[]>>("GET", `/api/academics/school/${schoolId}/exam-config/types`),
-        enabled: !!schoolId
+        enabled: !!schoolId,
+        staleTime: 30 * 60 * 1000,
     });
 };
 
@@ -115,7 +117,8 @@ export const useGetGradingSystems = (schoolId: string) => {
     return useQuery({
         queryKey: [EXAM_KEYS.GRADING, schoolId],
         queryFn: () => useApi<ApiResponse<GradingSystem[]>>("GET", `/api/academics/school/${schoolId}/exam-config/grading`),
-        enabled: !!schoolId
+        enabled: !!schoolId,
+        staleTime: 30 * 60 * 1000,
     });
 };
 
@@ -159,7 +162,8 @@ export const useGetExams = (schoolId: string, academicYear?: string) => {
     return useQuery({
         queryKey: [EXAM_KEYS.EXAMS, schoolId, academicYear],
         queryFn: () => useApi<ApiResponse<Exam[]>>("GET", `/api/academics/school/${schoolId}/exams`, undefined, { academicYear }),
-        enabled: !!schoolId
+        enabled: !!schoolId,
+        staleTime: 5 * 60 * 1000,
     });
 };
 
@@ -199,7 +203,8 @@ export const useGetExamSchedule = (schoolId: string, examId: string) => {
     return useQuery({
         queryKey: [EXAM_KEYS.SCHEDULE, schoolId, examId],
         queryFn: () => useApi<ApiResponse<ExamSchedule[]>>("GET", `/api/academics/school/${schoolId}/exams/${examId}/schedule`),
-        enabled: !!schoolId && !!examId
+        enabled: !!schoolId && !!examId,
+        staleTime: 5 * 60 * 1000,
     });
 };
 

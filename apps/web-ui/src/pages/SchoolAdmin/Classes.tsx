@@ -25,8 +25,7 @@ import {
 import { StatusChip } from '../../components/Table/DataTable';
 import ClassDialog from '../../components/Dialogs/AddClassDialog';
 import { useGetClasses, useUpdateClass, useRemoveSection } from '../../queries/Class';
-import { useGetTeachers } from '../../queries/Teacher';
-import type { Class, Teacher } from '../../types';
+import type { Class } from '../../types';
 import TokenService from '../../queries/token/tokenService';
 import { useNotificationStore } from '../../stores/notificationStore';
 
@@ -38,18 +37,16 @@ const ClassesPage = () => {
 
     const schoolId = TokenService.getSchoolId() || '';
     const { data, isLoading, error } = useGetClasses(schoolId);
-    const { data: teachersData } = useGetTeachers(schoolId, { limit: 9999 } as any);
 
     const updateMutation = useUpdateClass(schoolId);
     const removeSectionMutation = useRemoveSection(schoolId);
 
     const classes = data?.data || [];
-    const teachers = teachersData?.data || [];
 
-    const getTeacherName = (teacherId: string | undefined): string => {
-        if (!teacherId) return '-';
-        const teacher = teachers.find((t: Teacher) => t.teacherId === teacherId);
-        return teacher ? `${teacher.firstName} ${teacher.lastName}` : '-';
+    const getTeacherName = (section: any): string => {
+        if (!section) return '-';
+        if (section.classTeacherName) return section.classTeacherName;
+        return section.classTeacherId || section.classTeacher || '-';
     };
 
     const handleAdd = () => {
@@ -174,11 +171,11 @@ const ClassesPage = () => {
                         ) : (
                             classes.map((classItem: Class) => (
                                 <>
-                                <TableRow 
-                                    hover 
-                                    key={classItem.classId}
-                                    sx={{ '& td': { py: 1 } }} // Keep row height stable
-                                >
+                                    <TableRow
+                                        hover
+                                        key={classItem.classId}
+                                        sx={{ '& td': { py: 1 } }} // Keep row height stable
+                                    >
                                         <TableCell>
                                             <IconButton
                                                 size="small"
@@ -246,7 +243,7 @@ const ClassesPage = () => {
                                                                     <TableRow key={section.sectionId} sx={{ '& td': { py: 0.5 } }}>
                                                                         <TableCell>{section.sectionId}</TableCell>
                                                                         <TableCell>{section.name}</TableCell>
-                                                                        <TableCell>{getTeacherName(section.classTeacherId)}</TableCell>
+                                                                        <TableCell>{getTeacherName(section)}</TableCell>
                                                                         <TableCell align="center">
                                                                             <Tooltip title="Remove Section">
                                                                                 <Switch

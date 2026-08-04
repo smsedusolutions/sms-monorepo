@@ -527,6 +527,30 @@ export const useValidateAITimetable = (schoolId: string) => {
     });
 };
 
+export const useSuggestAIRules = (schoolId: string) => {
+    return useMutation({
+        mutationFn: (data: { subjectIds: string[] }) =>
+            useApi<ApiResponse<{
+                suggestions: Record<string, {
+                    periodsPerWeek: number;
+                    maxPeriodsPerDay: number;
+                    morningPriority: boolean;
+                    tier: number;
+                    tierLabel: string;
+                }>;
+                meta: {
+                    workingDaysCount: number;
+                    regularPeriodsPerDay: number;
+                    totalWeeklySlots: number;
+                };
+            }>>(
+                "POST",
+                `/api/academics/school/${schoolId}/ai/suggest-rules`,
+                data
+            ),
+    });
+};
+
 export const useGenerateAITimetable = (schoolId: string) => {
     const queryClient = useQueryClient();
     return useMutation({

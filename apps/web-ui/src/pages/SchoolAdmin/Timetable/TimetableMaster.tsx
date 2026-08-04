@@ -20,6 +20,7 @@ import {
   ToggleButton,
   Chip,
   Backdrop,
+  FormHelperText,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -31,7 +32,7 @@ import {
   SwapHoriz as SwapIcon,
   Download as DownloadIcon,
   FileUpload as UploadIcon,
-  // AutoAwesome as MagicIcon,
+  AutoAwesome as MagicIcon,
 } from "@mui/icons-material";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -96,34 +97,124 @@ const EntryDialog = ({
   teachersOnLeave = [],
   schoolId,
 }: EntryDialogProps) => {
-  const [teacherId, setTeacherId] = useState(editData?.teacherId || "");
-  const [subjectId, setSubjectId] = useState(editData?.subjectId || "");
+  // Helpers for robust teacher & subject resolution
+  const getTeacherCanonicalId = (t: any): string => {
+    if (!t) return "";
+    return t.teacherId || t._id || t.id || t.userId || t.employeeId || "";
+  };
+
+  const getSubjectCanonicalId = (s: any): string => {
+    if (!s) return "";
+    return s.subjectId || s._id || s.id || s.code || "";
+  };
+
+  const findMatchingTeacher = (rawTeacherId: string): any => {
+    if (!rawTeacherId) return null;
+    const target = String(rawTeacherId).trim().toLowerCase();
+    return teachers.find((t: any) => {
+      if (!t) return false;
+      const ids = [
+        t.teacherId,
+        t._id,
+        t.id,
+        t.userId,
+        t.employeeId,
+        t.staffId,
+        t.code,
+        `${t.firstName || ''} ${t.lastName || ''}`.trim(),
+        t.name,
+      ]
+        .filter(Boolean)
+        .map((id: any) => String(id).trim().toLowerCase());
+      return ids.includes(target);
+    });
+  };
+
+  const findMatchingSubject = (rawSubjectId: string): any => {
+    if (!rawSubjectId) return null;
+    const target = String(rawSubjectId).trim().toLowerCase();
+    return subjects.find((s: any) => {
+      if (!s) return false;
+      const ids = [s.subjectId, s._id, s.id, s.code, s.name]
+        .filter(Boolean)
+        .map((id: any) => String(id).trim().toLowerCase());
+      return ids.includes(target);
+    });
+  };
+
+  const isTeacherQualifiedForSubject = (t: any, targetSubjectId: string): boolean => {
+    if (!targetSubjectId) return true;
+    if (!t.subjects || !Array.isArray(t.subjects) || t.subjects.length === 0) return true;
+
+    const targetSub = findMatchingSubject(targetSubjectId);
+    const validIds = new Set<string>();
+    validIds.add(String(targetSubjectId).trim().toLowerCase());
+    if (targetSub) {
+      if (targetSub.subjectId) validIds.add(String(targetSub.subjectId).trim().toLowerCase());
+      if (targetSub._id) validIds.add(String(targetSub._id).trim().toLowerCase());
+      if (targetSub.id) validIds.add(String(targetSub.id).trim().toLowerCase());
+      if (targetSub.code) validIds.add(String(targetSub.code).trim().toLowerCase());
+      if (targetSub.name) validIds.add(String(targetSub.name).trim().toLowerCase());
+    }
+
+    return t.subjects.some((sub: any) => validIds.has(String(sub).trim().toLowerCase()));
+  };
+
+  const [teacherId, setTeacherId] = useState("");
+  const [subjectId, setSubjectId] = useState("");
 
   // Reset state when editData changes
   useEffect(() => {
-    setTeacherId(editData?.teacherId || "");
-    setSubjectId(editData?.subjectId || "");
-  }, [editData, open]);
+    const rawSubId = editData?.subjectId || (subjects[0] ? getSubjectCanonicalId(subjects[0]) : "");
+    const matchedSub = findMatchingSubject(rawSubId);
+    const canonicalSubId = matchedSub ? getSubjectCanonicalId(matchedSub) : rawSubId;
+
+    const rawTId = editData?.teacherId || "";
+    const matchedT = findMatchingTeacher(rawTId);
+    const canonicalTId = matchedT ? getTeacherCanonicalId(matchedT) : rawTId;
+
+    const qualified = teachers.filter((t: any) => isTeacherQualifiedForSubject(t, canonicalSubId));
+    const validTeachers = qualified.length > 0 ? qualified : teachers;
+    const finalTId = canonicalTId || (validTeachers[0] ? getTeacherCanonicalId(validTeachers[0]) : "");
+
+    setSubjectId(canonicalSubId);
+    setTeacherId(finalTId);
+  }, [editData, open, teachers, subjects]);
 
   // Filter teachers who can teach the selected subject
   const subjectTeachers = useMemo(() => {
     if (!subjectId) return teachers;
-    return teachers.filter(
-      (t: any) => t.subjects?.includes(subjectId) || t.subjects?.length === 0,
-    );
-  }, [subjectId, teachers]);
+    const qualified = teachers.filter((t: any) => isTeacherQualifiedForSubject(t, subjectId));
+    return qualified.length > 0 ? qualified : teachers;
+  }, [subjectId, teachers, subjects]);
 
-  // Auto-select teacher if only one can teach this subject
-  useEffect(() => {
-    if (subjectId && subjectTeachers.length === 1) {
-      setTeacherId(subjectTeachers[0].teacherId);
-    } else if (!subjectId) {
-      setTeacherId("");
-    }
-  }, [subjectId, subjectTeachers]);
+  // Handle subject change
+  const handleSubjectChange = (newSubjectId: string) => {
+    setSubjectId(newSubjectId);
+    const qualified = teachers.filter((t: any) => isTeacherQualifiedForSubject(t, newSubjectId));
+    const validTeachers = qualified.length > 0 ? qualified : teachers;
+    const currentTeacherObj = findMatchingTeacher(teacherId);
+    const isCurrentValid = currentTeacherObj
+      ? validTeachers.some((t: any) => getTeacherCanonicalId(t) === getTeacherCanonicalId(currentTeacherObj))
+      : false;
+
+    setTeacherId(
+      isCurrentValid && teacherId
+        ? teacherId
+        : getTeacherCanonicalId(validTeachers[0])
+    );
+  };
 
   // Check if currently selected teacher is on leave
-  const isTeacherOnLeave = teachersOnLeave.includes(teacherId);
+  const isTeacherOnLeave = useMemo(() => {
+    const currentT = findMatchingTeacher(teacherId);
+    const canonicalTId = currentT ? getTeacherCanonicalId(currentT) : teacherId;
+    return teachersOnLeave.some((onLeaveId: string) => {
+      const matchedOnLeave = findMatchingTeacher(onLeaveId);
+      const canonicalOnLeave = matchedOnLeave ? getTeacherCanonicalId(matchedOnLeave) : onLeaveId;
+      return canonicalOnLeave.toLowerCase() === canonicalTId.toLowerCase();
+    });
+  }, [teacherId, teachersOnLeave, teachers]);
 
   // Get free teachers for suggestions
   const { data: freeTeachersData } = useGetFreeTeachers(
@@ -137,10 +228,10 @@ const EntryDialog = ({
   const suggestedSubstitutes = useMemo(() => {
     if (!subjectId || !isTeacherOnLeave) return [];
     return freeTeachers.filter((ft: any) => {
-      const teacher = teachers.find((t: any) => t.teacherId === ft.teacherId);
-      return teacher?.subjects?.includes(subjectId);
+      const teacher = findMatchingTeacher(ft.teacherId);
+      return teacher && isTeacherQualifiedForSubject(teacher, subjectId);
     });
-  }, [freeTeachers, subjectId, isTeacherOnLeave, teachers]);
+  }, [freeTeachers, subjectId, isTeacherOnLeave, teachers, subjects]);
 
   const handleSubmit = () => {
     onSave({
@@ -152,8 +243,6 @@ const EntryDialog = ({
       periodNumber,
     });
   };
-
-  const showTeacherDropdown = subjectTeachers.length > 1 || !subjectId;
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -171,71 +260,68 @@ const EntryDialog = ({
             <Select
               value={subjectId}
               label="Subject"
-              onChange={(e) => setSubjectId(e.target.value)}
+              onChange={(e) => handleSubjectChange(e.target.value as string)}
             >
-              {subjects.map((s: any) => (
-                <MenuItem key={s.subjectId} value={s.subjectId}>
-                  {s.name} ({s.code})
-                </MenuItem>
-              ))}
+              {subjects.map((s: any) => {
+                const sId = getSubjectCanonicalId(s);
+                return (
+                  <MenuItem key={sId || s.name} value={sId}>
+                    {s.name} ({s.code || sId})
+                  </MenuItem>
+                );
+              })}
             </Select>
           </FormControl>
 
-          {/* Show auto-selected teacher info or dropdown */}
-          {subjectId && subjectTeachers.length === 1 && (
-            <Box
-              sx={{
-                p: 2,
-                bgcolor: "success.light",
-                borderRadius: 1,
-                color: "success.contrastText",
-              }}
-            >
-              <Typography variant="body2">
-                <strong>Auto-assigned:</strong> {subjectTeachers[0].firstName}{" "}
-                {subjectTeachers[0].lastName}
-              </Typography>
-              <Typography variant="caption">
-                (Only teacher assigned to this subject)
-              </Typography>
-            </Box>
+          {subjectId && subjectTeachers.length === 0 && (
+            <Alert severity="warning">
+              No teachers are assigned to teach this subject. Please assign a teacher to this subject in Subject/Teacher configuration.
+            </Alert>
           )}
 
-          {showTeacherDropdown && (
-            <FormControl fullWidth>
-              <InputLabel>Teacher</InputLabel>
-              <Select
-                value={teacherId}
-                label="Teacher"
-                onChange={(e) => setTeacherId(e.target.value)}
-              >
-                {subjectTeachers.map((t: any) => {
-                  const onLeave = teachersOnLeave.includes(t.teacherId);
-                  return (
-                    <MenuItem
-                      key={t.teacherId}
-                      value={t.teacherId}
-                      sx={
-                        onLeave
-                          ? { color: "error.main", bgcolor: "error.lighter" }
-                          : {}
-                      }
-                    >
-                      {t.firstName} {t.lastName}
-                      {onLeave && (
-                        <Chip
-                          label="On Leave"
-                          size="small"
-                          color="error"
-                          sx={{ ml: 1 }}
-                        />
-                      )}
-                    </MenuItem>
-                  );
-                })}
-              </Select>
-            </FormControl>
-          )}
+          <FormControl fullWidth disabled={!subjectId || subjectTeachers.length === 0}>
+            <InputLabel>Teacher</InputLabel>
+            <Select
+              value={teacherId}
+              label="Teacher"
+              onChange={(e) => setTeacherId(e.target.value)}
+            >
+              {subjectTeachers.map((t: any) => {
+                const tId = getTeacherCanonicalId(t);
+                const tName = `${t.firstName || ''} ${t.lastName || ''}`.trim() || t.name || tId;
+                const onLeave = teachersOnLeave.some((onLeaveId: string) => {
+                  const matchedOnLeave = findMatchingTeacher(onLeaveId);
+                  const canonicalOnLeave = matchedOnLeave ? getTeacherCanonicalId(matchedOnLeave) : onLeaveId;
+                  return canonicalOnLeave.toLowerCase() === tId.toLowerCase();
+                });
+
+                return (
+                  <MenuItem
+                    key={tId}
+                    value={tId}
+                    sx={
+                      onLeave
+                        ? { color: "error.main", bgcolor: "error.lighter" }
+                        : {}
+                    }
+                  >
+                    {tName}
+                    {onLeave && (
+                      <Chip
+                        label="On Leave"
+                        size="small"
+                        color="error"
+                        sx={{ ml: 1 }}
+                      />
+                    )}
+                  </MenuItem>
+                );
+              })}
+            </Select>
+            {!subjectId && (
+              <FormHelperText>Select a subject first to view assigned teachers</FormHelperText>
+            )}
+          </FormControl>
 
           {/* Leave Warning */}
           {isTeacherOnLeave && (
@@ -331,6 +417,34 @@ const TimetableMaster = () => {
   const teachersOnLeave = teachersOnLeaveData?.data?.teacherIds || [];
   const substitutes = substitutesData?.data || [];
   const activeClasses = activeClassesData?.data || [];
+
+  const getTeacherDisplayName = (entry: TimetableEntry) => {
+    if (!entry) return "";
+    const rawTId = String(entry.teacherId || "").trim();
+    if (entry.teacher?.name && entry.teacher.name !== rawTId && !entry.teacher.name.startsWith("TCH-") && !entry.teacher.name.startsWith("TEA_")) {
+      return entry.teacher.name;
+    }
+    if (entry.teacher?.firstName || entry.teacher?.lastName) {
+      const fn = `${entry.teacher.firstName || ''} ${entry.teacher.lastName || ''}`.trim();
+      if (fn) return fn;
+    }
+    if (!rawTId) return "";
+
+    const teacher = teachers.find((t: any) => {
+      if (!t) return false;
+      const ids = [t.teacherId, t._id, t.id, t.userId, t.employeeId, t.staffId, t.code]
+        .filter(Boolean)
+        .map((id: any) => String(id).trim().toLowerCase());
+      return ids.includes(rawTId.toLowerCase());
+    });
+
+    if (teacher) {
+      const fn = `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim();
+      if (fn) return fn;
+      if (teacher.name && !teacher.name.startsWith("TCH-")) return teacher.name;
+    }
+    return rawTId;
+  };
 
   // Get sections for selected class
   const selectedClassObj = classes.find(
@@ -590,7 +704,7 @@ const TimetableMaster = () => {
         const entry = entryMap[`${day}-${period.periodNumber}`];
         if (entry) {
           row.push(
-            `${entry.subject?.name || entry.subjectId}\n${entry.teacher?.name || entry.teacherId}`,
+            `${subjects.find(s => s.subjectId === entry.subjectId)?.name || entry.subject?.name || entry.subjectId}\n${getTeacherDisplayName(entry)}`,
           );
         } else {
           row.push("-");
@@ -702,6 +816,16 @@ const TimetableMaster = () => {
               sx={{ width: { xs: "100%", sm: "auto" } }}
             />
           )}
+          <AppButton
+            variant="contained"
+            color="primary"
+            startIcon={<MagicIcon />}
+            onClick={() => setAiGenerateDialogOpen(true)}
+            size="small"
+          >
+            AI Auto-Generate
+          </AppButton>
+
           {selectedClass && selectedSection && (
             <>
               <AppButton
@@ -735,15 +859,6 @@ const TimetableMaster = () => {
                   onChange={handleUploadExcel}
                 />
               </AppButton>
-              {/* <AppButton
-                variant="outlined"
-                color="secondary"
-                startIcon={<MagicIcon />}
-                onClick={() => setAiGenerateDialogOpen(true)}
-                size="small"
-              >
-                AI Auto-Generate
-              </AppButton> */}
               {entries.length > 0 && (
                 <AppButton
                   variant="outlined"
@@ -1051,12 +1166,12 @@ const TimetableMaster = () => {
                                           : {}
                                       }
                                     >
-                                      {entry.teacher?.name || entry.teacherId}
+                                      {getTeacherDisplayName(entry)}
                                     </Typography>
 
                                     {hasSubstitute && (
                                       <Tooltip
-                                        title={`Substitute for: ${entry.teacher?.name || entry.teacherId}`}
+                                        title={`Substitute for: ${getTeacherDisplayName(entry)}`}
                                       >
                                         <Box
                                           sx={{
@@ -1240,7 +1355,7 @@ const TimetableMaster = () => {
                                   variant="caption"
                                   color="text.secondary"
                                 >
-                                  {entry.teacher?.name}
+                                  {getTeacherDisplayName(entry)}
                                 </Typography>
                                 {isOnLeave && day === todayDayName && (
                                   <Chip
