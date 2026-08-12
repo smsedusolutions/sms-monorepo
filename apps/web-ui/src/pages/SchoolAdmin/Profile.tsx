@@ -29,6 +29,7 @@ import {
 import { useUserStore } from "../../stores/userStore";
 import { useNotification } from "../../hooks/useNotification";
 import { PhoneInput } from "../../components/shared/PhoneInput";
+import TokenService from "../../queries/token/tokenService";
 
 const SchoolAdminProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -43,9 +44,9 @@ const SchoolAdminProfile = () => {
   } = useUserStore();
 
   // Derivations for legacy compatibility and clear naming
-  const userId = admin?.userId || "";
-  const schoolId = school?.schoolId || "";
-  const role = admin?.role || "sch_admin";
+  const userId = admin?.userId || TokenService.getUserId() || "";
+  const schoolId = school?.schoolId || TokenService.getSchoolId() || "";
+  const role = admin?.role || TokenService.getRole() || "sch_admin";
 
   // Use aggregated data from store
   const schoolName = admin?.schoolName || school?.schoolName || schoolId;

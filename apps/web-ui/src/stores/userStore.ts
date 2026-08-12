@@ -19,17 +19,24 @@ export const useUserStore = create<UserStore>()(
             setSchool: (school) => set({ school }),
 
             fetchProfile: async (force = false) => {
-                if (!force && (get().user || get().isLoading)) return;
+                const role = TokenService.getRole();
+                const userId = TokenService.getUserId();
+                const schoolId = TokenService.getSchoolId();
+
+                if (!role || !userId) {
+                    set({ user: null, isLoading: false });
+                    return;
+                }
+
+                const currentStoreUser = get().user;
+                if (!force && currentStoreUser && currentStoreUser.userId === userId && currentStoreUser.role === role) {
+                    return;
+                }
+
+                if (get().isLoading) return;
                 set({ isLoading: true, error: null });
 
                 try {
-                    const role = TokenService.getRole();
-                    const userId = TokenService.getUserId();
-                    const schoolId = TokenService.getSchoolId();
-
-                    if (!role || !userId) {
-                        throw new Error('User not authenticated');
-                    }
 
                     // Select the correct API path based on role
                     let path = '';

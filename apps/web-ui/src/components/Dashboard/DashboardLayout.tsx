@@ -18,6 +18,7 @@ import { useRoleStore } from '../../stores/roleStore';
 import { useTimeSettingsStore } from '../../stores/timeSettingsStore';
 import LogoutConfirmDialog from '../../pages/Sidebar/LogoutConfirmDialog';
 import AppBreadcrumbs from '../shared/AppBreadcrumbs';
+import { useBreadcrumbs } from '../../hooks/useBreadcrumbs';
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -54,6 +55,19 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     const { fetchRoles, getRoleByCode } = useRoleStore();
     const { timeFormat, setTimeFormat } = useTimeSettingsStore();
 
+    const { items: breadcrumbs } = useBreadcrumbs();
+    const currentPageTitle = breadcrumbs.length > 0 ? breadcrumbs[breadcrumbs.length - 1].label : '';
+
+    // Dynamically update document title based on current page title & school name
+    useEffect(() => {
+        const schoolName = school?.schoolName || userProfile?.schoolName || 'SMS Edu Solution';
+        if (currentPageTitle) {
+            document.title = `${currentPageTitle} — ${schoolName}`;
+        } else {
+            document.title = schoolName;
+        }
+    }, [currentPageTitle, school?.schoolName, userProfile?.schoolName, location.pathname]);
+
     // Trigger brief top progress indicator when location changes
     useEffect(() => {
         setIsNavigating(true);
@@ -66,7 +80,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             fetchProfile();
             fetchRoles();
         }
-    }, [user?.userId]);
+    }, [user?.userId, user?.role]);
 
     useEffect(() => {
         const handleResize = () => {

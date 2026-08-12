@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import TokenService from "../queries/token/tokenService";
+import { useUserStore } from "../stores/userStore";
 
 interface AuthUser {
   userId: string;
@@ -52,10 +53,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       role: decoded.role,
       schoolId: decoded.schoolId,
     });
+
+    // Clear stale user profile and fetch fresh profile for newly logged in user
+    useUserStore.getState().clearStore();
+    useUserStore.getState().fetchProfile(true);
   };
 
   const logout = () => {
     TokenService.removeToken();
+    useUserStore.getState().clearStore();
     setUser(null);
   };
 
