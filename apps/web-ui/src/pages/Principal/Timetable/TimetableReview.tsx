@@ -60,6 +60,7 @@ import ConfirmationDialog from '../../../components/Dialogs/ConfirmationDialog';
 import type { TimetableSchedule } from '../../../types/timetable.types';
 import { useTimeSettingsStore, type TimeFormat } from '../../../stores/timeSettingsStore';
 import { formatSingleTime } from '../../../utils/timeUtils';
+import { useUrlTab } from '../../../hooks/useUrlTab';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const formatDate = (d?: string | null) => {
@@ -117,7 +118,7 @@ const TimetableReview: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
 
     const { timeFormat } = useTimeSettingsStore();
-    const [activeTab, setActiveTab] = useState(0);
+    const [activeTab, setActiveTab] = useUrlTab(0, ['pending', 'approved', 'rejected']);
     const [selectedSchedule, setSelectedSchedule] = useState<TimetableSchedule | null>(null);
     const [selectedClassSectionKey, setSelectedClassSectionKey] = useState<string>('');
     const [rejectDialog, setRejectDialog] = useState<TimetableSchedule | null>(null);

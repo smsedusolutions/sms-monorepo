@@ -1,6 +1,6 @@
 // apps/web-ui/src/pages/Parent/Fees/index.tsx
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Box,
     Typography,
@@ -21,6 +21,7 @@ import InfoIcon from '@mui/icons-material/Info';
 
 import TokenService from '../../../queries/token/tokenService';
 import { useChildSelector } from '../../../context/ChildSelectorContext';
+import { useUrlTab } from '../../../hooks/useUrlTab';
 import {
     useGetStudentFeeAccounts,
     useGetPaymentsByStudent,
@@ -149,11 +150,10 @@ const ChildFeePanel: React.FC<{
     );
 };
 
-// ── Main page ─────────────────────────────────────────────────────────────────
 const ParentFees: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const { children, isLoading: childrenLoading } = useChildSelector();
-    const [activeTab, setActiveTab] = useState(0);
+    const [activeTab, setActiveTab] = useUrlTab(0);
 
     const formatCurrency = (val: number) =>
         new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val);

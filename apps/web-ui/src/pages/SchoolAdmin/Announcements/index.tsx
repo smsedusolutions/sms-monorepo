@@ -31,6 +31,7 @@ import {
 import { useGetAnnouncements, useDeleteAnnouncement, useCreateAnnouncement, useUpdateAnnouncement } from '../../../queries/Announcement';
 import { useGetClasses } from '../../../queries/Class';
 import TokenService from '../../../queries/token/tokenService';
+import { useUrlTab } from '../../../hooks/useUrlTab';
 import FileUpload from '../../../components/FileUpload/FileUpload';
 import { IMAGEKIT_FOLDERS } from '../../../utils/imagekit';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -52,7 +53,7 @@ const SchoolAdminAnnouncements: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const role = TokenService.getRole();
 
-    const [tabValue, setTabValue] = useState(0);
+    const [tabValue, setTabValue] = useUrlTab(0, ['active', 'archived', 'all']);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
 

@@ -28,12 +28,13 @@ import type { Homework } from '../../../types';
 import { AppCard } from '../../../components/shared/AppCard';
 import { AppButton } from '../../../components/shared/AppButton';
 import HomeworkDialog from '../../../components/Dialogs/HomeworkDialog';
+import { useUrlTab } from '../../../hooks/useUrlTab';
 
 const TeacherHomework: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const teacherId = TokenService.getTeacherId() || '';
 
-    const [tabValue, setTabValue] = useState(0);
+    const [tabValue, setTabValue] = useUrlTab(0, ['active', 'completed', 'all']);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [homeworkToDelete, setHomeworkToDelete] = useState<Homework | null>(null);
     const [isHomeworkDialogOpen, setIsHomeworkDialogOpen] = useState(false);

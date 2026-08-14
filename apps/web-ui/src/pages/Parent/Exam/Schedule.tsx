@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Box,
     Typography,
@@ -30,6 +30,7 @@ import { useChildSelector } from '../../../context/ChildSelectorContext';
 import { useGetExams, useGetExamSchedule } from '../../../queries/Exam';
 import { useGetSubjects } from '../../../queries/Subject';
 import TokenService from '../../../queries/token/tokenService';
+import { useUrlTab } from '../../../hooks/useUrlTab';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -53,7 +54,7 @@ const TabPanel = (props: TabPanelProps) => {
 const ParentExamSchedule: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const { selectedChild, setSelectedChild, children: contextChildren, isLoading: loadingChild } = useChildSelector();
-    const [selectedTab, setSelectedTab] = useState(0);
+    const [selectedTab, setSelectedTab] = useUrlTab(0, ['upcoming', 'ongoing', 'completed', 'all']);
 
     // Fetch exams without restricting to hardcoded academic year
     const { data: examsData, isLoading: examsLoading, error } = useGetExams(schoolId);
@@ -68,7 +69,7 @@ const ParentExamSchedule: React.FC = () => {
     };
 
     const upcomingExams = allExams.filter((e: any) => ['scheduled', 'draft'].includes(e.status)).sort(sortByStartDate);
-    const ongoingExams  = allExams.filter((e: any) => e.status === 'ongoing').sort(sortByStartDate);
+    const ongoingExams = allExams.filter((e: any) => e.status === 'ongoing').sort(sortByStartDate);
     const completedExams = allExams.filter((e: any) => e.status === 'completed').sort(sortByStartDate);
 
     // Helper to get subject name

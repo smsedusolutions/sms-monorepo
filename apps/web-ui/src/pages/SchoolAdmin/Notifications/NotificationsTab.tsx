@@ -38,6 +38,7 @@ import {
   useDeleteNotification
 } from "../../../queries/Notification";
 import TokenService from "../../../queries/token/tokenService";
+import { useUrlTab } from "../../../hooks/useUrlTab";
 import ConfirmationDialog from "../../../components/Dialogs/ConfirmationDialog";
 import type { Notification, NotificationType } from "../../../types";
 
@@ -66,7 +67,7 @@ const NotificationsTab: React.FC = () => {
   const navigate = useNavigate();
   const schoolId = TokenService.getSchoolId() || "";
 
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useUrlTab(0, ['all', 'read', 'unread'], 'filter');
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const limit = 10;

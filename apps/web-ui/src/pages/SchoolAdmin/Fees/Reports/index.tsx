@@ -25,11 +25,12 @@ import {
     useGetDiscountReport,
     useGetFeeDefaulters
 } from '../../../../queries/Fee';
+import { useUrlTab } from '../../../../hooks/useUrlTab';
 import { AppTable } from '../../../../components/shared/AppTable';
 
 const FeeReports: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
-    const [activeTab, setActiveTab] = useState(0);
+    const [activeTab, setActiveTab] = useUrlTab(0, ['pending', 'today', 'monthly', 'classwise', 'discounts', 'defaulters']);
 
     // Filters
     const [academicYear, setAcademicYear] = useState('2026-2027');

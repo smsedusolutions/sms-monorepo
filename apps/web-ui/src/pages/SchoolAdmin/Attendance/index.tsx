@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { Box, Tabs, Tab, Paper } from '@mui/material';
+import { useUrlTab } from '../../../hooks/useUrlTab';
 import Reports from './Reports';
 import TeacherAttendance from './TeacherAttendance';
 
@@ -8,7 +8,7 @@ import TeacherAttendance from './TeacherAttendance';
  * Provides access to reports and teacher attendance marking
  */
 const AttendanceAdmin = () => {
-    const [tab, setTab] = useState(0);
+    const [tab, setTab] = useUrlTab(0, ['reports', 'teachers']);
 
     return (
         <Box sx={{ p: { xs: 2, sm: 3 } }}>

@@ -49,6 +49,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import { pdf } from '@react-pdf/renderer';
 import { useAuth } from '../../../context/AuthContext';
+import { useUrlTab } from '../../../hooks/useUrlTab';
 import {
     useCreateExam,
     useUpdateExam,
@@ -793,7 +794,7 @@ const VirtualizedAdmitCardGrid = ({
 // ==========================================
 
 const ExamDetailView = ({ schoolId, exam, onBack }: { schoolId: string, exam: Exam, onBack: () => void }) => {
-    const [tabValue, setTabValue] = useState(0);
+    const [tabValue, setTabValue] = useUrlTab(0, ['schedule', 'admit-cards']);
     const [open, setOpen] = useState(false);
     const [editingSchedule, setEditingSchedule] = useState<any>(null);
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);

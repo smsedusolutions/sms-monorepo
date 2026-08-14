@@ -7,6 +7,8 @@ import ReplayIcon from "@mui/icons-material/Replay";
 import ArchiveIcon from "@mui/icons-material/Archive";
 import HistoryIcon from "@mui/icons-material/History";
 
+import { useUrlTab } from "../../../hooks/useUrlTab";
+
 // Lazy Loaded Child Components with explicit TSX extensions enabled by compiler options
 const ClassPromotion = lazy(() => import("./ClassPromotion.tsx"));
 const BulkPromotion = lazy(() => import("./BulkPromotion.tsx"));
@@ -16,7 +18,7 @@ const ArchiveYear = lazy(() => import("./ArchiveYear.tsx"));
 const PromotionLogs = lazy(() => import("./PromotionLogs.tsx"));
 
 const PromotionDashboard = () => {
-    const [activeTab, setActiveTab] = useState(0);
+    const [activeTab, setActiveTab] = useUrlTab(0, ['class-promotion', 'bulk-promotion', 'repeaters', 'graduation', 'archive', 'logs']);
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
         setActiveTab(newValue);

@@ -83,6 +83,7 @@ import TokenService from "../../../queries/token/tokenService";
 import { useNotificationStore } from "../../../stores/notificationStore";
 import { useTimeSettingsStore } from "../../../stores/timeSettingsStore";
 import { formatSingleTime } from "../../../utils/timeUtils";
+import { useUrlTab } from "../../../hooks/useUrlTab";
 import ConfirmationDialog from "../../../components/Dialogs/ConfirmationDialog";
 import { AppButton } from "../../../components/shared/AppButton";
 import { generateTimetableTemplate, parseTimetableTemplate } from "../../../utils/timetableExcelUtils";
@@ -407,7 +408,7 @@ const TimetableMaster = () => {
   const [aiGenerateDialogOpen, setAiGenerateDialogOpen] = useState(false);
   const { showNotification } = useNotificationStore();
 
-  const [tabIndex, setTabIndex] = useState<number>(0);
+  const [tabIndex, setTabIndex] = useUrlTab(0, ['manual', 'ai', 'published', 'rejected']);
   const [selectedAiVersion, setSelectedAiVersion] = useState<number | undefined>(undefined);
 
   // Get today's date for leave checking

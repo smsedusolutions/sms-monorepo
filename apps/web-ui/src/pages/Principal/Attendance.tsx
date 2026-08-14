@@ -1,5 +1,5 @@
 import { Box, Typography, Paper, Tabs, Tab } from '@mui/material';
-import { useState } from 'react';
+import { useUrlTab } from '../../hooks/useUrlTab';
 import Reports from '../SchoolAdmin/Attendance/Reports';
 
 /**
@@ -7,7 +7,7 @@ import Reports from '../SchoolAdmin/Attendance/Reports';
  * Reuses the existing Reports component from SchoolAdmin.
  */
 const PrincipalAttendance = () => {
-    const [tab, setTab] = useState(0);
+    const [tab, setTab] = useUrlTab(0, ['reports']);
 
     return (
         <Box sx={{ p: { xs: 2, sm: 3 } }}>
