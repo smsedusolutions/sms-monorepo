@@ -24,6 +24,7 @@ import {
   Delete as DeleteIcon,
   Edit as EditIcon,
   Add as AddIcon,
+  Send as SendIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -34,18 +35,22 @@ import {
   useDeleteAIDraftEntry,
   useGetAIDraftVersions,
   useDeleteAIDraftVersion,
+  useSubmitTimetableForApproval,
 } from "../../../queries/Timetable";
 import { useGetClasses } from "../../../queries/Class";
 import { useGetTeachers } from "../../../queries/Teacher";
 import { useGetSubjects } from "../../../queries/Subject";
 import TokenService from "../../../queries/token/tokenService";
 import { useNotificationStore } from "../../../stores/notificationStore";
+import { useTimeSettingsStore } from "../../../stores/timeSettingsStore";
+import { formatSingleTime } from "../../../utils/timeUtils";
 import { AppButton } from "../../../components/shared/AppButton";
 import ConfirmationDialog from "../../../components/Dialogs/ConfirmationDialog";
 
 const TimetableDraftPreview = () => {
   const navigate = useNavigate();
   const schoolId = TokenService.getSchoolId() || "";
+  const { timeFormat } = useTimeSettingsStore();
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -78,6 +83,7 @@ const TimetableDraftPreview = () => {
   const updateDraftEntry = useUpdateAIDraftEntry(schoolId);
   const deleteDraftEntry = useDeleteAIDraftEntry(schoolId);
   const deleteVersion = useDeleteAIDraftVersion(schoolId);
+  const submitForApproval = useSubmitTimetableForApproval(schoolId);
 
   const config = configData?.data;
   const classes = classesData?.data || [];
@@ -132,6 +138,23 @@ const TimetableDraftPreview = () => {
       navigate("/school-admin/timetable/master");
     } catch (err: any) {
       showNotification(err?.message || "Failed to publish draft", "error");
+    }
+  };
+
+  const handleSendForApproval = async () => {
+    try {
+      await submitForApproval.mutateAsync({
+        scheduleId: `AI_DRAFT_v${selectedVersion || 1}`,
+        payload: {
+          source: "ai",
+          aiVersion: selectedVersion || 1,
+          name: `AI Timetable Draft (v${selectedVersion || 1})`,
+        },
+      });
+      showNotification(`AI Timetable Draft v${selectedVersion || 1} sent to Principal for approval!`, "success");
+      navigate("/school-admin/timetable/master");
+    } catch (err: any) {
+      showNotification(err?.message || "Failed to send draft for approval", "error");
     }
   };
 
@@ -371,6 +394,16 @@ const TimetableDraftPreview = () => {
           </AppButton>
           <AppButton
             variant="contained"
+            color="primary"
+            startIcon={<SendIcon />}
+            onClick={handleSendForApproval}
+            loading={submitForApproval.isPending}
+            disabled={!draft}
+          >
+            Send for Approval
+          </AppButton>
+          <AppButton
+            variant="contained"
             color="success"
             startIcon={<PublishIcon />}
             onClick={handlePublish}
@@ -463,7 +496,7 @@ const TimetableDraftPreview = () => {
                       {period.type === "regular" ? `Period ${period.periodNumber}` : period.name}
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
-                      {period.startTime} - {period.endTime}
+                      {formatSingleTime(period.startTime, timeFormat)} - {formatSingleTime(period.endTime, timeFormat)}
                     </Typography>
                   </Box>
 

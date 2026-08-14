@@ -55,6 +55,8 @@ export const useUserStore = create<UserStore>()(
                         path = `/api/school/${schoolId}/parents/${userId}`;
                     } else if (role === 'driver' && schoolId) {
                         path = `/api/school/${schoolId}/drivers/${userId}`;
+                    } else if (role === 'principal' && schoolId) {
+                        path = `/api/school/${schoolId}/principals/${userId}`;
                     } else {
                         // If we don't have a path, just stop
                         set({ isLoading: false });

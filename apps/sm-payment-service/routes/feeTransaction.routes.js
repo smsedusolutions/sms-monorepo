@@ -14,32 +14,32 @@ const {
 // Apply auth globally
 router.use(Authenticated);
 
-// Record a payment (Admin only)
+// Record a payment (Admin & Principal)
 router.post(
     '/',
-    authorizeRoles('sch_admin'),
+    authorizeRoles('sch_admin', 'principal'),
     recordPayment
 );
 
-// List all payments (Admin only)
+// List all payments (Admin & Principal)
 router.get(
     '/',
-    authorizeRoles('sch_admin'),
+    authorizeRoles('sch_admin', 'principal'),
     paginate,
     getPayments
 );
 
-// Get student's payments (Admin, Student, and Parent allowed)
+// Get student's payments (Admin, Principal, Student, and Parent allowed)
 router.get(
     '/student/:studentId',
-    authorizeRoles('sch_admin', 'student', 'parent'),
+    authorizeRoles('sch_admin', 'student', 'parent', 'principal'),
     getPaymentsByStudent
 );
 
-// Get single payment details (Admin, Student, and Parent allowed)
+// Get single payment details (Admin, Principal, Student, and Parent allowed)
 router.get(
     '/:transactionId',
-    authorizeRoles('sch_admin', 'student', 'parent'),
+    authorizeRoles('sch_admin', 'student', 'parent', 'principal'),
     getPaymentById
 );
 

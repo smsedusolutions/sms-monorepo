@@ -31,6 +31,7 @@ const roleProfilePaths: Record<string, string> = {
     student: '/student/profile',
     parent: '/parent/profile',
     driver: '/driver/profile',
+    principal: '/principal/profile',
 };
 
 const DashboardLayout = ({ children }: DashboardLayoutProps) => {

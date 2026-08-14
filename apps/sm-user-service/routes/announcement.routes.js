@@ -12,11 +12,11 @@ const {
     getAnnouncementSeenStatus,
 } = require('../controllers/announcement.controller');
 
-// Create announcement (Admin and Teacher)
+// Create announcement (Admin, Principal, and Teacher)
 router.post(
     '/',
     Authenticated,
-    authorizeRoles('sch_admin', 'teacher'),
+    authorizeRoles('sch_admin', 'teacher', 'principal'),
     createAnnouncement
 );
 
@@ -31,7 +31,7 @@ router.get(
 router.get(
     '/my',
     Authenticated,
-    authorizeRoles('teacher'),
+    authorizeRoles('teacher', 'principal'),
     getMyAnnouncements
 );
 
@@ -46,7 +46,7 @@ router.get(
 router.put(
     '/:announcementId',
     Authenticated,
-    authorizeRoles('sch_admin', 'teacher'),
+    authorizeRoles('sch_admin', 'teacher', 'principal'),
     updateAnnouncement
 );
 
@@ -54,7 +54,7 @@ router.put(
 router.delete(
     '/:announcementId',
     Authenticated,
-    authorizeRoles('sch_admin', 'teacher'),
+    authorizeRoles('sch_admin', 'teacher', 'principal'),
     deleteAnnouncement
 );
 
@@ -65,11 +65,11 @@ router.post(
     markAnnouncementAsSeen
 );
 
-// Get announcement seen status (Admin/Teacher only)
+// Get announcement seen status (Admin/Principal/Teacher)
 router.get(
     '/:announcementId/seen-status',
     Authenticated,
-    authorizeRoles('sch_admin', 'teacher'),
+    authorizeRoles('sch_admin', 'teacher', 'principal'),
     getAnnouncementSeenStatus
 );
 

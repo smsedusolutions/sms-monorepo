@@ -111,6 +111,39 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
   const isLoading =
     isLoadingSuperAdmin || isLoadingSchoolAdmin || isLoadingUserMenus;
 
+  // Hardcoded fallback menus for principal — used when API hasn't configured them yet
+  const principalFallbackMenus: SideBarMenuItemType[] = [
+    { name: "Dashboard", icon: <DynamicIcon icon="material-symbols:dashboard-outline" />, path: "/principal/dashboard", isExpandable: false },
+    {
+      name: "Leave Approvals",
+      icon: <DynamicIcon icon="material-symbols:event-note-outline" />,
+      path: "/principal/leave/teacher-requests",
+      isExpandable: false,
+    },
+    {
+      name: "Timetable Review",
+      icon: <DynamicIcon icon="material-symbols:schedule-outline" />,
+      path: "/principal/timetable/review",
+      isExpandable: false,
+    },
+    {
+      name: "Exam Approvals",
+      icon: <DynamicIcon icon="material-symbols:assignment-outline" />,
+      isExpandable: true,
+      subItems: [
+        { name: "Schedule Approval", icon: <DynamicIcon icon="material-symbols:assignment-outline" />, path: "/principal/exam/approval" },
+        { name: "Exam Results", icon: <DynamicIcon icon="material-symbols:trending-up" />, path: "/principal/exam/results" },
+      ],
+    },
+    { name: "Attendance", icon: <DynamicIcon icon="material-symbols:how-to-reg-outline" />, path: "/principal/attendance", isExpandable: false },
+    { name: "Teachers", icon: <DynamicIcon icon="material-symbols:people-outline" />, path: "/principal/teachers", isExpandable: false },
+    { name: "Students", icon: <DynamicIcon icon="material-symbols:school-outline" />, path: "/principal/students", isExpandable: false },
+    { name: "Announcements", icon: <DynamicIcon icon="material-symbols:campaign-outline" />, path: "/principal/announcements", isExpandable: false },
+    { name: "Notifications", icon: <DynamicIcon icon="material-symbols:notifications-outline" />, path: "/principal/notifications", isExpandable: false },
+    { name: "Chat", icon: <DynamicIcon icon="material-symbols:chat-outline" />, path: "/principal/chat", isExpandable: false },
+    { name: "Profile", icon: <DynamicIcon icon="material-symbols:person-outline" />, path: "/principal/profile", isExpandable: false },
+  ];
+
   // Updated menu items logic based on role
   const getMenuItems = () => {
     let items: SideBarMenuItemType[] = [];
@@ -129,6 +162,12 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
           });
         }
         break;
+      case "principal": {
+        // Use API menus if available; otherwise fall back to hardcoded list
+        const apiItems = transformMenuData(userMenus?.data || [], role || undefined);
+        items = apiItems.length > 0 ? apiItems : principalFallbackMenus;
+        break;
+      }
       default:
         // Handle all other school-specific roles
         items = transformMenuData(userMenus?.data || [], role || undefined);

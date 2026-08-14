@@ -147,6 +147,11 @@ const login = async (req, res) => {
                     Model = schoolDb.model("Driver", driverSchema);
                     idField = "driverId";
                     break;
+                case "principal":
+                    const { PrincipalSchema: principalSchema } = require("@sms/shared");
+                    Model = schoolDb.model("Principal", principalSchema);
+                    idField = "principalId";
+                    break;
                 default:
                     return res.status(400).json({
                         success: false,
@@ -222,6 +227,8 @@ const login = async (req, res) => {
                 tokenPayload.driverId = user.driverId;
                 tokenPayload.currentVehicleId = user.currentVehicleId;
                 tokenPayload.currentRouteId = user.currentRouteId;
+            } else if (role === "principal") {
+                tokenPayload.principalId = user.principalId;
             }
         }
 

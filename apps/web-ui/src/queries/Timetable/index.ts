@@ -285,19 +285,60 @@ export const useUpdateTimetableSchedule = (schoolId: string) => {
     });
 };
 
-export const useToggleTimetableSchedule = (schoolId: string) => {
+export const useSubmitTimetableForApproval = (schoolId: string) => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ scheduleId, status }: { scheduleId: string; status?: 'active' | 'disabled' | 'draft' }) =>
+        mutationFn: ({ scheduleId, payload }: { scheduleId: string; payload?: { source?: 'ai' | 'manual'; aiVersion?: number; name?: string } }) =>
             useApi<ApiResponse<TimetableSchedule>>(
-                "PATCH" as any,
-                `/api/academics/school/${schoolId}/schedules/${scheduleId}/toggle`,
-                status ? { status } : undefined
+                "POST",
+                `/api/academics/school/${schoolId}/schedules/${scheduleId}/submit-approval`,
+                payload
             ),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["timetable-schedules", schoolId] });
             queryClient.invalidateQueries({ queryKey: ["active-schedule", schoolId] });
         },
+    });
+};
+
+export const useToggleTimetableSchedule = (schoolId: string) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            scheduleId,
+            status,
+            rejectionComment,
+            force,
+        }: {
+            scheduleId: string;
+            status?: 'active' | 'disabled' | 'draft' | 'pending_approval' | 'rejected';
+            rejectionComment?: string;
+            force?: boolean;
+        }) =>
+            useApi<ApiResponse<TimetableSchedule>>(
+                "PATCH" as any,
+                `/api/academics/school/${schoolId}/schedules/${scheduleId}/toggle`,
+                { status, rejectionComment, force }
+            ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["timetable-schedules", schoolId] });
+            queryClient.invalidateQueries({ queryKey: ["active-schedule", schoolId] });
+        },
+    });
+};
+
+// Fetch all schedules across all statuses (for admin history / rejected view)
+export const useGetAllTimetableSchedules = (schoolId: string) => {
+    return useQuery({
+        queryKey: ["timetable-schedules-all", schoolId],
+        queryFn: () =>
+            useApi<ApiResponse<TimetableSchedule[]>>(
+                "GET",
+                `/api/academics/school/${schoolId}/schedules`,
+                undefined,
+                { status: "all" }
+            ),
+        enabled: !!schoolId,
     });
 };
 

@@ -38,6 +38,7 @@ import {
   type Role,
 } from "../../queries/Roles";
 import { useNotificationStore } from "../../stores/notificationStore";
+import { useRoleStore } from "../../stores/roleStore";
 
 const COLOR_OPTIONS: Role["colorTheme"][] = [
   "default",
@@ -147,7 +148,10 @@ const RoleManagement = () => {
           <AppButton
             variant="outlined"
             startIcon={<RefreshIcon />}
-            onClick={() => refetch()}
+            onClick={() => {
+              refetch();
+              useRoleStore.getState().fetchRoles(true);
+            }}
           >
             Refresh
           </AppButton>

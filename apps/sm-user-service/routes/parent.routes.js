@@ -16,7 +16,7 @@ const { Authenticated, authorizeRoles } = require("@sms/shared/middlewares");
 router.get(
     "/search",
     Authenticated,
-    authorizeRoles("super_admin", "sch_admin", "teacher"),
+    authorizeRoles("super_admin", "sch_admin", "teacher", "principal"),
     searchParents
 );
 
@@ -32,7 +32,7 @@ router.post(
 router.get(
     "/",
     Authenticated,
-    authorizeRoles("super_admin", "sch_admin", "teacher", "parent"),
+    authorizeRoles("super_admin", "sch_admin", "teacher", "parent", "principal"),
     getAllParents
 );
 
@@ -40,7 +40,7 @@ router.get(
 router.get(
     "/student/:studentId",
     Authenticated,
-    authorizeRoles("super_admin", "sch_admin", "teacher", "parent"),
+    authorizeRoles("super_admin", "sch_admin", "teacher", "parent", "principal"),
     getParentsByStudentId
 );
 
@@ -48,7 +48,7 @@ router.get(
 router.get(
     "/:id",
     Authenticated,
-    authorizeRoles("super_admin", "sch_admin", "teacher", "parent"),
+    authorizeRoles("super_admin", "sch_admin", "teacher", "parent", "principal"),
     getParentById
 );
 

@@ -164,7 +164,7 @@ router.get(
 router.get(
     '/registration/:examId/list',
     Authenticated,
-    authorizeRoles('sch_admin', 'teacher'),
+    authorizeRoles('sch_admin', 'teacher', 'principal'),
     getExamRegistrations
 );
 
@@ -175,19 +175,19 @@ router.get(
 router.post(
     '/results/submit',
     Authenticated,
-    authorizeRoles('sch_admin', 'teacher'),
+    authorizeRoles('sch_admin', 'teacher', 'principal'),
     submitMarks
 );
 router.get(
     '/results/subject/:examId/:scheduleId',
     Authenticated,
-    authorizeRoles('sch_admin', 'teacher'),
+    authorizeRoles('sch_admin', 'teacher', 'principal'),
     getSubjectResults
 );
 router.post(
     '/results/publish',
     Authenticated,
-    authorizeRoles('sch_admin'),
+    authorizeRoles('sch_admin', 'principal'),
     publishResults
 );
 router.get(

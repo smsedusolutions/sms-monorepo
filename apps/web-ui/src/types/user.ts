@@ -6,7 +6,7 @@ export interface UserProfile {
   email?: string;
   phone?: string;
   profileImage?: string;
-  role: "student" | "teacher" | "sch_admin" | "parent" | "super_admin";
+  role: "student" | "teacher" | "sch_admin" | "parent" | "super_admin" | "driver" | "principal";
 
   // Student specific
   studentId?: string;
@@ -33,6 +33,9 @@ export interface UserProfile {
 
   // Admin specific
   adminId?: string;
+
+  // Principal specific
+  principalId?: string;
 
   // Allow for extra dynamic fields from aggregated API responses
   [key: string]: any;

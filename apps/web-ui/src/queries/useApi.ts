@@ -5,6 +5,8 @@ import TokenService from "./token/tokenService";
 interface ApiError {
     message: string;
     status?: number;
+    code?: string;
+    [key: string]: unknown;  // allow extra fields like existingSchedule
 }
 
 // Service types for different microservices
@@ -161,8 +163,10 @@ const useApi = async <T>(
                     status: 0
                 };
             }
+            const responseData = error.response?.data || {};
             const apiError: ApiError = {
-                message: error.response?.data?.message || "An error occurred",
+                ...responseData,                                          // forward all backend fields (code, existingSchedule, etc.)
+                message: responseData?.message || "An error occurred",
                 status: error.response?.status,
             };
             throw apiError;

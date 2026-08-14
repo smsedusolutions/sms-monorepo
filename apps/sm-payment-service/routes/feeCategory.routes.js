@@ -14,7 +14,7 @@ const {
 
 // Apply auth and admin-only rules globally to this router
 router.use(Authenticated);
-router.use(authorizeRoles('sch_admin'));
+router.use(authorizeRoles('sch_admin', 'principal'));
 
 // Create Category
 router.post(

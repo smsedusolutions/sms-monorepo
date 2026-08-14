@@ -23,27 +23,27 @@ router.post(
     assignStructure
 );
 
-// Get all ledgers (Admin only)
+// Get all ledgers (Admin & Principal)
 router.get(
     '/',
-    authorizeRoles('sch_admin'),
+    authorizeRoles('sch_admin', 'principal'),
     paginate,
     getAccounts
 );
 
-// Get student ledgers (Admin, Student, and Parent allowed)
+// Get student ledgers (Admin, Principal, Student, and Parent allowed)
 // NOTE: must be registered BEFORE /:accountId to prevent Express
 // from matching "student" as an accountId value.
 router.get(
     '/student/:studentId',
-    authorizeRoles('sch_admin', 'student', 'parent'),
+    authorizeRoles('sch_admin', 'student', 'parent', 'principal'),
     getAccountsByStudent
 );
 
-// Get account details by ID (Admin only)
+// Get account details by ID (Admin & Principal)
 router.get(
     '/:accountId',
-    authorizeRoles('sch_admin'),
+    authorizeRoles('sch_admin', 'principal'),
     getAccountById
 );
 

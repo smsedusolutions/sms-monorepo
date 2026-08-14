@@ -9,9 +9,57 @@ const roomController = require("../controllers/room.controller");
 const periodSwapController = require("../controllers/period-swap.controller");
 const reportsController = require("../controllers/reports.controller");
 const aiController = require("../controllers/timetable-ai.controller");
+const scheduleController = require("../controllers/timetable-schedule.controller");
 
 // Middleware
 const { Authenticated, authorizeRoles } = require("@sms/shared/middlewares");
+
+// ==========================================
+// TIMETABLE SCHEDULE ROUTES (Approval Flow)
+// ==========================================
+
+router.get(
+    "/schedules",
+    Authenticated,
+    authorizeRoles("sch_admin", "principal", "teacher", "student", "parent"),
+    scheduleController.getSchedules
+);
+router.get(
+    "/schedules/active",
+    Authenticated,
+    authorizeRoles("sch_admin", "principal", "teacher", "student", "parent"),
+    scheduleController.getActiveSchedule
+);
+router.post(
+    "/schedules",
+    Authenticated,
+    authorizeRoles("sch_admin"),
+    scheduleController.createSchedule
+);
+router.post(
+    "/schedules/:scheduleId/submit-approval",
+    Authenticated,
+    authorizeRoles("sch_admin"),
+    scheduleController.submitForApproval
+);
+router.put(
+    "/schedules/:scheduleId",
+    Authenticated,
+    authorizeRoles("sch_admin"),
+    scheduleController.updateSchedule
+);
+router.patch(
+    "/schedules/:scheduleId/toggle",
+    Authenticated,
+    authorizeRoles("sch_admin", "principal"),
+    scheduleController.toggleScheduleStatus
+);
+router.delete(
+    "/schedules/:scheduleId",
+    Authenticated,
+    authorizeRoles("sch_admin"),
+    scheduleController.deleteSchedule
+);
 
 // ==========================================
 // TIMETABLE CONFIGURATION ROUTES
@@ -29,7 +77,7 @@ router.post(
 router.get(
     "/config/active",
     Authenticated,
-    authorizeRoles("sch_admin", "teacher", "student", "parent"),
+    authorizeRoles("sch_admin", "teacher", "student", "parent", "principal"),
     configController.getActiveConfig
 );
 
@@ -37,7 +85,7 @@ router.get(
 router.get(
     "/config",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     configController.getAllConfigs
 );
 
@@ -45,7 +93,7 @@ router.get(
 router.get(
     "/config/:configId",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     configController.getConfigById
 );
 
@@ -145,7 +193,7 @@ router.post(
 router.get(
     "/ai/draft",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     aiController.getAIDraft
 );
 
@@ -153,7 +201,7 @@ router.get(
 router.get(
     "/ai/draft/versions",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     aiController.getAIDraftVersions
 );
 
@@ -213,7 +261,7 @@ router.post(
 router.get(
     "/class/:classId/:sectionId",
     Authenticated,
-    authorizeRoles("sch_admin", "teacher", "student", "parent"),
+    authorizeRoles("sch_admin", "teacher", "student", "parent", "principal"),
     entryController.getClassTimetable
 );
 
@@ -229,7 +277,7 @@ router.delete(
 router.get(
     "/active-classes",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     entryController.getClassesWithTimetables
 );
 
@@ -245,7 +293,7 @@ router.post(
 router.get(
     "/teacher/:teacherId",
     Authenticated,
-    authorizeRoles("sch_admin", "teacher"),
+    authorizeRoles("sch_admin", "teacher", "principal"),
     entryController.getTeacherTimetable
 );
 
@@ -253,7 +301,7 @@ router.get(
 router.get(
     "/day/:dayOfWeek",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     entryController.getEntriesByDay
 );
 
@@ -277,7 +325,7 @@ router.delete(
 router.get(
     "/teacher/:teacherId/free-periods",
     Authenticated,
-    authorizeRoles("sch_admin", "teacher"),
+    authorizeRoles("sch_admin", "teacher", "principal"),
     entryController.getTeacherFreePeriods
 );
 
@@ -285,7 +333,7 @@ router.get(
 router.get(
     "/free-teachers",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     entryController.getFreeTeachersForPeriod
 );
 
@@ -293,7 +341,7 @@ router.get(
 router.get(
     "/conflicts",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     entryController.getConflictReport
 );
 
@@ -313,7 +361,7 @@ router.post(
 router.get(
     "/substitute/date/:date",
     Authenticated,
-    authorizeRoles("sch_admin", "teacher", "parent", "student"),
+    authorizeRoles("sch_admin", "teacher", "parent", "student", "principal"),
     substituteController.getSubstitutesForDate
 );
 
@@ -321,7 +369,7 @@ router.get(
 router.get(
     "/substitute/history",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     substituteController.getSubstituteHistory
 );
 
@@ -453,7 +501,7 @@ router.patch(
 router.get(
     "/reports/teacher-workload",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     reportsController.getTeacherWorkload
 );
 
@@ -461,7 +509,7 @@ router.get(
 router.get(
     "/reports/subject-distribution",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     reportsController.getSubjectDistribution
 );
 
@@ -469,7 +517,7 @@ router.get(
 router.get(
     "/reports/summary",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     reportsController.getTimetableSummary
 );
 
@@ -477,7 +525,7 @@ router.get(
 router.get(
     "/export",
     Authenticated,
-    authorizeRoles("sch_admin", "teacher", "student"),
+    authorizeRoles("sch_admin", "teacher", "student", "principal"),
     reportsController.exportTimetableData
 );
 

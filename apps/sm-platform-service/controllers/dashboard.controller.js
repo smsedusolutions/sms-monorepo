@@ -520,7 +520,7 @@ const deleteMenu = async (req, res) => {
 const getAllMenus = async (req, res) => {
   try {
     const { page, limit, skip } = getPaginationParams(req.query);
-    const { search, schoolId } = req.query;
+    const { search, schoolId, menuType } = req.query;
 
     let baseQuery = {};
 
@@ -539,18 +539,23 @@ const getAllMenus = async (req, res) => {
       ];
     }
 
-    // Only paginate main menus
-    const mainMenuQuery = { ...baseQuery, menuType: "main" };
+    // Only paginate main menus (or target menuType if explicitly requested)
+    const mainMenuQuery = { ...baseQuery };
+    if (menuType) {
+      mainMenuQuery.menuType = menuType;
+    } else {
+      mainMenuQuery.menuType = "main";
+    }
 
     const [mainMenus, totalMainMenus] = await Promise.all([
       Menu.find(mainMenuQuery).sort({ menuOrder: 1 }).skip(skip).limit(limit),
       Menu.countDocuments(mainMenuQuery),
     ]);
 
-    // Fetch all submenus belonging to these main menus
+    // Fetch all submenus belonging to these main menus ONLY if menuType is not explicitly specified
     const mainMenuIds = mainMenus.map((m) => m.menuId);
     let subMenus = [];
-    if (mainMenuIds.length > 0) {
+    if (!menuType && mainMenuIds.length > 0) {
       subMenus = await Menu.find({
         ...baseQuery,
         menuType: "sub",

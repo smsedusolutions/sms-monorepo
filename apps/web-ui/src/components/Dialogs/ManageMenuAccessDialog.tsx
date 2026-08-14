@@ -57,13 +57,16 @@ const ManageMenuAccessDialog: React.FC<ManageMenuAccessDialogProps> = ({
     string[]
   >([]);
 
-  // Sync local state when menu prop changes
+  // Sync local state when menu prop changes and fetch latest roles
   React.useEffect(() => {
+    if (open) {
+      useRoleStore.getState().fetchRoles(true);
+    }
     if (menu) {
       setLocalDeactivatedRoles(menu.deactivatedRoles || []);
       setLocalDeactivatedSchools(menu.deactivatedSchools || []);
     }
-  }, [menu]);
+  }, [open, menu]);
 
   if (!menu) return null;
 

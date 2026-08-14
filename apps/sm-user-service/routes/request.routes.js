@@ -13,7 +13,7 @@ const { Authenticated, authorizeRoles } = require("@sms/shared/middlewares");
 router.post(
     "/",
     Authenticated,
-    authorizeRoles("sch_admin", "teacher", "student", "parent"),
+    authorizeRoles("sch_admin", "teacher", "student", "parent", "principal"),
     createRequest
 );
 
@@ -21,23 +21,23 @@ router.post(
 router.get(
     "/my",
     Authenticated,
-    authorizeRoles("sch_admin", "teacher", "student", "parent"),
+    authorizeRoles("sch_admin", "teacher", "student", "parent", "principal"),
     getMyRequests
 );
 
-// GET /api/school/:schoolId/requests - Get all requests (admin only)
+// GET /api/school/:schoolId/requests - Get all requests (admin and principal)
 router.get(
     "/",
     Authenticated,
-    authorizeRoles("super_admin", "sch_admin"),
+    authorizeRoles("super_admin", "sch_admin", "principal"),
     getAllRequests
 );
 
-// PUT /api/school/:schoolId/requests/:requestId - Update request status (admin only)
+// PUT /api/school/:schoolId/requests/:requestId - Update request status (admin and principal)
 router.put(
     "/:requestId",
     Authenticated,
-    authorizeRoles("super_admin", "sch_admin"),
+    authorizeRoles("super_admin", "sch_admin", "principal"),
     updateRequestStatus
 );
 
