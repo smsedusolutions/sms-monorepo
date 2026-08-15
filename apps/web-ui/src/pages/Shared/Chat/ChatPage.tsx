@@ -43,7 +43,6 @@ import {
   GetApp as DownloadIcon,
   InsertDriveFile as FileIcon,
   Edit as EditIcon,
-  Person as PersonIcon,
   SentimentSatisfiedAlt as EmojiIcon,
   ShieldOutlined as ShieldIcon,
 } from "@mui/icons-material";
@@ -69,6 +68,7 @@ import { useGetSubjects } from "../../../queries/Subject";
 import { useGetChildTeachers, useGetMyChildren } from "../../../queries/ParentPortal";
 import { useTimeSettingsStore } from "../../../stores/timeSettingsStore";
 import { formatSingleTime } from "../../../utils/timeUtils";
+import EmojiPickerPopover from "./EmojiPickerPopover";
 import type { Parent, Teacher, Subject, ChildTeacherInfo, Class as ClassType } from "../../../types";
 
 interface DecryptedMessage {
@@ -138,6 +138,7 @@ export const ChatPage: React.FC = () => {
   const [partnerTyping, setPartnerTyping] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [downloadingFileId, setDownloadingFileId] = useState<string | null>(null);
+  const [emojiAnchorEl, setEmojiAnchorEl] = useState<HTMLElement | null>(null);
 
   // Contact Info Popup Dialog State
   const [infoModalOpen, setInfoModalOpen] = useState(false);
@@ -1151,13 +1152,17 @@ export const ChatPage: React.FC = () => {
   return (
     <Box
       sx={{
-        height: "calc(100vh - 84px)",
-        p: { xs: 0, sm: 2 },
+        height: "100%",
+        width: "100%",
+        p: { xs: 0, md: 2 },
+        m: 0,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         background: "#f8fafc",
         fontFamily: "'Inter', sans-serif",
+        overflow: "hidden",
+        boxSizing: "border-box",
       }}
     >
       {/* ---------------------------------------------------- */}
@@ -1170,11 +1175,11 @@ export const ChatPage: React.FC = () => {
           maxWidth: "1640px",
           maxHeight: { xs: "100%", md: "862px" },
           bgcolor: "#ffffff",
-          borderRadius: { xs: 0, sm: "32px" },
-          boxShadow: { xs: "none", sm: "0 25px 50px -12px rgba(0, 0, 0, 0.12)" },
+          borderRadius: { xs: 0, md: "24px" },
+          boxShadow: { xs: "none", md: "0 25px 50px -12px rgba(0, 0, 0, 0.12)" },
           display: "flex",
           overflow: "hidden",
-          border: { xs: "none", sm: "1px solid #e2e8f0" },
+          border: { xs: "none", md: "1px solid #e2e8f0" },
           position: "relative",
         }}
       >
@@ -1660,77 +1665,62 @@ export const ChatPage: React.FC = () => {
         <Box
           sx={{
             flex: 1,
+            height: "100%",
+            minHeight: 0,
+            minWidth: 0,
             display: { xs: selectedRoom ? "flex" : "none", md: "flex" },
             flexDirection: "column",
             bgcolor: "#f5f7ff",
+            overflow: "hidden",
+            position: "relative",
           }}
         >
           {selectedRoom ? (
             <>
-              {/* Mobile Top Navigation Header Bar (Matches Mobile Screenshot 2) */}
-              <Box
-                sx={{
-                  display: { xs: "flex", md: "none" },
-                  height: "56px",
-                  px: 2,
-                  bgcolor: "#ffffff",
-                  borderBottom: "1px solid #e2e8f0",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1.5}>
-                  <IconButton onClick={() => setSelectedRoom(null)} sx={{ color: "#4f46e5", p: 0.5 }}>
-                    <ArrowBackIcon />
-                  </IconButton>
-                  <Typography variant="h6" fontWeight={700} color="#0f172a" sx={{ fontSize: "1.125rem" }}>
-                    Message View
-                  </Typography>
-                </Stack>
-
-                <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    bgcolor: "#4f46e5",
-                    color: "#ffffff",
-                  }}
-                >
-                  <PersonIcon sx={{ fontSize: 18 }} />
-                </Avatar>
-              </Box>
-
               {/* Chat Header Bar */}
               <Box
                 sx={{
-                  height: { xs: "72px", md: "96px" },
-                  px: { xs: 2, md: 5 },
+                  height: { xs: "60px", md: "80px" },
+                  px: { xs: 1.5, md: 4 },
                   borderBottom: "1px solid #e2e8f0",
                   display: "flex",
                   alignItems: "center",
-                  bgcolor: "rgba(255, 255, 255, 0.8)",
-                  backdropFilter: "blur(12px)",
+                  bgcolor: "#ffffff",
                   position: "sticky",
                   top: 0,
                   zIndex: 10,
+                  flexShrink: 0,
                 }}
               >
+                {/* Back button on mobile to return to conversations list */}
+                <IconButton
+                  onClick={() => setSelectedRoom(null)}
+                  sx={{
+                    display: { xs: "inline-flex", md: "none" },
+                    mr: 1,
+                    p: 0.5,
+                    color: "#4f46e5",
+                  }}
+                  size="small"
+                >
+                  <ArrowBackIcon fontSize="small" />
+                </IconButton>
+
                 {/* Avatar with real presence indicator */}
                 {(() => {
                   const partnerId = getPartnerId(selectedRoom);
                   const presence = getPartnerPresence(partnerId);
                   return (
-                    <Box sx={{ position: "relative", mr: 2, flexShrink: 0 }}>
+                    <Box sx={{ position: "relative", mr: 1.5, flexShrink: 0 }}>
                       <Avatar
                         src={activePartnerInfo?.profileImage || undefined}
                         sx={{
-                          width: { xs: 44, md: 56 },
-                          height: { xs: 44, md: 56 },
-                          borderRadius: "16px",
+                          width: { xs: 40, md: 50 },
+                          height: { xs: 40, md: 50 },
+                          borderRadius: "14px",
                           bgcolor: "#4f46e5",
                           fontWeight: 700,
-                          fontSize: "1.25rem",
-                          boxShadow: "0 10px 20px -5px rgba(238, 242, 255, 1)",
+                          fontSize: "1.1rem",
                         }}
                       >
                         {activePartnerInfo?.name?.charAt(0) || "U"}
@@ -1740,8 +1730,8 @@ export const ChatPage: React.FC = () => {
                           position: "absolute",
                           bottom: -2,
                           right: -2,
-                          width: 16,
-                          height: 16,
+                          width: 12,
+                          height: 12,
                           borderRadius: "50%",
                           bgcolor: presence.isOnline ? "#10b981" : "#94a3b8",
                           border: "2px solid #ffffff",
@@ -1751,13 +1741,19 @@ export const ChatPage: React.FC = () => {
                   );
                 })()}
 
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="h6" fontWeight={700} color="#0f172a" sx={{ fontSize: { xs: "1rem", md: "1.125rem" } }}>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography
+                    variant="h6"
+                    fontWeight={700}
+                    color="#0f172a"
+                    noWrap
+                    sx={{ fontSize: { xs: "0.95rem", md: "1.1rem" }, lineHeight: 1.2 }}
+                  >
                     {activePartnerInfo?.name}
                   </Typography>
 
                   {partnerTyping ? (
-                    <Typography variant="caption" color="#4f46e5" fontStyle="italic" fontWeight={600}>
+                    <Typography variant="caption" color="#4f46e5" fontStyle="italic" fontWeight={600} sx={{ fontSize: "11px" }}>
                       typing...
                     </Typography>
                   ) : (() => {
@@ -1765,19 +1761,19 @@ export const ChatPage: React.FC = () => {
                     const presence = getPartnerPresence(partnerId);
                     if (presence.isOnline) {
                       return (
-                        <Typography variant="caption" fontWeight={700} color="#10b981" sx={{ fontSize: "10px", letterSpacing: "0.05em", display: "block" }}>
-                          ONLINE
+                        <Typography variant="caption" fontWeight={700} color="#10b981" sx={{ fontSize: "11px", display: "block" }}>
+                          Online
                         </Typography>
                       );
                     } else if (presence.lastSeen) {
                       return (
-                        <Typography variant="caption" fontWeight={500} color="#94a3b8" sx={{ fontSize: "10px", display: "block" }}>
+                        <Typography variant="caption" fontWeight={500} color="#94a3b8" sx={{ fontSize: "11px", display: "block" }} noWrap>
                           Last seen {formatSingleTime(presence.lastSeen, timeFormat)}
                         </Typography>
                       );
                     } else {
                       return (
-                        <Typography variant="caption" fontWeight={500} color="#cbd5e1" sx={{ fontSize: "10px", display: "block" }}>
+                        <Typography variant="caption" fontWeight={500} color="#94a3b8" sx={{ fontSize: "11px", display: "block" }}>
                           Offline
                         </Typography>
                       );
@@ -1785,15 +1781,13 @@ export const ChatPage: React.FC = () => {
                   })()}
                 </Box>
 
-                <Stack direction="row" alignItems="center" spacing={0.5}>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => handleOpenInfoModal(getPartnerId(selectedRoom), e)}
-                    sx={{ p: 1, color: "#94a3b8", "&:hover": { bgcolor: "#f1f5f9", color: "#334155" } }}
-                  >
-                    <InfoIcon sx={{ fontSize: 20 }} />
-                  </IconButton>
-                </Stack>
+                <IconButton
+                  size="small"
+                  onClick={(e) => handleOpenInfoModal(getPartnerId(selectedRoom), e)}
+                  sx={{ p: 1, color: "#94a3b8", "&:hover": { bgcolor: "#f1f5f9", color: "#334155" } }}
+                >
+                  <InfoIcon sx={{ fontSize: 20 }} />
+                </IconButton>
               </Box>
 
               {/* Message Viewport */}
@@ -1802,11 +1796,12 @@ export const ChatPage: React.FC = () => {
                 onScroll={handleViewportScroll}
                 sx={{
                   flex: 1,
+                  minHeight: 0,
                   overflowY: "auto",
-                  p: { xs: 2, md: 5 },
+                  p: { xs: 1.5, md: 4 },
                   display: "flex",
                   flexDirection: "column",
-                  gap: 2.5,
+                  gap: 2,
                   "&::-webkit-scrollbar": { width: "5px" },
                   "&::-webkit-scrollbar-track": { background: "transparent" },
                   "&::-webkit-scrollbar-thumb": { background: "#e2e8f0", borderRadius: "10px" },
@@ -2158,14 +2153,25 @@ export const ChatPage: React.FC = () => {
               </Box>
 
               {/* Quick Conversation Starter Chips */}
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ px: { xs: 2, md: 5 }, py: 1.25, bgcolor: "#ffffff", borderTop: "1px solid #f1f5f9", overflowX: "auto" }}>
-                <Typography variant="caption" color="#94a3b8" fontWeight={700} sx={{ fontSize: "11px", whiteSpace: "nowrap", mr: 0.5 }}>
-                  Quick Start:
-                </Typography>
-                {["👋 Hi!", "Hello! Glad to connect.", "Good day!", "Can we discuss student progress?"].map((chipText) => (
+              <Stack
+                direction="row"
+                spacing={0.75}
+                alignItems="center"
+                sx={{
+                  px: { xs: 1.5, md: 3 },
+                  py: 0.75,
+                  bgcolor: "#ffffff",
+                  borderTop: "1px solid #f1f5f9",
+                  overflowX: "auto",
+                  flexShrink: 0,
+                  "&::-webkit-scrollbar": { display: "none" },
+                }}
+              >
+                {["👋 Hi!", "Hello! Glad to connect.", "Good day!", "Can we discuss progress?"].map((chipText) => (
                   <Chip
                     key={chipText}
                     label={chipText}
+                    size="small"
                     clickable
                     onClick={() => setInputText(chipText)}
                     sx={{
@@ -2174,6 +2180,8 @@ export const ChatPage: React.FC = () => {
                       fontWeight: 600,
                       fontSize: "12px",
                       border: "1px solid #e2e8f0",
+                      flexShrink: 0,
+                      height: 28,
                       "&:hover": { bgcolor: "#e0e7ff", color: "#3730a3", borderColor: "#c7d2fe" },
                     }}
                   />
@@ -2185,13 +2193,16 @@ export const ChatPage: React.FC = () => {
                 component="form"
                 onSubmit={handleSendMessage}
                 sx={{
-                  px: { xs: 2, md: 5 },
-                  py: { xs: 2, md: 3 },
+                  px: { xs: 1, sm: 2, md: 3 },
+                  py: { xs: 1, md: 1.75 },
                   bgcolor: "#ffffff",
                   borderTop: "1px solid #e2e8f0",
                   display: "flex",
                   alignItems: "center",
-                  gap: 1.5,
+                  gap: { xs: 0.75, sm: 1.25 },
+                  flexShrink: 0,
+                  width: "100%",
+                  boxSizing: "border-box",
                 }}
               >
                 <input
@@ -2204,31 +2215,58 @@ export const ChatPage: React.FC = () => {
                 <IconButton
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploadingFile}
+                  size="small"
                   sx={{
-                    p: 1.25,
-                    color: "#94a3b8",
-                    borderRadius: "16px",
-                    transition: "all 0.2s ease",
+                    p: 0.75,
+                    color: "#64748b",
+                    flexShrink: 0,
+                    borderRadius: "10px",
                     "&:hover": { color: "#4f46e5", bgcolor: "#e0e7ff" },
                   }}
                 >
-                  {uploadingFile ? <CircularProgress size={20} sx={{ color: "#4f46e5" }} /> : <AttachFileIcon sx={{ fontSize: 22 }} />}
+                  {uploadingFile ? <CircularProgress size={18} sx={{ color: "#4f46e5" }} /> : <AttachFileIcon sx={{ fontSize: 22 }} />}
                 </IconButton>
 
-                <Box sx={{ flex: 1, display: "flex", alignItems: "center", bgcolor: "#f8fafc", borderRadius: "9999px", px: 2, border: "1px solid #e2e8f0" }}>
+                <Box
+                  sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    bgcolor: "#f1f5f9",
+                    borderRadius: "24px",
+                    px: 1.75,
+                    border: "1px solid #e2e8f0",
+                    transition: "all 0.15s ease",
+                    "&:focus-within": {
+                      borderColor: "#818cf8",
+                      bgcolor: "#ffffff",
+                    },
+                  }}
+                >
                   <TextField
                     fullWidth
                     variant="standard"
-                    placeholder="Type a secure message..."
+                    placeholder="Type a message..."
                     value={inputText}
                     onChange={(e) => handleInputChange(e.target.value)}
                     InputProps={{
                       disableUnderline: true,
-                      sx: { py: 1, fontSize: "15px" },
+                      sx: { py: 0.75, fontSize: { xs: "14px", sm: "15px" } },
                     }}
                   />
-                  <IconButton size="small" sx={{ color: "#94a3b8" }}>
-                    <EmojiIcon fontSize="small" />
+                  <IconButton
+                    size="small"
+                    onClick={(e) => setEmojiAnchorEl(e.currentTarget)}
+                    sx={{
+                      color: Boolean(emojiAnchorEl) ? "#4f46e5" : "#94a3b8",
+                      p: 0.5,
+                      flexShrink: 0,
+                      transition: "color 0.15s ease",
+                      "&:hover": { color: "#4f46e5" },
+                    }}
+                  >
+                    <EmojiIcon sx={{ fontSize: 19 }} />
                   </IconButton>
                 </Box>
 
@@ -2236,21 +2274,33 @@ export const ChatPage: React.FC = () => {
                   type="submit"
                   disabled={!inputText.trim()}
                   sx={{
-                    width: 44,
-                    height: 44,
+                    width: 38,
+                    height: 38,
+                    minWidth: 38,
+                    flexShrink: 0,
                     bgcolor: "#4f46e5",
                     color: "#ffffff",
                     borderRadius: "50%",
-                    boxShadow: "0 10px 15px -3px rgba(199, 210, 254, 1)",
-                    transition: "all 0.2s ease",
-                    "&:hover": { bgcolor: "#4338ca", transform: "scale(1.05)" },
-                    "&:active": { transform: "scale(0.95)" },
-                    "&.Mui-disabled": { bgcolor: "#e2e8f0", color: "#94a3b8", boxShadow: "none" },
+                    boxShadow: "0 2px 8px rgba(79, 70, 229, 0.25)",
+                    transition: "all 0.15s ease",
+                    "&:hover": { bgcolor: "#4338ca" },
+                    "&:active": { transform: "scale(0.92)" },
+                    "&.Mui-disabled": { bgcolor: "#f1f5f9", color: "#cbd5e1", boxShadow: "none" },
                   }}
                 >
-                  <SendIcon sx={{ fontSize: 18, ml: 0.25 }} />
+                  <SendIcon sx={{ fontSize: 16, ml: 0.25 }} />
                 </IconButton>
               </Box>
+
+              {/* Emoji Picker Popover */}
+              <EmojiPickerPopover
+                anchorEl={emojiAnchorEl}
+                open={Boolean(emojiAnchorEl)}
+                onClose={() => setEmojiAnchorEl(null)}
+                onSelectEmoji={(emoji) => {
+                  setInputText((prev) => prev + emoji);
+                }}
+              />
             </>
           ) : (
             <Box

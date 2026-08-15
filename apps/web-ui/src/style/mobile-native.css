@@ -87,6 +87,16 @@
   overscroll-behavior-y: contain;
 }
 
+.mobile-content-chat {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0 0 calc(var(--mobile-bottom-nav-height, 60px) + var(--safe-area-bottom, 0px)) 0;
+  box-sizing: border-box;
+}
+
 /* Native Tap & Active Scale Effects */
 .touch-active {
   transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.12s ease;
