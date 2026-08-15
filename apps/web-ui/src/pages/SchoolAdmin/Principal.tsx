@@ -23,7 +23,6 @@ import {
     Phone as PhoneIcon,
     Badge as BadgeIcon,
     School as SchoolIcon,
-    PersonAdd as PersonAddIcon,
     CheckCircle as ActiveIcon,
     Cancel as InactiveIcon,
 } from '@mui/icons-material';

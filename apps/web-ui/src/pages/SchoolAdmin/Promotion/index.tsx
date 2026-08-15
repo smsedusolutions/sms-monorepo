@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 import { Box, Container, Paper, Tab, Tabs, Typography, CircularProgress } from "@mui/material";
 import SchoolIcon from "@mui/icons-material/School";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
