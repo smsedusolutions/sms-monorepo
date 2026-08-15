@@ -5,8 +5,13 @@ import {
   Typography,
   CircularProgress,
   Paper,
+  Pagination,
 } from '@mui/material';
 import { customTableStyles } from '../../style/dataTableTheme';
+import { useIsMobile } from '../../hooks/useIsMobile';
+import MobileCardList from '../mobile/data/MobileCardList';
+import MobileCardItem from '../mobile/data/MobileCardItem';
+import type { MobileCardMeta } from '../mobile/data/MobileCardItem';
 
 export interface AppTableColumn<T> {
   name: string;
@@ -38,7 +43,7 @@ export interface AppTableProps<T> {
   onChangeRowsPerPage?: (currentRowsPerPage: number, currentPage: number) => void;
 }
 
-export const AppTable = <T,>({
+export const AppTable = <T extends Record<string, any>>({
   title,
   columns,
   data,
@@ -55,6 +60,9 @@ export const AppTable = <T,>({
   onChangePage,
   onChangeRowsPerPage,
 }: AppTableProps<T>) => {
+  const isMobile = useIsMobile();
+  const [currentPage, setCurrentPage] = React.useState(1);
+
   const transformedColumns: TableColumn<T>[] = columns.map((col) => ({
     name: col.name,
     selector: col.selector as any,
@@ -82,6 +90,111 @@ export const AppTable = <T,>({
     </Box>
   );
 
+  // Mobile Native Rendering
+  if (isMobile) {
+    const totalItems = paginationServer ? paginationTotalRows || data.length : data.length;
+    const totalPages = Math.ceil(totalItems / paginationPerPage) || 1;
+
+    const displayedData = paginationServer
+      ? data
+      : pagination
+      ? data.slice((currentPage - 1) * paginationPerPage, currentPage * paginationPerPage)
+      : data;
+
+    const handlePageChange = (_: any, page: number) => {
+      setCurrentPage(page);
+      if (onChangePage) {
+        onChangePage(page);
+      }
+    };
+
+    return (
+      <Box sx={{ width: '100%' }}>
+        {/* Mobile Header */}
+        {(title || actions) && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+            {title && (
+              <Typography sx={{ fontWeight: 800, fontSize: '1.2rem', color: '#0f172a', fontFamily: '"Outfit", sans-serif' }}>
+                {title}
+              </Typography>
+            )}
+            {actions && <Box sx={{ display: 'flex', gap: 1 }}>{actions}</Box>}
+          </Box>
+        )}
+
+        {/* Mobile Card List */}
+        <MobileCardList
+          isLoading={isLoading}
+          emptyTitle="No Data Found"
+          emptyMessage={emptyMessage}
+          totalCount={totalItems}
+          itemCount={displayedData.length}
+        >
+          {displayedData.map((row, index) => {
+            const firstCol = columns[0];
+            const secondCol = columns.length > 1 ? columns[1] : undefined;
+
+            const cardTitle = firstCol?.cell
+              ? firstCol.cell(row)
+              : firstCol?.selector
+              ? String(firstCol.selector(row) || '')
+              : 'Item';
+
+            const cardSubtitle = secondCol?.cell
+              ? secondCol.cell(row)
+              : secondCol?.selector
+              ? String(secondCol.selector(row) || '')
+              : undefined;
+
+            const metaItems: MobileCardMeta[] = [];
+            columns.slice(2).forEach((col) => {
+              if (col.name && col.name.toLowerCase() !== 'action' && col.name.toLowerCase() !== 'actions') {
+                const val = col.cell ? col.cell(row) : col.selector ? col.selector(row) : null;
+                if (val !== null && val !== undefined && val !== '') {
+                  metaItems.push({
+                    label: col.name,
+                    value: val,
+                  });
+                }
+              }
+            });
+
+            const actionCol = columns.find(
+              (c) => c.name && (c.name.toLowerCase() === 'action' || c.name.toLowerCase() === 'actions')
+            );
+            const rightAction = actionCol?.cell ? actionCol.cell(row) : undefined;
+
+            return (
+              <MobileCardItem
+                key={row.id || row._id || index}
+                title={cardTitle}
+                subtitle={cardSubtitle}
+                metaItems={metaItems}
+                rightAction={rightAction}
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+              />
+            );
+          })}
+        </MobileCardList>
+
+        {/* Mobile Pagination */}
+        {pagination && totalPages > 1 && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2.5, mb: 2 }}>
+            <Pagination
+              count={totalPages}
+              page={currentPage}
+              onChange={handlePageChange}
+              color="primary"
+              shape="rounded"
+              size="medium"
+            />
+          </Box>
+        )}
+      </Box>
+    );
+  }
+
+  // Desktop Rendering
   return (
     <Box sx={{ width: '100%' }}>
       {(title || actions) && (
@@ -130,3 +243,4 @@ export const AppTable = <T,>({
     </Box>
   );
 };
+

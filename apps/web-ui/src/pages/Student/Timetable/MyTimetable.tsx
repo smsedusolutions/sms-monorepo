@@ -26,6 +26,10 @@ import autoTable from 'jspdf-autotable';
 import { useGetClassTimetable, useGetActiveConfig, useGetSubstitutesForDate } from '../../../queries/Timetable';
 import TokenService from '../../../queries/token/tokenService';
 import type { TimetableEntry } from '../../../types/timetable.types';
+import { useIsMobile } from '../../../hooks/useIsMobile';
+import MobileSegmentedTabs from '../../../components/mobile/navigation/MobileSegmentedTabs';
+import MobileCardItem from '../../../components/mobile/data/MobileCardItem';
+import MobileCardList from '../../../components/mobile/data/MobileCardList';
 
 type ViewMode = 'table' | 'list';
 
@@ -35,6 +39,7 @@ interface MyTimetableProps {
 }
 
 const MyTimetable = ({ studentClassId, studentSectionId }: MyTimetableProps = {}) => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
     // Get class and section from props (for parents) or student token (for students)
     const user = TokenService.getUser();
@@ -42,6 +47,11 @@ const MyTimetable = ({ studentClassId, studentSectionId }: MyTimetableProps = {}
     const sectionId = studentSectionId || user?.section || '';
 
     const [viewMode, setViewMode] = useState<ViewMode>('table');
+
+    // Get today's day
+    const today = new Date();
+    const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const [selectedMobileDay, setSelectedMobileDay] = useState<string>(todayDayName);
 
     // Get today's date for substitute fetching
     const todayDate = new Date().toISOString().split('T')[0];
@@ -79,10 +89,6 @@ const MyTimetable = ({ studentClassId, studentSectionId }: MyTimetableProps = {}
         });
         return map;
     }, [substitutes, classId, sectionId]);
-
-    // Get today's day
-    const today = new Date();
-    const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
 
     // Today's schedule with substitutes
     const todaySchedule = useMemo(() => {
@@ -206,6 +212,113 @@ const MyTimetable = ({ studentClassId, studentSectionId }: MyTimetableProps = {}
         return (
             <Box sx={{ p: 3 }}>
                 <Alert severity="warning">Class information not found. Please contact your administrator.</Alert>
+            </Box>
+        );
+    }
+
+    // Mobile Day Tab Options
+    const mobileDayOptions = (config?.workingDays || []).map((day) => ({
+        id: day,
+        label: day.substring(0, 3).toUpperCase(),
+        count: entries.filter((e) => e.dayOfWeek === day).length,
+    }));
+
+    const currentMobileDaySchedule = entries
+        .filter((e: TimetableEntry) => e.dayOfWeek === selectedMobileDay)
+        .sort((a: TimetableEntry, b: TimetableEntry) => a.periodNumber - b.periodNumber);
+
+    if (isMobile) {
+        return (
+            <Box sx={{ width: '100%' }}>
+                {/* Mobile Title & Action */}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography sx={{ fontWeight: 800, fontSize: '1.25rem', fontFamily: '"Outfit", sans-serif', color: '#0f172a' }}>
+                        Class Schedule
+                    </Typography>
+                    <Button
+                        variant="outlined"
+                        color="success"
+                        startIcon={<PdfIcon sx={{ fontSize: 18 }} />}
+                        onClick={handleExportPdf}
+                        size="small"
+                        sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, fontSize: '0.78rem' }}
+                    >
+                        PDF
+                    </Button>
+                </Box>
+
+                {/* Day Segmented Tabs */}
+                {mobileDayOptions.length > 0 && (
+                    <MobileSegmentedTabs
+                        options={mobileDayOptions}
+                        activeId={selectedMobileDay}
+                        onChange={(id) => setSelectedMobileDay(id)}
+                    />
+                )}
+
+                {/* Today Badge if viewing today */}
+                {selectedMobileDay === todayDayName && (
+                    <Box sx={{ mb: 1.5, px: 0.5 }}>
+                        <Chip
+                            icon={<TodayIcon sx={{ fontSize: 16 }} />}
+                            label="Today's Active Classes"
+                            size="small"
+                            color="success"
+                            variant="filled"
+                            sx={{ fontWeight: 700, borderRadius: '8px' }}
+                        />
+                    </Box>
+                )}
+
+                {/* Period Cards Timeline */}
+                <MobileCardList
+                    emptyTitle="No Classes Scheduled"
+                    emptyMessage={`There are no classes scheduled for ${selectedMobileDay.toUpperCase()}.`}
+                    itemCount={currentMobileDaySchedule.length}
+                >
+                    {regularPeriods.map((period) => {
+                        const entry = entryMap[`${selectedMobileDay}-${period.periodNumber}`];
+                        const substitute = substituteMap[`${selectedMobileDay}-${period.periodNumber}`];
+                        const hasSubstitute = !!substitute && selectedMobileDay === todayDayName;
+
+                        if (!entry) {
+                            return (
+                                <MobileCardItem
+                                    key={period.periodNumber}
+                                    title="Free Period"
+                                    subtitle={`${period.name} (${period.startTime} - ${period.endTime})`}
+                                    avatarText={`P${period.periodNumber}`}
+                                    avatarBg="#94a3b8"
+                                    badge={{ label: 'Free', color: 'default' }}
+                                />
+                            );
+                        }
+
+                        const subjectName = entry.subject?.name || entry.subjectId;
+                        const teacherName = hasSubstitute
+                            ? `Sub: ${substitute.substituteTeacher?.name || 'Substitute'}`
+                            : entry.teacher?.name || 'Instructor TBA';
+
+                        return (
+                            <MobileCardItem
+                                key={entry.entryId || period.periodNumber}
+                                title={subjectName}
+                                subtitle={teacherName}
+                                avatarText={`P${entry.periodNumber}`}
+                                avatarBg="#4f46e5"
+                                highlightColor={hasSubstitute ? '#f59e0b' : '#4f46e5'}
+                                badges={[
+                                    { label: `${period.startTime} - ${period.endTime}`, color: 'primary', variant: 'outlined' },
+                                    ...(hasSubstitute ? [{ label: 'Substitute', color: 'warning' as const }] : []),
+                                ]}
+                                metaItems={[
+                                    { label: 'Period', value: period.name },
+                                    { label: 'Room', value: entry.roomId || 'Main Class' },
+                                ]}
+                            />
+                        );
+                    })}
+                </MobileCardList>
             </Box>
         );
     }

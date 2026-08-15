@@ -7,6 +7,7 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
+    IconButton,
     Typography,
     Table,
     TableBody,
@@ -15,15 +16,19 @@ import {
     TableHead,
     TableRow,
     Paper,
+    Stack,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import TokenService from "../../../queries/token/tokenService";
 import { useGetPromotionLogs, useRollbackPromotion } from "../../../queries/Promotion";
 import { useNotificationStore } from "../../../stores/notificationStore";
 import DataTable from "../../../components/Table/DataTable";
 import type { Column } from "../../../components/Table/DataTable";
 import ConfirmationDialog from "../../../components/Dialogs/ConfirmationDialog";
+import { useIsMobile } from "../../../hooks/useIsMobile";
 
 const PromotionLogs = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || "";
     const { showNotification } = useNotificationStore();
 
@@ -67,7 +72,7 @@ const PromotionLogs = () => {
         {
             id: "createdAt",
             label: "Executed Date",
-            format: (value: any) => new Date(value).toLocaleString(),
+            format: (value: any) => new Date(value).toLocaleDateString(),
         },
         {
             id: "promotionType",
@@ -89,7 +94,7 @@ const PromotionLogs = () => {
         },
         {
             id: "students",
-            label: "Students Affected",
+            label: "Students",
             format: (value: any[]) => value?.length || 0,
         },
         {
@@ -104,9 +109,10 @@ const PromotionLogs = () => {
                         : "warning";
                 return (
                     <Chip
-                        label={value.toUpperCase().replace("_", " ")}
+                        label={value.replace("_", " ")}
                         color={color}
                         size="small"
+                        sx={{ textTransform: 'capitalize', fontWeight: 600, height: 22, fontSize: '0.75rem' }}
                     />
                 );
             },
@@ -120,6 +126,7 @@ const PromotionLogs = () => {
                         size="small"
                         variant="outlined"
                         onClick={() => handleViewDetails(row)}
+                        sx={{ textTransform: 'none', fontSize: '0.75rem', py: 0.25, borderRadius: 1 }}
                     >
                         Details
                     </Button>
@@ -130,6 +137,7 @@ const PromotionLogs = () => {
                             color="error"
                             disabled={rollbackMutation.isPending}
                             onClick={() => handleRollbackClick(row._id)}
+                            sx={{ textTransform: 'none', fontSize: '0.75rem', py: 0.25, borderRadius: 1 }}
                         >
                             Rollback
                         </Button>
@@ -141,12 +149,14 @@ const PromotionLogs = () => {
 
     return (
         <Box>
-            <Typography variant="h6" gutterBottom fontWeight="medium" sx={{ mb: 3 }}>
-                Promotion History & Logs
-            </Typography>
+            {!isMobile && (
+                <Typography variant="h6" fontWeight={700} color="#0f172a" sx={{ mb: 2 }}>
+                    Promotion History & Logs
+                </Typography>
+            )}
 
             <DataTable
-                title="Year-End logs"
+                title="Year-End Logs"
                 columns={columns}
                 data={logs}
                 isLoading={isLoading}
@@ -159,71 +169,108 @@ const PromotionLogs = () => {
                 onClose={() => setDetailsOpen(false)}
                 maxWidth="md"
                 fullWidth
+                fullScreen={isMobile}
             >
-                <DialogTitle>Promotion Action Log Details</DialogTitle>
-                <DialogContent>
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: 700 }}>
+                    Promotion Action Details
+                    <IconButton size="small" onClick={() => setDetailsOpen(false)}>
+                        <CloseIcon fontSize="small" />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent dividers>
                     {selectedLog && (
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
-                            <Typography variant="body2" color="text.secondary">
-                                <strong>Log ID:</strong> {selectedLog._id}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                <strong>Date:</strong>{" "}
-                                {new Date(selectedLog.createdAt).toLocaleString()}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                <strong>Notes:</strong> {selectedLog.notes || "None"}
-                            </Typography>
+                        <Stack spacing={2}>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+                                <Typography variant="body2" color="text.secondary">
+                                    <strong>Date:</strong> {new Date(selectedLog.createdAt).toLocaleString()}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    <strong>Academic Year:</strong> {selectedLog.academicYear}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    <strong>Notes:</strong> {selectedLog.notes || "None"}
+                                </Typography>
+                            </Box>
 
                             {selectedLog.students && selectedLog.students.length > 0 ? (
-                                <TableContainer component={Paper} sx={{ mt: 2, maxHeight: 400 }}>
-                                    <Table stickyHeader size="small">
-                                        <TableHead>
-                                            <TableRow>
-                                                <TableCell>Student ID</TableCell>
-                                                <TableCell>From Class</TableCell>
-                                                <TableCell>From Section</TableCell>
-                                                <TableCell>To Class</TableCell>
-                                                <TableCell>To Section</TableCell>
-                                                <TableCell>Result</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {selectedLog.students.map((st: any, idx: number) => (
-                                                <TableRow key={idx}>
-                                                    <TableCell>{st.studentId}</TableCell>
-                                                    <TableCell>{st.fromClass}</TableCell>
-                                                    <TableCell>{st.fromSection || "-"}</TableCell>
-                                                    <TableCell>{st.toClass}</TableCell>
-                                                    <TableCell>{st.toSection || "-"}</TableCell>
-                                                    <TableCell>
-                                                        <Chip
-                                                            label={st.status.toUpperCase()}
-                                                            size="small"
-                                                            color={
-                                                                st.status === "promoted"
-                                                                    ? "success"
-                                                                    : st.status === "repeated"
-                                                                    ? "warning"
-                                                                    : "info"
-                                                            }
-                                                        />
-                                                    </TableCell>
+                                isMobile ? (
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                        {selectedLog.students.map((st: any, idx: number) => (
+                                            <Paper key={idx} variant="outlined" sx={{ p: 1.25, borderRadius: 1.5 }}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                                                    <Typography variant="caption" fontWeight={700}>
+                                                        ID: {st.studentId}
+                                                    </Typography>
+                                                    <Chip
+                                                        label={st.status}
+                                                        size="small"
+                                                        color={
+                                                            st.status === "promoted"
+                                                                ? "success"
+                                                                : st.status === "repeated"
+                                                                ? "warning"
+                                                                : "default"
+                                                        }
+                                                        sx={{ textTransform: 'capitalize', height: 20, fontSize: '0.68rem', fontWeight: 600 }}
+                                                    />
+                                                </Box>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {st.fromClass} {st.fromSection ? `(${st.fromSection})` : ''} → {st.toClass} {st.toSection ? `(${st.toSection})` : ''}
+                                                </Typography>
+                                            </Paper>
+                                        ))}
+                                    </Box>
+                                ) : (
+                                    <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1.5, maxHeight: 400 }}>
+                                        <Table stickyHeader size="small">
+                                            <TableHead>
+                                                <TableRow>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Student ID</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>From Class</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>From Section</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>To Class</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>To Section</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Result</TableCell>
                                                 </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
+                                            </TableHead>
+                                            <TableBody>
+                                                {selectedLog.students.map((st: any, idx: number) => (
+                                                    <TableRow key={idx}>
+                                                        <TableCell>{st.studentId}</TableCell>
+                                                        <TableCell>{st.fromClass}</TableCell>
+                                                        <TableCell>{st.fromSection || "-"}</TableCell>
+                                                        <TableCell>{st.toClass}</TableCell>
+                                                        <TableCell>{st.toSection || "-"}</TableCell>
+                                                        <TableCell>
+                                                            <Chip
+                                                                label={st.status}
+                                                                size="small"
+                                                                color={
+                                                                    st.status === "promoted"
+                                                                        ? "success"
+                                                                        : st.status === "repeated"
+                                                                        ? "warning"
+                                                                        : "default"
+                                                                }
+                                                                sx={{ textTransform: 'capitalize', height: 20, fontSize: '0.68rem', fontWeight: 600 }}
+                                                            />
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                )
                             ) : (
-                                <Typography variant="body2" sx={{ mt: 2 }}>
+                                <Typography variant="body2" color="text.secondary">
                                     No students affected directly by this log (e.g., Year Archive event).
                                 </Typography>
                             )}
-                        </Box>
+                        </Stack>
                     )}
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={() => setDetailsOpen(false)} variant="contained">
+                    <Button onClick={() => setDetailsOpen(false)} variant="contained" sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 600 }}>
                         Close
                     </Button>
                 </DialogActions>

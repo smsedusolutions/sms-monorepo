@@ -1,6 +1,8 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import TokenService from "../queries/token/tokenService";
 import DashboardLayout from "../components/Dashboard/DashboardLayout";
+import MobileAppLayout from "../components/mobile/layout/MobileAppLayout";
+import { useIsMobile } from "../hooks/useIsMobile";
 import {
   useGetSuperAdminMenus,
   useGetSchoolAdminMenus,
@@ -14,6 +16,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
+  const isMobile = useIsMobile();
   const token = TokenService.getToken();
 
   if (!token) {
@@ -119,6 +122,14 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
 
   if (hasMenuData && isRoleRoute && !isAllowed) {
     return <Navigate to="/not-found" replace />;
+  }
+
+  if (isMobile) {
+    return (
+      <MobileAppLayout>
+        <Outlet />
+      </MobileAppLayout>
+    );
   }
 
   return (

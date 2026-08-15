@@ -16,6 +16,7 @@ import {
 import { Close as CloseIcon } from '@mui/icons-material';
 import { useCreateParent, useUpdateParent } from '../../queries/Parent';
 import { useNotification } from '../../hooks/useNotification';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import { searchStudentsApi } from '../../queries/Student';
 import type { CreateParentPayload, Parent, Student } from '../../types';
 import { ImageUpload } from '../ImageUpload';
@@ -235,6 +236,7 @@ const ParentDialog: React.FC<ParentDialogProps> = ({ open, onClose, schoolId, ed
         onClose();
     };
 
+    const isMobile = useIsMobile();
     const isPending = createMutation.isPending || updateMutation.isPending;
     const isError = createMutation.isError || updateMutation.isError;
     const errorMessage = (createMutation.error as { message?: string })?.message ||
@@ -242,24 +244,46 @@ const ParentDialog: React.FC<ParentDialogProps> = ({ open, onClose, schoolId, ed
         'Operation failed';
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                {isEditMode ? 'Edit Parent Profile' : 'Add New Parent'}
-                <IconButton onClick={handleClose} size="small">
+        <Dialog 
+            open={open} 
+            onClose={handleClose} 
+            maxWidth="md" 
+            fullWidth
+            fullScreen={isMobile}
+            PaperProps={{
+                sx: {
+                    borderRadius: isMobile ? 0 : 3,
+                    maxHeight: isMobile ? '100dvh' : '90vh',
+                }
+            }}
+        >
+            <DialogTitle sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                py: { xs: 1.5, sm: 2 },
+                px: { xs: 2, sm: 3 },
+            }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+                    {isEditMode ? 'Edit Parent Profile' : 'Add New Parent'}
+                </Typography>
+                <IconButton onClick={handleClose} size="small" edge="end">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
 
-            <form onSubmit={handleSubmit}>
-                <DialogContent>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                <DialogContent sx={{ p: { xs: 2, sm: 3 }, overflowY: 'auto' }}>
                     {isError && <Alert severity="error" sx={{ mb: 2 }}>{errorMessage}</Alert>}
 
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+                        <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
                             Personal Details
                         </Typography>
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
                             <AppInput name="firstName" label="First Name" value={formData.firstName}
                                 onChange={handleChange} error={!!errors.firstName} helperText={errors.firstName}
                                 required />
@@ -268,7 +292,7 @@ const ParentDialog: React.FC<ParentDialogProps> = ({ open, onClose, schoolId, ed
                                 required />
                         </Box>
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
                             <AppSelect
                                 label="Relationship to Student"
                                 value={formData.relationship || 'father'}
@@ -294,9 +318,9 @@ const ParentDialog: React.FC<ParentDialogProps> = ({ open, onClose, schoolId, ed
                             error={!!errors.password} helperText={errors.password} required={!isEditMode}
                             labelHint={isEditMode ? 'Leave blank to keep current' : ''} />
 
-                        <Divider sx={{ my: 1 }} />
+                        <Divider sx={{ my: 0.5 }} />
 
-                        <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+                        <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
                             Contact & Occupation
                         </Typography>
 
@@ -306,9 +330,9 @@ const ParentDialog: React.FC<ParentDialogProps> = ({ open, onClose, schoolId, ed
                         <AppInput name="address" label="Residential Address" value={formData.address}
                             onChange={handleChange} multiline rows={2} />
 
-                        <Divider sx={{ my: 1 }} />
+                        <Divider sx={{ my: 0.5 }} />
 
-                        <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+                        <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
                             Student Connectivity
                         </Typography>
 
@@ -362,9 +386,9 @@ const ParentDialog: React.FC<ParentDialogProps> = ({ open, onClose, schoolId, ed
                             )}
                         />
 
-                        <Divider sx={{ my: 1 }} />
+                        <Divider sx={{ my: 0.5 }} />
 
-                        <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+                        <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
                             Status & Identification
                         </Typography>
 
@@ -378,7 +402,7 @@ const ParentDialog: React.FC<ParentDialogProps> = ({ open, onClose, schoolId, ed
                             onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value as 'active' | 'inactive' }))}
                         />
 
-                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mt: 1 }}>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mt: 1 }}>
                             <ImageUpload
                                 folder={IMAGEKIT_FOLDERS.PROFILE_IMAGES}
                                 fileName={isEditMode && editData ? `${editData.parentId}_profile` : `new_parent_profile_${Date.now()}`}
@@ -412,7 +436,19 @@ const ParentDialog: React.FC<ParentDialogProps> = ({ open, onClose, schoolId, ed
                     </Box>
                 </DialogContent>
 
-                <DialogActions sx={{ px: 3, pb: 2 }}>
+                <DialogActions sx={{ 
+                    px: { xs: 2, sm: 3 }, 
+                    py: 2, 
+                    borderTop: '1px solid', 
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
+                    gap: 1.5,
+                    flexDirection: { xs: 'column-reverse', sm: 'row' },
+                    '& > button': {
+                        width: { xs: '100%', sm: 'auto' },
+                        height: 44,
+                    }
+                }}>
                     <AppButton onClick={handleClose} variant="text" color="inherit">Cancel</AppButton>
                     <AppButton type="submit" variant="contained" loading={isPending}>
                         {isEditMode ? 'Update Parent' : 'Create Parent'}

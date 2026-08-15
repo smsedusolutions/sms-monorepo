@@ -53,6 +53,10 @@ import {
 import { useGetActivityLogs, useGetLogStats, useClearLogs } from "../../../queries/ActivityLog";
 import TokenService from "../../../queries/token/tokenService";
 import { useUrlTab } from "../../../hooks/useUrlTab";
+import { useIsMobile } from "../../../hooks/useIsMobile";
+import MobileSegmentedTabs from "../../../components/mobile/navigation/MobileSegmentedTabs";
+import MobileCardList from "../../../components/mobile/data/MobileCardList";
+import MobileCardItem from "../../../components/mobile/data/MobileCardItem";
 import ConfirmationDialog from "../../../components/Dialogs/ConfirmationDialog";
 import { exportToExcel } from "../../../components/ExcelExport";
 import type { ActivityLog, ActivityLogFilters } from "../../../types";
@@ -60,8 +64,9 @@ import NotificationsTab from "./NotificationsTab"; // We'll create this to wrap 
 
 const SchoolAdminNotifications: React.FC = () => {
   const theme = useTheme();
+  const isMobile = useIsMobile();
   const schoolId = TokenService.getSchoolId() || "";
-  const [activeTab, setActiveTab] = useUrlTab(0, ['audit-logs', 'notifications']);
+  const [activeTab, setActiveTab] = useUrlTab(0, ['notifications', 'audit-logs']);
   const [isPurgeDialogOpen, setIsPurgeDialogOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -192,22 +197,37 @@ const SchoolAdminNotifications: React.FC = () => {
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, width: "100%" }}>
       {/* Header Section */}
-      <Box sx={{ mb: 4, display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <Box sx={{ 
+        mb: 3, 
+        display: "flex", 
+        flexDirection: { xs: "column", sm: "row" }, 
+        justifyContent: "space-between", 
+        alignItems: { xs: "stretch", sm: "flex-start" },
+        gap: 2 
+      }}>
         <Box>
-          <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5, color: theme.palette.text.primary }}>
+          <Typography variant="h4" sx={{ 
+            fontWeight: 700, 
+            mb: 0.5, 
+            color: theme.palette.text.primary,
+            fontSize: { xs: "1.35rem", sm: "1.85rem", md: "2.125rem" }
+          }}>
             Admin Control Center
           </Typography>
-          <Typography variant="body1" sx={{ color: theme.palette.text.secondary }}>
+          <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
             Manage system notifications and monitor administrative audit trails
           </Typography>
         </Box>
-        <Box sx={{ display: "flex", gap: 2 }}>
+        <Box sx={{ display: "flex", gap: 1.5, flexShrink: 0, alignSelf: { xs: "flex-start", sm: "center" } }}>
           <Button
             variant="contained"
             startIcon={<RefreshIcon />}
             onClick={() => refetchLogs()}
             sx={{ 
-                borderRadius: 2, 
+                borderRadius: 2.5, 
+                px: 2.5,
+                py: 1,
+                fontWeight: 700,
                 backgroundColor: theme.palette.primary.main,
                 boxShadow: `0 4px 14px 0 ${alpha(theme.palette.primary.main, 0.39)}`,
                 "&:hover": {
@@ -221,47 +241,60 @@ const SchoolAdminNotifications: React.FC = () => {
       </Box>
 
       {/* Navigation Tabs */}
-      <Card sx={{ 
-          mb: 4, 
-          borderRadius: 3, 
-          boxShadow: theme.shadows[2],
-          background: alpha(theme.palette.background.paper, 0.8),
-          backdropFilter: "blur(8px)",
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
-      }}>
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          sx={{
-            px: 2,
-            "& .MuiTab-root": {
-              py: 2,
-              fontWeight: 600,
-              fontSize: "1rem",
-              minWidth: 160,
-              transition: "all 0.2s",
-            },
-            "& .Mui-selected": {
-              color: theme.palette.primary.main,
-            },
-            "& .MuiTabs-indicator": {
-              height: 3,
-              borderRadius: "3px 3px 0 0",
-            },
-          }}
-        >
-          <Tab 
-            icon={<NotificationsIcon sx={{ mr: 1 }} />} 
-            iconPosition="start" 
-            label="System Notifications" 
+      {isMobile ? (
+        <Box sx={{ mb: 3 }}>
+          <MobileSegmentedTabs
+            options={[
+              { id: 'notifications', label: 'Notifications', icon: <NotificationsIcon sx={{ fontSize: 18 }} /> },
+              { id: 'audit-logs', label: 'Activity Logs', icon: <HistoryIcon sx={{ fontSize: 18 }} /> },
+            ]}
+            activeId={activeTab === 0 ? 'notifications' : 'audit-logs'}
+            onChange={(id) => setActiveTab(id === 'notifications' ? 0 : 1)}
           />
-          <Tab 
-            icon={<HistoryIcon sx={{ mr: 1 }} />} 
-            iconPosition="start" 
-            label="Activity Logs" 
-          />
-        </Tabs>
-      </Card>
+        </Box>
+      ) : (
+        <Card sx={{ 
+            mb: 4, 
+            borderRadius: 3, 
+            boxShadow: theme.shadows[2],
+            background: alpha(theme.palette.background.paper, 0.8),
+            backdropFilter: "blur(8px)",
+            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+        }}>
+          <Tabs
+            value={activeTab}
+            onChange={handleTabChange}
+            sx={{
+              px: 2,
+              "& .MuiTab-root": {
+                py: 2,
+                fontWeight: 600,
+                fontSize: "1rem",
+                minWidth: 160,
+                transition: "all 0.2s",
+              },
+              "& .Mui-selected": {
+                color: theme.palette.primary.main,
+              },
+              "& .MuiTabs-indicator": {
+                height: 3,
+                borderRadius: "3px 3px 0 0",
+              },
+            }}
+          >
+            <Tab 
+              icon={<NotificationsIcon sx={{ mr: 1 }} />} 
+              iconPosition="start" 
+              label="System Notifications" 
+            />
+            <Tab 
+              icon={<HistoryIcon sx={{ mr: 1 }} />} 
+              iconPosition="start" 
+              label="Activity Logs" 
+            />
+          </Tabs>
+        </Card>
+      )}
 
       {/* Tab Content */}
       <Box>
@@ -427,117 +460,183 @@ const SchoolAdminNotifications: React.FC = () => {
               </Card>
             </Grid>
 
-            {/* Activity Table */}
+            {/* Activity Table / Mobile List */}
             <Grid size={{ xs: 12 }}>
-              <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: theme.shadows[1] }}>
-                <Table sx={{ minWidth: 650 }}>
-                  <TableHead sx={{ bgcolor: alpha(theme.palette.common.black, 0.02) }}>
-                    <TableRow>
-                      <TableCell sx={{ fontWeight: 700 }}>Timestamp</TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>Actor</TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>Entity</TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
-                      <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {logsLoading ? (
-                      [...Array(5)].map((_, i) => (
-                        <TableRow key={i}>
-                          {[...Array(6)].map((_, j) => (
-                            <TableCell key={j}><Skeleton variant="text" /></TableCell>
-                          ))}
-                        </TableRow>
-                      ))
-                    ) : logsData?.data?.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
-                          <HistoryIcon sx={{ fontSize: 60, color: "text.disabled", mb: 2 }} />
-                          <Typography variant="h6" color="text.secondary">No activity logs found</Typography>
-                          <Typography variant="body2" color="text.disabled">Try adjusting your filters or search terms</Typography>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      (logsData?.data as ActivityLog[])?.map((log: ActivityLog) => (
-                        <TableRow key={log.logId} hover sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
-                          <TableCell sx={{ whiteSpace: "nowrap" }}>
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(log.createdAt).split(",")[0]}</Typography>
-                            <Typography variant="caption" color="text.secondary">{formatDate(log.createdAt).split(",")[1]}</Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                              <Box sx={{ 
-                                  width: 32, height: 32, borderRadius: "10px", 
-                                  bgcolor: alpha(theme.palette.primary.main, 0.08),
-                                  display: "flex", alignItems: "center", justifyContent: "center" 
-                              }}>
-                                <PersonIcon sx={{ fontSize: 18, color: theme.palette.primary.main }} />
-                              </Box>
-                              <Box>
-                                <Typography variant="body2" sx={{ fontWeight: 700 }}>{log.actorName}</Typography>
-                                <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600, fontSize: "0.65rem", textTransform: "uppercase" }}>
-                                  {log.actorRole.replace("sch_", "")}
-                                </Typography>
-                              </Box>
-                            </Box>
-                          </TableCell>
-                          <TableCell>
+              {isMobile ? (
+                <MobileCardList
+                  isLoading={logsLoading}
+                  emptyTitle="No Activity Logs Found"
+                  emptyMessage="Try adjusting your filters or search terms"
+                  totalCount={logsData?.pagination?.total || logsData?.pagination?.totalRecords || (logsData?.data as any[])?.length || 0}
+                  itemCount={(logsData?.data as any[])?.length || 0}
+                >
+                  {(logsData?.data as ActivityLog[])?.map((log: ActivityLog) => {
+                    const actionCol = getActionColor(log.action);
+                    return (
+                      <MobileCardItem
+                        key={log.logId}
+                        title={
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0f172a" }}>
+                              {log.actorName}
+                            </Typography>
                             <Chip
-                              label={log.action}
+                              label={log.actorRole.replace("sch_", "").toUpperCase()}
                               size="small"
-                              color={getActionColor(log.action) as any}
-                              variant="outlined"
-                              sx={{ 
-                                  fontWeight: 800, 
-                                  fontSize: "0.65rem", 
-                                  height: 24, 
-                                  borderRadius: "6px",
-                                  bgcolor: alpha(theme.palette[getActionColor(log.action) as "success" | "info" | "error" | "secondary"]?.main || theme.palette.grey[500], 0.1)
+                              sx={{
+                                height: 18,
+                                fontSize: "0.6rem",
+                                fontWeight: 700,
+                                bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                color: theme.palette.primary.main,
                               }}
                             />
-                          </TableCell>
-                          <TableCell>
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>{log.entity}</Typography>
-                            {log.entityLabel && (
-                              <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                                {log.entityLabel}
-                              </Typography>
-                            )}
-                          </TableCell>
-                          <TableCell sx={{ maxWidth: 300 }}>
-                            <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                              {log.description}
-                            </Typography>
-                          </TableCell>
-                          <TableCell align="right">
-                            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
-                              <Tooltip title="View Details">
-                                <IconButton 
-                                  size="small" 
-                                  sx={{ color: "primary.main" }}
-                                  onClick={() => {
-                                    setSelectedLog(log);
-                                    setIsDetailsOpen(true);
-                                  }}
-                                >
-                                  <ViewIcon fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                              <IconButton 
-                                size="small"
-                                onClick={(e) => handleMenuOpen(e, log)}
-                              >
-                                <MoreIcon fontSize="small" />
-                              </IconButton>
-                            </Box>
+                          </Box>
+                        }
+                        subtitle={`${log.entity}${log.entityLabel ? ` • ${log.entityLabel}` : ''}`}
+                        badge={{
+                          label: log.action,
+                          color: actionCol === 'success' ? 'success' : actionCol === 'error' ? 'error' : actionCol === 'info' ? 'info' : 'default',
+                        }}
+                        metaItems={[
+                          { label: 'Date/Time', value: formatDate(log.createdAt) },
+                          { label: 'Details', value: log.description },
+                        ]}
+                        rightAction={
+                          <Box sx={{ display: "flex", gap: 0.5 }}>
+                            <IconButton 
+                              size="small" 
+                              sx={{ color: "primary.main" }}
+                              onClick={() => {
+                                setSelectedLog(log);
+                                setIsDetailsOpen(true);
+                              }}
+                            >
+                              <ViewIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton 
+                              size="small"
+                              onClick={(e) => handleMenuOpen(e, log)}
+                            >
+                              <MoreIcon fontSize="small" />
+                            </IconButton>
+                          </Box>
+                        }
+                      />
+                    );
+                  })}
+                </MobileCardList>
+              ) : (
+                <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: theme.shadows[1] }}>
+                  <Table sx={{ minWidth: 650 }}>
+                    <TableHead sx={{ bgcolor: alpha(theme.palette.common.black, 0.02) }}>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: 700 }}>Timestamp</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Actor</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Action</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Entity</TableCell>
+                        <TableCell sx={{ fontWeight: 700 }}>Description</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: 700 }}>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {logsLoading ? (
+                        [...Array(5)].map((_, i) => (
+                          <TableRow key={i}>
+                            {[...Array(6)].map((_, j) => (
+                              <TableCell key={j}><Skeleton variant="text" /></TableCell>
+                            ))}
+                          </TableRow>
+                        ))
+                      ) : logsData?.data?.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={6} align="center" sx={{ py: 10 }}>
+                            <HistoryIcon sx={{ fontSize: 60, color: "text.disabled", mb: 2 }} />
+                            <Typography variant="h6" color="text.secondary">No activity logs found</Typography>
+                            <Typography variant="body2" color="text.disabled">Try adjusting your filters or search terms</Typography>
                           </TableCell>
                         </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                      ) : (
+                        (logsData?.data as ActivityLog[])?.map((log: ActivityLog) => (
+                          <TableRow key={log.logId} hover sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}>
+                              <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatDate(log.createdAt).split(",")[0]}</Typography>
+                              <Typography variant="caption" color="text.secondary">{formatDate(log.createdAt).split(",")[1]}</Typography>
+                            </TableCell>
+                            <TableCell>
+                              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                <Box sx={{ 
+                                    width: 32, height: 32, borderRadius: "10px", 
+                                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                    display: "flex", alignItems: "center", justifyContent: "center" 
+                                }}>
+                                  <PersonIcon sx={{ fontSize: 18, color: theme.palette.primary.main }} />
+                                </Box>
+                                <Box>
+                                  <Typography variant="body2" sx={{ fontWeight: 700 }}>{log.actorName}</Typography>
+                                  <Typography variant="caption" color="primary.main" sx={{ fontWeight: 600, fontSize: "0.65rem", textTransform: "uppercase" }}>
+                                    {log.actorRole.replace("sch_", "")}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </TableCell>
+                            <TableCell>
+                              <Chip
+                                label={log.action}
+                                size="small"
+                                color={getActionColor(log.action) as any}
+                                variant="outlined"
+                                sx={{ 
+                                    fontWeight: 800, 
+                                    fontSize: "0.65rem", 
+                                    height: 24, 
+                                    borderRadius: "6px",
+                                    bgcolor: alpha(theme.palette[getActionColor(log.action) as "success" | "info" | "error" | "secondary"]?.main || theme.palette.grey[500], 0.1)
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Typography variant="body2" sx={{ fontWeight: 600 }}>{log.entity}</Typography>
+                              {log.entityLabel && (
+                                <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                                  {log.entityLabel}
+                                </Typography>
+                              )}
+                            </TableCell>
+                            <TableCell sx={{ maxWidth: 300 }}>
+                              <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                                {log.description}
+                              </Typography>
+                            </TableCell>
+                            <TableCell align="right">
+                              <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
+                                <Tooltip title="View Details">
+                                  <IconButton 
+                                    size="small" 
+                                    sx={{ color: "primary.main" }}
+                                    onClick={() => {
+                                      setSelectedLog(log);
+                                      setIsDetailsOpen(true);
+                                    }}
+                                  >
+                                    <ViewIcon fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                                <IconButton 
+                                  size="small"
+                                  onClick={(e) => handleMenuOpen(e, log)}
+                                >
+                                  <MoreIcon fontSize="small" />
+                                </IconButton>
+                              </Box>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
 
               {/* Pagination */}
               <Box sx={{ mt: 3, display: "flex", justifyContent: "center" }}>

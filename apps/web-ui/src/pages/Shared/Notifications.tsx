@@ -34,6 +34,8 @@ import { useNavigate } from 'react-router-dom';
 import { useGetMyNotifications, useMarkAsRead, useMarkAllAsRead, useDeleteNotification } from '../../queries/Notification';
 import TokenService from '../../queries/token/tokenService';
 import { useUrlTab } from '../../hooks/useUrlTab';
+import { useIsMobile } from '../../hooks/useIsMobile';
+import MobileSegmentedTabs from '../../components/mobile/navigation/MobileSegmentedTabs';
 import type { Notification, NotificationType } from '../../types';
 
 const getNotificationIcon = (type: NotificationType) => {
@@ -60,6 +62,7 @@ const getNotificationIcon = (type: NotificationType) => {
 };
 
 const NotificationsPage: React.FC = () => {
+    const isMobile = useIsMobile();
     const navigate = useNavigate();
     const schoolId = TokenService.getSchoolId() || '';
     const role = TokenService.getRole();
@@ -98,34 +101,29 @@ const NotificationsPage: React.FC = () => {
             markAsRead.mutate(notification.notificationId);
         }
 
-        let path = '';
-        const prefix = role === 'parent' ? '/parent' : role === 'student' ? '/student' : role === 'teacher' ? '/teacher' : '/school-admin';
+        const rolePrefix = role ? `/${role.toLowerCase().replace(/_/g, '-')}` : '';
 
         switch (notification.type) {
-            case 'announcement':
-                path = `${prefix}/announcements`;
+            case 'absence_alert':
+                navigate(`${rolePrefix}/attendance`);
                 break;
             case 'homework_assigned':
             case 'homework_due':
-                path = `${prefix}/homework`;
+                navigate(`${rolePrefix}/homework`);
                 break;
-            case 'absence_alert':
-                path = role === 'parent' ? '/parent/attendance' : '/student/attendance';
+            case 'announcement':
+                navigate(`${rolePrefix}/announcements`);
                 break;
             case 'leave_status':
-                path = role === 'parent' ? '/parent/leave/history' : `${prefix}/leave/my`;
+                navigate(`${rolePrefix}/leave`);
                 break;
             case 'chat_invite':
-            case 'chat_accepted': {
-                const partnerId = notification.metadata?.inviterId || notification.metadata?.partnerId;
-                path = `${prefix}/chat${partnerId ? `?partnerId=${partnerId}` : ''}`;
+            case 'chat_accepted':
+                navigate('/chat');
                 break;
-            }
             default:
-                return; // Don't navigate for general notifications
+                break;
         }
-
-        navigate(path);
     };
 
     const formatTime = (dateString?: string) => {
@@ -142,41 +140,75 @@ const NotificationsPage: React.FC = () => {
 
     if (error) {
         return (
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ p: { xs: 2, sm: 3 } }}>
                 <Alert severity="error">Failed to load notifications. Please try again later.</Alert>
             </Box>
         );
     }
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ p: { xs: 2, sm: 3 } }}>
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: { xs: 'column', sm: 'row' },
+                justifyContent: 'space-between', 
+                alignItems: { xs: 'stretch', sm: 'center' }, 
+                mb: 3,
+                gap: 2
+            }}>
                 <Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <NotificationsIcon color="primary" />
-                        <Typography variant="h4" fontWeight={600}>
+                        <Typography variant="h4" fontWeight={600} sx={{ fontSize: { xs: '1.4rem', sm: '2.125rem' } }}>
                             Notifications
                         </Typography>
                     </Box>
-                    <Typography variant="body1" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary">
                         Stay updated with school activities
                     </Typography>
                 </Box>
                 <Button
-                    variant="outlined"
+                    variant="contained"
+                    color="primary"
                     startIcon={<MarkReadIcon />}
                     onClick={() => markAllAsRead.mutate()}
                     disabled={markAllAsRead.isPending}
+                    sx={{ 
+                        borderRadius: 2.5,
+                        height: 42,
+                        px: 2.5,
+                        fontWeight: 700,
+                        whiteSpace: 'nowrap',
+                        alignSelf: { xs: 'stretch', sm: 'auto' }
+                    }}
                 >
                     Mark All Read
                 </Button>
             </Box>
 
-            <Tabs value={tabValue} onChange={(_, v) => { setTabValue(v); setPage(1); }} sx={{ mb: 3 }}>
-                <Tab label="All" />
-                <Tab label="Read" />
-                <Tab label="Unread" />
-            </Tabs>
+            {isMobile ? (
+                <Box sx={{ mb: 3 }}>
+                    <MobileSegmentedTabs
+                        options={[
+                            { id: 'all', label: 'All' },
+                            { id: 'read', label: 'Read' },
+                            { id: 'unread', label: 'Unread' },
+                        ]}
+                        activeId={tabValue === 0 ? 'all' : tabValue === 1 ? 'read' : 'unread'}
+                        onChange={(id) => {
+                            const idx = id === 'all' ? 0 : id === 'read' ? 1 : 2;
+                            setTabValue(idx);
+                            setPage(1);
+                        }}
+                    />
+                </Box>
+            ) : (
+                <Tabs value={tabValue} onChange={(_, v) => { setTabValue(v); setPage(1); }} sx={{ mb: 3 }}>
+                    <Tab label="All" />
+                    <Tab label="Read" />
+                    <Tab label="Unread" />
+                </Tabs>
+            )}
 
             <Card>
                 {isLoading ? (

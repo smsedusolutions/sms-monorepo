@@ -1,0 +1,138 @@
+/* ==========================================================================
+   MOBILE NATIVE APP STYLES & SAFE AREA TOKENS
+   Gives the web application an authentic iOS / Android look and feel.
+   ========================================================================== */
+
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --mobile-header-height: 56px;
+  --mobile-bottom-nav-height: 64px;
+  --app-primary: #4f46e5;
+  --app-primary-light: #6366f1;
+  --app-bg: #f8fafc;
+  --app-card-bg: #ffffff;
+}
+
+/* Touch & Interaction Optimizations */
+@media (max-width: 768px) {
+  html, body {
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  /* Allow text selection inside inputs and readable content */
+  input, textarea, [contenteditable="true"], .selectable-text {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  /* Prevent iOS input zoom by forcing 16px base on inputs */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Hide scrollbars for app-like clean look */
+  *::-webkit-scrollbar {
+    display: none !important;
+  }
+  * {
+    -ms-overflow-style: none !important;
+    scrollbar-width: none !important;
+  }
+}
+
+/* Safe Area Inset Classes */
+.pt-safe {
+  padding-top: var(--safe-area-top) !important;
+}
+
+.pb-safe {
+  padding-bottom: var(--safe-area-bottom) !important;
+}
+
+.pl-safe {
+  padding-left: var(--safe-area-left) !important;
+}
+
+.pr-safe {
+  padding-right: var(--safe-area-right) !important;
+}
+
+/* Mobile Screen Full Viewport */
+.mobile-app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  width: 100vw;
+  background-color: var(--app-bg);
+  overflow: hidden;
+  position: relative;
+}
+
+.mobile-content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 16px calc(var(--mobile-bottom-nav-height) + var(--safe-area-bottom) + 24px) 16px;
+  overscroll-behavior-y: contain;
+}
+
+/* Native Tap & Active Scale Effects */
+.touch-active {
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.12s ease;
+}
+
+.touch-active:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
+.touch-card-active {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.15s ease;
+}
+
+.touch-card-active:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Glassmorphism Backdrop Blur for Headers & Sheets */
+.mobile-glass-header {
+  background: rgba(255, 255, 255, 0.88) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.mobile-glass-nav {
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Pulse badge animation */
+@keyframes mobilePulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.85;
+  }
+}
+
+.badge-pulse {
+  animation: mobilePulse 2s infinite ease-in-out;
+}

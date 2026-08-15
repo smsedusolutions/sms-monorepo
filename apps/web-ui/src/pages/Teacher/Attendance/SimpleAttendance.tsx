@@ -15,6 +15,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Snackbar,
+  Avatar,
 } from '@mui/material';
 import {
   CheckCircle as PresentIcon,
@@ -31,6 +32,8 @@ import TokenService from '../../../queries/token/tokenService';
 import { AppSelect } from '../../../components/shared/AppSelect';
 import { AppButton } from '../../../components/shared/AppButton';
 import { format } from 'date-fns';
+import { useIsMobile } from '../../../hooks/useIsMobile';
+import MobileStickyActionBar from '../../../components/mobile/navigation/MobileStickyActionBar';
 
 interface AttendanceRecord {
   studentId: string;
@@ -39,6 +42,7 @@ interface AttendanceRecord {
 }
 
 const SimpleAttendance = () => {
+  const isMobile = useIsMobile();
   const schoolId = TokenService.getSchoolId() || "";
   const teacherId = TokenService.getTeacherId() || "";
   const [selectedClass, setSelectedClass] = useState("");
@@ -98,8 +102,21 @@ const SimpleAttendance = () => {
   );
   const students = studentsData?.data || [];
 
-  // Fetch existing attendance
-  const { data: existingAttendance, isLoading: attendanceLoading } =
+  // Set default selections once data is loaded
+  useEffect(() => {
+    if (classes.length === 1 && !selectedClass) {
+      setSelectedClass(classes[0].classId);
+    }
+  }, [classes, selectedClass]);
+
+  useEffect(() => {
+    if (filteredSections.length === 1 && !selectedSection) {
+      setSelectedSection(filteredSections[0].sectionId);
+    }
+  }, [filteredSections, selectedSection]);
+
+  // Fetch existing attendance for the selected date and class
+  const { data: existingAttendanceData, isLoading: attendanceLoading } =
     useGetSimpleClassAttendance(
       schoolId,
       selectedClass,
@@ -107,42 +124,39 @@ const SimpleAttendance = () => {
       selectedSection || undefined,
     );
 
-  // Mark attendance mutation
-  const markAttendance = useMarkSimpleAttendance(schoolId);
-
-  // Auto-select class if teacher has only one assigned class
+  // Initialize attendance state from existing data or default to empty
   useEffect(() => {
-    if (classes.length === 1 && !selectedClass) {
-      setSelectedClass(classes[0].classId);
-    }
-  }, [classes, selectedClass]);
+    if (students.length > 0) {
+      const initialAttendance: Record<string, AttendanceRecord> = {};
 
-  // Auto-select section if there's only one available section
-  useEffect(() => {
-    if (filteredSections.length === 1 && !selectedSection) {
-      setSelectedSection(filteredSections[0].sectionId);
-    } else if (filteredSections.length === 0 && selectedSection) {
-      setSelectedSection("");
-    }
-  }, [filteredSections, selectedSection]);
+      if (
+        existingAttendanceData?.data &&
+        existingAttendanceData.data.length > 0
+      ) {
+        existingAttendanceData.data.forEach((record: any) => {
+          initialAttendance[record.studentId] = {
+            studentId: record.studentId,
+            status: record.status,
+            remarks: record.remarks,
+          };
+        });
+      }
 
-  // Initialize attendance from existing data only
-  useEffect(() => {
-    if (existingAttendance?.data && existingAttendance.data.length > 0) {
-      const existing: Record<string, AttendanceRecord> = {};
-      existingAttendance.data.forEach((a) => {
-        existing[a.studentId] = {
-          studentId: a.studentId,
-          status: a.status,
-          remarks: a.remarks,
-        };
+      students.forEach((student: Student) => {
+        if (!initialAttendance[student.studentId]) {
+          initialAttendance[student.studentId] = {
+            studentId: student.studentId,
+            status: "present",
+          };
+        }
       });
-      setAttendance(existing);
-    } else {
-      // Clear attendance when no data exists (date/class changed)
-      setAttendance({});
+
+      setAttendance(initialAttendance);
     }
-  }, [existingAttendance]);
+  }, [students, existingAttendanceData]);
+
+  // Mutation for saving attendance
+  const markAttendance = useMarkSimpleAttendance(schoolId);
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
     setAttendance((prev) => ({
@@ -157,11 +171,10 @@ const SimpleAttendance = () => {
 
   const handleMarkAll = (status: AttendanceStatus) => {
     const updated: Record<string, AttendanceRecord> = {};
-    students.forEach((s: Student) => {
-      updated[s.studentId] = {
-        studentId: s.studentId,
+    students.forEach((student: Student) => {
+      updated[student.studentId] = {
+        studentId: student.studentId,
         status,
-        remarks: attendance[s.studentId]?.remarks,
       };
     });
     setAttendance(updated);
@@ -177,22 +190,37 @@ const SimpleAttendance = () => {
       return;
     }
 
+    const attendanceRecords = Object.values(attendance);
+    if (attendanceRecords.length === 0) {
+      setSnackbar({
+        open: true,
+        message: "No attendance records to save",
+        severity: "error",
+      });
+      return;
+    }
+
     try {
       await markAttendance.mutateAsync({
         classId: selectedClass,
         sectionId: selectedSection || undefined,
         date: selectedDate,
-        attendanceRecords: Object.values(attendance),
+        attendanceRecords: attendanceRecords.map((r) => ({
+          studentId: r.studentId,
+          status: r.status,
+          remarks: r.remarks,
+        })),
       });
+
       setSnackbar({
         open: true,
-        message: "Attendance saved successfully!",
+        message: "Attendance saved successfully",
         severity: "success",
       });
-    } catch {
+    } catch (error: any) {
       setSnackbar({
         open: true,
-        message: "Failed to save attendance",
+        message: error.response?.data?.message || "Failed to save attendance",
         severity: "error",
       });
     }
@@ -201,7 +229,7 @@ const SimpleAttendance = () => {
   const getSummary = () => {
     const values = Object.values(attendance);
     return {
-      total: values.length,
+      total: students.length,
       present: values.filter((a) => a.status === "present").length,
       absent: values.filter((a) => a.status === "absent").length,
       late: values.filter((a) => a.status === "late").length,
@@ -211,25 +239,20 @@ const SimpleAttendance = () => {
   const summary = getSummary();
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
-      <Typography variant="h5" fontWeight={600} gutterBottom>
+    <Box sx={{ p: { xs: 1, sm: 3 }, pb: isMobile ? 10 : 3 }}>
+      <Typography variant="h5" fontWeight={700} gutterBottom sx={{ fontFamily: '"Outfit", sans-serif' }}>
         Daily Attendance
       </Typography>
 
       {/* Filters */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-            <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-              Attendance Date
-            </Typography>
-            <Chip
-              label={`Today: ${format(new Date(), 'dd-MM-yyyy')}`}
-              color="primary"
-              variant="filled"
-              sx={{ fontWeight: 600, borderRadius: 1.5, py: 2 }}
-            />
-          </Box>
+      <Paper sx={{ p: 2, mb: 2.5, borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
+          <Chip
+            label={`Date: ${format(new Date(), 'dd-MM-yyyy')}`}
+            color="primary"
+            variant="filled"
+            sx={{ fontWeight: 700, borderRadius: '10px', height: 36, px: 0.5 }}
+          />
           <AppSelect
             label="Class"
             value={selectedClass}
@@ -240,7 +263,7 @@ const SimpleAttendance = () => {
               setSelectedSection('');
               setAttendance({});
             }}
-            sx={{ minWidth: 200 }}
+            sx={{ minWidth: isMobile ? '100%' : 200 }}
           />
           {filteredSections.length > 0 && (
             <AppSelect
@@ -255,61 +278,173 @@ const SimpleAttendance = () => {
                 setSelectedSection(e.target.value as string);
                 setAttendance({});
               }}
-              sx={{ minWidth: 150 }}
+              sx={{ minWidth: isMobile ? '100%' : 150 }}
             />
           )}
         </Box>
       </Paper>
 
-      {/* Summary Cards */}
+      {/* Summary Badges */}
       {students.length > 0 && (
-        <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
-          <Chip
-            label={`Total: ${summary.total}`}
-            color="default"
-            variant="outlined"
-          />
-          <Chip
-            label={`Present: ${summary.present}`}
-            color="success"
-            variant="filled"
-          />
-          <Chip
-            label={`Absent: ${summary.absent}`}
-            color="error"
-            variant="filled"
-          />
-          <Chip
-            label={`Late: ${summary.late}`}
-            color="warning"
-            variant="filled"
-          />
+        <Box sx={{ display: "grid", gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, mb: 2 }}>
+          <Box sx={{ bgcolor: '#ffffff', p: 1, borderRadius: '12px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <Typography sx={{ fontSize: '0.68rem', color: '#64748b', fontWeight: 600 }}>Total</Typography>
+            <Typography sx={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>{summary.total}</Typography>
+          </Box>
+          <Box sx={{ bgcolor: '#ecfdf5', p: 1, borderRadius: '12px', border: '1px solid #a7f3d0', textAlign: 'center' }}>
+            <Typography sx={{ fontSize: '0.68rem', color: '#059669', fontWeight: 600 }}>Present</Typography>
+            <Typography sx={{ fontSize: '1.1rem', fontWeight: 800, color: '#059669' }}>{summary.present}</Typography>
+          </Box>
+          <Box sx={{ bgcolor: '#fef2f2', p: 1, borderRadius: '12px', border: '1px solid #fecaca', textAlign: 'center' }}>
+            <Typography sx={{ fontSize: '0.68rem', color: '#dc2626', fontWeight: 600 }}>Absent</Typography>
+            <Typography sx={{ fontSize: '1.1rem', fontWeight: 800, color: '#dc2626' }}>{summary.absent}</Typography>
+          </Box>
+          <Box sx={{ bgcolor: '#fffbeb', p: 1, borderRadius: '12px', border: '1px solid #fde68a', textAlign: 'center' }}>
+            <Typography sx={{ fontSize: '0.68rem', color: '#d97706', fontWeight: 600 }}>Late</Typography>
+            <Typography sx={{ fontSize: '1.1rem', fontWeight: 800, color: '#d97706' }}>{summary.late}</Typography>
+          </Box>
         </Box>
       )}
 
-      {/* Quick Actions */}
+      {/* Quick Mark All Actions */}
       {students.length > 0 && (
-        <Box sx={{ mb: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-          <AppButton size="small" variant="outlined" color="success" onClick={() => handleMarkAll('present')}>
+        <Box sx={{ mb: 2, display: 'flex', gap: 1 }}>
+          <button
+            onClick={() => handleMarkAll('present')}
+            className="touch-active flex-1 py-2 px-3 rounded-xl font-semibold text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 outline-none cursor-pointer"
+          >
             Mark All Present
-          </AppButton>
-          <AppButton size="small" variant="outlined" color="error" onClick={() => handleMarkAll('absent')}>
+          </button>
+          <button
+            onClick={() => handleMarkAll('absent')}
+            className="touch-active flex-1 py-2 px-3 rounded-xl font-semibold text-xs text-rose-700 bg-rose-50 border border-rose-200 outline-none cursor-pointer"
+          >
             Mark All Absent
-          </AppButton>
+          </button>
         </Box>
       )}
 
-      {/* Students Table */}
+      {/* Students View: Mobile Card List vs Desktop Table */}
       {classesLoading || studentsLoading || attendanceLoading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
           <CircularProgress />
         </Box>
       ) : !selectedClass ? (
-        <Alert severity="info">Please select a class to mark attendance</Alert>
+        <Alert severity="info" sx={{ borderRadius: '14px' }}>Please select a class to mark attendance</Alert>
       ) : students.length === 0 ? (
-        <Alert severity="warning">No students found in this class</Alert>
+        <Alert severity="warning" sx={{ borderRadius: '14px' }}>No students found in this class</Alert>
+      ) : isMobile ? (
+        /* Mobile Card Roster */
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
+          {students.map((student: Student, index: number) => {
+            const currentStatus = attendance[student.studentId]?.status || 'present';
+            return (
+              <Box
+                key={student.studentId}
+                className="touch-card-active"
+                sx={{
+                  bgcolor: '#ffffff',
+                  p: 1.5,
+                  borderRadius: '16px',
+                  border: '1px solid',
+                  borderColor:
+                    currentStatus === 'present'
+                      ? '#a7f3d0'
+                      : currentStatus === 'absent'
+                      ? '#fecaca'
+                      : '#fde68a',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.02)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 1,
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2, minWidth: 0, flex: 1 }}>
+                  <Avatar
+                    sx={{
+                      width: 38,
+                      height: 38,
+                      bgcolor:
+                        currentStatus === 'present'
+                          ? '#10b981'
+                          : currentStatus === 'absent'
+                          ? '#ef4444'
+                          : '#f59e0b',
+                      fontSize: '0.85rem',
+                      fontWeight: 700,
+                    }}
+                  >
+                    {student.firstName?.[0] || 'S'}
+                  </Avatar>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a' }} noWrap>
+                      {student.firstName} {student.lastName}
+                    </Typography>
+                    <Typography sx={{ fontSize: '0.72rem', color: '#64748b' }}>
+                      Roll: {student.rollNumber || '-'} • #{index + 1}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Touch Toggle Buttons */}
+                <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                  <button
+                    onClick={() => handleStatusChange(student.studentId, 'present')}
+                    className="touch-active"
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: '10px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      border: 'none',
+                      cursor: 'pointer',
+                      backgroundColor: currentStatus === 'present' ? '#10b981' : '#f1f5f9',
+                      color: currentStatus === 'present' ? '#ffffff' : '#64748b',
+                    }}
+                  >
+                    P
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange(student.studentId, 'absent')}
+                    className="touch-active"
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: '10px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      border: 'none',
+                      cursor: 'pointer',
+                      backgroundColor: currentStatus === 'absent' ? '#ef4444' : '#f1f5f9',
+                      color: currentStatus === 'absent' ? '#ffffff' : '#64748b',
+                    }}
+                  >
+                    A
+                  </button>
+                  <button
+                    onClick={() => handleStatusChange(student.studentId, 'late')}
+                    className="touch-active"
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: '10px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      border: 'none',
+                      cursor: 'pointer',
+                      backgroundColor: currentStatus === 'late' ? '#f59e0b' : '#f1f5f9',
+                      color: currentStatus === 'late' ? '#ffffff' : '#64748b',
+                    }}
+                  >
+                    L
+                  </button>
+                </Box>
+              </Box>
+            );
+          })}
+        </Box>
       ) : (
-        <TableContainer component={Paper}>
+        /* Desktop Table */
+        <TableContainer component={Paper} sx={{ borderRadius: '16px' }}>
           <Table>
             <TableHead>
               <TableRow>
@@ -358,8 +493,8 @@ const SimpleAttendance = () => {
         </TableContainer>
       )}
 
-      {/* Save Button */}
-      {students.length > 0 && (
+      {/* Desktop Save Button */}
+      {!isMobile && students.length > 0 && (
         <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
           <AppButton
             variant="contained"
@@ -371,6 +506,16 @@ const SimpleAttendance = () => {
             Save Attendance
           </AppButton>
         </Box>
+      )}
+
+      {/* Mobile Sticky Save Action Bar */}
+      {isMobile && students.length > 0 && (
+        <MobileStickyActionBar
+          primaryLabel="Save Attendance"
+          primaryIcon={<SaveIcon />}
+          primaryLoading={markAttendance.isPending}
+          onPrimaryClick={handleSave}
+        />
       )}
 
       <Snackbar

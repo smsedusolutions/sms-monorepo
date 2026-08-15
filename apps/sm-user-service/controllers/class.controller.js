@@ -167,7 +167,9 @@ const getAllClasses = async (req, res) => {
         const query = {};
         if (status) query.status = status;
 
-        const classes = await ClassModel.find(query).sort({ name: 1 });
+        const classes = await ClassModel.find(query)
+            .collation({ locale: "en", numericOrdering: true })
+            .sort({ name: 1 });
 
         // Collect all class teacher IDs across sections
         const teacherIds = [];
@@ -198,16 +200,23 @@ const getAllClasses = async (req, res) => {
         const populatedClasses = classes.map((c) => {
             const cObj = c.toObject();
             if (cObj.sections && Array.isArray(cObj.sections)) {
-                cObj.sections = cObj.sections.map((s) => {
-                    const tId = s.classTeacherId || s.classTeacher;
-                    const tName = tId ? (teacherMap.get(tId) || tId) : null;
-                    return {
-                        ...s,
-                        classTeacherName: tName,
-                    };
-                });
+                cObj.sections = cObj.sections
+                    .map((s) => {
+                        const tId = s.classTeacherId || s.classTeacher;
+                        const tName = tId ? (teacherMap.get(tId) || tId) : null;
+                        return {
+                            ...s,
+                            classTeacherName: tName,
+                        };
+                    })
+                    .sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' }));
             }
             return cObj;
+        });
+
+        // Ensure robust natural ascending sorting (e.g. Class 1, Class 2, ... Class 10) in API response
+        populatedClasses.sort((a, b) => {
+            return (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' });
         });
 
         return res.status(200).json({

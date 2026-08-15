@@ -17,6 +17,7 @@ import { useCreateSubject, useUpdateSubject, useGetSubjects } from '../../querie
 import { useGetClasses } from '../../queries/Class';
 import { useGetTeachers } from '../../queries/Teacher';
 import { useNotification } from '../../hooks/useNotification';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import type { Subject, Teacher, Class } from '../../types';
 import { AppInput } from '../shared/AppInput';
 import { AppSelect } from '../shared/AppSelect';
@@ -38,6 +39,7 @@ export const AddSubjectDialog: React.FC<SubjectDialogProps> = ({
     editData,
     initialClassId,
 }) => {
+    const isMobile = useIsMobile();
     const isEditMode = !!editData;
     const notification = useNotification();
 
@@ -174,27 +176,46 @@ export const AddSubjectDialog: React.FC<SubjectDialogProps> = ({
         .map((t: Teacher) => ({ id: t.teacherId, label: `${t.firstName} ${t.lastName}` }));
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        <Dialog 
+            open={open} 
+            onClose={handleClose} 
+            maxWidth="sm" 
+            fullWidth
+            fullScreen={isMobile}
+            PaperProps={{
+                sx: {
+                    borderRadius: isMobile ? 0 : 3,
+                    maxHeight: isMobile ? '100dvh' : '90vh',
+                }
+            }}
+        >
+            <DialogTitle sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                py: { xs: 1.5, sm: 2 },
+                px: { xs: 2, sm: 3 },
+            }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                     {isEditMode ? 'Modify Subject Profile' : 'Register New Subject'}
                 </Typography>
-                <IconButton onClick={handleClose} size="small">
+                <IconButton onClick={handleClose} size="small" edge="end">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
 
-            <form onSubmit={handleSubmit}>
-                <Divider />
-                <DialogContent sx={{ py: 3 }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                <DialogContent sx={{ p: { xs: 2, sm: 3 }, overflowY: 'auto' }}>
                     {isError && (
-                        <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                        <Alert severity="error" sx={{ mb: 2.5, borderRadius: 2 }}>
                             {errorMessage}
                         </Alert>
                     )}
 
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-                        <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+                        <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
                             Subject Identification
                         </Typography>
 
@@ -263,7 +284,7 @@ export const AddSubjectDialog: React.FC<SubjectDialogProps> = ({
 
                         <Divider sx={{ my: 0.5 }} />
 
-                        <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+                        <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
                             Faculty Assignment
                         </Typography>
 
@@ -278,7 +299,7 @@ export const AddSubjectDialog: React.FC<SubjectDialogProps> = ({
 
                         <Divider sx={{ my: 0.5 }} />
 
-                        <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+                        <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
                             Categorization & Notes
                         </Typography>
 
@@ -295,7 +316,19 @@ export const AddSubjectDialog: React.FC<SubjectDialogProps> = ({
                     </Box>
                 </DialogContent>
 
-                <DialogActions sx={{ px: 3, pb: 2 }}>
+                <DialogActions sx={{ 
+                    px: { xs: 2, sm: 3 }, 
+                    py: 2, 
+                    borderTop: '1px solid', 
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
+                    gap: 1.5,
+                    flexDirection: { xs: 'column-reverse', sm: 'row' },
+                    '& > button': {
+                        width: { xs: '100%', sm: 'auto' },
+                        height: 44,
+                    }
+                }}>
                     <AppButton onClick={handleClose} variant="text" color="inherit">Cancel</AppButton>
                     <AppButton
                         type="submit"

@@ -14,6 +14,7 @@ import { Close as CloseIcon } from "@mui/icons-material";
 import { useCreateTeacher, useUpdateTeacher } from "../../queries/Teacher";
 import { useGetClasses } from "../../queries/Class";
 import { useNotification } from "../../hooks/useNotification";
+import { useIsMobile } from "../../hooks/useIsMobile";
 import { useGetSubjects } from "../../queries/Subject";
 import type {
   CreateTeacherPayload,
@@ -171,6 +172,7 @@ const TeacherDialog: React.FC<TeacherDialogProps> = ({
     onClose();
   };
 
+  const isMobile = useIsMobile();
   const isPending = createMutation.isPending || updateMutation.isPending;
   const isError = createMutation.isError || updateMutation.isError;
   const errorMessage =
@@ -179,33 +181,53 @@ const TeacherDialog: React.FC<TeacherDialogProps> = ({
     "Operation failed";
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog 
+      open={open} 
+      onClose={handleClose} 
+      maxWidth="md" 
+      fullWidth
+      fullScreen={isMobile}
+      PaperProps={{
+        sx: {
+          borderRadius: isMobile ? 0 : 3,
+          maxHeight: isMobile ? '100dvh' : '90vh',
+        }
+      }}
+    >
       <DialogTitle
-        sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+        sx={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center",
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          py: { xs: 1.5, sm: 2 },
+          px: { xs: 2, sm: 3 },
+        }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
           {isEditMode ? "Modify Educator Profile" : "Register New Teacher"}
         </Typography>
-        <IconButton onClick={handleClose} size="small">
+        <IconButton onClick={handleClose} size="small" edge="end">
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
-      <form onSubmit={handleSubmit}>
-        <DialogContent>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 }, overflowY: 'auto' }}>
           {isError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {errorMessage}
             </Alert>
           )}
 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
             {/* ── Basic Information ── */}
-            <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+            <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
               Basic Information
             </Typography>
 
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
               <AppInput
                 name="firstName"
                 label="First Name"
@@ -237,7 +259,7 @@ const TeacherDialog: React.FC<TeacherDialogProps> = ({
               required
             />
 
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
               <AppInput
                 name="password"
                 label="Password"
@@ -257,10 +279,10 @@ const TeacherDialog: React.FC<TeacherDialogProps> = ({
               />
             </Box>
 
-            <Divider sx={{ my: 1 }} />
+            <Divider sx={{ my: 0.5 }} />
 
             {/* ── Academic Assignments ── */}
-            <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+            <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
               Academic Assignments
             </Typography>
 
@@ -290,10 +312,10 @@ const TeacherDialog: React.FC<TeacherDialogProps> = ({
               chipColor="info"
             />
 
-            <Divider sx={{ my: 1 }} />
+            <Divider sx={{ my: 0.5 }} />
 
             {/* ── Status & Identification ── */}
-            <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+            <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
               Status & Identification
             </Typography>
 
@@ -312,7 +334,7 @@ const TeacherDialog: React.FC<TeacherDialogProps> = ({
               }
             />
 
-            <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2, mt: 1 }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2, mt: 1 }}>
               <ImageUpload
                 folder={IMAGEKIT_FOLDERS.PROFILE_IMAGES}
                 fileName={
@@ -350,7 +372,19 @@ const TeacherDialog: React.FC<TeacherDialogProps> = ({
           </Box>
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+        <DialogActions sx={{ 
+          px: { xs: 2, sm: 3 }, 
+          py: 2, 
+          borderTop: '1px solid', 
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          gap: 1.5,
+          flexDirection: { xs: 'column-reverse', sm: 'row' },
+          '& > button': {
+            width: { xs: '100%', sm: 'auto' },
+            height: 44,
+          }
+        }}>
           <AppButton onClick={handleClose} variant="text" color="inherit">
             Cancel
           </AppButton>

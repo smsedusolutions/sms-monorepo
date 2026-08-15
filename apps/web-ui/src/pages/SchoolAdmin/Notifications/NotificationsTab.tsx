@@ -39,6 +39,8 @@ import {
 } from "../../../queries/Notification";
 import TokenService from "../../../queries/token/tokenService";
 import { useUrlTab } from "../../../hooks/useUrlTab";
+import { useIsMobile } from "../../../hooks/useIsMobile";
+import MobileSegmentedTabs from "../../../components/mobile/navigation/MobileSegmentedTabs";
 import ConfirmationDialog from "../../../components/Dialogs/ConfirmationDialog";
 import type { Notification, NotificationType } from "../../../types";
 
@@ -64,6 +66,7 @@ const getNotificationIcon = (type: NotificationType) => {
 
 const NotificationsTab: React.FC = () => {
   const theme = useTheme();
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const schoolId = TokenService.getSchoolId() || "";
 
@@ -136,29 +139,60 @@ const NotificationsTab: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
-        <Tabs
-          value={tabValue}
-          onChange={(_, v) => { setTabValue(v); setPage(1); }}
-          sx={{
-            "& .MuiTab-root": {
-              fontWeight: 600,
-              textTransform: "none",
-              minWidth: 100,
-            }
-          }}
-        >
-          <Tab label="All Alerts" />
-          <Tab label="Read" />
-          <Tab label="Unread" />
-        </Tabs>
+      <Box sx={{ 
+        display: "flex", 
+        flexDirection: { xs: "column", sm: "row" }, 
+        justifyContent: "space-between", 
+        alignItems: { xs: "stretch", sm: "center" }, 
+        mb: 3,
+        gap: 2 
+      }}>
+        {isMobile ? (
+          <MobileSegmentedTabs
+            options={[
+              { id: 'all', label: 'All Alerts' },
+              { id: 'read', label: 'Read' },
+              { id: 'unread', label: 'Unread' },
+            ]}
+            activeId={tabValue === 0 ? 'all' : tabValue === 1 ? 'read' : 'unread'}
+            onChange={(id) => {
+              const idx = id === 'all' ? 0 : id === 'read' ? 1 : 2;
+              setTabValue(idx);
+              setPage(1);
+            }}
+          />
+        ) : (
+          <Tabs
+            value={tabValue}
+            onChange={(_, v) => { setTabValue(v); setPage(1); }}
+            sx={{
+              "& .MuiTab-root": {
+                fontWeight: 600,
+                textTransform: "none",
+                minWidth: 100,
+              }
+            }}
+          >
+            <Tab label="All Alerts" />
+            <Tab label="Read" />
+            <Tab label="Unread" />
+          </Tabs>
+        )}
+
         <Button
           variant="contained"
           color="primary"
           startIcon={<MarkReadIcon />}
           onClick={() => markAllAsRead.mutate()}
           disabled={markAllAsRead.isPending || notifications.length === 0}
-          sx={{ borderRadius: 2 }}
+          sx={{ 
+            borderRadius: 2.5, 
+            height: 42,
+            px: 2.5,
+            fontWeight: 700,
+            whiteSpace: "nowrap",
+            alignSelf: { xs: "stretch", sm: "auto" }
+          }}
         >
           Mark All Read
         </Button>

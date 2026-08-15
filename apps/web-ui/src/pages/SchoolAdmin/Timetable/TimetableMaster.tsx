@@ -3,7 +3,7 @@ import {
   Box,
   Typography,
   Paper,
-  Grid,
+  Button,
   FormControl,
   InputLabel,
   Select,
@@ -38,15 +38,12 @@ import {
   List as ListIcon,
   PictureAsPdf as PdfIcon,
   Warning as WarningIcon,
-  SwapHoriz as SwapIcon,
   Download as DownloadIcon,
   FileUpload as UploadIcon,
   AutoAwesome as MagicIcon,
   Send as SendIcon,
   Edit as EditIcon,
-  Verified as VerifiedIcon,
   CheckCircle as CheckCircleIcon,
-  Block as BlockIcon,
   Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import { jsPDF } from "jspdf";
@@ -88,6 +85,7 @@ import ConfirmationDialog from "../../../components/Dialogs/ConfirmationDialog";
 import { AppButton } from "../../../components/shared/AppButton";
 import { generateTimetableTemplate, parseTimetableTemplate } from "../../../utils/timetableExcelUtils";
 import AITimetableGenerateDialog from "../../../components/Dialogs/AITimetableGenerateDialog";
+import { useIsMobile } from "../../../hooks/useIsMobile";
 
 type ViewMode = "table" | "list";
 
@@ -122,6 +120,7 @@ const EntryDialog = ({
   teachersOnLeave = [],
   schoolId,
 }: EntryDialogProps) => {
+  const isMobile = useIsMobile();
   // Helpers for robust teacher & subject resolution
   const getTeacherCanonicalId = (t: any): string => {
     if (!t) return "";
@@ -270,8 +269,27 @@ const EntryDialog = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      fullScreen={isMobile}
+      PaperProps={{
+        sx: {
+          borderRadius: isMobile ? 0 : 3,
+        }
+      }}
+    >
+      <DialogTitle sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        borderBottom: "1px solid",
+        borderColor: "divider",
+        py: { xs: 1.5, sm: 2 },
+        px: { xs: 2, sm: 3 }
+      }}>
         {editData ? "Edit Schedule" : "Add Schedule"}
         <Typography variant="body2" color="text.secondary">
           {dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1)} - Period{" "}
@@ -395,6 +413,7 @@ const EntryDialog = ({
 };
 
 const TimetableMaster = () => {
+  const isMobile = useIsMobile();
   const schoolId = TokenService.getSchoolId() || "";
   const { timeFormat } = useTimeSettingsStore();
   const [selectedClass, setSelectedClass] = useState("");
@@ -408,8 +427,18 @@ const TimetableMaster = () => {
   const [aiGenerateDialogOpen, setAiGenerateDialogOpen] = useState(false);
   const { showNotification } = useNotificationStore();
 
+  const [selectedDayTab, setSelectedDayTab] = useState<string>(() =>
+    new Date().toLocaleDateString("en-US", { weekday: "long" }).toLowerCase()
+  );
+
   const [tabIndex, setTabIndex] = useUrlTab(0, ['manual', 'ai', 'published', 'rejected']);
   const [selectedAiVersion, setSelectedAiVersion] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    if (isMobile) {
+      setViewMode("list");
+    }
+  }, [isMobile]);
 
   // Track visited tabs to fetch data lazily on tab visit
   const [visitedTabs, setVisitedTabs] = useState<Set<number>>(() => new Set([tabIndex]));
@@ -515,7 +544,7 @@ const TimetableMaster = () => {
   const config = configData?.data;
   const classes = useMemo(() => {
     return (classesData?.data || []).sort((a: any, b: any) =>
-      b.name.localeCompare(a.name, undefined, { numeric: true, sensitivity: 'base' })
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
     );
   }, [classesData]);
 
@@ -903,309 +932,270 @@ const TimetableMaster = () => {
   }
 
   return (
-    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+    <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
       {/* Title & Master Tabs */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight={600} sx={{ mb: 2 }}>
+      {!isMobile && (
+        <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }} color="#0f172a">
           Master Timetable Studio
         </Typography>
+      )}
 
-        <Paper sx={{ borderRadius: 2, bgcolor: "background.paper", boxShadow: 1 }}>
-          <Tabs
-            value={tabIndex}
-            onChange={(_e, val) => setTabIndex(val)}
-            indicatorColor="primary"
-            textColor="primary"
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{ borderBottom: 1, borderColor: "divider", px: 1 }}
-          >
-            <Tab
-              icon={<EditIcon />}
-              iconPosition="start"
-              label="1. Create / Edit Manual Timetable"
-              sx={{ fontWeight: 600, py: 1.5 }}
-            />
-            <Tab
-              icon={<MagicIcon />}
-              iconPosition="start"
-              label="2. AI Timetable Generator & Drafts"
-              sx={{ fontWeight: 600, py: 1.5 }}
-            />
-            <Tab
-              icon={<VerifiedIcon />}
-              iconPosition="start"
-              label="3. Published Live Timetable"
-              sx={{ fontWeight: 600, py: 1.5 }}
-            />
-            <Tab
-              icon={<BlockIcon />}
-              iconPosition="start"
-              label={
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-                  4. Rejected Submissions
-                  {rejectedSchedules.length > 0 && (
-                    <Chip label={rejectedSchedules.length} size="small" color="error" sx={{ height: 18, fontSize: 11 }} />
-                  )}
-                </Box>
-              }
-              sx={{ fontWeight: 600, py: 1.5 }}
-            />
-          </Tabs>
-        </Paper>
+      {/* Clean Flat Tabs */}
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+        <Tabs
+          value={tabIndex}
+          onChange={(_e, val) => setTabIndex(val)}
+          textColor="primary"
+          indicatorColor="primary"
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ minHeight: 40 }}
+        >
+          <Tab label={isMobile ? "Manual" : "1. Manual Timetable"} sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1, fontSize: { xs: '0.85rem', sm: '0.9rem' } }} />
+          <Tab label={isMobile ? "AI Drafts" : "2. AI Generator & Drafts"} sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1, fontSize: { xs: '0.85rem', sm: '0.9rem' } }} />
+          <Tab label={isMobile ? "Live" : "3. Published Live"} sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1, fontSize: { xs: '0.85rem', sm: '0.9rem' } }} />
+          <Tab
+            label={
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                {isMobile ? "Rejected" : "4. Rejected Submissions"}
+                {rejectedSchedules.length > 0 && (
+                  <Chip label={rejectedSchedules.length} size="small" color="error" sx={{ height: 16, fontSize: 10, fontWeight: 700 }} />
+                )}
+              </Box>
+            }
+            sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1, fontSize: { xs: '0.85rem', sm: '0.9rem' } }}
+          />
+        </Tabs>
       </Box>
 
-      {/* Tab-Specific Action Banners */}
-      {tabIndex === 0 && (
-        <Paper sx={{ p: 2, mb: 3, bgcolor: "#f8fafc", borderLeft: "4px solid #3b82f6" }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
-            <Box>
-              <Typography variant="subtitle1" fontWeight={700} color="primary">
-                📝 Manual Timetable Builder
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Create and edit slots manually, upload Excel schedules, and submit for Principal approval.
-              </Typography>
-            </Box>
-            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
-              {teachersOnLeave.length > 0 && (
-                <Chip
-                  icon={<WarningIcon />}
-                  label={`${teachersOnLeave.length} teacher(s) on leave today`}
-                  color="warning"
-                  size="small"
-                />
-              )}
+      {/* Class & Section Selectors + Actions */}
+      <Box sx={{ mb: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+        {/* Class & Section Row */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+          <FormControl fullWidth size="small">
+            <InputLabel>Class</InputLabel>
+            <Select
+              value={selectedClass}
+              label="Class"
+              onChange={(e) => {
+                setSelectedClass(e.target.value);
+                setSelectedSection("");
+              }}
+            >
+              {classes.map((c: any) => (
+                <MenuItem key={c.classId} value={c.classId}>
+                  {c.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth size="small" disabled={!selectedClass}>
+            <InputLabel>Section</InputLabel>
+            <Select
+              value={selectedSection}
+              label="Section"
+              onChange={(e) => setSelectedSection(e.target.value)}
+            >
+              {sections.map((s: any) => (
+                <MenuItem key={s.sectionId} value={s.sectionId}>
+                  {s.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+
+        {/* Tab 0: Manual Actions */}
+        {tabIndex === 0 && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
               <AppButton
                 variant="contained"
-                color="secondary"
+                color="primary"
                 startIcon={<SendIcon />}
                 onClick={handleSubmitForApproval}
                 loading={submitForApproval.isPending}
                 size="small"
+                sx={{ flex: { xs: 1, sm: 'none' }, fontWeight: 600, textTransform: 'none' }}
               >
-                Send Manual Timetable for Approval
+                Send for Approval
               </AppButton>
-              {selectedClass && selectedSection && (
-                <>
-                  <AppButton variant="outlined" startIcon={<PdfIcon />} onClick={handleExportPdf} size="small">
-                    Export PDF
-                  </AppButton>
-                  <AppButton variant="outlined" startIcon={<DownloadIcon />} onClick={handleDownloadExcelTemplate} size="small">
-                    Excel Template
-                  </AppButton>
-                  <AppButton variant="outlined" component="label" startIcon={<UploadIcon />} size="small" loading={bulkCreateEntries.isPending}>
-                    Upload Excel
-                    <input type="file" hidden accept=".xlsx, .xls" onChange={handleUploadExcel} />
-                  </AppButton>
-                  {entries.length > 0 && (
-                    <AppButton variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={() => setIsDeleteDialogOpen(true)} size="small">
-                      Delete Table
-                    </AppButton>
-                  )}
-                </>
-              )}
-              <ToggleButtonGroup value={viewMode} exclusive onChange={(_, v) => v && setViewMode(v)} size="small">
-                <ToggleButton value="table"><TableIcon /></ToggleButton>
-                <ToggleButton value="list"><ListIcon /></ToggleButton>
-              </ToggleButtonGroup>
-            </Box>
-          </Box>
-        </Paper>
-      )}
 
-      {tabIndex === 1 && (
-        <Paper sx={{ p: 2, mb: 3, bgcolor: "#f0fdf4", borderLeft: "4px solid #16a34a" }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
-            <Box>
-              <Typography variant="subtitle1" fontWeight={700} color="success.main" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                🪄 AI Timetable Generator & Draft Versions
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Auto-generate optimized timetables using AI. Switch between draft versions and submit for Principal approval.
-              </Typography>
+              {teachersOnLeave.length > 0 && (
+                <Chip
+                  icon={<WarningIcon sx={{ fontSize: 14 }} />}
+                  label={`${teachersOnLeave.length} on leave`}
+                  color="warning"
+                  size="small"
+                  sx={{ fontWeight: 600 }}
+                />
+              )}
             </Box>
-            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
+
+            {selectedClass && selectedSection && (
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                  <Button variant="outlined" size="small" startIcon={<PdfIcon />} onClick={handleExportPdf} sx={{ textTransform: 'none', px: 1, minWidth: 'auto' }}>
+                    PDF
+                  </Button>
+                  <Button variant="outlined" size="small" startIcon={<DownloadIcon />} onClick={handleDownloadExcelTemplate} sx={{ textTransform: 'none', px: 1, minWidth: 'auto' }}>
+                    Template
+                  </Button>
+                  <Button variant="outlined" size="small" component="label" startIcon={<UploadIcon />} sx={{ textTransform: 'none', px: 1, minWidth: 'auto' }} disabled={bulkCreateEntries.isPending}>
+                    Upload
+                    <input type="file" hidden accept=".xlsx, .xls" onChange={handleUploadExcel} />
+                  </Button>
+                  {entries.length > 0 && (
+                    <Button variant="outlined" color="error" size="small" onClick={() => setIsDeleteDialogOpen(true)} sx={{ textTransform: 'none', px: 1, minWidth: 'auto' }}>
+                      Delete
+                    </Button>
+                  )}
+                </Box>
+
+                <ToggleButtonGroup
+                  value={viewMode}
+                  exclusive
+                  onChange={(_, v) => v && setViewMode(v)}
+                  size="small"
+                >
+                  <ToggleButton value="list" sx={{ px: 1, py: 0.25, textTransform: 'none', fontSize: '0.8rem' }}>
+                    <ListIcon fontSize="small" sx={{ mr: 0.5 }} /> Day
+                  </ToggleButton>
+                  <ToggleButton value="table" sx={{ px: 1, py: 0.25, textTransform: 'none', fontSize: '0.8rem' }}>
+                    <TableIcon fontSize="small" sx={{ mr: 0.5 }} /> Week
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {/* Tab 1: AI Actions */}
+        {tabIndex === 1 && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
               {aiVersions.length > 0 && (
-                <FormControl size="small" sx={{ minWidth: 160 }}>
-                  <InputLabel>Draft Version</InputLabel>
+                <FormControl size="small" sx={{ minWidth: 120 }}>
+                  <InputLabel>Draft</InputLabel>
                   <Select
                     value={selectedAiVersion || ""}
-                    label="Draft Version"
+                    label="Draft"
                     onChange={(e) => setSelectedAiVersion(Number(e.target.value))}
                   >
                     {aiVersions.map((v: any) => (
                       <MenuItem key={v.version} value={v.version}>
-                        Version {v.version} ({v.status})
+                        v{v.version} ({v.status})
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               )}
-              <AppButton
-                variant="contained"
+              <Button variant="contained" size="small" startIcon={<MagicIcon />} onClick={() => setAiGenerateDialogOpen(true)} sx={{ textTransform: 'none' }}>
+                Generate AI
+              </Button>
+              <Button
+                variant="outlined"
                 color="primary"
-                startIcon={<MagicIcon />}
-                onClick={() => setAiGenerateDialogOpen(true)}
                 size="small"
-              >
-                Generate AI Timetable
-              </AppButton>
-              <AppButton
-                variant="contained"
-                color="secondary"
                 startIcon={<SendIcon />}
                 onClick={handleSendAiDraftForApproval}
-                loading={submitForApproval.isPending}
                 disabled={aiVersions.length === 0}
-                size="small"
+                sx={{ textTransform: 'none' }}
               >
-                Send AI Draft for Approval
-              </AppButton>
+                Send for Approval
+              </Button>
               {aiVersions.length > 0 && selectedAiVersion && (
-                <AppButton
+                <Button
                   variant="outlined"
                   color="error"
-                  startIcon={<DeleteIcon />}
-                  onClick={handleDeleteAiVersion}
-                  loading={deleteAiVersion.isPending}
                   size="small"
+                  onClick={handleDeleteAiVersion}
+                  disabled={deleteAiVersion.isPending}
+                  sx={{ textTransform: 'none' }}
                 >
                   Delete Version
-                </AppButton>
+                </Button>
               )}
             </Box>
-          </Box>
-        </Paper>
-      )}
 
-      {tabIndex === 2 && (
-        <Paper sx={{ p: 2, mb: 3, bgcolor: "#faf5ff", borderLeft: "4px solid #9333ea" }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
-            <Box>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
-                <Typography variant="subtitle1" fontWeight={700} color="secondary">
-                  🌐 Final Published Live Timetable
-                </Typography>
-                <Chip
-                  icon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
-                  label="LIVE ACTIVE"
-                  color="success"
-                  size="small"
-                  sx={{ fontWeight: 700 }}
-                />
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Currently active timetable approved by the Principal. Read-only live view.
-              </Typography>
-            </Box>
-            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
-              {activeSchedule && (
-                <Box sx={{ textAlign: { xs: "left", sm: "right" } }}>
-                  <Typography variant="caption" color="text.secondary" display="block">
-                    Active Schedule: <strong>{activeSchedule.name}</strong>
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" display="block">
-                    Published: {new Date(activeSchedule.updatedAt || activeSchedule.createdAt).toLocaleDateString()}
-                  </Typography>
-                </Box>
-              )}
-              {selectedClass && selectedSection && (
-                <AppButton variant="outlined" startIcon={<PdfIcon />} onClick={handleExportPdf} size="small">
-                  Export PDF
-                </AppButton>
-              )}
-              <ToggleButtonGroup value={viewMode} exclusive onChange={(_, v) => v && setViewMode(v)} size="small">
-                <ToggleButton value="table"><TableIcon /></ToggleButton>
-                <ToggleButton value="list"><ListIcon /></ToggleButton>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={(_, v) => v && setViewMode(v)}
+                size="small"
+              >
+                <ToggleButton value="list" sx={{ px: 1, py: 0.25, textTransform: 'none', fontSize: '0.8rem' }}>
+                  <ListIcon fontSize="small" sx={{ mr: 0.5 }} /> Day
+                </ToggleButton>
+                <ToggleButton value="table" sx={{ px: 1, py: 0.25, textTransform: 'none', fontSize: '0.8rem' }}>
+                  <TableIcon fontSize="small" sx={{ mr: 0.5 }} /> Week
+                </ToggleButton>
               </ToggleButtonGroup>
             </Box>
           </Box>
-        </Paper>
-      )}
+        )}
 
-      {/* Class/Section Selector */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Grid container spacing={2}>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <FormControl fullWidth size="small">
-              <InputLabel>Select Class</InputLabel>
-              <Select
-                value={selectedClass}
-                label="Select Class"
-                onChange={(e) => {
-                  setSelectedClass(e.target.value);
-                  setSelectedSection("");
-                }}
-              >
-                {classes.map((c: any) => (
-                  <MenuItem key={c.classId} value={c.classId}>
-                    {c.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-            <FormControl fullWidth size="small" disabled={!selectedClass}>
-              <InputLabel>Select Section</InputLabel>
-              <Select
-                value={selectedSection}
-                label="Select Section"
-                onChange={(e) => setSelectedSection(e.target.value)}
-              >
-                {sections.map((s: any) => (
-                  <MenuItem key={s.sectionId} value={s.sectionId}>
-                    {s.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          {entries.some(entry => {
-            const days = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
-            const todayName = days[new Date().getDay()];
-            return teachersOnLeave.includes(entry.teacherId) && entry.dayOfWeek.toLowerCase() === todayName;
-          }) && (
-              <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', alignItems: 'center' }}>
-                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', ml: { md: 2 } }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Box sx={{ width: 16, height: 16, bgcolor: '#ffc107', borderRadius: 0.5 }} />
-                    <Typography variant="caption" color="text.secondary">Teacher on Leave</Typography>
-                  </Box>
-                </Box>
-              </Grid>
-            )}
-        </Grid>
-      </Paper>
+        {/* Tab 2: Live Actions */}
+        {tabIndex === 2 && (
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+              <Chip label="LIVE" color="success" size="small" sx={{ fontWeight: 700, height: 22 }} />
+              {activeSchedule && (
+                <Typography variant="caption" color="text.secondary">
+                  {activeSchedule.name}
+                </Typography>
+              )}
+              {selectedClass && selectedSection && (
+                <Button variant="outlined" size="small" startIcon={<PdfIcon />} onClick={handleExportPdf} sx={{ textTransform: 'none' }}>
+                  Export PDF
+                </Button>
+              )}
+            </Box>
 
-      {/* Timetable Grid */}
+            <ToggleButtonGroup
+              value={viewMode}
+              exclusive
+              onChange={(_, v) => v && setViewMode(v)}
+              size="small"
+            >
+              <ToggleButton value="list" sx={{ px: 1, py: 0.25, textTransform: 'none', fontSize: '0.8rem' }}>
+                <ListIcon fontSize="small" sx={{ mr: 0.5 }} /> Day
+              </ToggleButton>
+              <ToggleButton value="table" sx={{ px: 1, py: 0.25, textTransform: 'none', fontSize: '0.8rem' }}>
+                <TableIcon fontSize="small" sx={{ mr: 0.5 }} /> Week
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+        )}
+      </Box>
+
+      {/* Timetable Grid & Day View */}
       {selectedClass && selectedSection && (
-        <Paper sx={{ p: 2, overflow: "auto" }}>
+        <Box sx={{ mb: 3 }}>
           {entries.length === 0 &&
             !timetableLoading &&
             activeClasses.length > 0 && (
               <Box
                 sx={{
                   p: 2,
-                  mb: 3,
-                  bgcolor: "background.default",
-                  borderRadius: 1,
-                  border: "1px dashed text.disabled",
+                  mb: 2,
+                  bgcolor: "#f8fafc",
+                  borderRadius: 1.5,
+                  border: "1px dashed #cbd5e1",
                 }}
               >
-                <Typography variant="subtitle2" gutterBottom>
-                  No timetable exists for this class/section. You can copy from
-                  an existing one:
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  No timetable exists for this class/section. You can copy from an existing one:
                 </Typography>
                 <Box
-                  sx={{ display: "flex", gap: 2, alignItems: "center", mt: 1 }}
+                  sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 1, alignItems: { xs: "stretch", sm: "center" }, mt: 1 }}
                 >
-                  <FormControl size="small" sx={{ minWidth: 250 }}>
-                    <InputLabel>Select Source Class/Section</InputLabel>
+                  <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 220 } }}>
+                    <InputLabel>Source Class/Section</InputLabel>
                     <Select
                       value={selectedCopySource}
-                      label="Select Source Class/Section"
+                      label="Source Class/Section"
                       onChange={(e) => setSelectedCopySource(e.target.value)}
                     >
                       <MenuItem value="">
@@ -1229,15 +1219,12 @@ const TimetableMaster = () => {
                         ))}
                     </Select>
                   </FormControl>
-                  <AppButton
+                  <Button
                     variant="outlined"
-                    disabled={
-                      !selectedCopySource || copyClassTimetable.isPending
-                    }
-                    loading={copyClassTimetable.isPending}
+                    size="small"
+                    disabled={!selectedCopySource || copyClassTimetable.isPending}
                     onClick={async () => {
-                      const [sourceClassId, sourceSectionId] =
-                        selectedCopySource.split("-");
+                      const [sourceClassId, sourceSectionId] = selectedCopySource.split("-");
                       try {
                         await copyClassTimetable.mutateAsync({
                           targetClassId: selectedClass,
@@ -1245,33 +1232,28 @@ const TimetableMaster = () => {
                           sourceClassId,
                           sourceSectionId,
                         });
-                        showNotification(
-                          "Timetable copied successfully",
-                          "success",
-                        );
+                        showNotification("Timetable copied successfully", "success");
                         setSelectedCopySource("");
                       } catch (error: any) {
                         console.error(error);
-                        showNotification(
-                          `Failed to copy timetable: ${error?.message || "Unknown error"}`,
-                          "error",
-                        );
+                        showNotification(`Failed to copy timetable: ${error?.message || "Unknown error"}`, "error");
                       }
                     }}
+                    sx={{ textTransform: 'none' }}
                   >
-                    Copy Timetable
-                  </AppButton>
+                    Copy
+                  </Button>
                 </Box>
               </Box>
             )}
 
           {timetableLoading || (tabIndex === 1 && aiDraftLoading) ? (
             <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
-              <CircularProgress />
+              <CircularProgress size={32} />
             </Box>
           ) : viewMode === "table" ? (
             /* Table View */
-            <Box sx={{ overflowX: "auto" }}>
+            <Box sx={{ overflowX: "auto", WebkitOverflowScrolling: "touch", borderRadius: 1.5, border: "1px solid", borderColor: "divider", bgcolor: "background.paper" }}>
               <Box
                 component="table"
                 sx={{
@@ -1280,20 +1262,21 @@ const TimetableMaster = () => {
                   "& th, & td": {
                     border: "1px solid",
                     borderColor: "divider",
-                    p: 1,
+                    p: { xs: 1, sm: 1.5 },
                     textAlign: "center",
-                    minWidth: 120,
+                    minWidth: { xs: 145, sm: 130 },
                   },
                   "& th": {
                     bgcolor: "primary.main",
                     color: "white",
-                    fontWeight: 600,
+                    fontWeight: 700,
+                    fontSize: { xs: "0.8rem", sm: "0.875rem" },
                   },
                 }}
               >
                 <thead>
                   <tr>
-                    <th>Period</th>
+                    <th style={{ minWidth: 100 }}>Period</th>
                     {config.workingDays.map((day) => (
                       <th
                         key={day}
@@ -1319,14 +1302,14 @@ const TimetableMaster = () => {
                           style={{
                             fontWeight: 600,
                             backgroundColor: isNonRegular
-                              ? "#f5f5f5"
-                              : "#f5f5f5",
+                              ? "#f8fafc"
+                              : "#f8fafc",
                           }}
                         >
-                          <Typography variant="body2" fontWeight={600}>
+                          <Typography variant="body2" fontWeight={700}>
                             {period.name}
                           </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
                             {formatSingleTime(period.startTime, timeFormat)} - {formatSingleTime(period.endTime, timeFormat)}
                           </Typography>
                         </td>
@@ -1334,13 +1317,13 @@ const TimetableMaster = () => {
                           <td
                             colSpan={config.workingDays.length}
                             style={{
-                              backgroundColor: "#eeeeee",
+                              backgroundColor: "#f1f5f9",
                               textAlign: "center",
                               fontWeight: "bold",
-                              letterSpacing: "2px",
-                              color: "#616161",
+                              letterSpacing: "1px",
+                              color: "#64748b",
                               textTransform: "uppercase",
-                              fontSize: "0.85rem",
+                              fontSize: "0.75rem",
                             }}
                           >
                             {period.type}
@@ -1370,9 +1353,9 @@ const TimetableMaster = () => {
                                   cursor: tabIndex === 0 ? "pointer" : "default",
                                   position: "relative",
                                   border: hasSubstitute
-                                    ? "3px solid #ff9800"
+                                    ? "2px solid #ff9800"
                                     : isOnLeave && day === todayDayName
-                                      ? "3px solid #f44336"
+                                      ? "2px solid #f44336"
                                       : undefined,
                                 }}
                                 onClick={() => {
@@ -1382,10 +1365,11 @@ const TimetableMaster = () => {
                                 }}
                               >
                                 {entry ? (
-                                  <Box>
+                                  <Box sx={{ position: "relative", pr: tabIndex === 0 ? 3 : 0, minHeight: 44, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-start", textAlign: "left" }}>
                                     <Typography
                                       variant="body2"
                                       fontWeight={600}
+                                      sx={{ fontSize: { xs: "0.8rem", sm: "0.875rem" }, wordBreak: "break-word" }}
                                     >
                                       {subjects.find(s => s.subjectId === entry.subjectId)?.name || entry.subject?.name || entry.subjectId}
                                     </Typography>
@@ -1408,70 +1392,51 @@ const TimetableMaster = () => {
                                     </Typography>
 
                                     {hasSubstitute && (
-                                      <Tooltip
-                                        title={`Substitute for: ${getTeacherDisplayName(entry)}`}
+                                      <Typography
+                                        variant="caption"
+                                        color="success.main"
+                                        fontWeight={600}
+                                        sx={{ fontSize: '0.65rem' }}
                                       >
-                                        <Box
-                                          sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: 0.5,
-                                            mt: 0.5,
-                                          }}
-                                        >
-                                          <SwapIcon
-                                            sx={{
-                                              fontSize: 14,
-                                              color: "success.main",
-                                            }}
-                                          />
-                                          <Typography
-                                            variant="caption"
-                                            color="success.main"
-                                            fontWeight={600}
-                                          >
-                                            {substitute.substituteTeacher
-                                              ?.name ||
-                                              substitute.substituteTeacherId}
-                                          </Typography>
-                                        </Box>
-                                      </Tooltip>
+                                        Sub: {substitute.substituteTeacher?.name || substitute.substituteTeacherId}
+                                      </Typography>
                                     )}
 
-                                    {isOnLeave &&
-                                      day === todayDayName &&
-                                      !hasSubstitute && (
-                                        <Chip
-                                          label="Absent"
-                                          size="small"
-                                          color="error"
-                                          sx={{
-                                            mt: 0.5,
-                                            fontSize: "0.6rem",
-                                            height: 18,
-                                          }}
-                                        />
-                                      )}
+                                    {isOnLeave && day === todayDayName && !hasSubstitute && (
+                                      <Chip
+                                        label="Absent"
+                                        size="small"
+                                        color="error"
+                                        sx={{
+                                          mt: 0.5,
+                                          fontSize: "0.6rem",
+                                          height: 16,
+                                        }}
+                                      />
+                                    )}
 
-                                    <IconButton
-                                      size="small"
-                                      sx={{
-                                        position: "absolute",
-                                        top: 2,
-                                        right: 2,
-                                      }}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteEntry(entry.entryId);
-                                      }}
-                                    >
-                                      <DeleteIcon fontSize="small" />
-                                    </IconButton>
+                                    {tabIndex === 0 && (
+                                      <IconButton
+                                        size="small"
+                                        sx={{
+                                          position: "absolute",
+                                          top: -2,
+                                          right: -6,
+                                          p: 0.5,
+                                        }}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteEntry(entry.entryId);
+                                        }}
+                                      >
+                                        <DeleteIcon sx={{ fontSize: 15 }} />
+                                      </IconButton>
+                                    )}
                                   </Box>
                                 ) : (
                                   <Tooltip title="Click to add">
                                     <AddIcon
-                                      sx={{ color: "action.disabled" }}
+                                      sx={{ color: "action.disabled", fontSize: 18 }}
                                     />
                                   </Tooltip>
                                 )}
@@ -1485,14 +1450,184 @@ const TimetableMaster = () => {
                 </tbody>
               </Box>
             </Box>
+          ) : isMobile ? (
+            /* Mobile Day Timeline View */
+            <Box>
+              {/* Day Selector Pills */}
+              <Box sx={{ display: 'flex', gap: 0.75, overflowX: 'auto', pb: 1.5, '::-webkit-scrollbar': { display: 'none' } }}>
+                {config.workingDays.map((day) => {
+                  const activeDay = selectedDayTab && config.workingDays.includes(selectedDayTab) ? selectedDayTab : config.workingDays[0];
+                  const isSelected = activeDay === day;
+                  const isToday = day === todayDayName;
+
+                  return (
+                    <Button
+                      key={day}
+                      onClick={() => setSelectedDayTab(day)}
+                      size="small"
+                      sx={{
+                        borderRadius: 1.5,
+                        textTransform: 'capitalize',
+                        px: 1.25,
+                        py: 0.5,
+                        fontWeight: 600,
+                        fontSize: '0.8rem',
+                        minWidth: 'auto',
+                        bgcolor: isSelected ? 'primary.main' : '#f1f5f9',
+                        color: isSelected ? '#ffffff' : '#475569',
+                        border: 'none',
+                        boxShadow: 'none',
+                        '&:hover': {
+                          bgcolor: isSelected ? 'primary.dark' : '#e2e8f0',
+                        },
+                      }}
+                    >
+                      {day.slice(0, 3)} {isToday && '• Today'}
+                    </Button>
+                  );
+                })}
+              </Box>
+
+              {/* Day Periods Vertical List */}
+              {(() => {
+                const currentDay = selectedDayTab && config.workingDays.includes(selectedDayTab) ? selectedDayTab : config.workingDays[0];
+                return (
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {allPeriods.map((period) => {
+                      const isNonRegular = period.type !== "regular";
+                      const entry = tabIndex === 1
+                        ? aiEntryMap[`${currentDay}-${period.periodNumber}`]
+                        : entryMap[`${currentDay}-${period.periodNumber}`];
+                      const substitute = substituteMap[`${currentDay}-${period.periodNumber}`];
+                      const isOnLeave = entry && teachersOnLeave.includes(entry.teacherId);
+                      const hasSubstitute = !!substitute && currentDay === todayDayName;
+
+                      if (isNonRegular) {
+                        return (
+                          <Box
+                            key={period.periodNumber}
+                            sx={{
+                              py: 0.75,
+                              px: 1.25,
+                              borderRadius: 1.5,
+                              bgcolor: '#f8fafc',
+                              border: '1px dashed #cbd5e1',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <Typography variant="body2" fontWeight={600} color="text.secondary" sx={{ textTransform: 'capitalize' }}>
+                              ☕ {period.name || period.type}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {formatSingleTime(period.startTime, timeFormat)} - {formatSingleTime(period.endTime, timeFormat)} ({period.duration}m)
+                            </Typography>
+                          </Box>
+                        );
+                      }
+
+                      return (
+                        <Paper
+                          key={period.periodNumber}
+                          variant="outlined"
+                          sx={{
+                            p: 1.25,
+                            borderRadius: 1.5,
+                            borderColor: '#e2e8f0',
+                            bgcolor: hasSubstitute ? '#fffbeb' : 'background.paper',
+                            cursor: tabIndex === 0 ? 'pointer' : 'default',
+                            transition: 'background-color 0.15s ease',
+                            '&:hover': { bgcolor: '#f8fafc' },
+                          }}
+                          onClick={() => {
+                            if (tabIndex === 0) {
+                              handleSlotClick(currentDay, period.periodNumber);
+                            }
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                              Period {period.periodNumber} • {formatSingleTime(period.startTime, timeFormat)} - {formatSingleTime(period.endTime, timeFormat)} ({period.duration}m)
+                            </Typography>
+
+                            {entry && tabIndex === 0 && (
+                              <Box sx={{ display: 'flex', gap: 0.25 }}>
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSlotClick(currentDay, period.periodNumber);
+                                  }}
+                                >
+                                  <EditIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                                <IconButton
+                                  size="small"
+                                  color="error"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteEntry(entry.entryId);
+                                  }}
+                                >
+                                  <DeleteIcon sx={{ fontSize: 16 }} />
+                                </IconButton>
+                              </Box>
+                            )}
+                          </Box>
+
+                          {entry ? (
+                            <Box>
+                              <Typography variant="body1" fontWeight={600} color="#0f172a">
+                                {subjects.find(s => s.subjectId === entry.subjectId)?.name || entry.subject?.name || entry.subjectId}
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{
+                                  textDecoration: (hasSubstitute || (isOnLeave && currentDay === todayDayName)) ? 'line-through' : 'none'
+                                }}
+                              >
+                                Teacher: {getTeacherDisplayName(entry)}
+                              </Typography>
+
+                              {hasSubstitute && (
+                                <Typography variant="caption" color="success.main" fontWeight={600} display="block" sx={{ mt: 0.25 }}>
+                                  Substitute: {substitute.substituteTeacher?.name || substitute.substituteTeacherId}
+                                </Typography>
+                              )}
+
+                              {isOnLeave && currentDay === todayDayName && !hasSubstitute && (
+                                <Chip label="Teacher on leave" size="small" color="error" sx={{ mt: 0.5, height: 18, fontSize: 10 }} />
+                              )}
+                            </Box>
+                          ) : (
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 0.25 }}>
+                              <Typography variant="body2" color="text.secondary" fontStyle="italic">
+                                No class scheduled
+                              </Typography>
+                              {tabIndex === 0 && (
+                                <Typography variant="caption" color="primary" fontWeight={600}>
+                                  + Assign
+                                </Typography>
+                              )}
+                            </Box>
+                          )}
+                        </Paper>
+                      );
+                    })}
+                  </Box>
+                );
+              })()}
+            </Box>
           ) : (
-            /* List View */
+            /* Desktop List View *//* Desktop List View */
             <Box>
               {config.workingDays.map((day) => (
                 <Box key={day} sx={{ mb: 3 }}>
                   <Typography
                     variant="h6"
-                    sx={{ mb: 1, textTransform: "capitalize" }}
+                    sx={{ mb: 1, textTransform: "capitalize", fontWeight: 700 }}
                   >
                     {day} {day === todayDayName && "(Today)"}
                   </Typography>
@@ -1514,7 +1649,7 @@ const TimetableMaster = () => {
                             p: 1.5,
                             mb: 1,
                             borderRadius: 1,
-                            bgcolor: "#eeeeee", // Gray for breaks
+                            bgcolor: "#eeeeee",
                             borderLeft: "4px solid #9e9e9e",
                           }}
                         >
@@ -1640,7 +1775,7 @@ const TimetableMaster = () => {
               ))}
             </Box>
           )}
-        </Paper>
+        </Box>
       )}
 
       {!selectedClass && tabIndex !== 3 && (
