@@ -19,6 +19,7 @@ const announcementRoutes = require('./routes/announcement.routes');
 const notificationRoutes = require('./routes/notification.routes');
 const activityLogRoutes = require('./routes/activityLog.routes');
 const driverRoutes = require('./routes/driver.routes');
+const principalRoutes = require('./routes/principal.routes');
 const emailTemplateRoutes = require('./routes/emailTemplate.routes');
 const testEmailRoutes = require('./routes/testEmail.routes');
 const roleRoutes = require('./routes/role.routes');
@@ -78,6 +79,7 @@ app.use('/api/school/:schoolId/notifications', notificationRoutes);
 app.use('/api/school/:schoolId/logs', activityLogRoutes);
 app.use('/api/school/:schoolId/email-templates', emailTemplateRoutes);
 app.use('/api/school/:schoolId/drivers', driverRoutes);
+app.use('/api/school/:schoolId/principals', principalRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/test', testEmailRoutes);
 app.use('/api/school/upload', uploadRoutes);
@@ -105,4 +107,4 @@ app.listen(PORT, async () => {
 
 module.exports = app;
 
-// Trigger redeployment
+// Trigger redeployment - Added principal role middleware authorization to routes

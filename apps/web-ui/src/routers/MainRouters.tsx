@@ -37,6 +37,7 @@ const SchoolAdminTransport = lazy(() => import("../pages/SchoolAdmin/Transport/T
 const VehicleManagement = lazy(() => import("../pages/SchoolAdmin/Transport/VehicleManagement"));
 const DriverManagement = lazy(() => import("../pages/SchoolAdmin/Transport/DriverManagement"));
 const SchoolAdminPromotion = lazy(() => import("../pages/SchoolAdmin/Promotion"));
+const SchoolAdminPrincipal = lazy(() => import("../pages/SchoolAdmin/Principal"));
 
 // Fee Management Pages
 const FeeDashboard = lazy(() => import("../pages/SchoolAdmin/Fees/Dashboard"));
@@ -87,6 +88,18 @@ const TeacherTimetable = lazy(() => import("../pages/Teacher/Timetable/MyTimetab
 const MarksEntry = lazy(() => import("../pages/Teacher/Exam/MarksEntry"));
 const TeacherExamScheduler = lazy(() => import("../pages/Teacher/Exam/ExamScheduler"));
 
+// Principal Pages
+const PrincipalDashboard = lazy(() => import("../pages/Principal/Dashboard"));
+const PrincipalTeacherLeaveApprovals = lazy(() => import("../pages/Principal/Leave/TeacherLeaveApprovals"));
+const PrincipalTimetableReview = lazy(() => import("../pages/Principal/Timetable/TimetableReview"));
+const PrincipalExamApproval = lazy(() => import("../pages/Principal/Exam/ExamApproval"));
+const PrincipalExamResults = lazy(() => import("../pages/Principal/Exam/ExamResults"));
+const PrincipalAttendance = lazy(() => import("../pages/Principal/Attendance"));
+const PrincipalTeachers = lazy(() => import("../pages/Principal/Teachers"));
+const PrincipalStudents = lazy(() => import("../pages/Principal/Students"));
+const PrincipalAnnouncements = lazy(() => import("../pages/Principal/Announcements"));
+const PrincipalProfile = lazy(() => import("../pages/Principal/Profile"));
+
 // Student Pages
 const StudentDashboard = lazy(() => import("../pages/Student/Dashboard"));
 const StudentClasses = lazy(() => import("../pages/Student/Classes"));
@@ -133,7 +146,7 @@ const MainRouters = () => {
           element={
             (() => {
               if (!userRole) return <Navigate to="/login" replace />;
-              
+
               const basePath = getBasePath(userRole);
               if (basePath) {
                 return <Navigate to={`${basePath}/dashboard`} replace />;
@@ -146,9 +159,10 @@ const MainRouters = () => {
                 'teacher': '/teacher',
                 'student': '/student',
                 'parent': '/parent',
-                'driver': '/driver'
+                'driver': '/driver',
+                'principal': '/principal',
               };
-              
+
               const fallback = standardPaths[userRole];
               if (fallback) {
                 return <Navigate to={`${fallback}/dashboard`} replace />;
@@ -245,6 +259,7 @@ const MainRouters = () => {
           <Route path="/school-admin/location" element={<SchoolLocation />} />
           <Route path="/school-admin/profile" element={<SchoolAdminProfile />} />
           <Route path="/school-admin/promotion" element={<SchoolAdminPromotion />} />
+          <Route path="/school-admin/principal" element={<SchoolAdminPrincipal />} />
 
           {/* Fee Management Routes */}
           <Route path="/school-admin/fees/dashboard" element={<FeeDashboard />} />
@@ -331,6 +346,23 @@ const MainRouters = () => {
             <Route path="/parent/fees" element={<ParentFees />} />
             <Route path="/parent/chat" element={<ChatPage />} />
           </Route>
+        </Route>
+
+        {/* Principal Routes */}
+        <Route element={<ProtectedRoute allowedRoles={["principal"]} />}>
+          <Route path="/principal" element={<Navigate to="/principal/dashboard" replace />} />
+          <Route path="/principal/dashboard" element={<PrincipalDashboard />} />
+          <Route path="/principal/leave/teacher-requests" element={<PrincipalTeacherLeaveApprovals />} />
+          <Route path="/principal/timetable/review" element={<PrincipalTimetableReview />} />
+          <Route path="/principal/exam/approval" element={<PrincipalExamApproval />} />
+          <Route path="/principal/exam/results" element={<PrincipalExamResults />} />
+          <Route path="/principal/attendance" element={<PrincipalAttendance />} />
+          <Route path="/principal/teachers" element={<PrincipalTeachers />} />
+          <Route path="/principal/students" element={<PrincipalStudents />} />
+          <Route path="/principal/announcements" element={<PrincipalAnnouncements />} />
+          <Route path="/principal/notifications" element={<NotificationsPage />} />
+          <Route path="/principal/chat" element={<ChatPage />} />
+          <Route path="/principal/profile" element={<PrincipalProfile />} />
         </Route>
 
         {/* Driver Routes */}

@@ -6,7 +6,8 @@ const {
   EmailRegistryModel,
   TeacherSchema,
   StudentSchema,
-  ParentSchema
+  ParentSchema,
+  PrincipalSchema
 } = require("../packages/shared/models");
 
 const MONGO_URI = process.env.MONGO_URI;
@@ -60,6 +61,7 @@ async function patchEmails() {
   const Teacher = schoolDb.model("Teacher", TeacherSchema);
   const Student = schoolDb.model("Student", StudentSchema);
   const Parent = schoolDb.model("Parent", ParentSchema);
+  const Principal = schoolDb.model("Principal", PrincipalSchema);
 
   const teachers = await Teacher.find({});
   for (const t of teachers) {
@@ -96,6 +98,19 @@ async function patchEmails() {
         schoolId: p.schoolId,
         userId: p.parentId,
         status: p.status || "active"
+      });
+    }
+  }
+
+  const principals = await Principal.find({});
+  for (const pr of principals) {
+    if (pr.email) {
+      registryEntries.push({
+        email: pr.email,
+        role: "principal",
+        schoolId: pr.schoolId,
+        userId: pr.principalId,
+        status: pr.status || "active"
       });
     }
   }

@@ -55,12 +55,14 @@ import { useGetClasses } from '../../../queries/Class';
 import type { CreateExamTermRequest, CreateExamTypeRequest, GradeRange } from '../../../types/exam.types';
 import type { CreateRoomRequest } from '../../../types/timetable.types';
 
+import { useUrlTab } from '../../../hooks/useUrlTab';
+
 // ==========================================
 // EXAM CONFIGURATION PAGE
 // ==========================================
 
 const ExamConfiguration = () => {
-    const [activeTab, setActiveTab] = useState(0);
+    const [activeTab, setActiveTab] = useUrlTab(0, ['terms', 'types', 'grading', 'rooms']);
     const { user } = useAuth();
     const schoolId = user?.schoolId || '';
 

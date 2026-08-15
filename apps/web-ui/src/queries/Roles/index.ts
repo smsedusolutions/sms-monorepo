@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useApi from "../useApi";
+import { useRoleStore } from "../../stores/roleStore";
 
 export interface Role {
   _id: string;
@@ -40,6 +41,7 @@ export const useCreateRole = () => {
     mutationFn: (data: Partial<Role>) => useApi<SingleRoleResponse>("POST", "/api/roles", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
+      useRoleStore.getState().fetchRoles(true);
     },
   });
 };
@@ -52,6 +54,7 @@ export const useUpdateRole = () => {
       useApi<SingleRoleResponse>("PUT", `/api/roles/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
+      useRoleStore.getState().fetchRoles(true);
     },
   });
 };
@@ -64,6 +67,7 @@ export const useDeleteRole = () => {
       useApi<{ success: boolean; message: string }>("DELETE", `/api/roles/${id}`, undefined, { permanent: String(permanent) }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["roles"] });
+      useRoleStore.getState().fetchRoles(true);
     },
   });
 };

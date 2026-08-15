@@ -52,6 +52,7 @@ import {
 } from "@mui/icons-material";
 import { useGetActivityLogs, useGetLogStats, useClearLogs } from "../../../queries/ActivityLog";
 import TokenService from "../../../queries/token/tokenService";
+import { useUrlTab } from "../../../hooks/useUrlTab";
 import ConfirmationDialog from "../../../components/Dialogs/ConfirmationDialog";
 import { exportToExcel } from "../../../components/ExcelExport";
 import type { ActivityLog, ActivityLogFilters } from "../../../types";
@@ -60,7 +61,7 @@ import NotificationsTab from "./NotificationsTab"; // We'll create this to wrap 
 const SchoolAdminNotifications: React.FC = () => {
   const theme = useTheme();
   const schoolId = TokenService.getSchoolId() || "";
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useUrlTab(0, ['audit-logs', 'notifications']);
   const [isPurgeDialogOpen, setIsPurgeDialogOpen] = useState(false);
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);

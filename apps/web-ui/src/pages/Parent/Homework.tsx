@@ -33,6 +33,7 @@ import { useNavigate } from 'react-router-dom';
 import { useChildSelector } from '../../context/ChildSelectorContext';
 import { useGetHomeworkByStudent } from '../../queries/Homework';
 import TokenService from '../../queries/token/tokenService';
+import { useUrlTab } from '../../hooks/useUrlTab';
 import type { Homework } from '../../types';
 
 const ParentHomework: React.FC = () => {
@@ -40,7 +41,7 @@ const ParentHomework: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const { selectedChild, setSelectedChild, children: contextChildren, isLoading: loadingChild } = useChildSelector();
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedTab, setSelectedTab] = useState(0); // 0: All, 1: Pending, 2: Overdue
+    const [selectedTab, setSelectedTab] = useUrlTab(0, ['all', 'active', 'overdue']); // 0: All, 1: Pending, 2: Overdue
 
     const { data, isLoading, error } = useGetHomeworkByStudent(
         schoolId,

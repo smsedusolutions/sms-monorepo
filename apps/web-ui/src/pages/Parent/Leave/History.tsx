@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Box,
     Typography,
@@ -29,6 +29,7 @@ import { useNavigate } from 'react-router-dom';
 import { useChildSelector } from '../../../context/ChildSelectorContext';
 import { useGetParentLeaves } from '../../../queries/Leave';
 import TokenService from '../../../queries/token/tokenService';
+import { useUrlTab } from '../../../hooks/useUrlTab';
 
 interface LeaveRequest {
     leaveId: string;
@@ -48,7 +49,7 @@ const ParentLeaveHistory: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const { children, isLoading: loadingChildren } = useChildSelector();
 
-    const [tabValue, setTabValue] = useState(0);
+    const [tabValue, setTabValue] = useUrlTab(0, ['all', 'pending', 'approved', 'rejected']);
     const statusFilter = tabValue === 1 ? 'pending' : tabValue === 2 ? 'approved' : tabValue === 3 ? 'rejected' : undefined;
 
     const { data, isLoading, error } = useGetParentLeaves(schoolId, {

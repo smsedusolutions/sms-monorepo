@@ -19,10 +19,10 @@ const { Authenticated, authorizeRoles } = require("@sms/shared/middlewares");
 router.post("/", Authenticated, authorizeRoles("sch_admin"), createClass);
 
 // GET /api/school/:schoolId/classes - Get all classes
-router.get("/", Authenticated, authorizeRoles("sch_admin", "teacher", "student", "parent"), getAllClasses);
+router.get("/", Authenticated, authorizeRoles("sch_admin", "teacher", "student", "parent", "principal"), getAllClasses);
 
 // GET /api/school/:schoolId/classes/:id - Get class by ID
-router.get("/:id", Authenticated, authorizeRoles("sch_admin", "teacher", "student"), getClassById);
+router.get("/:id", Authenticated, authorizeRoles("sch_admin", "teacher", "student", "principal"), getClassById);
 
 // PUT /api/school/:schoolId/classes/:id - Update class
 router.put("/:id", Authenticated, authorizeRoles("sch_admin"), updateClassById);

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
     Box,
     Typography,
@@ -33,6 +33,7 @@ import { useGetSubjects } from '../../../queries/Subject';
 import { useGetClasses } from '../../../queries/Class';
 import { useGetTeacherById } from '../../../queries/Teacher';
 import TokenService from '../../../queries/token/tokenService';
+import { useUrlTab } from '../../../hooks/useUrlTab';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -169,7 +170,7 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
     teacherSubjectIds, teacherClassIds,
     getSubjectName, getClassName
 }) => {
-    const [innerTab, setInnerTab] = useState(0);
+    const [innerTab, setInnerTab] = useUrlTab(0, ['my-classes', 'invigilation', 'all-schedules'], 'subtab');
     const { data: scheduleData, isLoading } = useGetExamSchedule(schoolId, exam.examId);
     const allSchedules: any[] = scheduleData?.data || [];
 
@@ -344,7 +345,7 @@ const TeacherExamScheduler: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const teacherId = TokenService.getUserId() || '';
 
-    const [selectedTab, setSelectedTab] = useState(0);
+    const [selectedTab, setSelectedTab] = useUrlTab(0, ['ongoing', 'upcoming', 'completed']);
 
     const { data: examsData, isLoading: examsLoading, error } = useGetExams(schoolId);
     const { data: subjectsData } = useGetSubjects(schoolId);

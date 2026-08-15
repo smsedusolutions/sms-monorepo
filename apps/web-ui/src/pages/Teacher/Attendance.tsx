@@ -6,6 +6,7 @@ import CheckInAttendance from './Attendance/CheckInAttendance';
 import TeacherSelfCheckIn from './Attendance/TeacherSelfCheckIn';
 import { useGetSchoolById } from '../../queries/School';
 import TokenService from '../../queries/token/tokenService';
+import { useUrlTab } from '../../hooks/useUrlTab';
 import type { AttendanceMode } from '../../types';
 
 /**
@@ -17,7 +18,7 @@ const TeacherAttendance = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const { data: schoolData, isLoading, error } = useGetSchoolById(schoolId);
     const [mode, setMode] = useState<AttendanceMode>('simple');
-    const [activeTab, setActiveTab] = useState(0);
+    const [activeTab, setActiveTab] = useUrlTab(0, ['students', 'my-attendance']);
 
     useEffect(() => {
         if (schoolData?.data?.attendanceSettings?.mode) {

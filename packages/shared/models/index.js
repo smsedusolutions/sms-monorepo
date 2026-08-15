@@ -11,6 +11,7 @@ module.exports = {
     TeacherSchema: require('./teacher.model'),
     StudentSchema: require('./student.model'),
     ParentSchema: require('./parent.model'),
+    PrincipalSchema: require('./principal.model'),
     AdminModel: require('./admin.model'),
     UserModel: require('./users.model'),
     MenuModel: require('./menu.model'),
@@ -28,6 +29,7 @@ module.exports = {
     // Timetable Management
     TimetableConfigSchema: require('./timetable-config.model'),
     TimetableEntrySchema: require('./timetable-entry.model'),
+    TimetableScheduleSchema: require('./timetable-schedule.model'),
     TimetableAIDraftSchema: require('./timetable-ai-draft.model'),
     SubstituteAssignmentSchema: require('./substitute-assignment.model'),
     RoomSchema: require('./room.model'),

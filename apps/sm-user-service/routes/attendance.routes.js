@@ -27,7 +27,7 @@ router.post(
 router.get(
     "/simple/class/:classId/:date",
     Authenticated,
-    authorizeRoles("teacher", "sch_admin"),
+    authorizeRoles("teacher", "sch_admin", "principal"),
     simpleController.getClassAttendance
 );
 
@@ -35,7 +35,7 @@ router.get(
 router.get(
     "/simple/student/:studentId",
     Authenticated,
-    authorizeRoles("teacher", "sch_admin", "student", "parent"),
+    authorizeRoles("teacher", "sch_admin", "student", "parent", "principal"),
     simpleController.getStudentAttendance
 );
 
@@ -51,7 +51,7 @@ router.put(
 router.get(
     "/simple/summary",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     simpleController.getAttendanceSummary
 );
 
@@ -71,7 +71,7 @@ router.post(
 router.get(
     "/period/class/:classId/:date/:period",
     Authenticated,
-    authorizeRoles("teacher", "sch_admin"),
+    authorizeRoles("teacher", "sch_admin", "principal"),
     periodController.getPeriodAttendance
 );
 
@@ -79,7 +79,7 @@ router.get(
 router.get(
     "/period/class/:classId/:date",
     Authenticated,
-    authorizeRoles("teacher", "sch_admin"),
+    authorizeRoles("teacher", "sch_admin", "principal"),
     periodController.getDayAttendance
 );
 
@@ -87,7 +87,7 @@ router.get(
 router.get(
     "/period/student/:studentId",
     Authenticated,
-    authorizeRoles("teacher", "sch_admin", "student", "parent"),
+    authorizeRoles("teacher", "sch_admin", "student", "parent", "principal"),
     periodController.getStudentPeriodAttendance
 );
 
@@ -95,7 +95,7 @@ router.get(
 router.get(
     "/period/subject/:subjectId/summary",
     Authenticated,
-    authorizeRoles("teacher", "sch_admin"),
+    authorizeRoles("teacher", "sch_admin", "principal"),
     periodController.getSubjectAttendanceSummary
 );
 
@@ -183,7 +183,7 @@ router.post(
 router.get(
     "/teacher/daily/:date",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     teacherController.getTeachersAttendance
 );
 
@@ -191,7 +191,7 @@ router.get(
 router.get(
     "/teacher/:teacherId/history",
     Authenticated,
-    authorizeRoles("teacher", "sch_admin"),
+    authorizeRoles("teacher", "sch_admin", "principal"),
     teacherController.getTeacherHistory
 );
 
@@ -203,7 +203,7 @@ router.get(
 router.get(
     "/reports/daily",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     reportsController.getDailyReport
 );
 
@@ -211,7 +211,7 @@ router.get(
 router.get(
     "/reports/monthly",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     reportsController.getMonthlyReport
 );
 
@@ -219,7 +219,7 @@ router.get(
 router.get(
     "/reports/range",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     reportsController.getDateRangeReport
 );
 
@@ -227,7 +227,7 @@ router.get(
 router.get(
     "/reports/classwise",
     Authenticated,
-    authorizeRoles("sch_admin"),
+    authorizeRoles("sch_admin", "principal"),
     reportsController.getClassWiseReport
 );
 

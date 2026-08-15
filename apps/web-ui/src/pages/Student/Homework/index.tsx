@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
     Box,
     Typography,
@@ -21,13 +21,14 @@ import {
 } from '@mui/icons-material';
 import { useGetHomeworkByStudent } from '../../../queries/Homework';
 import TokenService from '../../../queries/token/tokenService';
+import { useUrlTab } from '../../../hooks/useUrlTab';
 import type { Homework } from '../../../types';
 
 const StudentHomework: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
-    const studentId = TokenService.getStudentId() || '';
+    const studentId = TokenService.getStudentId() || TokenService.getUserId() || '';
 
-    const [tabValue, setTabValue] = useState(0);
+    const [tabValue, setTabValue] = useUrlTab(0, ['pending', 'completed', 'all']);
     const statusFilter = tabValue === 0 ? 'active' : tabValue === 1 ? 'completed' : undefined;
 
     const { data, isLoading, error } = useGetHomeworkByStudent(

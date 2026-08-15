@@ -59,6 +59,25 @@ export const useGetMenus = (
   });
 };
 
+// Search parent menus (main menus only, no parentMenuId) — used for parent picker with debounce
+export const useSearchParentMenus = (search: string, enabled = true) => {
+  return useQuery({
+    queryKey: ["menus", "parent-search", search],
+    queryFn: () => {
+      let url = `/api/admin/dashboard/menus/all?page=1&limit=50&menuType=main`;
+      if (search.trim()) url += `&search=${encodeURIComponent(search.trim())}`;
+      return useApi<ApiResponse<Menu[]>>("GET", url);
+    },
+    enabled,
+    select: (data) => ({
+      ...data,
+      // Filter client-side as a safety net — only show true parent menus
+      data: (data?.data || []).filter((m: any) => !m.parentMenuId),
+    }),
+    staleTime: 30_000, // 30s — results are stable while typing
+  });
+};
+
 // Create Menu
 export const useCreateMenu = () => {
   const queryClient = useQueryClient();

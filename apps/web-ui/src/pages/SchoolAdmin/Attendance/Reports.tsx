@@ -29,10 +29,11 @@ import { useGetSchoolById } from '../../../queries/School';
 import type { Class } from '../../../types';
 import TokenService from '../../../queries/token/tokenService';
 import { exportDailyAttendance, exportMonthlyAttendance, exportClassWiseAttendance } from '../../../components/ExcelExport';
+import { useUrlTab } from '../../../hooks/useUrlTab';
 
 const AttendanceReports = () => {
     const schoolId = TokenService.getSchoolId() || '';
-    const [tab, setTab] = useState(0);
+    const [tab, setTab] = useUrlTab(0, ['daily', 'classwise', 'monthly']);
     const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());

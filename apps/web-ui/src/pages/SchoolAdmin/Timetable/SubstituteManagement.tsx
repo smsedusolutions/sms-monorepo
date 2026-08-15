@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     Box,
     Typography,
@@ -42,6 +42,7 @@ import { AppSelect } from '../../../components/shared/AppSelect';
 import { AppButton } from '../../../components/shared/AppButton';
 import { AppDatePicker } from '../../../components/shared/AppDatePicker';
 import { format } from 'date-fns';
+import { useUrlTab } from '../../../hooks/useUrlTab';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -60,9 +61,21 @@ function TabPanel(props: TabPanelProps) {
 
 const SubstituteManagement = () => {
     const schoolId = TokenService.getSchoolId() || '';
-    const [tabValue, setTabValue] = useState(0);
+    const [tabValue, setTabValue] = useUrlTab(0, ['assignments', 'history']);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+    // Track visited tabs to fetch data lazily on tab visit
+    const [visitedTabs, setVisitedTabs] = useState<Set<number>>(() => new Set([tabValue]));
+
+    useEffect(() => {
+        setVisitedTabs(prev => {
+            if (prev.has(tabValue)) return prev;
+            const updated = new Set(prev);
+            updated.add(tabValue);
+            return updated;
+        });
+    }, [tabValue]);
 
     // Form state for creating substitute
     const [formData, setFormData] = useState({
@@ -77,8 +90,8 @@ const SubstituteManagement = () => {
 
     // Data fetching
     const { data: configData } = useGetActiveConfig(schoolId);
-    const { data: substitutesData, isLoading: substitutesLoading } = useGetSubstitutesForDate(schoolId, selectedDate);
-    const { data: historyData, isLoading: historyLoading } = useGetSubstituteHistory(schoolId, { limit: 50 });
+    const { data: substitutesData, isLoading: substitutesLoading } = useGetSubstitutesForDate(schoolId, selectedDate, { enabled: visitedTabs.has(0) });
+    const { data: historyData, isLoading: historyLoading } = useGetSubstituteHistory(schoolId, { limit: 50 }, { enabled: visitedTabs.has(1) });
     const { data: teachersData } = useGetTeachers(schoolId);
     const { data: classesData } = useGetClasses(schoolId);
 

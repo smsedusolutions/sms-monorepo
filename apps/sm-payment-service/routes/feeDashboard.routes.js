@@ -16,7 +16,7 @@ const {
 
 // Apply auth globally
 router.use(Authenticated);
-router.use(authorizeRoles('sch_admin'));
+router.use(authorizeRoles('sch_admin', 'principal'));
 
 // Summary Stats
 router.get('/stats', getDashboardStats);

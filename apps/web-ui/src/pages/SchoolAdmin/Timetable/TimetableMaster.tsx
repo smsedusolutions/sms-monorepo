@@ -21,6 +21,15 @@ import {
   Chip,
   Backdrop,
   FormHelperText,
+  Tabs,
+  Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Divider,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -33,6 +42,12 @@ import {
   Download as DownloadIcon,
   FileUpload as UploadIcon,
   AutoAwesome as MagicIcon,
+  Send as SendIcon,
+  Edit as EditIcon,
+  Verified as VerifiedIcon,
+  CheckCircle as CheckCircleIcon,
+  Block as BlockIcon,
+  Refresh as RefreshIcon,
 } from "@mui/icons-material";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -49,6 +64,13 @@ import {
   useCopyClassTimetable,
   useDeleteClassTimetable,
   useBulkCreateEntries,
+  useSubmitTimetableForApproval,
+  useGetAIDraft,
+  useGetAIDraftVersions,
+  useDeleteAIDraftVersion,
+  useGetActiveSchedule,
+  useGetTimetableSchedules,
+  useSubmitTimetableForApproval as useResubmitTimetable,
 } from "../../../queries/Timetable";
 import { useGetClasses } from "../../../queries/Class";
 import { useGetTeachers } from "../../../queries/Teacher";
@@ -59,6 +81,9 @@ import type {
 } from "../../../types/timetable.types";
 import TokenService from "../../../queries/token/tokenService";
 import { useNotificationStore } from "../../../stores/notificationStore";
+import { useTimeSettingsStore } from "../../../stores/timeSettingsStore";
+import { formatSingleTime } from "../../../utils/timeUtils";
+import { useUrlTab } from "../../../hooks/useUrlTab";
 import ConfirmationDialog from "../../../components/Dialogs/ConfirmationDialog";
 import { AppButton } from "../../../components/shared/AppButton";
 import { generateTimetableTemplate, parseTimetableTemplate } from "../../../utils/timetableExcelUtils";
@@ -371,6 +396,7 @@ const EntryDialog = ({
 
 const TimetableMaster = () => {
   const schoolId = TokenService.getSchoolId() || "";
+  const { timeFormat } = useTimeSettingsStore();
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("table");
@@ -381,6 +407,21 @@ const TimetableMaster = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [aiGenerateDialogOpen, setAiGenerateDialogOpen] = useState(false);
   const { showNotification } = useNotificationStore();
+
+  const [tabIndex, setTabIndex] = useUrlTab(0, ['manual', 'ai', 'published', 'rejected']);
+  const [selectedAiVersion, setSelectedAiVersion] = useState<number | undefined>(undefined);
+
+  // Track visited tabs to fetch data lazily on tab visit
+  const [visitedTabs, setVisitedTabs] = useState<Set<number>>(() => new Set([tabIndex]));
+
+  useEffect(() => {
+    setVisitedTabs(prev => {
+      if (prev.has(tabIndex)) return prev;
+      const updated = new Set(prev);
+      updated.add(tabIndex);
+      return updated;
+    });
+  }, [tabIndex]);
 
   // Get today's date for leave checking
   const today = new Date().toISOString().split("T")[0];
@@ -397,12 +438,79 @@ const TimetableMaster = () => {
   const { data: substitutesData } = useGetSubstitutesForDate(schoolId, today);
   const { data: activeClassesData } = useGetActiveClasses(schoolId);
 
+  // AI & Schedule data fetching (lazy loaded on tab visit)
+  const { data: aiDraftData, isLoading: aiDraftLoading } = useGetAIDraft(schoolId, selectedAiVersion, { enabled: visitedTabs.has(1) });
+  const { data: aiVersionsData } = useGetAIDraftVersions(schoolId, { enabled: visitedTabs.has(1) });
+  const { data: activeScheduleData } = useGetActiveSchedule(schoolId, undefined, undefined, { enabled: visitedTabs.has(2) });
+  const deleteAiVersion = useDeleteAIDraftVersion(schoolId);
+  // Rejected timetable submissions (lazy loaded on tab visit)
+  const { data: rejectedSchedulesData, isLoading: rejectedLoading } = useGetTimetableSchedules(schoolId, 'rejected', undefined, { enabled: visitedTabs.has(3) });
+  const resubmitSchedule = useResubmitTimetable(schoolId);
+
   const createEntry = useCreateEntry(schoolId);
   const updateEntry = useUpdateEntry(schoolId);
   const deleteEntry = useDeleteEntry(schoolId);
   const copyClassTimetable = useCopyClassTimetable(schoolId);
   const deleteClassTimetable = useDeleteClassTimetable(schoolId);
   const bulkCreateEntries = useBulkCreateEntries(schoolId);
+  const submitForApproval = useSubmitTimetableForApproval(schoolId);
+
+  const aiDraft = aiDraftData?.data;
+  const aiDraftEntries = aiDraft?.entries || [];
+  const aiVersions = aiVersionsData?.data || [];
+  const activeSchedule = activeScheduleData?.data;
+  const rejectedSchedules = rejectedSchedulesData?.data || [];
+
+  // Auto-set initial AI version
+  useEffect(() => {
+    if (selectedAiVersion === undefined && aiVersions.length > 0) {
+      const activeVersion = aiVersions.find((v: any) => v.status === 'draft') || aiVersions[0];
+      if (activeVersion) setSelectedAiVersion(activeVersion.version);
+    }
+  }, [aiVersions, selectedAiVersion]);
+
+  const handleSubmitForApproval = async () => {
+    try {
+      await submitForApproval.mutateAsync({
+        scheduleId: "MAIN_TIMETABLE",
+        payload: {
+          source: "manual",
+          name: "Manual Master Timetable",
+        },
+      });
+      showNotification("Manual timetable schedule sent to Principal for approval successfully!", "success");
+    } catch (err: any) {
+      showNotification(err?.message || "Failed to send timetable for approval", "error");
+    }
+  };
+
+  const handleSendAiDraftForApproval = async () => {
+    const v = selectedAiVersion || (aiVersions.length > 0 ? aiVersions[0].version : 1);
+    try {
+      await submitForApproval.mutateAsync({
+        scheduleId: `AI_DRAFT_v${v}`,
+        payload: {
+          source: "ai",
+          aiVersion: v,
+          name: `AI Timetable Draft (v${v})`,
+        },
+      });
+      showNotification(`AI Timetable Draft v${v} sent to Principal for approval!`, "success");
+    } catch (err: any) {
+      showNotification(err?.message || "Failed to send AI draft for approval", "error");
+    }
+  };
+
+  const handleDeleteAiVersion = async () => {
+    if (!selectedAiVersion) return;
+    try {
+      await deleteAiVersion.mutateAsync(selectedAiVersion);
+      showNotification(`AI Draft Version ${selectedAiVersion} deleted successfully`, "success");
+      setSelectedAiVersion(undefined);
+    } catch (err: any) {
+      showNotification(err?.message || "Failed to delete AI draft version", "error");
+    }
+  };
 
   const config = configData?.data;
   const classes = useMemo(() => {
@@ -481,6 +589,18 @@ const TimetableMaster = () => {
     });
     return map;
   }, [entries]);
+
+  // Create AI entry lookup map
+  const aiEntryMap = useMemo(() => {
+    const map: Record<string, any> = {};
+    if (!selectedClass || !selectedSection) return map;
+    aiDraftEntries.forEach((entry: any) => {
+      if (entry.classId === selectedClass && entry.sectionId === selectedSection) {
+        map[`${entry.dayOfWeek}-${entry.periodNumber}`] = entry;
+      }
+    });
+    return map;
+  }, [aiDraftEntries, selectedClass, selectedSection]);
 
   // Create substitute lookup map by day-period for current class/section
   const substituteMap = useMemo(() => {
@@ -784,110 +904,225 @@ const TimetableMaster = () => {
 
   return (
     <Box sx={{ p: { xs: 2, sm: 3 } }}>
-      {/* Header */}
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          justifyContent: "space-between",
-          alignItems: { xs: "flex-start", md: "center" },
-          mb: 3,
-          gap: 2,
-        }}
-      >
-        <Typography variant="h5" fontWeight={600}>
-          Master Timetable
+      {/* Title & Master Tabs */}
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h5" fontWeight={600} sx={{ mb: 2 }}>
+          Master Timetable Studio
         </Typography>
-        <Box
-          sx={{
-            display: "flex",
-            gap: 1.5,
-            alignItems: "center",
-            flexWrap: "wrap",
-            width: { xs: "100%", md: "auto" }
-          }}
-        >
-          {teachersOnLeave.length > 0 && (
-            <Chip
-              icon={<WarningIcon />}
-              label={`${teachersOnLeave.length} teacher(s) on leave today`}
-              color="warning"
-              size="small"
-              sx={{ width: { xs: "100%", sm: "auto" } }}
-            />
-          )}
-          <AppButton
-            variant="contained"
-            color="primary"
-            startIcon={<MagicIcon />}
-            onClick={() => setAiGenerateDialogOpen(true)}
-            size="small"
-          >
-            AI Auto-Generate
-          </AppButton>
 
-          {selectedClass && selectedSection && (
-            <>
-              <AppButton
-                variant="outlined"
-                startIcon={<PdfIcon />}
-                onClick={handleExportPdf}
-                size="small"
-              >
-                Export PDF
-              </AppButton>
-              <AppButton
-                variant="outlined"
-                startIcon={<DownloadIcon />}
-                onClick={handleDownloadExcelTemplate}
-                size="small"
-              >
-                Excel Template
-              </AppButton>
-              <AppButton
-                variant="outlined"
-                component="label"
-                startIcon={<UploadIcon />}
-                size="small"
-                loading={bulkCreateEntries.isPending}
-              >
-                Upload Excel
-                <input
-                  type="file"
-                  hidden
-                  accept=".xlsx, .xls"
-                  onChange={handleUploadExcel}
+        <Paper sx={{ borderRadius: 2, bgcolor: "background.paper", boxShadow: 1 }}>
+          <Tabs
+            value={tabIndex}
+            onChange={(_e, val) => setTabIndex(val)}
+            indicatorColor="primary"
+            textColor="primary"
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{ borderBottom: 1, borderColor: "divider", px: 1 }}
+          >
+            <Tab
+              icon={<EditIcon />}
+              iconPosition="start"
+              label="1. Create / Edit Manual Timetable"
+              sx={{ fontWeight: 600, py: 1.5 }}
+            />
+            <Tab
+              icon={<MagicIcon />}
+              iconPosition="start"
+              label="2. AI Timetable Generator & Drafts"
+              sx={{ fontWeight: 600, py: 1.5 }}
+            />
+            <Tab
+              icon={<VerifiedIcon />}
+              iconPosition="start"
+              label="3. Published Live Timetable"
+              sx={{ fontWeight: 600, py: 1.5 }}
+            />
+            <Tab
+              icon={<BlockIcon />}
+              iconPosition="start"
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
+                  4. Rejected Submissions
+                  {rejectedSchedules.length > 0 && (
+                    <Chip label={rejectedSchedules.length} size="small" color="error" sx={{ height: 18, fontSize: 11 }} />
+                  )}
+                </Box>
+              }
+              sx={{ fontWeight: 600, py: 1.5 }}
+            />
+          </Tabs>
+        </Paper>
+      </Box>
+
+      {/* Tab-Specific Action Banners */}
+      {tabIndex === 0 && (
+        <Paper sx={{ p: 2, mb: 3, bgcolor: "#f8fafc", borderLeft: "4px solid #3b82f6" }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
+            <Box>
+              <Typography variant="subtitle1" fontWeight={700} color="primary">
+                📝 Manual Timetable Builder
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Create and edit slots manually, upload Excel schedules, and submit for Principal approval.
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
+              {teachersOnLeave.length > 0 && (
+                <Chip
+                  icon={<WarningIcon />}
+                  label={`${teachersOnLeave.length} teacher(s) on leave today`}
+                  color="warning"
+                  size="small"
                 />
+              )}
+              <AppButton
+                variant="contained"
+                color="secondary"
+                startIcon={<SendIcon />}
+                onClick={handleSubmitForApproval}
+                loading={submitForApproval.isPending}
+                size="small"
+              >
+                Send Manual Timetable for Approval
               </AppButton>
-              {entries.length > 0 && (
+              {selectedClass && selectedSection && (
+                <>
+                  <AppButton variant="outlined" startIcon={<PdfIcon />} onClick={handleExportPdf} size="small">
+                    Export PDF
+                  </AppButton>
+                  <AppButton variant="outlined" startIcon={<DownloadIcon />} onClick={handleDownloadExcelTemplate} size="small">
+                    Excel Template
+                  </AppButton>
+                  <AppButton variant="outlined" component="label" startIcon={<UploadIcon />} size="small" loading={bulkCreateEntries.isPending}>
+                    Upload Excel
+                    <input type="file" hidden accept=".xlsx, .xls" onChange={handleUploadExcel} />
+                  </AppButton>
+                  {entries.length > 0 && (
+                    <AppButton variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={() => setIsDeleteDialogOpen(true)} size="small">
+                      Delete Table
+                    </AppButton>
+                  )}
+                </>
+              )}
+              <ToggleButtonGroup value={viewMode} exclusive onChange={(_, v) => v && setViewMode(v)} size="small">
+                <ToggleButton value="table"><TableIcon /></ToggleButton>
+                <ToggleButton value="list"><ListIcon /></ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+          </Box>
+        </Paper>
+      )}
+
+      {tabIndex === 1 && (
+        <Paper sx={{ p: 2, mb: 3, bgcolor: "#f0fdf4", borderLeft: "4px solid #16a34a" }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
+            <Box>
+              <Typography variant="subtitle1" fontWeight={700} color="success.main" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                🪄 AI Timetable Generator & Draft Versions
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Auto-generate optimized timetables using AI. Switch between draft versions and submit for Principal approval.
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
+              {aiVersions.length > 0 && (
+                <FormControl size="small" sx={{ minWidth: 160 }}>
+                  <InputLabel>Draft Version</InputLabel>
+                  <Select
+                    value={selectedAiVersion || ""}
+                    label="Draft Version"
+                    onChange={(e) => setSelectedAiVersion(Number(e.target.value))}
+                  >
+                    {aiVersions.map((v: any) => (
+                      <MenuItem key={v.version} value={v.version}>
+                        Version {v.version} ({v.status})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              )}
+              <AppButton
+                variant="contained"
+                color="primary"
+                startIcon={<MagicIcon />}
+                onClick={() => setAiGenerateDialogOpen(true)}
+                size="small"
+              >
+                Generate AI Timetable
+              </AppButton>
+              <AppButton
+                variant="contained"
+                color="secondary"
+                startIcon={<SendIcon />}
+                onClick={handleSendAiDraftForApproval}
+                loading={submitForApproval.isPending}
+                disabled={aiVersions.length === 0}
+                size="small"
+              >
+                Send AI Draft for Approval
+              </AppButton>
+              {aiVersions.length > 0 && selectedAiVersion && (
                 <AppButton
                   variant="outlined"
                   color="error"
                   startIcon={<DeleteIcon />}
-                  onClick={() => setIsDeleteDialogOpen(true)}
+                  onClick={handleDeleteAiVersion}
+                  loading={deleteAiVersion.isPending}
                   size="small"
                 >
-                  Delete Table
+                  Delete Version
                 </AppButton>
               )}
-            </>
-          )}
+            </Box>
+          </Box>
+        </Paper>
+      )}
 
-          <ToggleButtonGroup
-            value={viewMode}
-            exclusive
-            onChange={(_, v) => v && setViewMode(v)}
-            size="small"
-          >
-            <ToggleButton value="table">
-              <TableIcon />
-            </ToggleButton>
-            <ToggleButton value="list">
-              <ListIcon />
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
-      </Box>
+      {tabIndex === 2 && (
+        <Paper sx={{ p: 2, mb: 3, bgcolor: "#faf5ff", borderLeft: "4px solid #9333ea" }}>
+          <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
+            <Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                <Typography variant="subtitle1" fontWeight={700} color="secondary">
+                  🌐 Final Published Live Timetable
+                </Typography>
+                <Chip
+                  icon={<CheckCircleIcon sx={{ fontSize: 16 }} />}
+                  label="LIVE ACTIVE"
+                  color="success"
+                  size="small"
+                  sx={{ fontWeight: 700 }}
+                />
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Currently active timetable approved by the Principal. Read-only live view.
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
+              {activeSchedule && (
+                <Box sx={{ textAlign: { xs: "left", sm: "right" } }}>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Active Schedule: <strong>{activeSchedule.name}</strong>
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    Published: {new Date(activeSchedule.updatedAt || activeSchedule.createdAt).toLocaleDateString()}
+                  </Typography>
+                </Box>
+              )}
+              {selectedClass && selectedSection && (
+                <AppButton variant="outlined" startIcon={<PdfIcon />} onClick={handleExportPdf} size="small">
+                  Export PDF
+                </AppButton>
+              )}
+              <ToggleButtonGroup value={viewMode} exclusive onChange={(_, v) => v && setViewMode(v)} size="small">
+                <ToggleButton value="table"><TableIcon /></ToggleButton>
+                <ToggleButton value="list"><ListIcon /></ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+          </Box>
+        </Paper>
+      )}
 
       {/* Class/Section Selector */}
       <Paper sx={{ p: 2, mb: 3 }}>
@@ -1030,7 +1265,7 @@ const TimetableMaster = () => {
               </Box>
             )}
 
-          {timetableLoading ? (
+          {timetableLoading || (tabIndex === 1 && aiDraftLoading) ? (
             <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
               <CircularProgress />
             </Box>
@@ -1092,7 +1327,7 @@ const TimetableMaster = () => {
                             {period.name}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {period.startTime} - {period.endTime}
+                            {formatSingleTime(period.startTime, timeFormat)} - {formatSingleTime(period.endTime, timeFormat)}
                           </Typography>
                         </td>
                         {isNonRegular ? (
@@ -1112,8 +1347,9 @@ const TimetableMaster = () => {
                           </td>
                         ) : (
                           config.workingDays.map((day) => {
-                            const entry =
-                              entryMap[`${day}-${period.periodNumber}`];
+                            const entry = tabIndex === 1
+                              ? aiEntryMap[`${day}-${period.periodNumber}`]
+                              : entryMap[`${day}-${period.periodNumber}`];
                             const substitute =
                               substituteMap[`${day}-${period.periodNumber}`];
                             const isOnLeave =
@@ -1131,7 +1367,7 @@ const TimetableMaster = () => {
                                     : entry
                                       ? getEntryColor(entry)
                                       : "white",
-                                  cursor: "pointer",
+                                  cursor: tabIndex === 0 ? "pointer" : "default",
                                   position: "relative",
                                   border: hasSubstitute
                                     ? "3px solid #ff9800"
@@ -1139,9 +1375,11 @@ const TimetableMaster = () => {
                                       ? "3px solid #f44336"
                                       : undefined,
                                 }}
-                                onClick={() =>
-                                  handleSlotClick(day, period.periodNumber)
-                                }
+                                onClick={() => {
+                                  if (tabIndex === 0) {
+                                    handleSlotClick(day, period.periodNumber);
+                                  }
+                                }}
                               >
                                 {entry ? (
                                   <Box>
@@ -1260,7 +1498,9 @@ const TimetableMaster = () => {
                   </Typography>
                   {allPeriods.map((period) => {
                     const isNonRegular = period.type !== "regular";
-                    const entry = entryMap[`${day}-${period.periodNumber}`];
+                    const entry = tabIndex === 1
+                      ? aiEntryMap[`${day}-${period.periodNumber}`]
+                      : entryMap[`${day}-${period.periodNumber}`];
                     const isOnLeave =
                       entry && teachersOnLeave.includes(entry.teacherId);
 
@@ -1335,7 +1575,7 @@ const TimetableMaster = () => {
                             {period.name}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {period.startTime} - {period.endTime}
+                            {formatSingleTime(period.startTime, timeFormat)} - {formatSingleTime(period.endTime, timeFormat)}
                           </Typography>
                         </Box>
                         <Box sx={{ ml: 2, flex: 1 }}>
@@ -1403,10 +1643,136 @@ const TimetableMaster = () => {
         </Paper>
       )}
 
-      {!selectedClass && (
+      {!selectedClass && tabIndex !== 3 && (
         <Alert severity="info">
           Please select a class and section to view or edit the timetable.
         </Alert>
+      )}
+
+      {/* Tab 4: Rejected Submissions */}
+      {tabIndex === 3 && (
+        <Paper sx={{ p: 0, mt: 0, borderRadius: 2, overflow: 'hidden' }}>
+          <Box sx={{ p: 2, bgcolor: '#fff5f5', borderLeft: '4px solid #ef4444', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+            <Box>
+              <Typography variant="subtitle1" fontWeight={700} color="error.main">
+                ❌ Rejected Timetable Submissions
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Timetables rejected by the Principal are listed here with feedback. Fix the issues and re-submit for approval.
+              </Typography>
+            </Box>
+          </Box>
+          <Divider />
+          {rejectedLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+              <CircularProgress />
+            </Box>
+          ) : rejectedSchedules.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <CheckCircleIcon sx={{ fontSize: 56, color: '#86efac', mb: 2 }} />
+              <Typography color="text.secondary" variant="h6">No rejected submissions</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                All your timetable submissions have been approved or are pending review.
+              </Typography>
+            </Box>
+          ) : (
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ bgcolor: '#fef2f2' }}>
+                    <TableCell sx={{ fontWeight: 700 }}>Timetable Name</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Source</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Slots</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Submitted</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Rejected On</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }}>Principal's Feedback</TableCell>
+                    <TableCell sx={{ fontWeight: 700 }} align="center">Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {rejectedSchedules.map((schedule: any) => (
+                    <TableRow key={schedule.scheduleId} hover>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight={600}>{schedule.name}</Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={schedule.source === 'ai' ? `AI v${schedule.aiDraftVersion || schedule.version || 1}` : 'Manual'}
+                          size="small"
+                          sx={{
+                            bgcolor: schedule.source === 'ai' ? '#ede9fe' : '#e0f2fe',
+                            color: schedule.source === 'ai' ? '#7c3aed' : '#0369a1',
+                            fontWeight: 600,
+                            fontSize: 11,
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip label={`${schedule.entries?.length || 0} slots`} size="small" variant="outlined" sx={{ fontSize: 11 }} />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontSize: 12 }}>
+                          {schedule.createdAt ? new Date(schedule.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontSize: 12, color: 'error.main' }}>
+                          {schedule.rejectedAt ? new Date(schedule.rejectedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ maxWidth: 280 }}>
+                        {schedule.rejectionComment ? (
+                          <Box
+                            sx={{
+                              bgcolor: '#fef9c3',
+                              border: '1px solid #fde047',
+                              borderRadius: 1,
+                              p: 1,
+                            }}
+                          >
+                            <Typography variant="body2" sx={{ fontSize: 12, color: '#854d0e', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
+                              {schedule.rejectionComment}
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Typography variant="body2" color="text.disabled" sx={{ fontSize: 12 }}>No comment provided</Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="center">
+                        <Tooltip title="Re-submit for Approval">
+                          <span>
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              disabled={resubmitSchedule.isPending}
+                              onClick={async () => {
+                                try {
+                                  await resubmitSchedule.mutateAsync({
+                                    scheduleId: schedule.scheduleId,
+                                    payload: {
+                                      source: schedule.source,
+                                      aiVersion: schedule.aiDraftVersion || schedule.version,
+                                      name: schedule.name,
+                                    },
+                                  });
+                                  showNotification('Timetable re-submitted for Principal approval!', 'success');
+                                } catch (err: any) {
+                                  showNotification(err?.message || 'Failed to re-submit', 'error');
+                                }
+                              }}
+                            >
+                              <RefreshIcon fontSize="small" />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Paper>
       )}
 
       {/* Entry Dialog */}

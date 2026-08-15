@@ -33,6 +33,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useGetMyNotifications, useMarkAsRead, useMarkAllAsRead, useDeleteNotification } from '../../queries/Notification';
 import TokenService from '../../queries/token/tokenService';
+import { useUrlTab } from '../../hooks/useUrlTab';
 import type { Notification, NotificationType } from '../../types';
 
 const getNotificationIcon = (type: NotificationType) => {
@@ -63,7 +64,7 @@ const NotificationsPage: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const role = TokenService.getRole();
 
-    const [tabValue, setTabValue] = useState(0);
+    const [tabValue, setTabValue] = useUrlTab(0, ['all', 'read', 'unread']);
     const [page, setPage] = useState(1);
     const limit = 20;
 

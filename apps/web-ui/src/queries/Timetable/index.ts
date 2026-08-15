@@ -225,7 +225,7 @@ export const useRemoveShift = (schoolId: string, configId: string) => {
 // TIMETABLE SCHEDULE HOOKS (Validity Periods)
 // ==========================================
 
-export const useGetTimetableSchedules = (schoolId: string, status?: string, scheduleType?: string) => {
+export const useGetTimetableSchedules = (schoolId: string, status?: string, scheduleType?: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: ["timetable-schedules", schoolId, status, scheduleType],
         queryFn: () =>
@@ -235,11 +235,11 @@ export const useGetTimetableSchedules = (schoolId: string, status?: string, sche
                 undefined,
                 { ...(status && { status }), ...(scheduleType && { scheduleType }) }
             ),
-        enabled: !!schoolId,
+        enabled: !!schoolId && (options?.enabled ?? true),
     });
 };
 
-export const useGetActiveSchedule = (schoolId: string, date?: string, scheduleType?: string) => {
+export const useGetActiveSchedule = (schoolId: string, date?: string, scheduleType?: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: ["active-schedule", schoolId, date, scheduleType],
         queryFn: () =>
@@ -249,7 +249,7 @@ export const useGetActiveSchedule = (schoolId: string, date?: string, scheduleTy
                 undefined,
                 { ...(date && { date }), ...(scheduleType && { scheduleType }) }
             ),
-        enabled: !!schoolId,
+        enabled: !!schoolId && (options?.enabled ?? true),
     });
 };
 
@@ -285,19 +285,60 @@ export const useUpdateTimetableSchedule = (schoolId: string) => {
     });
 };
 
-export const useToggleTimetableSchedule = (schoolId: string) => {
+export const useSubmitTimetableForApproval = (schoolId: string) => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ scheduleId, status }: { scheduleId: string; status?: 'active' | 'disabled' | 'draft' }) =>
+        mutationFn: ({ scheduleId, payload }: { scheduleId: string; payload?: { source?: 'ai' | 'manual'; aiVersion?: number; name?: string } }) =>
             useApi<ApiResponse<TimetableSchedule>>(
-                "PATCH" as any,
-                `/api/academics/school/${schoolId}/schedules/${scheduleId}/toggle`,
-                status ? { status } : undefined
+                "POST",
+                `/api/academics/school/${schoolId}/schedules/${scheduleId}/submit-approval`,
+                payload
             ),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["timetable-schedules", schoolId] });
             queryClient.invalidateQueries({ queryKey: ["active-schedule", schoolId] });
         },
+    });
+};
+
+export const useToggleTimetableSchedule = (schoolId: string) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({
+            scheduleId,
+            status,
+            rejectionComment,
+            force,
+        }: {
+            scheduleId: string;
+            status?: 'active' | 'disabled' | 'draft' | 'pending_approval' | 'rejected';
+            rejectionComment?: string;
+            force?: boolean;
+        }) =>
+            useApi<ApiResponse<TimetableSchedule>>(
+                "PATCH" as any,
+                `/api/academics/school/${schoolId}/schedules/${scheduleId}/toggle`,
+                { status, rejectionComment, force }
+            ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["timetable-schedules", schoolId] });
+            queryClient.invalidateQueries({ queryKey: ["active-schedule", schoolId] });
+        },
+    });
+};
+
+// Fetch all schedules across all statuses (for admin history / rejected view)
+export const useGetAllTimetableSchedules = (schoolId: string) => {
+    return useQuery({
+        queryKey: ["timetable-schedules-all", schoolId],
+        queryFn: () =>
+            useApi<ApiResponse<TimetableSchedule[]>>(
+                "GET",
+                `/api/academics/school/${schoolId}/schedules`,
+                undefined,
+                { status: "all" }
+            ),
+        enabled: !!schoolId,
     });
 };
 
@@ -567,7 +608,7 @@ export const useGenerateAITimetable = (schoolId: string) => {
     });
 };
 
-export const useGetAIDraft = (schoolId: string, version?: number) => {
+export const useGetAIDraft = (schoolId: string, version?: number, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: ["ai-draft", schoolId, version],
         queryFn: () =>
@@ -575,11 +616,11 @@ export const useGetAIDraft = (schoolId: string, version?: number) => {
                 "GET",
                 `/api/academics/school/${schoolId}/ai/draft${version ? `?version=${version}` : ""}`
             ),
-        enabled: !!schoolId,
+        enabled: !!schoolId && (options?.enabled ?? true),
     });
 };
 
-export const useGetAIDraftVersions = (schoolId: string) => {
+export const useGetAIDraftVersions = (schoolId: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: ["ai-draft-versions", schoolId],
         queryFn: () =>
@@ -587,7 +628,7 @@ export const useGetAIDraftVersions = (schoolId: string) => {
                 "GET",
                 `/api/academics/school/${schoolId}/ai/draft/versions`
             ),
-        enabled: !!schoolId,
+        enabled: !!schoolId && (options?.enabled ?? true),
     });
 };
 
@@ -671,7 +712,7 @@ export const useCreateSubstitute = (schoolId: string) => {
     });
 };
 
-export const useGetSubstitutesForDate = (schoolId: string, date: string) => {
+export const useGetSubstitutesForDate = (schoolId: string, date: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: ["substitutes", schoolId, date],
         queryFn: () =>
@@ -679,11 +720,15 @@ export const useGetSubstitutesForDate = (schoolId: string, date: string) => {
                 "GET",
                 `/api/academics/school/${schoolId}/substitute/date/${date}`
             ),
-        enabled: !!schoolId && !!date,
+        enabled: !!schoolId && !!date && (options?.enabled ?? true),
     });
 };
 
-export const useGetSubstituteHistory = (schoolId: string, params?: { teacherId?: string; startDate?: string; endDate?: string; limit?: number }) => {
+export const useGetSubstituteHistory = (
+    schoolId: string,
+    params?: { teacherId?: string; startDate?: string; endDate?: string; limit?: number },
+    options?: { enabled?: boolean }
+) => {
     return useQuery({
         queryKey: ["substitute-history", schoolId, params],
         queryFn: () =>
@@ -693,7 +738,7 @@ export const useGetSubstituteHistory = (schoolId: string, params?: { teacherId?:
                 undefined,
                 params
             ),
-        enabled: !!schoolId,
+        enabled: !!schoolId && (options?.enabled ?? true),
     });
 };
 

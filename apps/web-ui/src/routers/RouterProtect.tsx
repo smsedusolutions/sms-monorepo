@@ -113,7 +113,11 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
     (prefix) => currentPath === prefix || currentPath.startsWith(prefix + "/"),
   );
 
-  if (isRoleRoute && !isAllowed) {
+  // If the API returned no menus (e.g. principal role not yet configured in backend),
+  // skip the path validation — the role-level guard above is sufficient.
+  const hasMenuData = (menus || []).length > 0;
+
+  if (hasMenuData && isRoleRoute && !isAllowed) {
     return <Navigate to="/not-found" replace />;
   }
 

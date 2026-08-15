@@ -60,7 +60,13 @@ export interface UpdateTimetableConfigRequest {
 // TIMETABLE SCHEDULE (Validity Periods)
 // ==========================================
 
-export type TimetableScheduleStatus = "active" | "disabled" | "draft";
+export type TimetableScheduleStatus =
+  | "draft"
+  | "pending_approval"
+  | "active"
+  | "disabled"
+  | "rejected"
+  | "replaced";
 export type TimetableScheduleType =
   | "regular"
   | "exam_phase"
@@ -77,10 +83,30 @@ export interface TimetableSchedule {
   validTo: string;
   status: TimetableScheduleStatus;
   scheduleType: TimetableScheduleType;
-  allowSpecialClasses: boolean;
+  allowSpecialClasses?: boolean;
+  source?: 'ai' | 'manual';
+  version?: number;
+  aiDraftVersion?: number;
+  entries?: Array<{
+    classId: string;
+    sectionId: string;
+    subjectId: string;
+    teacherId: string;
+    dayOfWeek: string;
+    periodNumber: number;
+  }>;
   createdBy?: string;
-  disabledBy?: string;
-  disabledAt?: string;
+  // Rejection audit
+  rejectionComment?: string;
+  rejectedAt?: string | null;
+  rejectedBy?: string | null;
+  // Approval audit
+  approvedAt?: string | null;
+  approvedBy?: string | null;
+  // Override / replacement tracking
+  replacedVersion?: string | null;        // scheduleId this record replaced
+  replacedByScheduleId?: string | null;  // scheduleId that replaced this record
+  replacedAt?: string | null;
   notes?: string;
   createdAt: string;
   updatedAt: string;

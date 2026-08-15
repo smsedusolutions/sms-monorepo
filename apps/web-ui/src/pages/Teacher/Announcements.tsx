@@ -33,6 +33,7 @@ import { AppDatePicker } from '../../components/shared/AppDatePicker';
 import { AppButton } from '../../components/shared/AppButton';
 import { AppExpandableTable } from '../../components/shared/AppExpandableTable';
 import TokenService from '../../queries/token/tokenService';
+import { useUrlTab } from '../../hooks/useUrlTab';
 import {
     useGetAnnouncements,
     useMarkAnnouncementSeen,
@@ -62,7 +63,7 @@ const Announcements: React.FC = () => {
     const { data, isLoading, error } = useGetAnnouncements(schoolId);
     const markAsSeen = useMarkAnnouncementSeen(schoolId);
 
-    const [tabValue, setTabValue] = useState(0);
+    const [tabValue, setTabValue] = useUrlTab(0, ['all', 'mine']);
     const [viewerOpen, setViewerOpen] = useState(false);
     const [currentFile, setCurrentFile] = useState<AnnouncementAttachment | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
