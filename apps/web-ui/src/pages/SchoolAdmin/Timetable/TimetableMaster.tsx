@@ -411,6 +411,18 @@ const TimetableMaster = () => {
   const [tabIndex, setTabIndex] = useUrlTab(0, ['manual', 'ai', 'published', 'rejected']);
   const [selectedAiVersion, setSelectedAiVersion] = useState<number | undefined>(undefined);
 
+  // Track visited tabs to fetch data lazily on tab visit
+  const [visitedTabs, setVisitedTabs] = useState<Set<number>>(() => new Set([tabIndex]));
+
+  useEffect(() => {
+    setVisitedTabs(prev => {
+      if (prev.has(tabIndex)) return prev;
+      const updated = new Set(prev);
+      updated.add(tabIndex);
+      return updated;
+    });
+  }, [tabIndex]);
+
   // Get today's date for leave checking
   const today = new Date().toISOString().split("T")[0];
 
@@ -426,13 +438,13 @@ const TimetableMaster = () => {
   const { data: substitutesData } = useGetSubstitutesForDate(schoolId, today);
   const { data: activeClassesData } = useGetActiveClasses(schoolId);
 
-  // AI & Schedule data fetching
-  const { data: aiDraftData, isLoading: aiDraftLoading } = useGetAIDraft(schoolId, selectedAiVersion);
-  const { data: aiVersionsData } = useGetAIDraftVersions(schoolId);
-  const { data: activeScheduleData } = useGetActiveSchedule(schoolId);
+  // AI & Schedule data fetching (lazy loaded on tab visit)
+  const { data: aiDraftData, isLoading: aiDraftLoading } = useGetAIDraft(schoolId, selectedAiVersion, { enabled: visitedTabs.has(1) });
+  const { data: aiVersionsData } = useGetAIDraftVersions(schoolId, { enabled: visitedTabs.has(1) });
+  const { data: activeScheduleData } = useGetActiveSchedule(schoolId, undefined, undefined, { enabled: visitedTabs.has(2) });
   const deleteAiVersion = useDeleteAIDraftVersion(schoolId);
-  // Rejected timetable submissions
-  const { data: rejectedSchedulesData, isLoading: rejectedLoading } = useGetTimetableSchedules(schoolId, 'rejected');
+  // Rejected timetable submissions (lazy loaded on tab visit)
+  const { data: rejectedSchedulesData, isLoading: rejectedLoading } = useGetTimetableSchedules(schoolId, 'rejected', undefined, { enabled: visitedTabs.has(3) });
   const resubmitSchedule = useResubmitTimetable(schoolId);
 
   const createEntry = useCreateEntry(schoolId);

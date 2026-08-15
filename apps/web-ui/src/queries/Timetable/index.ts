@@ -225,7 +225,7 @@ export const useRemoveShift = (schoolId: string, configId: string) => {
 // TIMETABLE SCHEDULE HOOKS (Validity Periods)
 // ==========================================
 
-export const useGetTimetableSchedules = (schoolId: string, status?: string, scheduleType?: string) => {
+export const useGetTimetableSchedules = (schoolId: string, status?: string, scheduleType?: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: ["timetable-schedules", schoolId, status, scheduleType],
         queryFn: () =>
@@ -235,11 +235,11 @@ export const useGetTimetableSchedules = (schoolId: string, status?: string, sche
                 undefined,
                 { ...(status && { status }), ...(scheduleType && { scheduleType }) }
             ),
-        enabled: !!schoolId,
+        enabled: !!schoolId && (options?.enabled ?? true),
     });
 };
 
-export const useGetActiveSchedule = (schoolId: string, date?: string, scheduleType?: string) => {
+export const useGetActiveSchedule = (schoolId: string, date?: string, scheduleType?: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: ["active-schedule", schoolId, date, scheduleType],
         queryFn: () =>
@@ -249,7 +249,7 @@ export const useGetActiveSchedule = (schoolId: string, date?: string, scheduleTy
                 undefined,
                 { ...(date && { date }), ...(scheduleType && { scheduleType }) }
             ),
-        enabled: !!schoolId,
+        enabled: !!schoolId && (options?.enabled ?? true),
     });
 };
 
@@ -608,7 +608,7 @@ export const useGenerateAITimetable = (schoolId: string) => {
     });
 };
 
-export const useGetAIDraft = (schoolId: string, version?: number) => {
+export const useGetAIDraft = (schoolId: string, version?: number, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: ["ai-draft", schoolId, version],
         queryFn: () =>
@@ -616,11 +616,11 @@ export const useGetAIDraft = (schoolId: string, version?: number) => {
                 "GET",
                 `/api/academics/school/${schoolId}/ai/draft${version ? `?version=${version}` : ""}`
             ),
-        enabled: !!schoolId,
+        enabled: !!schoolId && (options?.enabled ?? true),
     });
 };
 
-export const useGetAIDraftVersions = (schoolId: string) => {
+export const useGetAIDraftVersions = (schoolId: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: ["ai-draft-versions", schoolId],
         queryFn: () =>
@@ -628,7 +628,7 @@ export const useGetAIDraftVersions = (schoolId: string) => {
                 "GET",
                 `/api/academics/school/${schoolId}/ai/draft/versions`
             ),
-        enabled: !!schoolId,
+        enabled: !!schoolId && (options?.enabled ?? true),
     });
 };
 
@@ -712,7 +712,7 @@ export const useCreateSubstitute = (schoolId: string) => {
     });
 };
 
-export const useGetSubstitutesForDate = (schoolId: string, date: string) => {
+export const useGetSubstitutesForDate = (schoolId: string, date: string, options?: { enabled?: boolean }) => {
     return useQuery({
         queryKey: ["substitutes", schoolId, date],
         queryFn: () =>
@@ -720,11 +720,15 @@ export const useGetSubstitutesForDate = (schoolId: string, date: string) => {
                 "GET",
                 `/api/academics/school/${schoolId}/substitute/date/${date}`
             ),
-        enabled: !!schoolId && !!date,
+        enabled: !!schoolId && !!date && (options?.enabled ?? true),
     });
 };
 
-export const useGetSubstituteHistory = (schoolId: string, params?: { teacherId?: string; startDate?: string; endDate?: string; limit?: number }) => {
+export const useGetSubstituteHistory = (
+    schoolId: string,
+    params?: { teacherId?: string; startDate?: string; endDate?: string; limit?: number },
+    options?: { enabled?: boolean }
+) => {
     return useQuery({
         queryKey: ["substitute-history", schoolId, params],
         queryFn: () =>
@@ -734,7 +738,7 @@ export const useGetSubstituteHistory = (schoolId: string, params?: { teacherId?:
                 undefined,
                 params
             ),
-        enabled: !!schoolId,
+        enabled: !!schoolId && (options?.enabled ?? true),
     });
 };
 

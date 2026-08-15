@@ -131,11 +131,23 @@ const TimetableReview: React.FC = () => {
     const [overrideConfirmOpen, setOverrideConfirmOpen] = useState(false);
     const [overridePending, setOverridePending] = useState<{ schedule: TimetableSchedule; existing: { scheduleId: string; name: string; approvedAt?: string } } | null>(null);
 
-    // Fetch data for all tabs & resolution lookup
-    const { data: pendingData, isLoading: pendingLoading } = useGetTimetableSchedules(schoolId, 'pending_approval');
-    const { data: activeData, isLoading: activeLoading } = useGetTimetableSchedules(schoolId, 'active');
-    const { data: replacedData } = useGetTimetableSchedules(schoolId, 'replaced');
-    const { data: rejectedData, isLoading: rejectedLoading } = useGetTimetableSchedules(schoolId, 'rejected');
+    // Track visited tabs to fetch data lazily on tab visit
+    const [visitedTabs, setVisitedTabs] = useState<Set<number>>(() => new Set([activeTab]));
+
+    useEffect(() => {
+        setVisitedTabs(prev => {
+            if (prev.has(activeTab)) return prev;
+            const updated = new Set(prev);
+            updated.add(activeTab);
+            return updated;
+        });
+    }, [activeTab]);
+
+    // Fetch data conditionally only for visited tabs
+    const { data: pendingData, isLoading: pendingLoading } = useGetTimetableSchedules(schoolId, 'pending_approval', undefined, { enabled: visitedTabs.has(0) });
+    const { data: activeData, isLoading: activeLoading } = useGetTimetableSchedules(schoolId, 'active', undefined, { enabled: visitedTabs.has(1) });
+    const { data: replacedData } = useGetTimetableSchedules(schoolId, 'replaced', undefined, { enabled: visitedTabs.has(1) });
+    const { data: rejectedData, isLoading: rejectedLoading } = useGetTimetableSchedules(schoolId, 'rejected', undefined, { enabled: visitedTabs.has(2) });
     const { data: classesData } = useGetActiveClasses(schoolId);
 
     // Context queries for timetable preview resolution
