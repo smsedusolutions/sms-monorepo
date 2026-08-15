@@ -1,4 +1,4 @@
-import { Box, Typography, Grid, Skeleton, Alert, Chip } from '@mui/material';
+import { Box, Typography, Grid, Skeleton, Alert, Chip, Card, CardContent, Button, Stack } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import SchoolIcon from '@mui/icons-material/School';
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -9,9 +9,14 @@ import AnnouncementIcon from '@mui/icons-material/Announcement';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import PendingActionsIcon from '@mui/icons-material/PendingActions';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import DashboardCard from '../../components/Dashboard/DashboardCard';
 import { useGetSchoolDashboardStats } from '../../queries/SchoolDashboard';
 import { useGetLeaveStats } from '../../queries/Leave';
+import { useGetTimetableSchedules } from '../../queries/Timetable';
+import { useGetExams } from '../../queries/Exam';
 import TokenService from '../../queries/token/tokenService';
 import { useNavigate } from 'react-router-dom';
 import { useUserStore } from '../../stores/userStore';
@@ -27,14 +32,25 @@ interface QuickActionCard {
 }
 
 const PrincipalDashboard = () => {
-    const schoolId = TokenService.getSchoolId() || '';
+    const { user } = useUserStore();
+    const schoolId = TokenService.getSchoolId() || user?.schoolId || TokenService.getUser()?.schoolId || '';
+
     const { data, isLoading, error } = useGetSchoolDashboardStats(schoolId);
     const { data: leaveData } = useGetLeaveStats(schoolId);
+    const { data: pendingTimetablesData } = useGetTimetableSchedules(schoolId, 'pending_approval');
+    const { data: examsData } = useGetExams(schoolId);
     const navigate = useNavigate();
-    const { user } = useUserStore();
+
+    const isStatsLoading = Boolean(isLoading && schoolId && !data);
 
     const stats = data?.data;
     const leaveStats = leaveData?.data;
+    const pendingTimetables = pendingTimetablesData?.data || [];
+    const pendingExams = examsData?.data?.filter((e: any) => e.status === 'scheduled' || e.status === 'draft') || [];
+
+    const pendingTimetableCount = pendingTimetables.length;
+    const pendingTeacherLeaveCount = leaveStats?.teacherPending || 0;
+    const totalPendingApprovals = pendingTimetableCount + pendingTeacherLeaveCount;
 
     const userName = user?.firstName
         ? `${user.firstName} ${user.lastName || ''}`.trim()
@@ -183,7 +199,7 @@ const PrincipalDashboard = () => {
                 School Overview
             </Typography>
             <Grid container spacing={{ xs: 2, sm: 3 }} sx={{ mb: 5 }}>
-                {isLoading ? (
+                {isStatsLoading ? (
                     [1, 2, 3, 4].map((i) => (
                         <Grid size={{ xs: 12, sm: 6, md: 3 }} key={i}>
                             <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 4 }} />
@@ -238,6 +254,167 @@ const PrincipalDashboard = () => {
                     </>
                 )}
             </Grid>
+
+            {/* Pending Approvals Section */}
+            <Box sx={{ mb: 5 }}>
+                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+                    <PendingActionsIcon sx={{ color: totalPendingApprovals > 0 ? '#d97706' : '#10b981', fontSize: 26 }} />
+                    <Typography variant="h5" fontWeight={700} color="#1e293b" sx={{ fontSize: { xs: '1.1rem', sm: '1.3rem' } }}>
+                        Pending Approvals & Action Items
+                    </Typography>
+                    {totalPendingApprovals > 0 ? (
+                        <Chip
+                            label={`${totalPendingApprovals} pending`}
+                            size="small"
+                            sx={{ bgcolor: '#fef3c7', color: '#b45309', fontWeight: 700, borderRadius: '8px' }}
+                        />
+                    ) : (
+                        <Chip
+                            icon={<CheckCircleOutlineIcon sx={{ fontSize: '14px !important', color: '#047857 !important' }} />}
+                            label="All Approvals Up To Date"
+                            size="small"
+                            sx={{ bgcolor: '#d1fae5', color: '#047857', fontWeight: 700, borderRadius: '8px' }}
+                        />
+                    )}
+                </Stack>
+
+                <Grid container spacing={2}>
+                    {/* Timetable Approvals Small Card */}
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <Card
+                            sx={{
+                                border: pendingTimetableCount > 0 ? '1.5px solid #fde68a' : '1px solid #e2e8f0',
+                                borderRadius: 3,
+                                background: pendingTimetableCount > 0 ? 'linear-gradient(135deg, #fffdf5 0%, #fffbebe6 100%)' : '#fff',
+                                boxShadow: pendingTimetableCount > 0 ? '0 4px 16px rgba(245, 158, 11, 0.08)' : 'none',
+                                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }
+                            }}
+                        >
+                            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+                                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                    <Box>
+                                        <Typography variant="caption" fontWeight={700} sx={{ color: '#92400e', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                            Timetable Review
+                                        </Typography>
+                                        <Typography variant="h5" fontWeight={800} color={pendingTimetableCount > 0 ? '#b45309' : '#334155'} sx={{ mt: 0.5 }}>
+                                            {pendingTimetableCount} {pendingTimetableCount === 1 ? 'Timetable' : 'Timetables'}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.82rem' }}>
+                                            {pendingTimetableCount > 0
+                                                ? `${pendingTimetables[0]?.name || 'Manual schedule'} submitted for review`
+                                                : 'No timetables waiting for approval'}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#fef3c7', color: '#d97706' }}>
+                                        <ScheduleIcon />
+                                    </Box>
+                                </Stack>
+                                <Button
+                                    fullWidth
+                                    size="small"
+                                    variant={pendingTimetableCount > 0 ? "contained" : "outlined"}
+                                    color="warning"
+                                    endIcon={<ArrowForwardIcon />}
+                                    onClick={() => navigate('/principal/timetable/review')}
+                                    sx={{ mt: 2, borderRadius: 2, fontWeight: 700, textTransform: 'none' }}
+                                >
+                                    {pendingTimetableCount > 0 ? 'Review & Approve' : 'View Timetables'}
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Teacher Leave Requests Small Card */}
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <Card
+                            sx={{
+                                border: pendingTeacherLeaveCount > 0 ? '1.5px solid #fecdd3' : '1px solid #e2e8f0',
+                                borderRadius: 3,
+                                background: pendingTeacherLeaveCount > 0 ? 'linear-gradient(135deg, #fff5f5 0%, #fff1f2e6 100%)' : '#fff',
+                                boxShadow: pendingTeacherLeaveCount > 0 ? '0 4px 16px rgba(239, 68, 68, 0.08)' : 'none',
+                                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }
+                            }}
+                        >
+                            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+                                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                    <Box>
+                                        <Typography variant="caption" fontWeight={700} sx={{ color: '#9f1239', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                            Teacher Leaves
+                                        </Typography>
+                                        <Typography variant="h5" fontWeight={800} color={pendingTeacherLeaveCount > 0 ? '#be123c' : '#334155'} sx={{ mt: 0.5 }}>
+                                            {pendingTeacherLeaveCount} {pendingTeacherLeaveCount === 1 ? 'Request' : 'Requests'}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.82rem' }}>
+                                            {pendingTeacherLeaveCount > 0
+                                                ? 'Teacher leave applications pending review'
+                                                : 'No teacher leaves pending approval'}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#ffe4e6', color: '#e11d48' }}>
+                                        <EventNoteIcon />
+                                    </Box>
+                                </Stack>
+                                <Button
+                                    fullWidth
+                                    size="small"
+                                    variant={pendingTeacherLeaveCount > 0 ? "contained" : "outlined"}
+                                    color="error"
+                                    endIcon={<ArrowForwardIcon />}
+                                    onClick={() => navigate('/principal/leave/teacher-requests')}
+                                    sx={{ mt: 2, borderRadius: 2, fontWeight: 700, textTransform: 'none' }}
+                                >
+                                    {pendingTeacherLeaveCount > 0 ? 'Review Requests' : 'View Leave History'}
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+
+                    {/* Exam Approvals / Management Small Card */}
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                        <Card
+                            sx={{
+                                border: '1px solid #e2e8f0',
+                                borderRadius: 3,
+                                background: '#fff',
+                                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 8px 24px rgba(0,0,0,0.06)' }
+                            }}
+                        >
+                            <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
+                                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                                    <Box>
+                                        <Typography variant="caption" fontWeight={700} sx={{ color: '#4338ca', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                                            Exam Approvals
+                                        </Typography>
+                                        <Typography variant="h5" fontWeight={800} color="#334155" sx={{ mt: 0.5 }}>
+                                            {pendingExams.length} {pendingExams.length === 1 ? 'Exam' : 'Exams'}
+                                        </Typography>
+                                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: '0.82rem' }}>
+                                            {pendingExams.length > 0 ? 'Active & upcoming exam schedules' : 'No pending exam approvals'}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#e0e7ff', color: '#4f46e5' }}>
+                                        <AssignmentIcon />
+                                    </Box>
+                                </Stack>
+                                <Button
+                                    fullWidth
+                                    size="small"
+                                    variant="outlined"
+                                    color="primary"
+                                    endIcon={<ArrowForwardIcon />}
+                                    onClick={() => navigate('/principal/exam/approval')}
+                                    sx={{ mt: 2, borderRadius: 2, fontWeight: 700, textTransform: 'none' }}
+                                >
+                                    Manage Exams
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+            </Box>
 
             {/* Quick Actions Section */}
             <Box sx={{ mb: 2 }}>
