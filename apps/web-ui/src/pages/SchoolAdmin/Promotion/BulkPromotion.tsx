@@ -21,11 +21,14 @@ import {
     DialogContent,
     DialogActions,
     DialogContentText,
+    Stack,
 } from "@mui/material";
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import TokenService from "../../../queries/token/tokenService";
 import { useGetClasses } from "../../../queries/Class";
 import { useBulkPromote } from "../../../queries/Promotion";
 import { useNotificationStore } from "../../../stores/notificationStore";
+import { useIsMobile } from "../../../hooks/useIsMobile";
 
 interface ClassMapping {
     classId: string;
@@ -34,6 +37,7 @@ interface ClassMapping {
 }
 
 const BulkPromotion = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || "";
     const { showNotification } = useNotificationStore();
 
@@ -52,7 +56,6 @@ const BulkPromotion = () => {
     useEffect(() => {
         if (classes.length > 0) {
             const initialMappings = classes.map((cls: any) => {
-                // Guess target class (e.g. Class 1 -> Class 2)
                 const numMatch = cls.name.match(/\d+/);
                 let guessedClassId = "";
 
@@ -117,105 +120,170 @@ const BulkPromotion = () => {
     if (classesLoading) {
         return (
             <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
-                <CircularProgress />
+                <CircularProgress size={32} />
             </Box>
         );
     }
 
     return (
         <Box>
-            <Typography variant="h6" gutterBottom fontWeight="medium" sx={{ mb: 3 }}>
-                Bulk Class Promotion Mapping
-            </Typography>
+            {!isMobile && (
+                <Typography variant="h6" fontWeight={700} color="#0f172a" sx={{ mb: 2 }}>
+                    Bulk Class Promotion Mapping
+                </Typography>
+            )}
 
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 3, mb: 4 }}>
-                <TextField
-                    label="New Academic Year"
-                    required
-                    placeholder="e.g., 2026-27"
-                    value={newAcademicYear}
-                    onChange={(e) => setNewAcademicYear(e.target.value)}
-                    sx={{ width: 250 }}
-                />
-                <TextField
-                    label="Notes / Remarks"
-                    placeholder="Describe this year-end process"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    sx={{ flexGrow: 1 }}
-                />
-                <Button
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    disabled={!newAcademicYear || bulkPromoteMutation.isPending}
-                    onClick={() => setConfirmDialogOpen(true)}
-                    sx={{ px: 4 }}
-                >
-                    Promote All Mapped Classes
-                </Button>
-            </Box>
+            <Paper
+                variant="outlined"
+                sx={{
+                    p: { xs: 2, sm: 2.5 },
+                    borderRadius: 2,
+                    borderColor: '#e2e8f0',
+                    bgcolor: '#ffffff',
+                    mb: 2.5,
+                }}
+            >
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }}>
+                    <TextField
+                        label="New Academic Year"
+                        required
+                        placeholder="e.g., 2026-27"
+                        value={newAcademicYear}
+                        onChange={(e) => setNewAcademicYear(e.target.value)}
+                        size="small"
+                        sx={{ minWidth: { xs: '100%', sm: 200 } }}
+                    />
+                    <TextField
+                        label="Notes / Remarks"
+                        placeholder="Describe this year-end process"
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        size="small"
+                        fullWidth
+                    />
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        disabled={!newAcademicYear || bulkPromoteMutation.isPending}
+                        onClick={() => setConfirmDialogOpen(true)}
+                        sx={{
+                            borderRadius: 1.5,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            py: 1,
+                            px: 3,
+                            whiteSpace: 'nowrap',
+                            minWidth: { xs: '100%', sm: 'auto' },
+                        }}
+                    >
+                        Promote All
+                    </Button>
+                </Stack>
+            </Paper>
 
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell sx={{ fontWeight: "bold" }}>Source Class</TableCell>
-                            <TableCell sx={{ fontWeight: "bold" }}>Promotion Action</TableCell>
-                            <TableCell sx={{ fontWeight: "bold" }}>Target Class</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {mappings.map((mapping) => (
-                            <TableRow key={mapping.classId}>
-                                <TableCell>{mapping.name}</TableCell>
-                                <TableCell>
-                                    <Typography variant="body2" color="text.secondary">
-                                        Promotes to
-                                    </Typography>
-                                </TableCell>
-                                <TableCell>
-                                    <FormControl sx={{ minWidth: 200 }}>
-                                        <InputLabel>Select Target Class</InputLabel>
-                                        <Select
-                                            value={mapping.targetClassId}
-                                            label="Select Target Class"
-                                            onChange={(e) =>
-                                                handleMappingChange(mapping.classId, e.target.value)
-                                            }
-                                        >
-                                            <MenuItem value="">
-                                                <em>Do Not Promote (Stays / Graduates)</em>
+            {isMobile ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    {mappings.map((mapping) => (
+                        <Paper
+                            key={mapping.classId}
+                            variant="outlined"
+                            sx={{
+                                p: 1.75,
+                                borderRadius: 2,
+                                borderColor: '#e2e8f0',
+                                bgcolor: '#ffffff',
+                            }}
+                        >
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                                <Typography variant="subtitle2" fontWeight={700} color="#0f172a">
+                                    {mapping.name}
+                                </Typography>
+                                <ArrowForwardRoundedIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+                            </Box>
+                            <FormControl fullWidth size="small">
+                                <InputLabel>Target Class</InputLabel>
+                                <Select
+                                    value={mapping.targetClassId}
+                                    label="Target Class"
+                                    onChange={(e) => handleMappingChange(mapping.classId, e.target.value)}
+                                >
+                                    <MenuItem value="">
+                                        <em>Do Not Promote (Stays / Graduates)</em>
+                                    </MenuItem>
+                                    {classes
+                                        .filter((c: any) => c.classId !== mapping.classId)
+                                        .map((cls: any) => (
+                                            <MenuItem key={cls.classId} value={cls.classId}>
+                                                {cls.name}
                                             </MenuItem>
-                                            {classes
-                                                .filter((c: any) => c.classId !== mapping.classId)
-                                                .map((cls: any) => (
-                                                    <MenuItem key={cls.classId} value={cls.classId}>
-                                                        {cls.name}
-                                                    </MenuItem>
-                                                ))}
-                                        </Select>
-                                    </FormControl>
-                                </TableCell>
+                                        ))}
+                                </Select>
+                            </FormControl>
+                        </Paper>
+                    ))}
+                </Box>
+            ) : (
+                <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 700 }}>Source Class</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>Promotion Action</TableCell>
+                                <TableCell sx={{ fontWeight: 700 }}>Target Class</TableCell>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                        </TableHead>
+                        <TableBody>
+                            {mappings.map((mapping) => (
+                                <TableRow key={mapping.classId}>
+                                    <TableCell sx={{ fontWeight: 600 }}>{mapping.name}</TableCell>
+                                    <TableCell>
+                                        <Typography variant="body2" color="text.secondary">
+                                            Promotes to
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell>
+                                        <FormControl size="small" sx={{ minWidth: 240 }}>
+                                            <InputLabel>Select Target Class</InputLabel>
+                                            <Select
+                                                value={mapping.targetClassId}
+                                                label="Select Target Class"
+                                                onChange={(e) =>
+                                                    handleMappingChange(mapping.classId, e.target.value)
+                                                }
+                                            >
+                                                <MenuItem value="">
+                                                    <em>Do Not Promote (Stays / Graduates)</em>
+                                                </MenuItem>
+                                                {classes
+                                                    .filter((c: any) => c.classId !== mapping.classId)
+                                                    .map((cls: any) => (
+                                                        <MenuItem key={cls.classId} value={cls.classId}>
+                                                            {cls.name}
+                                                        </MenuItem>
+                                                    ))}
+                                            </Select>
+                                        </FormControl>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
 
             {/* Confirm Dialog */}
-            <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
-                <DialogTitle>Confirm Year-End Bulk Promotion</DialogTitle>
+            <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ fontWeight: 700 }}>Confirm Year-End Bulk Promotion</DialogTitle>
                 <DialogContent>
-                    <DialogContentText>
+                    <DialogContentText variant="body2">
                         You are about to promote all active students in the selected source classes to their designated target classes for the academic year <strong>{newAcademicYear}</strong>.
                         <br />
                         <br />
                         This action will update all matching student records. Are you sure you want to proceed?
                     </DialogContentText>
                 </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 3 }}>
-                    <Button onClick={() => setConfirmDialogOpen(false)} color="secondary">
+                <DialogActions sx={{ px: 2.5, pb: 2 }}>
+                    <Button onClick={() => setConfirmDialogOpen(false)} color="inherit" sx={{ textTransform: 'none', fontWeight: 600 }}>
                         Cancel
                     </Button>
                     <Button
@@ -223,6 +291,7 @@ const BulkPromotion = () => {
                         variant="contained"
                         color="primary"
                         disabled={bulkPromoteMutation.isPending}
+                        sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 600 }}
                     >
                         {bulkPromoteMutation.isPending ? "Executing..." : "Confirm & Execute"}
                     </Button>
@@ -233,4 +302,3 @@ const BulkPromotion = () => {
 };
 
 export default BulkPromotion;
-// Export BulkPromotion component

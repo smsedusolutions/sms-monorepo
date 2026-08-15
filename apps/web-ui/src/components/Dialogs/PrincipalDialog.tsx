@@ -23,6 +23,7 @@ import {
     type CreatePrincipalPayload,
 } from '../../queries/Principal';
 import { useNotification } from '../../hooks/useNotification';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import { ImageUpload } from '../ImageUpload';
 import { IMAGEKIT_FOLDERS } from '../../utils/imagekit';
 import { AppInput } from '../shared/AppInput';
@@ -135,6 +136,7 @@ const PrincipalDialog: React.FC<PrincipalDialogProps> = ({
         onClose();
     };
 
+    const isMobile = useIsMobile();
     const isPending = createMutation.isPending || updateMutation.isPending;
     const isError = createMutation.isError || updateMutation.isError;
     const errorMessage =
@@ -143,8 +145,30 @@ const PrincipalDialog: React.FC<PrincipalDialogProps> = ({
         'Operation failed';
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Dialog 
+            open={open} 
+            onClose={handleClose} 
+            maxWidth="sm" 
+            fullWidth
+            fullScreen={isMobile}
+            PaperProps={{
+                sx: {
+                    borderRadius: isMobile ? 0 : 3,
+                    maxHeight: isMobile ? '100dvh' : '90vh',
+                }
+            }}
+        >
+            <DialogTitle
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    py: { xs: 1.5, sm: 2 },
+                    px: { xs: 2, sm: 3 },
+                }}
+            >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Avatar
                         sx={{
@@ -156,7 +180,7 @@ const PrincipalDialog: React.FC<PrincipalDialogProps> = ({
                         <PrincipalIcon sx={{ fontSize: 20 }} />
                     </Avatar>
                     <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1.1rem', sm: '1.25rem' }, lineHeight: 1.2 }}>
                             {isEditMode ? 'Edit Principal' : 'Register Principal'}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
@@ -164,15 +188,15 @@ const PrincipalDialog: React.FC<PrincipalDialogProps> = ({
                         </Typography>
                     </Box>
                 </Box>
-                <IconButton onClick={handleClose} size="small">
+                <IconButton onClick={handleClose} size="small" edge="end">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
 
-            <form onSubmit={handleSubmit}>
-                <DialogContent>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                <DialogContent sx={{ p: { xs: 2, sm: 3 }, overflowY: 'auto' }}>
                     {!isEditMode && (
-                        <Alert severity="info" sx={{ mb: 2 }}>
+                        <Alert severity="info" sx={{ mb: 2.5, borderRadius: 2 }}>
                             <Typography variant="body2" fontWeight={600} gutterBottom>
                                 One Principal Per School
                             </Typography>
@@ -183,7 +207,7 @@ const PrincipalDialog: React.FC<PrincipalDialogProps> = ({
                     )}
 
                     {isError && (
-                        <Alert severity="error" sx={{ mb: 2 }}>
+                        <Alert severity="error" sx={{ mb: 2.5, borderRadius: 2 }}>
                             {errorMessage}
                         </Alert>
                     )}
@@ -210,12 +234,12 @@ const PrincipalDialog: React.FC<PrincipalDialogProps> = ({
                             />
                         </Box>
 
-                        <Divider>
-                            <Chip label="Personal Information" size="small" />
+                        <Divider sx={{ my: 0.5 }}>
+                            <Chip label="Personal Information" size="small" sx={{ fontWeight: 600 }} />
                         </Divider>
 
                         {/* ── Name ── */}
-                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
                             <AppInput
                                 name="firstName"
                                 label="First Name"
@@ -250,7 +274,7 @@ const PrincipalDialog: React.FC<PrincipalDialogProps> = ({
                         />
 
                         {/* ── Password + Phone ── */}
-                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
                             <AppInput
                                 name="password"
                                 label="Password"
@@ -270,8 +294,8 @@ const PrincipalDialog: React.FC<PrincipalDialogProps> = ({
                             />
                         </Box>
 
-                        <Divider>
-                            <Chip label="Account Status" size="small" />
+                        <Divider sx={{ my: 0.5 }}>
+                            <Chip label="Account Status" size="small" sx={{ fontWeight: 600 }} />
                         </Divider>
 
                         <AppSelect
@@ -291,7 +315,19 @@ const PrincipalDialog: React.FC<PrincipalDialogProps> = ({
                     </Box>
                 </DialogContent>
 
-                <DialogActions sx={{ px: 3, pb: 2.5 }}>
+                <DialogActions sx={{ 
+                    px: { xs: 2, sm: 3 }, 
+                    py: 2, 
+                    borderTop: '1px solid', 
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
+                    gap: 1.5,
+                    flexDirection: { xs: 'column-reverse', sm: 'row' },
+                    '& > button': {
+                        width: { xs: '100%', sm: 'auto' },
+                        height: 44,
+                    }
+                }}>
                     <AppButton onClick={handleClose} variant="text" color="inherit">
                         Cancel
                     </AppButton>

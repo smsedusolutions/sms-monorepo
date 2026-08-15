@@ -15,6 +15,7 @@ import {
 import { Close as CloseIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import { useCreateClass, useUpdateClass, useAddSection, useRemoveSection, useAssignClassTeacher, useGetClasses } from '../../queries/Class';
 import { useNotification } from '../../hooks/useNotification';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import { useGetTeachers } from '../../queries/Teacher';
 import type { Class, CreateClassPayload, Teacher } from '../../types';
 import { AppInput } from '../shared/AppInput';
@@ -211,27 +212,47 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
         onClose();
     };
 
+    const isMobile = useIsMobile();
     const isPending = createMutation.isPending || updateMutation.isPending || addSectionMutation.isPending;
     const isError = createMutation.isError || updateMutation.isError || addSectionMutation.isError;
-    const errorMessage =
-        (createMutation.error as { message?: string })?.message ||
+    const errorMessage = (createMutation.error as { message?: string })?.message ||
         (updateMutation.error as { message?: string })?.message ||
         (addSectionMutation.error as { message?: string })?.message ||
         'Operation failed';
 
     return (
-        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        <Dialog 
+            open={open} 
+            onClose={handleClose} 
+            maxWidth="sm" 
+            fullWidth
+            fullScreen={isMobile}
+            PaperProps={{
+                sx: {
+                    borderRadius: isMobile ? 0 : 3,
+                    maxHeight: isMobile ? '100dvh' : '90vh',
+                }
+            }}
+        >
+            <DialogTitle sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                py: { xs: 1.5, sm: 2 },
+                px: { xs: 2, sm: 3 },
+            }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                     {isEditMode ? 'Edit Class Configuration' : 'Create New Class'}
                 </Typography>
-                <IconButton onClick={handleClose} size="small">
+                <IconButton onClick={handleClose} size="small" edge="end">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
 
-            <form onSubmit={handleSubmit}>
-                <DialogContent>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+                <DialogContent sx={{ p: { xs: 2, sm: 3 }, overflowY: 'auto' }}>
                     {isError && (
                         <Alert severity="error" sx={{ mb: 2 }}>
                             {errorMessage}
@@ -240,7 +261,7 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
 
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                         {/* ── Core Definition ── */}
-                        <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+                        <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
                             Core Definition
                         </Typography>
 
@@ -270,7 +291,7 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
                         <Divider sx={{ my: 0.5 }} />
 
                         {/* ── Section Management ── */}
-                        <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+                        <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
                             Section Management
                         </Typography>
 
@@ -390,7 +411,7 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
                                 <AppButton
                                     variant="outlined"
                                     onClick={handleAddSection}
-                                    sx={{ minWidth: '72px', height: '45px', flexShrink: 0 }}
+                                    sx={{ minWidth: '72px', height: '45px', flexShrink: 0, width: { xs: '100%', sm: 'auto' } }}
                                 >
                                     Add
                                 </AppButton>
@@ -419,7 +440,19 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
                     </Box>
                 </DialogContent>
 
-                <DialogActions sx={{ px: 3, pb: 2 }}>
+                <DialogActions sx={{ 
+                    px: { xs: 2, sm: 3 }, 
+                    py: 2, 
+                    borderTop: '1px solid', 
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
+                    gap: 1.5,
+                    flexDirection: { xs: 'column-reverse', sm: 'row' },
+                    '& > button': {
+                        width: { xs: '100%', sm: 'auto' },
+                        height: 44,
+                    }
+                }}>
                     <AppButton onClick={handleClose} variant="text" color="inherit">Cancel</AppButton>
                     <AppButton type="submit" variant="contained" loading={isPending}>
                         {isEditMode ? 'Update Configuration' : 'Create Class'}

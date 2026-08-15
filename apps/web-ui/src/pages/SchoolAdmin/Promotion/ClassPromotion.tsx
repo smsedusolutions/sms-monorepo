@@ -2,8 +2,6 @@ import { useState, useMemo } from "react";
 import {
     Box,
     Button,
-    Card,
-    CardContent,
     Checkbox,
     FormControl,
     Grid,
@@ -21,13 +19,16 @@ import {
     Paper,
     CircularProgress,
     Alert,
+    Chip,
 } from "@mui/material";
 import TokenService from "../../../queries/token/tokenService";
 import { useGetClasses } from "../../../queries/Class";
 import { useGetPromotionPreview, usePromoteClass } from "../../../queries/Promotion";
 import { useNotificationStore } from "../../../stores/notificationStore";
+import { useIsMobile } from "../../../hooks/useIsMobile";
 
 const ClassPromotion = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || "";
     const { showNotification } = useNotificationStore();
 
@@ -127,157 +128,232 @@ const ClassPromotion = () => {
     if (classesLoading || previewLoading) {
         return (
             <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
-                <CircularProgress />
+                <CircularProgress size={32} />
             </Box>
         );
     }
 
     return (
         <Box>
-            <Typography variant="h6" gutterBottom fontWeight="medium" sx={{ mb: 3 }}>
-                Promote Single Class
-            </Typography>
+            {!isMobile && (
+                <Typography variant="h6" fontWeight={700} color="#0f172a" sx={{ mb: 2 }}>
+                    Promote Single Class
+                </Typography>
+            )}
 
-            <Grid container spacing={3}>
+            <Grid container spacing={2.5}>
                 <Grid size={{ xs: 12, md: 4 }}>
-                    <Card sx={{ backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.12)" }}>
-                        <CardContent>
-                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                                Promotion Parameters
-                            </Typography>
-                            <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
-                                <FormControl fullWidth required>
-                                    <InputLabel>Source Class</InputLabel>
-                                    <Select
-                                        value={sourceClassId}
-                                        label="Source Class"
-                                        onChange={(e) => {
-                                            setSourceClassId(e.target.value);
-                                            setSourceSectionId("");
-                                        }}
-                                    >
-                                        {classes.map((cls: any) => (
-                                            <MenuItem key={cls.classId} value={cls.classId}>
-                                                {cls.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
-                                <FormControl fullWidth>
-                                    <InputLabel>Source Section (Optional)</InputLabel>
-                                    <Select
-                                        value={sourceSectionId}
-                                        label="Source Section (Optional)"
-                                        onChange={(e) => setSourceSectionId(e.target.value)}
-                                        disabled={!sourceClassId}
-                                    >
-                                        <MenuItem value="">All Sections</MenuItem>
-                                        {sourceSections.map((sec: any) => (
-                                            <MenuItem key={sec.sectionId} value={sec.sectionId}>
-                                                {sec.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
-                                <FormControl fullWidth required>
-                                    <InputLabel>Target Class</InputLabel>
-                                    <Select
-                                        value={targetClassId}
-                                        label="Target Class"
-                                        onChange={(e) => {
-                                            setTargetClassId(e.target.value);
-                                            setTargetSectionId("");
-                                        }}
-                                    >
-                                        {classes.map((cls: any) => (
-                                            <MenuItem key={cls.classId} value={cls.classId}>
-                                                {cls.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
-                                <FormControl fullWidth>
-                                    <InputLabel>Target Section (Optional)</InputLabel>
-                                    <Select
-                                        value={targetSectionId}
-                                        label="Target Section (Optional)"
-                                        onChange={(e) => setTargetSectionId(e.target.value)}
-                                        disabled={!targetClassId}
-                                    >
-                                        <MenuItem value="">Maintain Current Sections</MenuItem>
-                                        {targetSections.map((sec: any) => (
-                                            <MenuItem key={sec.sectionId} value={sec.sectionId}>
-                                                {sec.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-
-                                <TextField
-                                    label="New Academic Year"
-                                    required
-                                    placeholder="e.g., 2026-27"
-                                    value={newAcademicYear}
-                                    onChange={(e) => setNewAcademicYear(e.target.value)}
-                                />
-
-                                <TextField
-                                    label="Notes / Remarks"
-                                    multiline
-                                    rows={3}
-                                    value={notes}
-                                    onChange={(e) => setNotes(e.target.value)}
-                                />
-
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    size="large"
-                                    fullWidth
-                                    onClick={handlePromote}
-                                    disabled={!sourceClassId || !targetClassId || !newAcademicYear || promoteMutation.isPending}
-                                    sx={{ mt: 1 }}
+                    <Paper
+                        variant="outlined"
+                        sx={{
+                            p: { xs: 2, sm: 2.5 },
+                            borderRadius: 2,
+                            borderColor: '#e2e8f0',
+                            bgcolor: '#ffffff',
+                        }}
+                    >
+                        <Typography variant="subtitle1" fontWeight={700} color="#0f172a" sx={{ mb: 2 }}>
+                            Promotion Parameters
+                        </Typography>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            <FormControl fullWidth size="small" required>
+                                <InputLabel>Source Class</InputLabel>
+                                <Select
+                                    value={sourceClassId}
+                                    label="Source Class"
+                                    onChange={(e) => {
+                                        setSourceClassId(e.target.value);
+                                        setSourceSectionId("");
+                                    }}
                                 >
-                                    {promoteMutation.isPending ? <CircularProgress size={24} /> : "Execute Promotion"}
-                                </Button>
-                            </Box>
-                        </CardContent>
-                    </Card>
+                                    {classes.map((cls: any) => (
+                                        <MenuItem key={cls.classId} value={cls.classId}>
+                                            {cls.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl fullWidth size="small">
+                                <InputLabel>Source Section (Optional)</InputLabel>
+                                <Select
+                                    value={sourceSectionId}
+                                    label="Source Section (Optional)"
+                                    onChange={(e) => setSourceSectionId(e.target.value)}
+                                    disabled={!sourceClassId}
+                                >
+                                    <MenuItem value="">All Sections</MenuItem>
+                                    {sourceSections.map((sec: any) => (
+                                        <MenuItem key={sec.sectionId} value={sec.sectionId}>
+                                            {sec.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl fullWidth size="small" required>
+                                <InputLabel>Target Class</InputLabel>
+                                <Select
+                                    value={targetClassId}
+                                    label="Target Class"
+                                    onChange={(e) => {
+                                        setTargetClassId(e.target.value);
+                                        setTargetSectionId("");
+                                    }}
+                                >
+                                    {classes.map((cls: any) => (
+                                        <MenuItem key={cls.classId} value={cls.classId}>
+                                            {cls.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <FormControl fullWidth size="small">
+                                <InputLabel>Target Section (Optional)</InputLabel>
+                                <Select
+                                    value={targetSectionId}
+                                    label="Target Section (Optional)"
+                                    onChange={(e) => setTargetSectionId(e.target.value)}
+                                    disabled={!targetClassId}
+                                >
+                                    <MenuItem value="">Maintain Current Sections</MenuItem>
+                                    {targetSections.map((sec: any) => (
+                                        <MenuItem key={sec.sectionId} value={sec.sectionId}>
+                                            {sec.name}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+
+                            <TextField
+                                label="New Academic Year"
+                                required
+                                placeholder="e.g., 2026-27"
+                                value={newAcademicYear}
+                                onChange={(e) => setNewAcademicYear(e.target.value)}
+                                size="small"
+                            />
+
+                            <TextField
+                                label="Notes / Remarks"
+                                multiline
+                                rows={2}
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                size="small"
+                                placeholder="Optional promotion notes"
+                            />
+
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                fullWidth
+                                onClick={handlePromote}
+                                disabled={!sourceClassId || !targetClassId || !newAcademicYear || promoteMutation.isPending}
+                                sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 600, py: 1 }}
+                            >
+                                {promoteMutation.isPending ? <CircularProgress size={20} color="inherit" /> : "Execute Promotion"}
+                            </Button>
+                        </Box>
+                    </Paper>
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 8 }}>
                     {sourceClassId ? (
                         <Box>
-                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ mb: 2 }}>
-                                Student List ({filteredStudents.length} active students)
-                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                                <Typography variant="subtitle1" fontWeight={700} color="#0f172a">
+                                    Student List
+                                </Typography>
+                                <Chip
+                                    label={`${filteredStudents.length} Students`}
+                                    size="small"
+                                    color="primary"
+                                    variant="outlined"
+                                    sx={{ fontWeight: 600, height: 22, fontSize: '0.75rem' }}
+                                />
+                            </Box>
+
                             {filteredStudents.length === 0 ? (
-                                <Alert severity="info">No active students found in this class/section.</Alert>
+                                <Alert severity="info" sx={{ borderRadius: 2 }}>No active students found in this class/section.</Alert>
+                            ) : isMobile ? (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                    {filteredStudents.map((student) => {
+                                        const isRepeating = repeaters.includes(student.studentId);
+                                        const isGraduating = graduates.includes(student.studentId);
+
+                                        return (
+                                            <Paper
+                                                key={student.studentId}
+                                                variant="outlined"
+                                                sx={{
+                                                    p: 1.5,
+                                                    borderRadius: 2,
+                                                    borderColor: '#e2e8f0',
+                                                    bgcolor: isRepeating ? '#fffbeb' : isGraduating ? '#f0fdf4' : '#ffffff',
+                                                }}
+                                            >
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                                    <Box>
+                                                        <Typography variant="body2" fontWeight={700} color="#0f172a">
+                                                            {student.firstName} {student.lastName}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Roll: {student.rollNumber || "—"} • ID: {student.studentId}
+                                                        </Typography>
+                                                    </Box>
+                                                    {isRepeating && <Chip label="Repeating" size="small" color="warning" sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }} />}
+                                                    {isGraduating && <Chip label="Graduating" size="small" color="success" sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }} />}
+                                                </Box>
+
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 1, borderTop: '1px solid #f1f5f9' }}>
+                                                    <Button
+                                                        size="small"
+                                                        variant={isRepeating ? "contained" : "outlined"}
+                                                        color="warning"
+                                                        onClick={() => handleRepeaterToggle(student.studentId)}
+                                                        sx={{ textTransform: 'none', fontSize: '0.75rem', py: 0.25, borderRadius: 1 }}
+                                                    >
+                                                        {isRepeating ? "✓ Repeat" : "Mark Repeat"}
+                                                    </Button>
+                                                    <Button
+                                                        size="small"
+                                                        variant={isGraduating ? "contained" : "outlined"}
+                                                        color="success"
+                                                        onClick={() => handleGraduateToggle(student.studentId)}
+                                                        sx={{ textTransform: 'none', fontSize: '0.75rem', py: 0.25, borderRadius: 1 }}
+                                                    >
+                                                        {isGraduating ? "✓ Graduate" : "Graduate"}
+                                                    </Button>
+                                                </Box>
+                                            </Paper>
+                                        );
+                                    })}
+                                </Box>
                             ) : (
-                                <TableContainer component={Paper} sx={{ maxHeight: 500 }}>
-                                    <Table stickyHeader>
+                                <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, maxHeight: 500 }}>
+                                    <Table stickyHeader size="small">
                                         <TableHead>
                                             <TableRow>
-                                                <TableCell>Roll No</TableCell>
-                                                <TableCell>Name</TableCell>
-                                                <TableCell>Student ID</TableCell>
-                                                <TableCell align="center">Repeat (Stay in Class)</TableCell>
-                                                <TableCell align="center">Graduate (Archive)</TableCell>
+                                                <TableCell sx={{ fontWeight: 700 }}>Roll No</TableCell>
+                                                <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
+                                                <TableCell sx={{ fontWeight: 700 }}>Student ID</TableCell>
+                                                <TableCell align="center" sx={{ fontWeight: 700 }}>Repeat (Stay in Class)</TableCell>
+                                                <TableCell align="center" sx={{ fontWeight: 700 }}>Graduate (Archive)</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
                                             {filteredStudents.map((student) => (
                                                 <TableRow key={student.studentId}>
                                                     <TableCell>{student.rollNumber || "-"}</TableCell>
-                                                    <TableCell>
+                                                    <TableCell sx={{ fontWeight: 600 }}>
                                                         {student.firstName} {student.lastName}
                                                     </TableCell>
-                                                    <TableCell>{student.studentId}</TableCell>
+                                                    <TableCell color="text.secondary">{student.studentId}</TableCell>
                                                     <TableCell align="center">
                                                         <Checkbox
+                                                            size="small"
                                                             checked={repeaters.includes(student.studentId)}
                                                             onChange={() => handleRepeaterToggle(student.studentId)}
                                                             color="warning"
@@ -285,6 +361,7 @@ const ClassPromotion = () => {
                                                     </TableCell>
                                                     <TableCell align="center">
                                                         <Checkbox
+                                                            size="small"
                                                             checked={graduates.includes(student.studentId)}
                                                             onChange={() => handleGraduateToggle(student.studentId)}
                                                             color="success"
@@ -298,20 +375,25 @@ const ClassPromotion = () => {
                             )}
                         </Box>
                     ) : (
-                        <Box
+                        <Paper
+                            variant="outlined"
                             sx={{
-                                border: "2px dashed rgba(255,255,255,0.15)",
+                                borderStyle: "dashed",
+                                borderColor: "#cbd5e1",
                                 borderRadius: 2,
                                 display: "flex",
+                                flexDirection: "column",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                height: "300px",
+                                minHeight: { xs: 160, sm: 280 },
+                                p: 3,
+                                bgcolor: "#f8fafc",
                             }}
                         >
-                            <Typography color="text.secondary">
+                            <Typography variant="body2" color="text.secondary" textAlign="center">
                                 Select a Source Class to preview and customize student promotions
                             </Typography>
-                        </Box>
+                        </Paper>
                     )}
                 </Grid>
             </Grid>

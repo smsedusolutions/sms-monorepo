@@ -2,8 +2,6 @@ import { useState, useMemo } from "react";
 import {
     Box,
     Button,
-    Card,
-    CardContent,
     Checkbox,
     FormControl,
     Grid,
@@ -21,13 +19,16 @@ import {
     Paper,
     CircularProgress,
     Alert,
+    Chip,
 } from "@mui/material";
 import TokenService from "../../../queries/token/tokenService";
 import { useGetClasses } from "../../../queries/Class";
 import { useGetPromotionPreview, useGraduateBatch } from "../../../queries/Promotion";
 import { useNotificationStore } from "../../../stores/notificationStore";
+import { useIsMobile } from "../../../hooks/useIsMobile";
 
 const GraduateBatch = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || "";
     const { showNotification } = useNotificationStore();
 
@@ -104,25 +105,35 @@ const GraduateBatch = () => {
     if (classesLoading || previewLoading) {
         return (
             <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
-                <CircularProgress />
+                <CircularProgress size={32} />
             </Box>
         );
     }
 
     return (
         <Box>
-            <Typography variant="h6" gutterBottom fontWeight="medium" sx={{ mb: 3 }}>
-                Graduate Student Batch
-            </Typography>
+            {!isMobile && (
+                <Typography variant="h6" fontWeight={700} color="#0f172a" sx={{ mb: 2 }}>
+                    Graduate Student Batch
+                </Typography>
+            )}
 
-            <Grid container spacing={3}>
+            <Grid container spacing={2.5}>
                 <Grid size={{ xs: 12, md: 4 }}>
-                    <Card>
-                        <CardContent sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                            <Typography variant="subtitle1" fontWeight="bold">
-                                Graduation Settings
-                            </Typography>
-                            <FormControl fullWidth required>
+                    <Paper
+                        variant="outlined"
+                        sx={{
+                            p: { xs: 2, sm: 2.5 },
+                            borderRadius: 2,
+                            borderColor: '#e2e8f0',
+                            bgcolor: '#ffffff',
+                        }}
+                    >
+                        <Typography variant="subtitle1" fontWeight={700} color="#0f172a" sx={{ mb: 2 }}>
+                            Graduation Settings
+                        </Typography>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            <FormControl fullWidth size="small" required>
                                 <InputLabel>Class</InputLabel>
                                 <Select
                                     value={selectedClassId}
@@ -141,7 +152,7 @@ const GraduateBatch = () => {
                                 </Select>
                             </FormControl>
 
-                            <FormControl fullWidth>
+                            <FormControl fullWidth size="small">
                                 <InputLabel>Section (Optional)</InputLabel>
                                 <Select
                                     value={selectedSectionId}
@@ -167,44 +178,126 @@ const GraduateBatch = () => {
                                 placeholder="e.g., 2025-26"
                                 value={newAcademicYear}
                                 onChange={(e) => setNewAcademicYear(e.target.value)}
+                                size="small"
                             />
 
                             <TextField
-                                label="Notes / Graduation Ceremony Remarks"
+                                label="Notes / Remarks"
                                 multiline
-                                rows={3}
+                                rows={2}
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
+                                size="small"
+                                placeholder="Optional graduation remarks"
                             />
 
                             <Button
                                 variant="contained"
                                 color="success"
-                                size="large"
+                                fullWidth
                                 onClick={handleGraduate}
                                 disabled={selectedStudentIds.length === 0 || !newAcademicYear || graduateMutation.isPending}
+                                sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 600, py: 1 }}
                             >
-                                Graduate Selected Batch
+                                {graduateMutation.isPending ? <CircularProgress size={20} color="inherit" /> : `Graduate ${selectedStudentIds.length} Selected Batch`}
                             </Button>
-                        </CardContent>
-                    </Card>
+                        </Box>
+                    </Paper>
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 8 }}>
                     {selectedClassId ? (
                         <Box>
-                            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                                Graduation Candidate List ({filteredStudents.length} active students)
-                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                                <Typography variant="subtitle1" fontWeight={700} color="#0f172a">
+                                    Graduation Candidate List
+                                </Typography>
+                                <Chip
+                                    label={`${selectedStudentIds.length} of ${filteredStudents.length} Selected`}
+                                    size="small"
+                                    color={selectedStudentIds.length > 0 ? "success" : "default"}
+                                    variant="outlined"
+                                    sx={{ fontWeight: 600, height: 22, fontSize: '0.75rem' }}
+                                />
+                            </Box>
+
                             {filteredStudents.length === 0 ? (
-                                <Alert severity="info">No active students found in this class/section.</Alert>
+                                <Alert severity="info" sx={{ borderRadius: 2 }}>No active students found in this class/section.</Alert>
+                            ) : isMobile ? (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                    <Paper
+                                        variant="outlined"
+                                        sx={{
+                                            p: 1.25,
+                                            borderRadius: 2,
+                                            borderColor: '#e2e8f0',
+                                            bgcolor: '#f8fafc',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                        }}
+                                    >
+                                        <Typography variant="body2" fontWeight={600} color="#0f172a">
+                                            Select All Students
+                                        </Typography>
+                                        <Checkbox
+                                            size="small"
+                                            indeterminate={
+                                                selectedStudentIds.length > 0 &&
+                                                selectedStudentIds.length < filteredStudents.length
+                                            }
+                                            checked={
+                                                filteredStudents.length > 0 &&
+                                                selectedStudentIds.length === filteredStudents.length
+                                            }
+                                            onChange={(e) => handleSelectAll(e.target.checked)}
+                                        />
+                                    </Paper>
+
+                                    {filteredStudents.map((student) => {
+                                        const isChecked = selectedStudentIds.includes(student.studentId);
+                                        return (
+                                            <Paper
+                                                key={student.studentId}
+                                                variant="outlined"
+                                                onClick={() => handleSelectStudent(student.studentId)}
+                                                sx={{
+                                                    p: 1.5,
+                                                    borderRadius: 2,
+                                                    borderColor: isChecked ? 'success.main' : '#e2e8f0',
+                                                    bgcolor: isChecked ? '#f0fdf4' : '#ffffff',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                <Box>
+                                                    <Typography variant="body2" fontWeight={700} color="#0f172a">
+                                                        {student.firstName} {student.lastName}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Roll: {student.rollNumber || "—"} • ID: {student.studentId}
+                                                    </Typography>
+                                                </Box>
+                                                <Checkbox
+                                                    size="small"
+                                                    color="success"
+                                                    checked={isChecked}
+                                                    onChange={() => handleSelectStudent(student.studentId)}
+                                                />
+                                            </Paper>
+                                        );
+                                    })}
+                                </Box>
                             ) : (
-                                <TableContainer component={Paper} sx={{ maxHeight: 500 }}>
-                                    <Table stickyHeader>
+                                <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2, maxHeight: 500 }}>
+                                    <Table stickyHeader size="small">
                                         <TableHead>
                                             <TableRow>
                                                 <TableCell padding="checkbox">
                                                     <Checkbox
+                                                        size="small"
                                                         indeterminate={
                                                             selectedStudentIds.length > 0 &&
                                                             selectedStudentIds.length < filteredStudents.length
@@ -216,26 +309,27 @@ const GraduateBatch = () => {
                                                         onChange={(e) => handleSelectAll(e.target.checked)}
                                                     />
                                                 </TableCell>
-                                                <TableCell>Roll No</TableCell>
-                                                <TableCell>Name</TableCell>
-                                                <TableCell>Student ID</TableCell>
-                                                <TableCell>Current Academic Year</TableCell>
+                                                <TableCell sx={{ fontWeight: 700 }}>Roll No</TableCell>
+                                                <TableCell sx={{ fontWeight: 700 }}>Name</TableCell>
+                                                <TableCell sx={{ fontWeight: 700 }}>Student ID</TableCell>
+                                                <TableCell sx={{ fontWeight: 700 }}>Current Academic Year</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
                                             {filteredStudents.map((student) => (
-                                                <TableRow key={student.studentId}>
+                                                <TableRow key={student.studentId} hover onClick={() => handleSelectStudent(student.studentId)} sx={{ cursor: 'pointer' }}>
                                                     <TableCell padding="checkbox">
                                                         <Checkbox
+                                                            size="small"
                                                             checked={selectedStudentIds.includes(student.studentId)}
                                                             onChange={() => handleSelectStudent(student.studentId)}
                                                         />
                                                     </TableCell>
                                                     <TableCell>{student.rollNumber || "-"}</TableCell>
-                                                    <TableCell>
+                                                    <TableCell sx={{ fontWeight: 600 }}>
                                                         {student.firstName} {student.lastName}
                                                     </TableCell>
-                                                    <TableCell>{student.studentId}</TableCell>
+                                                    <TableCell color="text.secondary">{student.studentId}</TableCell>
                                                     <TableCell>{student.academicYear || "-"}</TableCell>
                                                 </TableRow>
                                             ))}
@@ -245,20 +339,25 @@ const GraduateBatch = () => {
                             )}
                         </Box>
                     ) : (
-                        <Box
+                        <Paper
+                            variant="outlined"
                             sx={{
-                                border: "2px dashed rgba(255,255,255,0.15)",
+                                borderStyle: "dashed",
+                                borderColor: "#cbd5e1",
                                 borderRadius: 2,
                                 display: "flex",
+                                flexDirection: "column",
                                 alignItems: "center",
                                 justifyContent: "center",
-                                height: "300px",
+                                minHeight: { xs: 160, sm: 280 },
+                                p: 3,
+                                bgcolor: "#f8fafc",
                             }}
                         >
-                            <Typography color="text.secondary">
+                            <Typography variant="body2" color="text.secondary" textAlign="center">
                                 Select a Class to view students and execute graduation
                             </Typography>
-                        </Box>
+                        </Paper>
                     )}
                 </Grid>
             </Grid>

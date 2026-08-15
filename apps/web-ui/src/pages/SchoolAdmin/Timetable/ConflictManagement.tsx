@@ -30,12 +30,12 @@ import {
     LinearProgress,
 } from '@mui/material';
 import {
-    Warning as WarningIcon,
     Person as PersonIcon,
     MeetingRoom as RoomIcon,
     Refresh as RefreshIcon,
     Delete as DeleteIcon,
     Edit as EditIcon,
+    Close as CloseIcon,
 } from '@mui/icons-material';
 import {
     useGetConflictReport,
@@ -45,8 +45,10 @@ import {
 } from '../../../queries/Timetable';
 import TokenService from '../../../queries/token/tokenService';
 import ConfirmationDialog from '../../../components/Dialogs/ConfirmationDialog';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 
 const ConflictManagement = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
 
     const { data: conflictData, isLoading, error, refetch, isRefetching } = useGetConflictReport(schoolId);
@@ -148,69 +150,82 @@ const ConflictManagement = () => {
     }
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 }, position: 'relative' }}>
+        <Box sx={{ p: { xs: 1.5, sm: 3 }, position: 'relative' }}>
             {/* Global Loader during Refetching */}
             {(isRefetching || updateEntryMutation.isPending || deleteEntryMutation.isPending) && (
                 <Box sx={{ width: '100%', position: 'absolute', top: 0, left: 0, zIndex: 10 }}>
                     <LinearProgress color="primary" />
                 </Box>
             )}
+
             {/* Header */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-                <Typography variant="h5" fontWeight={600}>Conflict Management</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5, flexWrap: 'wrap', gap: 1 }}>
+                {!isMobile ? (
+                    <Typography variant="h5" fontWeight={700} color="#0f172a">
+                        Conflict Management
+                    </Typography>
+                ) : (
+                    <Chip 
+                        label={totalConflicts === 0 ? "All Schedules Conflict-free" : `${totalConflicts} Active Conflict${totalConflicts > 1 ? 's' : ''}`}
+                        color={totalConflicts === 0 ? "success" : "error"}
+                        size="small"
+                        sx={{ fontWeight: 700 }}
+                    />
+                )}
                 <Button
                     variant="outlined"
                     startIcon={<RefreshIcon />}
                     onClick={() => refetch()}
                     size="small"
+                    sx={{ borderRadius: 2 }}
                 >
                     Refresh
                 </Button>
             </Box>
 
             {/* Summary Cards */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-                <Card sx={{ 
-                    minWidth: 200, 
-                    bgcolor: totalConflicts === 0 ? 'success.main' : 'error.main',
-                    color: 'white'
-                }}>
-                    <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <WarningIcon sx={{ color: 'white' }} />
-                            <Typography variant="h4" fontWeight={600} color="inherit">
-                                {totalConflicts}
-                            </Typography>
-                        </Box>
-                        <Typography variant="body2" sx={{ opacity: 0.9, color: 'inherit' }}>
+            <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: { xs: 'repeat(3, 1fr)', sm: 'repeat(3, 1fr)' }, 
+                gap: 1.5, 
+                mb: 2.5 
+            }}>
+                <Card 
+                    variant="outlined"
+                    sx={{ 
+                        borderRadius: 2.5,
+                        bgcolor: totalConflicts === 0 ? '#15803d' : '#b91c1c',
+                        color: 'white',
+                        textAlign: 'center',
+                    }}
+                >
+                    <CardContent sx={{ p: { xs: 1.25, sm: 2 }, '&:last-child': { pb: { xs: 1.25, sm: 2 } } }}>
+                        <Typography variant="h5" fontWeight={800} color="inherit">
+                            {totalConflicts}
+                        </Typography>
+                        <Typography variant="caption" sx={{ opacity: 0.95, color: 'inherit', fontWeight: 600, fontSize: { xs: '0.65rem', sm: '0.75rem' } }} display="block">
                             Total Conflicts
                         </Typography>
                     </CardContent>
                 </Card>
 
-                <Card sx={{ minWidth: 200 }}>
-                    <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <PersonIcon color="primary" />
-                            <Typography variant="h4" fontWeight={600}>
-                                {teacherConflicts.length}
-                            </Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
+                <Card variant="outlined" sx={{ borderRadius: 2.5, textAlign: 'center', bgcolor: 'background.paper' }}>
+                    <CardContent sx={{ p: { xs: 1.25, sm: 2 }, '&:last-child': { pb: { xs: 1.25, sm: 2 } } }}>
+                        <Typography variant="h5" fontWeight={800} color="primary.main">
+                            {teacherConflicts.length}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }} display="block">
                             Teacher Conflicts
                         </Typography>
                     </CardContent>
                 </Card>
 
-                <Card sx={{ minWidth: 200 }}>
-                    <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <RoomIcon color="secondary" />
-                            <Typography variant="h4" fontWeight={600}>
-                                {roomConflicts.length}
-                            </Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary">
+                <Card variant="outlined" sx={{ borderRadius: 2.5, textAlign: 'center', bgcolor: 'background.paper' }}>
+                    <CardContent sx={{ p: { xs: 1.25, sm: 2 }, '&:last-child': { pb: { xs: 1.25, sm: 2 } } }}>
+                        <Typography variant="h5" fontWeight={800} color="secondary.main">
+                            {roomConflicts.length}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }} display="block">
                             Room Conflicts
                         </Typography>
                     </CardContent>
@@ -218,223 +233,302 @@ const ConflictManagement = () => {
             </Box>
 
             {totalConflicts === 0 ? (
-                <Alert severity="success" sx={{ mb: 3 }}>
+                <Alert severity="success" sx={{ mb: 3, borderRadius: 2.5 }}>
                     No scheduling conflicts detected. Your timetable is conflict-free!
                 </Alert>
             ) : (
                 <>
                     {/* Teacher Conflicts */}
                     {teacherConflicts.length > 0 && (
-                        <Paper sx={{ mb: 3, p: 2 }}>
-                            <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Paper sx={{ mb: 3, p: { xs: 1.5, sm: 2 }, borderRadius: 3 }} variant="outlined">
+                            <Typography variant="h6" fontWeight={700} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                                 <PersonIcon color="primary" />
                                 Teacher Double-Booking Conflicts
                             </Typography>
-                            <TableContainer>
-                                <Table size="small">
-                                    <TableHead>
-                                        <TableRow sx={{ bgcolor: 'grey.100' }}>
-                                            <TableCell><strong>Description</strong></TableCell>
-                                            <TableCell><strong>Timing</strong></TableCell>
-                                            <TableCell><strong>Conflicting Assignments</strong></TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {teacherConflicts.map((conflict, index) => (
-                                            <TableRow 
-                                                key={index} 
-                                                sx={{ 
-                                                    '&:vertical-align': 'top',
-                                                    '& td': {
-                                                        borderBottom: index < teacherConflicts.length - 1 ? '2px dashed !important' : 'none',
-                                                        borderColor: 'grey.400 !important',
-                                                        pb: 3,
-                                                        pt: 3
-                                                    }
-                                                }}
-                                            >
-                                                <TableCell sx={{ minWidth: 200 }}>
-                                                    <Typography variant="body2" fontWeight={600} color="error.main">
-                                                        {conflict.description}
-                                                    </Typography>
-                                                    <Typography variant="caption" color="text.secondary" display="block">
-                                                        Resolve this by reassigning or deleting one of the entries below.
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                                                        <Chip
-                                                            label={conflict.dayOfWeek?.charAt(0).toUpperCase() + conflict.dayOfWeek?.slice(1)}
-                                                            size="small"
-                                                            variant="outlined"
-                                                        />
-                                                        <Chip
-                                                            label={`Period ${conflict.periodNumber}`}
-                                                            size="small"
-                                                            color="primary"
-                                                        />
-                                                    </Box>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Grid container spacing={1}>
-                                                        {conflict.entries?.map((entry: any, i: number) => (
-                                                            <Grid size={{ xs: 12, md: 6 }} key={i}>
-                                                                <Card variant="outlined" sx={{ bgcolor: 'background.default' }}>
-                                                                    <Box sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                                        <Box>
-                                                                            <Typography variant="subtitle2" color="primary.main" fontWeight={700}>
-                                                                                {entry.className} - {entry.sectionName}
-                                                                            </Typography>
-                                                                            <Typography variant="body2" fontWeight={500}>
-                                                                                {entry.subjectName}
-                                                                            </Typography>
-                                                                            <Typography variant="caption" color="text.secondary">
-                                                                                Teacher: {entry.teacherName}
-                                                                            </Typography>
-                                                                        </Box>
-                                                                        <Box sx={{ display: 'flex' }}>
-                                                                            <Tooltip title="Reassign Teacher">
-                                                                                <IconButton
-                                                                                    size="small"
-                                                                                    color="primary"
-                                                                                    onClick={() => handleOpenReassign(entry, conflict.dayOfWeek, conflict.periodNumber)}
-                                                                                >
-                                                                                    <EditIcon fontSize="small" />
-                                                                                </IconButton>
-                                                                            </Tooltip>
-                                                                            <Tooltip title="Delete Entry">
-                                                                                <IconButton
-                                                                                    size="small"
-                                                                                    color="error"
-                                                                                    onClick={() => handleDeleteEntry(entry.entryId)}
-                                                                                >
-                                                                                    <DeleteIcon fontSize="small" />
-                                                                                </IconButton>
-                                                                            </Tooltip>
-                                                                        </Box>
-                                                                    </Box>
-                                                                </Card>
-                                                            </Grid>
-                                                        ))}
-                                                    </Grid>
-                                                </TableCell>
+                            {isMobile ? (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                    {teacherConflicts.map((conflict, index) => (
+                                        <Card key={index} variant="outlined" sx={{ borderRadius: 2, p: 1.5, borderColor: 'error.light', bgcolor: 'error.50' }}>
+                                            <Typography variant="subtitle2" fontWeight={700} color="error.dark">
+                                                {conflict.description}
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', gap: 1, my: 1 }}>
+                                                <Chip label={conflict.dayOfWeek?.toUpperCase()} size="small" variant="outlined" />
+                                                <Chip label={`Period ${conflict.periodNumber}`} size="small" color="primary" />
+                                            </Box>
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+                                                {conflict.entries?.map((entry: any, i: number) => (
+                                                    <Paper key={i} sx={{ p: 1.5, borderRadius: 1.5, bgcolor: 'background.paper', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} elevation={0}>
+                                                        <Box>
+                                                            <Typography variant="subtitle2" fontWeight={700} color="primary">
+                                                                {entry.className} - {entry.sectionName}
+                                                            </Typography>
+                                                            <Typography variant="body2">{entry.subjectName}</Typography>
+                                                            <Typography variant="caption" color="text.secondary">Teacher: {entry.teacherName}</Typography>
+                                                        </Box>
+                                                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                            <IconButton
+                                                                size="small"
+                                                                color="primary"
+                                                                onClick={() => handleOpenReassign(entry, conflict.dayOfWeek, conflict.periodNumber)}
+                                                            >
+                                                                <EditIcon fontSize="small" />
+                                                            </IconButton>
+                                                            <IconButton
+                                                                size="small"
+                                                                color="error"
+                                                                onClick={() => handleDeleteEntry(entry.entryId)}
+                                                            >
+                                                                <DeleteIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Box>
+                                                    </Paper>
+                                                ))}
+                                            </Box>
+                                        </Card>
+                                    ))}
+                                </Box>
+                            ) : (
+                                <TableContainer>
+                                    <Table size="small">
+                                        <TableHead>
+                                            <TableRow sx={{ bgcolor: 'grey.100' }}>
+                                                <TableCell><strong>Description</strong></TableCell>
+                                                <TableCell><strong>Timing</strong></TableCell>
+                                                <TableCell><strong>Conflicting Assignments</strong></TableCell>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+                                        </TableHead>
+                                        <TableBody>
+                                            {teacherConflicts.map((conflict, index) => (
+                                                <TableRow 
+                                                    key={index} 
+                                                    sx={{ 
+                                                        '&:vertical-align': 'top',
+                                                        '& td': {
+                                                            borderBottom: index < teacherConflicts.length - 1 ? '2px dashed !important' : 'none',
+                                                            borderColor: 'grey.400 !important',
+                                                            pb: 3,
+                                                            pt: 3
+                                                        }
+                                                    }}
+                                                >
+                                                    <TableCell sx={{ minWidth: 200 }}>
+                                                        <Typography variant="body2" fontWeight={600} color="error.main">
+                                                            {conflict.description}
+                                                        </Typography>
+                                                        <Typography variant="caption" color="text.secondary" display="block">
+                                                            Resolve this by reassigning or deleting one of the entries below.
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                                            <Chip
+                                                                label={conflict.dayOfWeek?.charAt(0).toUpperCase() + conflict.dayOfWeek?.slice(1)}
+                                                                size="small"
+                                                                variant="outlined"
+                                                            />
+                                                            <Chip
+                                                                label={`Period ${conflict.periodNumber}`}
+                                                                size="small"
+                                                                color="primary"
+                                                            />
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Grid container spacing={1}>
+                                                            {conflict.entries?.map((entry: any, i: number) => (
+                                                                <Grid size={{ xs: 12, md: 6 }} key={i}>
+                                                                    <Card variant="outlined" sx={{ bgcolor: 'background.default' }}>
+                                                                        <Box sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                                            <Box>
+                                                                                <Typography variant="subtitle2" color="primary.main" fontWeight={700}>
+                                                                                    {entry.className} - {entry.sectionName}
+                                                                                </Typography>
+                                                                                <Typography variant="body2" fontWeight={500}>
+                                                                                    {entry.subjectName}
+                                                                                </Typography>
+                                                                                <Typography variant="caption" color="text.secondary">
+                                                                                    Teacher: {entry.teacherName}
+                                                                                </Typography>
+                                                                            </Box>
+                                                                            <Box sx={{ display: 'flex' }}>
+                                                                                <Tooltip title="Reassign Teacher">
+                                                                                    <IconButton
+                                                                                        size="small"
+                                                                                        color="primary"
+                                                                                        onClick={() => handleOpenReassign(entry, conflict.dayOfWeek, conflict.periodNumber)}
+                                                                                    >
+                                                                                        <EditIcon fontSize="small" />
+                                                                                    </IconButton>
+                                                                                </Tooltip>
+                                                                                <Tooltip title="Delete Entry">
+                                                                                    <IconButton
+                                                                                        size="small"
+                                                                                        color="error"
+                                                                                        onClick={() => handleDeleteEntry(entry.entryId)}
+                                                                                    >
+                                                                                        <DeleteIcon fontSize="small" />
+                                                                                    </IconButton>
+                                                                                </Tooltip>
+                                                                            </Box>
+                                                                        </Box>
+                                                                    </Card>
+                                                                </Grid>
+                                                            ))}
+                                                        </Grid>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            )}
                         </Paper>
                     )}
 
                     {/* Room Conflicts */}
                     {roomConflicts.length > 0 && (
-                        <Paper sx={{ p: 2 }}>
-                            <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Paper sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 3, mb: 3 }} variant="outlined">
+                            <Typography variant="h6" fontWeight={700} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                                 <RoomIcon color="secondary" />
                                 Room Double-Booking Conflicts
                             </Typography>
-                            <TableContainer>
-                                <Table size="small">
-                                    <TableHead>
-                                        <TableRow sx={{ bgcolor: 'grey.100' }}>
-                                            <TableCell><strong>Description</strong></TableCell>
-                                            <TableCell><strong>Timing</strong></TableCell>
-                                            <TableCell><strong>Conflicting Assignments</strong></TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {roomConflicts.map((conflict, index) => (
-                                            <TableRow 
-                                                key={index} 
-                                                sx={{ 
-                                                    '&:vertical-align': 'top',
-                                                    '& td': {
-                                                        borderBottom: index < roomConflicts.length - 1 ? '2px dashed !important' : 'none',
-                                                        borderColor: 'grey.400 !important',
-                                                        pb: 3,
-                                                        pt: 3
-                                                    }
-                                                }}
-                                            >
-                                                <TableCell sx={{ minWidth: 200 }}>
-                                                    <Typography variant="body2" fontWeight={600} color="secondary.main">
-                                                        {conflict.description}
-                                                    </Typography>
-                                                    <Typography variant="caption" color="text.secondary" display="block">
-                                                        Multiple classes are using this room at the same time.
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                                                        <Chip
-                                                            label={conflict.dayOfWeek?.charAt(0).toUpperCase() + conflict.dayOfWeek?.slice(1)}
+                            {isMobile ? (
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                    {roomConflicts.map((conflict, index) => (
+                                        <Card key={index} variant="outlined" sx={{ borderRadius: 2, p: 1.5, borderColor: 'secondary.light' }}>
+                                            <Typography variant="subtitle2" fontWeight={700} color="secondary.main">
+                                                {conflict.description}
+                                            </Typography>
+                                            <Box sx={{ display: 'flex', gap: 1, my: 1 }}>
+                                                <Chip label={conflict.dayOfWeek?.toUpperCase()} size="small" variant="outlined" />
+                                                <Chip label={`Period ${conflict.periodNumber}`} size="small" color="secondary" />
+                                            </Box>
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 1 }}>
+                                                {conflict.entries?.map((entry: any, i: number) => (
+                                                    <Paper key={i} sx={{ p: 1.5, borderRadius: 1.5, bgcolor: 'background.paper', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} elevation={0}>
+                                                        <Box>
+                                                            <Typography variant="subtitle2" fontWeight={700} color="secondary">
+                                                                {entry.className} - {entry.sectionName}
+                                                            </Typography>
+                                                            <Typography variant="body2">{entry.subjectName}</Typography>
+                                                            <Typography variant="caption" color="text.secondary">Room: {entry.roomName || entry.roomId}</Typography>
+                                                        </Box>
+                                                        <IconButton
                                                             size="small"
-                                                            variant="outlined"
-                                                        />
-                                                        <Chip
-                                                            label={`Period ${conflict.periodNumber}`}
-                                                            size="small"
-                                                            color="secondary"
-                                                        />
-                                                    </Box>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Grid container spacing={1}>
-                                                        {conflict.entries?.map((entry: any, i: number) => (
-                                                            <Grid size={{ xs: 12, md: 6 }} key={i}>
-                                                                <Card variant="outlined" sx={{ bgcolor: 'background.default' }}>
-                                                                    <Box sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                                        <Box>
-                                                                            <Typography variant="subtitle2" color="secondary.main" fontWeight={700}>
-                                                                                {entry.className} - {entry.sectionName}
-                                                                            </Typography>
-                                                                            <Typography variant="body2" fontWeight={500}>
-                                                                                {entry.subjectName}
-                                                                            </Typography>
-                                                                            <Typography variant="caption" color="text.secondary">
-                                                                                Teacher: {entry.teacherName}
-                                                                            </Typography>
-                                                                        </Box>
-                                                                        <Box>
-                                                                            <Tooltip title="Delete Entry">
-                                                                                <IconButton
-                                                                                    size="small"
-                                                                                    color="error"
-                                                                                    onClick={() => handleDeleteEntry(entry.entryId)}
-                                                                                >
-                                                                                    <DeleteIcon fontSize="small" />
-                                                                                </IconButton>
-                                                                            </Tooltip>
-                                                                        </Box>
-                                                                    </Box>
-                                                                </Card>
-                                                            </Grid>
-                                                        ))}
-                                                    </Grid>
-                                                </TableCell>
+                                                            color="error"
+                                                            onClick={() => handleDeleteEntry(entry.entryId)}
+                                                        >
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Paper>
+                                                ))}
+                                            </Box>
+                                        </Card>
+                                    ))}
+                                </Box>
+                            ) : (
+                                <TableContainer>
+                                    <Table size="small">
+                                        <TableHead>
+                                            <TableRow sx={{ bgcolor: 'grey.100' }}>
+                                                <TableCell><strong>Description</strong></TableCell>
+                                                <TableCell><strong>Timing</strong></TableCell>
+                                                <TableCell><strong>Conflicting Assignments</strong></TableCell>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+                                        </TableHead>
+                                        <TableBody>
+                                            {roomConflicts.map((conflict, index) => (
+                                                <TableRow key={index}>
+                                                    <TableCell sx={{ minWidth: 200 }}>
+                                                        <Typography variant="body2" fontWeight={600} color="error.main">
+                                                            {conflict.description}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                                                            <Chip
+                                                                label={conflict.dayOfWeek?.charAt(0).toUpperCase() + conflict.dayOfWeek?.slice(1)}
+                                                                size="small"
+                                                                variant="outlined"
+                                                            />
+                                                            <Chip
+                                                                label={`Period ${conflict.periodNumber}`}
+                                                                size="small"
+                                                                color="secondary"
+                                                            />
+                                                        </Box>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Grid container spacing={1}>
+                                                            {conflict.entries?.map((entry: any, i: number) => (
+                                                                <Grid size={{ xs: 12, md: 6 }} key={i}>
+                                                                    <Card variant="outlined" sx={{ bgcolor: 'background.default' }}>
+                                                                        <Box sx={{ p: 1.5, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                                            <Box>
+                                                                                <Typography variant="subtitle2" color="secondary.main" fontWeight={700}>
+                                                                                    {entry.className} - {entry.sectionName}
+                                                                                </Typography>
+                                                                                <Typography variant="body2" fontWeight={500}>
+                                                                                    {entry.subjectName}
+                                                                                </Typography>
+                                                                                <Typography variant="caption" color="text.secondary">
+                                                                                    Room: {entry.roomName || entry.roomId}
+                                                                                </Typography>
+                                                                            </Box>
+                                                                            <IconButton
+                                                                                size="small"
+                                                                                color="error"
+                                                                                onClick={() => handleDeleteEntry(entry.entryId)}
+                                                                            >
+                                                                                <DeleteIcon fontSize="small" />
+                                                                            </IconButton>
+                                                                        </Box>
+                                                                    </Card>
+                                                                </Grid>
+                                                            ))}
+                                                        </Grid>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            )}
                         </Paper>
                     )}
                 </>
             )}
 
             {/* Reassign Teacher Dialog */}
-            <Dialog open={reassignDialogOpen} onClose={handleCloseReassign} maxWidth="xs" fullWidth>
-                <DialogTitle>Reassign Teacher</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ mt: 1, mb: 2 }}>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Dialog 
+                open={reassignDialogOpen} 
+                onClose={handleCloseReassign} 
+                maxWidth="xs" 
+                fullWidth
+                fullScreen={isMobile}
+                PaperProps={{
+                    sx: {
+                        borderRadius: isMobile ? 0 : 3,
+                    }
+                }}
+            >
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid', borderColor: 'divider', py: { xs: 1.5, sm: 2 } }}>
+                    <Typography variant="h6" fontWeight={700}>Reassign Teacher</Typography>
+                    <IconButton onClick={handleCloseReassign} size="small" edge="end">
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
+                    <Box sx={{ mt: 1, mb: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        <Typography variant="body2" color="text.secondary">
                             <strong>Class:</strong> {selectedEntry?.className} - {selectedEntry?.sectionName}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                             <strong>Subject:</strong> {selectedEntry?.subjectName}
                         </Typography>
-                        <Divider sx={{ my: 2 }} />
-                        <Typography variant="subtitle2" sx={{ mb: 1.5 }}>
+                        <Divider sx={{ my: 1 }} />
+                        <Typography variant="subtitle2" sx={{ mb: 1 }}>
                             Select an available teacher for {selectedConflictParams.day} - Period {selectedConflictParams.period}
                         </Typography>
                         <FormControl fullWidth size="small">
@@ -460,8 +554,19 @@ const ConflictManagement = () => {
                         )}
                     </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseReassign}>Cancel</Button>
+                <DialogActions sx={{ 
+                    px: { xs: 2, sm: 3 }, 
+                    py: 2, 
+                    borderTop: '1px solid', 
+                    borderColor: 'divider',
+                    flexDirection: { xs: 'column-reverse', sm: 'row' },
+                    gap: 1,
+                    '& > button': {
+                        width: { xs: '100%', sm: 'auto' },
+                        height: 44,
+                    }
+                }}>
+                    <Button onClick={handleCloseReassign} color="inherit">Cancel</Button>
                     <Button
                         variant="contained"
                         onClick={handleConfirmReassign}
@@ -486,12 +591,12 @@ const ConflictManagement = () => {
             />
 
             {/* Info Box */}
-            <Alert severity="info" sx={{ mt: 3, '& .MuiAlert-message': { width: '100%' } }}>
-                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+            <Alert severity="info" sx={{ mt: 3, borderRadius: 2.5, '& .MuiAlert-message': { width: '100%' } }}>
+                <Typography variant="subtitle2" fontWeight={700} gutterBottom>
                     How to Resolve Conflicts:
                 </Typography>
                 <Typography variant="body2" component="div">
-                    <ul>
+                    <ul style={{ paddingLeft: '1.2rem', margin: 0 }}>
                         <li><strong>Reassign:</strong> Click the <EditIcon sx={{ fontSize: 16, verticalAlign: 'middle', mx: 0.5 }} color="primary" /> icon to move a teacher to a different class or choose an available teacher from the free list.</li>
                         <li><strong>Delete:</strong> Click the <DeleteIcon sx={{ fontSize: 16, verticalAlign: 'middle', mx: 0.5 }} color="error" /> icon to remove an erroneous entry entirely.</li>
                         <li><strong>Room Conflicts:</strong> These occur when multiple classes are scheduled in the same room. Delete the conflicting entry and assign a different room in the Master Timetable.</li>

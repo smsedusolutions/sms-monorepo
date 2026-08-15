@@ -49,6 +49,9 @@ import {
 } from '../../../queries/Timetable';
 import type { Period, Shift } from '../../../types/timetable.types';
 import TokenService from '../../../queries/token/tokenService';
+import { useIsMobile } from '../../../hooks/useIsMobile';
+import MobileCardList from '../../../components/mobile/data/MobileCardList';
+import MobileCardItem from '../../../components/mobile/data/MobileCardItem';
 
 const DAYS_OF_WEEK = [
     { value: 'monday', label: 'Monday' },
@@ -82,6 +85,7 @@ interface PeriodDialogProps {
 }
 
 const PeriodDialog = ({ open, onClose, onSave, editData, shifts, nextPeriodNumber = 1 }: PeriodDialogProps) => {
+    const isMobile = useIsMobile();
     const [formData, setFormData] = useState<Partial<Period>>({
         periodNumber: 1,
         name: '',
@@ -158,8 +162,8 @@ const PeriodDialog = ({ open, onClose, onSave, editData, shifts, nextPeriodNumbe
             setFormData((prev) => {
                 const updated = { ...prev, startTime: timeStr };
                 // If we have a duration, auto-calculate end time
-                if (updated.duration) {
-                    const newEndTime = addMinutes(date, updated.duration);
+                if (prev.duration && prev.duration > 0) {
+                    const newEndTime = addMinutes(date, prev.duration);
                     setEndTimeDate(newEndTime);
                     updated.endTime = formatTimeToString(newEndTime);
                 }
@@ -178,11 +182,11 @@ const PeriodDialog = ({ open, onClose, onSave, editData, shifts, nextPeriodNumbe
             const timeStr = formatTimeToString(date);
             setFormData((prev) => {
                 const updated = { ...prev, endTime: timeStr };
-                // Auto-calculate duration if start time exists
+                // If we have start time, calculate duration
                 if (startTimeDate) {
-                    const duration = differenceInMinutes(date, startTimeDate);
-                    if (duration > 0) {
-                        updated.duration = duration;
+                    const durationMinutes = differenceInMinutes(date, startTimeDate);
+                    if (durationMinutes > 0) {
+                        updated.duration = durationMinutes;
                     }
                 }
                 return updated;
@@ -235,20 +239,41 @@ const PeriodDialog = ({ open, onClose, onSave, editData, shifts, nextPeriodNumbe
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>{editData ? 'Edit Period Definition' : 'Define New Period'}</Typography>
-                <IconButton onClick={onClose} size="small">
+        <Dialog 
+            open={open} 
+            onClose={onClose} 
+            maxWidth="md" 
+            fullWidth
+            fullScreen={isMobile}
+            PaperProps={{
+                sx: {
+                    borderRadius: isMobile ? 0 : 3,
+                }
+            }}
+        >
+            <DialogTitle sx={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                py: { xs: 1.5, sm: 2 },
+                px: { xs: 2, sm: 3 }
+            }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+                    {editData ? 'Edit Period Definition' : 'Define New Period'}
+                </Typography>
+                <IconButton onClick={onClose} size="small" edge="end">
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
-            <DialogContent>
+            <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mt: 1 }}>
-                    <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+                    <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2 }}>
                         Temporal Definition
                     </Typography>
 
-                    <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 2fr' }, gap: 2 }}>
                         <AppInput
                             label="Period Rank"
                             type="number"
@@ -257,7 +282,6 @@ const PeriodDialog = ({ open, onClose, onSave, editData, shifts, nextPeriodNumbe
                             onChange={(e) => handleChange('periodNumber', parseInt(e.target.value))}
                             error={!!errors.periodNumber}
                             helperText={errors.periodNumber}
-                            sx={{ flex: 1 }}
                         />
                         <AppInput
                             label="Period Label"
@@ -267,11 +291,10 @@ const PeriodDialog = ({ open, onClose, onSave, editData, shifts, nextPeriodNumbe
                             placeholder="e.g., Morning Session"
                             error={!!errors.name}
                             helperText={errors.name}
-                            sx={{ flex: 2 }}
                         />
                     </Box>
 
-                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px', gap: 2, alignItems: 'start' }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr 120px' }, gap: 2, alignItems: 'start' }}>
                         <AppTimePicker
                             label="Start Time"
                             value={startTimeDate}
@@ -295,7 +318,7 @@ const PeriodDialog = ({ open, onClose, onSave, editData, shifts, nextPeriodNumbe
 
                     <Divider sx={{ my: 0.5 }} />
 
-                    <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
+                    <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2 }}>
                         Categorization & Scope
                     </Typography>
 
@@ -335,7 +358,18 @@ const PeriodDialog = ({ open, onClose, onSave, editData, shifts, nextPeriodNumbe
                     )}
                 </Box>
             </DialogContent>
-            <DialogActions sx={{ px: 3, pb: 2 }}>
+            <DialogActions sx={{ 
+                px: { xs: 2, sm: 3 }, 
+                py: 2, 
+                borderTop: '1px solid', 
+                borderColor: 'divider',
+                flexDirection: { xs: 'column-reverse', sm: 'row' },
+                gap: 1,
+                '& > button': {
+                    width: { xs: '100%', sm: 'auto' },
+                    height: 44,
+                }
+            }}>
                 <AppButton onClick={onClose} variant="text" color="inherit">Cancel</AppButton>
                 <AppButton onClick={handleSubmit} variant="contained">
                     {editData ? 'Update Period' : 'Append Period'}
@@ -346,6 +380,7 @@ const PeriodDialog = ({ open, onClose, onSave, editData, shifts, nextPeriodNumbe
 };
 
 const TimetableConfigPage = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
     const { data: configData, isLoading, error } = useGetActiveConfig(schoolId);
     const createConfig = useCreateConfig(schoolId);
@@ -593,12 +628,12 @@ const TimetableConfigPage = () => {
                     </Paper>
 
                     {/* Working Days */}
-                    <Paper sx={{ p: 3, mb: 3 }}>
+                    <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, borderRadius: 3 }} elevation={0} variant="outlined">
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                            <Typography variant="h6">Working Days</Typography>
+                            <Typography variant="h6" fontWeight={700}>Working Days</Typography>
                             {updateConfig.isPending && <CircularProgress size={20} />}
                         </Box>
-                        <FormGroup row>
+                        <FormGroup sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, gap: 1 }}>
                             {DAYS_OF_WEEK.map((day) => (
                                 <FormControlLabel
                                     key={day.value}
@@ -616,76 +651,115 @@ const TimetableConfigPage = () => {
                     </Paper>
 
                     {/* Periods */}
-                    <Paper sx={{ p: 3, mb: 3 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="h6">Period Structure</Typography>
+                    <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, borderRadius: 3 }} elevation={0} variant="outlined">
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+                            <Typography variant="h6" fontWeight={700}>Period Structure</Typography>
                             <Button
                                 variant="contained"
                                 startIcon={<AddIcon />}
                                 onClick={handleAddPeriod}
+                                size={isMobile ? "small" : "medium"}
                             >
                                 Add Period
                             </Button>
                         </Box>
-                        <TableContainer>
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell>#</TableCell>
-                                        <TableCell>Name</TableCell>
-                                        <TableCell>Start Time</TableCell>
-                                        <TableCell>End Time</TableCell>
-                                        <TableCell>Duration</TableCell>
-                                        <TableCell>Type</TableCell>
-                                        <TableCell align="center">Actions</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {config.periods.length === 0 ? (
+                        {isMobile ? (
+                            <MobileCardList
+                                emptyTitle="No Periods Configured"
+                                emptyMessage="Click 'Add Period' to set up your school schedule."
+                                totalCount={config.periods.length}
+                                itemCount={config.periods.length}
+                            >
+                                {config.periods.map((period) => (
+                                    <MobileCardItem
+                                        key={period.periodNumber}
+                                        title={period.name}
+                                        subtitle={`Period #${period.periodNumber} • ${period.duration} mins`}
+                                        badge={{
+                                            label: PERIOD_TYPES.find((t) => t.value === period.type)?.label || period.type,
+                                            color: (getTypeChipColor(period.type) || 'default') as any,
+                                        }}
+                                        metaItems={[
+                                            { label: 'Timing', value: `${period.startTime} - ${period.endTime}` }
+                                        ]}
+                                        rightAction={
+                                            <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                                <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleEditPeriod(period); }}>
+                                                    <EditIcon fontSize="small" />
+                                                </IconButton>
+                                                <IconButton
+                                                    size="small"
+                                                    color="error"
+                                                    onClick={(e) => { e.stopPropagation(); handleDeletePeriod(period.periodNumber); }}
+                                                >
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            </Box>
+                                        }
+                                    />
+                                ))}
+                            </MobileCardList>
+                        ) : (
+                            <TableContainer>
+                                <Table size="small">
+                                    <TableHead>
                                         <TableRow>
-                                            <TableCell colSpan={7} align="center">
-                                                <Typography color="text.secondary">
-                                                    No periods configured. Click 'Add Period' to start.
-                                                </Typography>
-                                            </TableCell>
+                                            <TableCell>#</TableCell>
+                                            <TableCell>Name</TableCell>
+                                            <TableCell>Start Time</TableCell>
+                                            <TableCell>End Time</TableCell>
+                                            <TableCell>Duration</TableCell>
+                                            <TableCell>Type</TableCell>
+                                            <TableCell align="center">Actions</TableCell>
                                         </TableRow>
-                                    ) : (
-                                        config.periods.map((period) => (
-                                            <TableRow key={period.periodNumber} hover>
-                                                <TableCell>{period.periodNumber}</TableCell>
-                                                <TableCell>{period.name}</TableCell>
-                                                <TableCell>{period.startTime}</TableCell>
-                                                <TableCell>{period.endTime}</TableCell>
-                                                <TableCell>{period.duration} min</TableCell>
-                                                <TableCell>
-                                                    <Chip
-                                                        label={PERIOD_TYPES.find((t) => t.value === period.type)?.label || period.type}
-                                                        size="small"
-                                                        color={getTypeChipColor(period.type) as any}
-                                                    />
-                                                </TableCell>
-                                                <TableCell align="center">
-                                                    <Tooltip title="Edit">
-                                                        <IconButton size="small" onClick={() => handleEditPeriod(period)}>
-                                                            <EditIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                    <Tooltip title="Delete">
-                                                        <IconButton
-                                                            size="small"
-                                                            color="error"
-                                                            onClick={() => handleDeletePeriod(period.periodNumber)}
-                                                        >
-                                                            <DeleteIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Tooltip>
+                                    </TableHead>
+                                    <TableBody>
+                                        {config.periods.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={7} align="center">
+                                                    <Typography color="text.secondary">
+                                                        No periods configured. Click 'Add Period' to start.
+                                                    </Typography>
                                                 </TableCell>
                                             </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
+                                        ) : (
+                                            config.periods.map((period) => (
+                                                <TableRow key={period.periodNumber} hover>
+                                                    <TableCell>{period.periodNumber}</TableCell>
+                                                    <TableCell>{period.name}</TableCell>
+                                                    <TableCell>{period.startTime}</TableCell>
+                                                    <TableCell>{period.endTime}</TableCell>
+                                                    <TableCell>{period.duration} min</TableCell>
+                                                    <TableCell>
+                                                        <Chip
+                                                            label={PERIOD_TYPES.find((t) => t.value === period.type)?.label || period.type}
+                                                            size="small"
+                                                            color={getTypeChipColor(period.type) as any}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell align="center">
+                                                        <Tooltip title="Edit">
+                                                            <IconButton size="small" onClick={() => handleEditPeriod(period)}>
+                                                                <EditIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Tooltip title="Delete">
+                                                            <IconButton
+                                                                size="small"
+                                                                color="error"
+                                                                onClick={() => handleDeletePeriod(period.periodNumber)}
+                                                            >
+                                                                <DeleteIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        )}
                     </Paper>
 
                     {/* Shifts (Optional) */}

@@ -12,6 +12,7 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { useNotification } from '../../hooks/useNotification';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import { useCreateSchoolAdmin, useUpdateSchoolAdmin } from '../../queries/SchoolAdmin';
 import { useGetSchools } from '../../queries/School';
 import type { CreateSchoolAdminPayload, SchoolAdmin } from '../../types';
@@ -167,141 +168,172 @@ const SchoolAdminDialog: React.FC<SchoolAdminDialogProps> = ({
     onClose();
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending;
-  const isError = createMutation.isError || updateMutation.isError;
-  const errorMessage =
-    (createMutation.error as { message?: string })?.message ||
-    (updateMutation.error as { message?: string })?.message ||
-    "Operation failed";
+    const isMobile = useIsMobile();
+    const isPending = createMutation.isPending || updateMutation.isPending;
+    const isError = createMutation.isError || updateMutation.isError;
+    const errorMessage =
+      (createMutation.error as { message?: string })?.message ||
+      (updateMutation.error as { message?: string })?.message ||
+      "Operation failed";
 
-  return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+    return (
+      <Dialog 
+        open={open} 
+        onClose={handleClose} 
+        maxWidth="sm" 
+        fullWidth
+        fullScreen={isMobile}
+        PaperProps={{
+          sx: {
+            borderRadius: isMobile ? 0 : 3,
+            maxHeight: isMobile ? '100dvh' : '90vh',
+          }
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>{isEditMode ? "Modify Administrator Profile" : "Register School Administrator"}</Typography>
-        <IconButton onClick={handleClose} size="small">
-          <CloseIcon />
-        </IconButton>
-      </DialogTitle>
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            py: { xs: 1.5, sm: 2 },
+            px: { xs: 2, sm: 3 },
+          }}
+        >
+          <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+            {isEditMode ? "Modify Administrator Profile" : "Register School Administrator"}
+          </Typography>
+          <IconButton onClick={handleClose} size="small" edge="end">
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
 
-      <form onSubmit={handleSubmit}>
-        <DialogContent>
-          {isError && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {errorMessage}
-            </Alert>
-          )}
-
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
-              Account Information
-            </Typography>
-
-            <AppSelect
-              label="Select School"
-              value={formData.schoolId}
-              onChange={(e) => handleSelectChange("schoolId", e.target.value as string)}
-              disabled={schoolsLoading || isEditMode}
-              options={schools.map(school => ({
-                value: school.schoolId,
-                label: `${school.schoolName} (${school.schoolId})`
-              }))}
-              error={!!errors.schoolId}
-              helperText={errors.schoolId}
-              required
-            />
-
-            <AppInput
-              name="username"
-              label="Username"
-              value={formData.username}
-              onChange={handleChange}
-              error={!!errors.username}
-              helperText={errors.username}
-              required
-            />
-
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-              <AppInput
-                name="email"
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                error={!!errors.email}
-                helperText={errors.email}
-                required
-              />
-
-              <PhoneInput
-                name="contactNumber"
-                label="Contact Number"
-                value={formData.contactNumber}
-                onChange={handleChange}
-              />
-            </Box>
-
-            {!isEditMode && (
-              <AppInput
-                name="password"
-                label="Password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                error={!!errors.password}
-                helperText={errors.password}
-                required
-              />
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+          <DialogContent sx={{ p: { xs: 2, sm: 3 }, overflowY: 'auto' }}>
+            {isError && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {errorMessage}
+              </Alert>
             )}
 
-            <Divider sx={{ my: 1 }} />
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
+              <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
+                Account Information
+              </Typography>
 
-            <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
-              Profile Branding
-            </Typography>
+              <AppSelect
+                label="Select School"
+                value={formData.schoolId}
+                onChange={(e) => handleSelectChange("schoolId", e.target.value as string)}
+                disabled={schoolsLoading || isEditMode}
+                options={schools.map(school => ({
+                  value: school.schoolId,
+                  label: `${school.schoolName} (${school.schoolId})`
+                }))}
+                error={!!errors.schoolId}
+                helperText={errors.schoolId}
+                required
+              />
 
-            <ImageUpload
-              folder={IMAGEKIT_FOLDERS.PROFILE_IMAGES}
-              fileName={
-                isEditMode && editData
-                  ? `${editData.userId}_profile`
-                  : `new_admin_profile_${Date.now()}`
-              }
-              currentImage={formData.profileImage}
-              label="Profile Image"
-              authEndpoint="admin"
-              variant="avatar"
-              size="medium"
-              onUploadSuccess={(result) => {
-                setFormData((prev) => ({ ...prev, profileImage: result.url }));
-              }}
-              onRemove={() => {
-                setFormData((prev) => ({ ...prev, profileImage: "" }));
-              }}
-            />
-          </Box>
-        </DialogContent>
+              <AppInput
+                name="username"
+                label="Username"
+                value={formData.username}
+                onChange={handleChange}
+                error={!!errors.username}
+                helperText={errors.username}
+                required
+              />
 
-        <DialogActions sx={{ px: 3, pb: 2.5 }}>
-          <AppButton onClick={handleClose} variant="text" color="inherit">
-            Cancel
-          </AppButton>
-          <AppButton
-            type="submit"
-            variant="contained"
-            loading={isPending}
-          >
-            {isEditMode ? "Update Profile" : "Create Account"}
-          </AppButton>
-        </DialogActions>
-      </form>
-    </Dialog>
-  );
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                <AppInput
+                  name="email"
+                  label="Email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={!!errors.email}
+                  helperText={errors.email}
+                  required
+                />
+
+                <PhoneInput
+                  name="contactNumber"
+                  label="Contact Number"
+                  value={formData.contactNumber}
+                  onChange={handleChange}
+                />
+              </Box>
+
+              {!isEditMode && (
+                <AppInput
+                  name="password"
+                  label="Password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={!!errors.password}
+                  helperText={errors.password}
+                  required
+                />
+              )}
+
+              <Divider sx={{ my: 0.5 }} />
+
+              <Typography variant="overline" color="primary" sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}>
+                Profile Branding
+              </Typography>
+
+              <ImageUpload
+                folder={IMAGEKIT_FOLDERS.PROFILE_IMAGES}
+                fileName={
+                  isEditMode && editData
+                    ? `${editData.userId}_profile`
+                    : `new_admin_profile_${Date.now()}`
+                }
+                currentImage={formData.profileImage}
+                label="Profile Image"
+                authEndpoint="admin"
+                variant="avatar"
+                size="medium"
+                onUploadSuccess={(result) => {
+                  setFormData((prev) => ({ ...prev, profileImage: result.url }));
+                }}
+                onRemove={() => {
+                  setFormData((prev) => ({ ...prev, profileImage: "" }));
+                }}
+              />
+            </Box>
+          </DialogContent>
+
+          <DialogActions sx={{ 
+            px: { xs: 2, sm: 3 }, 
+            py: 2, 
+            borderTop: '1px solid', 
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+            gap: 1.5,
+            flexDirection: { xs: 'column-reverse', sm: 'row' },
+            '& > button': {
+              width: { xs: '100%', sm: 'auto' },
+              height: 44,
+            }
+          }}>
+            <AppButton onClick={handleClose} variant="text" color="inherit">
+              Cancel
+            </AppButton>
+            <AppButton
+              type="submit"
+              variant="contained"
+              loading={isPending}
+            >
+              {isEditMode ? "Update Profile" : "Create Account"}
+            </AppButton>
+          </DialogActions>
+        </form>
+      </Dialog>
+    );
 };
 
 export default SchoolAdminDialog;

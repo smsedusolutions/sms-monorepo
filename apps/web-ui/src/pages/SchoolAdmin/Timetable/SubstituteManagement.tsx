@@ -5,8 +5,6 @@ import {
     Paper,
     CircularProgress,
     Alert,
-    Card,
-    CardContent,
     Table,
     TableBody,
     TableCell,
@@ -20,12 +18,15 @@ import {
     Tabs,
     Tab,
     Chip,
+    IconButton,
 } from '@mui/material';
 import {
     Add as AddIcon,
     Cancel as CancelIcon,
     History as HistoryIcon,
     Today as TodayIcon,
+    SwapHoriz as SwapIcon,
+    Close as CloseIcon,
 } from '@mui/icons-material';
 import {
     useGetSubstitutesForDate,
@@ -43,6 +44,7 @@ import { AppButton } from '../../../components/shared/AppButton';
 import { AppDatePicker } from '../../../components/shared/AppDatePicker';
 import { format } from 'date-fns';
 import { useUrlTab } from '../../../hooks/useUrlTab';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -54,12 +56,13 @@ function TabPanel(props: TabPanelProps) {
     const { children, value, index, ...other } = props;
     return (
         <div role="tabpanel" hidden={value !== index} {...other}>
-            {value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
+            {value === index && <Box sx={{ pt: 1.5 }}>{children}</Box>}
         </div>
     );
 }
 
 const SubstituteManagement = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
     const [tabValue, setTabValue] = useUrlTab(0, ['assignments', 'history']);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -158,175 +161,314 @@ const SubstituteManagement = () => {
         }
     };
 
+    const todayCount = substitutes.filter((s: any) => s.date === new Date().toISOString().split('T')[0]).length;
+
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
             {/* Header */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-                <Typography variant="h5" fontWeight={600}>Substitute Management</Typography>
-                <AppButton
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => setCreateDialogOpen(true)}
-                    size="small"
-                >
-                    Assign Substitute
-                </AppButton>
+            {!isMobile && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+                    <Typography variant="h5" fontWeight={700} color="#0f172a">Substitute Management</Typography>
+                    <AppButton
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setCreateDialogOpen(true)}
+                        size="small"
+                        sx={{ textTransform: 'none', fontWeight: 600 }}
+                    >
+                        Assign Substitute
+                    </AppButton>
+                </Box>
+            )}
+
+            {/* Clean Summary Row & Mobile Action */}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1.5, mb: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, bgcolor: '#f8fafc', px: 1.5, py: 1, borderRadius: 1.5, border: '1px solid #e2e8f0', flex: { xs: 1, sm: 'none' } }}>
+                    <TodayIcon sx={{ fontSize: 20, color: 'primary.main' }} />
+                    <Box>
+                        <Typography variant="body2" fontWeight={600} color="text.primary">
+                            Today's Substitutes: <strong style={{ color: '#2563eb' }}>{todayCount}</strong>
+                        </Typography>
+                    </Box>
+                </Box>
+
+                {isMobile && (
+                    <AppButton
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setCreateDialogOpen(true)}
+                        size="small"
+                        sx={{ textTransform: 'none', fontWeight: 600 }}
+                    >
+                        Assign Substitute
+                    </AppButton>
+                )}
             </Box>
 
-            {/* Summary Card */}
-            <Card sx={{ mb: 3, bgcolor: 'primary.main', color: 'primary.contrastText' }}>
-                <CardContent>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                        <TodayIcon sx={{ color: 'inherit' }} />
-                        <Typography variant="h6" color="inherit">Today's Substitutes</Typography>
-                    </Box>
-                    <Typography variant="h3" fontWeight={600} color="inherit">
-                        {substitutes.filter((s: any) => s.date === new Date().toISOString().split('T')[0]).length}
-                    </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.9, color: 'inherit' }}>Active substitute assignments for today</Typography>
-                </CardContent>
-            </Card>
-
-            {/* Tabs */}
-            <Paper sx={{ mb: 2 }}>
-                <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
-                    <Tab icon={<TodayIcon />} label="By Date" iconPosition="start" />
-                    <Tab icon={<HistoryIcon />} label="History" iconPosition="start" />
+            {/* Clean Flat Tabs */}
+            <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+                <Tabs
+                    value={tabValue}
+                    onChange={(_, v) => setTabValue(v)}
+                    textColor="primary"
+                    indicatorColor="primary"
+                    sx={{ minHeight: 40 }}
+                >
+                    <Tab icon={<TodayIcon sx={{ fontSize: 18 }} />} label="By Date" iconPosition="start" sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1 }} />
+                    <Tab icon={<HistoryIcon sx={{ fontSize: 18 }} />} label="History" iconPosition="start" sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1 }} />
                 </Tabs>
-            </Paper>
+            </Box>
 
-            {/* Tab Panels */}
+            {/* Tab 0: By Date */}
             <TabPanel value={tabValue} index={0}>
                 {/* Date Selector */}
-                <Paper sx={{ p: 2, mb: 2 }}>
+                <Box sx={{ mb: 2, maxWidth: 300 }}>
                     <AppDatePicker
                         label="Select Date"
                         value={selectedDate ? new Date(selectedDate) : null}
                         onChange={(date) => setSelectedDate(date ? format(date, 'yyyy-MM-dd') : '')}
                     />
-                </Paper>
+                </Box>
 
-                {/* Substitutes Table */}
-                <Paper sx={{ p: 2 }}>
-                    {substitutesLoading ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                            <CircularProgress />
-                        </Box>
-                    ) : substitutes.length === 0 ? (
-                        <Alert severity="info">No substitute assignments for this date.</Alert>
-                    ) : (
-                        <TableContainer>
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow sx={{ bgcolor: 'grey.100' }}>
-                                        <TableCell><strong>Original Teacher</strong></TableCell>
-                                        <TableCell><strong>Substitute</strong></TableCell>
-                                        <TableCell><strong>Class</strong></TableCell>
-                                        <TableCell><strong>Period</strong></TableCell>
-                                        <TableCell><strong>Reason</strong></TableCell>
-                                        <TableCell><strong>Status</strong></TableCell>
-                                        <TableCell><strong>Actions</strong></TableCell>
+                {/* Substitutes List / Table */}
+                {substitutesLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                        <CircularProgress size={32} />
+                    </Box>
+                ) : substitutes.length === 0 ? (
+                    <Alert severity="info" variant="outlined" sx={{ borderRadius: 1.5 }}>
+                        No substitute assignments for this date.
+                    </Alert>
+                ) : isMobile ? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        {substitutes.map((sub: any) => (
+                            <Paper
+                                key={sub.substituteId}
+                                variant="outlined"
+                                sx={{ p: 1.5, borderRadius: 2, borderColor: '#e2e8f0' }}
+                            >
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                    <Chip
+                                        label={`${sub.entry?.dayOfWeek?.charAt(0).toUpperCase()}${sub.entry?.dayOfWeek?.slice(1) || ''} • Period ${sub.entry?.periodNumber || '?'}`}
+                                        size="small"
+                                        color="primary"
+                                        variant="outlined"
+                                        sx={{ fontWeight: 600, height: 22, fontSize: '0.75rem' }}
+                                    />
+                                    <Chip
+                                        label={sub.status?.charAt(0).toUpperCase() + sub.status?.slice(1)}
+                                        size="small"
+                                        color={getStatusColor(sub.status)}
+                                        sx={{ fontWeight: 600, height: 22, fontSize: '0.75rem' }}
+                                    />
+                                </Box>
+
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, my: 0.75 }}>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography variant="caption" color="text.secondary">Original</Typography>
+                                        <Typography variant="body2" fontWeight={600} color="text.primary">
+                                            {sub.originalTeacher?.name || sub.originalTeacherId}
+                                        </Typography>
+                                    </Box>
+                                    <SwapIcon sx={{ color: 'action.active', fontSize: 20 }} />
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography variant="caption" color="text.secondary">Substitute</Typography>
+                                        <Typography variant="body2" fontWeight={600} color="primary.main">
+                                            {sub.substituteTeacher?.name || sub.substituteTeacherId}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 0.5, borderTop: '1px solid #f1f5f9' }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                        Class: <strong>{sub.entry?.classId || '-'} {sub.entry?.sectionId || ''}</strong>
+                                        {sub.reason && ` • ${sub.reason}`}
+                                    </Typography>
+
+                                    {sub.status === 'pending' && (
+                                        <AppButton
+                                            size="small"
+                                            variant="text"
+                                            color="error"
+                                            startIcon={<CancelIcon sx={{ fontSize: 16 }} />}
+                                            onClick={() => handleCancelSubstitute(sub.substituteId)}
+                                            loading={cancelSubstitute.isPending}
+                                            sx={{ p: 0, minWidth: 'auto', textTransform: 'none', fontSize: '0.8rem' }}
+                                        >
+                                            Cancel
+                                        </AppButton>
+                                    )}
+                                </Box>
+                            </Paper>
+                        ))}
+                    </Box>
+                ) : (
+                    <TableContainer component={Paper} elevation={0} variant="outlined" sx={{ borderRadius: 1.5 }}>
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow sx={{ bgcolor: 'grey.100' }}>
+                                    <TableCell><strong>Original Teacher</strong></TableCell>
+                                    <TableCell><strong>Substitute</strong></TableCell>
+                                    <TableCell><strong>Class</strong></TableCell>
+                                    <TableCell><strong>Period</strong></TableCell>
+                                    <TableCell><strong>Reason</strong></TableCell>
+                                    <TableCell><strong>Status</strong></TableCell>
+                                    <TableCell><strong>Actions</strong></TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {substitutes.map((sub: any) => (
+                                    <TableRow key={sub.substituteId} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
+                                        <TableCell>{sub.originalTeacher?.name || sub.originalTeacherId}</TableCell>
+                                        <TableCell>{sub.substituteTeacher?.name || sub.substituteTeacherId}</TableCell>
+                                        <TableCell>
+                                            {sub.entry?.classId || '-'} {sub.entry?.sectionId || ''}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={`${sub.entry?.dayOfWeek?.charAt(0).toUpperCase()}${sub.entry?.dayOfWeek?.slice(1) || ''} - Period ${sub.entry?.periodNumber || '?'}`}
+                                                size="small"
+                                                color="primary"
+                                            />
+                                        </TableCell>
+                                        <TableCell>{sub.reason || '-'}</TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={sub.status?.charAt(0).toUpperCase() + sub.status?.slice(1)}
+                                                size="small"
+                                                color={getStatusColor(sub.status)}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            {sub.status === 'pending' && (
+                                                <AppButton
+                                                    size="small"
+                                                    variant="text"
+                                                    color="error"
+                                                    startIcon={<CancelIcon />}
+                                                    onClick={() => handleCancelSubstitute(sub.substituteId)}
+                                                    loading={cancelSubstitute.isPending}
+                                                >
+                                                    Cancel
+                                                </AppButton>
+                                            )}
+                                        </TableCell>
                                     </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {substitutes.map((sub: any) => (
-                                        <TableRow key={sub.substituteId} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
-                                            <TableCell>{sub.originalTeacher?.name || sub.originalTeacherId}</TableCell>
-                                            <TableCell>{sub.substituteTeacher?.name || sub.substituteTeacherId}</TableCell>
-                                            <TableCell>
-                                                {sub.entry?.classId || '-'} {sub.entry?.sectionId || ''}
-                                            </TableCell>
-                                            <TableCell>
-                                                <Chip
-                                                    label={`${sub.entry?.dayOfWeek?.charAt(0).toUpperCase()}${sub.entry?.dayOfWeek?.slice(1) || ''} - Period ${sub.entry?.periodNumber || '?'}`}
-                                                    size="small"
-                                                    color="primary"
-                                                />
-                                            </TableCell>
-                                            <TableCell>{sub.reason || '-'}</TableCell>
-                                            <TableCell>
-                                                <Chip
-                                                    label={sub.status?.charAt(0).toUpperCase() + sub.status?.slice(1)}
-                                                    size="small"
-                                                    color={getStatusColor(sub.status)}
-                                                />
-                                            </TableCell>
-                                            <TableCell>
-                                                {sub.status === 'pending' && (
-                                                    <AppButton
-                                                        size="small"
-                                                        variant="text"
-                                                        color="error"
-                                                        startIcon={<CancelIcon />}
-                                                        onClick={() => handleCancelSubstitute(sub.substituteId)}
-                                                        loading={cancelSubstitute.isPending}
-                                                    >
-                                                        Cancel
-                                                    </AppButton>
-                                                )}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    )}
-                </Paper>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
             </TabPanel>
 
+            {/* Tab 1: History */}
             <TabPanel value={tabValue} index={1}>
-                {/* History Table */}
-                <Paper sx={{ p: 2 }}>
-                    {historyLoading ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                            <CircularProgress />
-                        </Box>
-                    ) : history.length === 0 ? (
-                        <Alert severity="info">No substitute history found.</Alert>
-                    ) : (
-                        <TableContainer>
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow sx={{ bgcolor: 'grey.100' }}>
-                                        <TableCell><strong>Date</strong></TableCell>
-                                        <TableCell><strong>Original Teacher</strong></TableCell>
-                                        <TableCell><strong>Substitute</strong></TableCell>
-                                        <TableCell><strong>Class</strong></TableCell>
-                                        <TableCell><strong>Period</strong></TableCell>
-                                        <TableCell><strong>Status</strong></TableCell>
+                {historyLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                        <CircularProgress size={32} />
+                    </Box>
+                ) : history.length === 0 ? (
+                    <Alert severity="info" variant="outlined" sx={{ borderRadius: 1.5 }}>
+                        No substitute history found.
+                    </Alert>
+                ) : isMobile ? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        {history.map((sub: any) => (
+                            <Paper
+                                key={sub.substituteId}
+                                variant="outlined"
+                                sx={{ p: 1.5, borderRadius: 2, borderColor: '#e2e8f0' }}
+                            >
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                    <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                        {new Date(sub.date).toLocaleDateString()} • Period {sub.periodNumber}
+                                    </Typography>
+                                    <Chip
+                                        label={sub.status?.charAt(0).toUpperCase() + sub.status?.slice(1)}
+                                        size="small"
+                                        color={getStatusColor(sub.status)}
+                                        sx={{ fontWeight: 600, height: 22, fontSize: '0.75rem' }}
+                                    />
+                                </Box>
+
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, my: 0.75 }}>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography variant="caption" color="text.secondary">Original</Typography>
+                                        <Typography variant="body2" fontWeight={600} color="text.primary">
+                                            {sub.originalTeacher?.name || sub.originalTeacherId}
+                                        </Typography>
+                                    </Box>
+                                    <SwapIcon sx={{ color: 'action.active', fontSize: 20 }} />
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography variant="caption" color="text.secondary">Substitute</Typography>
+                                        <Typography variant="body2" fontWeight={600} color="primary.main">
+                                            {sub.substituteTeacher?.name || sub.substituteTeacherId}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', pt: 0.5, borderTop: '1px solid #f1f5f9' }}>
+                                    Class: <strong>{sub.class?.name || sub.classId} {sub.section?.name || ''}</strong>
+                                </Typography>
+                            </Paper>
+                        ))}
+                    </Box>
+                ) : (
+                    <TableContainer component={Paper} elevation={0} variant="outlined" sx={{ borderRadius: 1.5 }}>
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow sx={{ bgcolor: 'grey.100' }}>
+                                    <TableCell><strong>Date</strong></TableCell>
+                                    <TableCell><strong>Original Teacher</strong></TableCell>
+                                    <TableCell><strong>Substitute</strong></TableCell>
+                                    <TableCell><strong>Class</strong></TableCell>
+                                    <TableCell><strong>Period</strong></TableCell>
+                                    <TableCell><strong>Status</strong></TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {history.map((sub: any) => (
+                                    <TableRow key={sub.substituteId} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
+                                        <TableCell>{new Date(sub.date).toLocaleDateString()}</TableCell>
+                                        <TableCell>{sub.originalTeacher?.name || sub.originalTeacherId}</TableCell>
+                                        <TableCell>{sub.substituteTeacher?.name || sub.substituteTeacherId}</TableCell>
+                                        <TableCell>{sub.class?.name || sub.classId} {sub.section?.name || ''}</TableCell>
+                                        <TableCell>
+                                            <Chip label={`Period ${sub.periodNumber}`} size="small" color="primary" />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={sub.status?.charAt(0).toUpperCase() + sub.status?.slice(1)}
+                                                size="small"
+                                                color={getStatusColor(sub.status)}
+                                            />
+                                        </TableCell>
                                     </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {history.map((sub: any) => (
-                                        <TableRow key={sub.substituteId} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
-                                            <TableCell>{new Date(sub.date).toLocaleDateString()}</TableCell>
-                                            <TableCell>{sub.originalTeacher?.name || sub.originalTeacherId}</TableCell>
-                                            <TableCell>{sub.substituteTeacher?.name || sub.substituteTeacherId}</TableCell>
-                                            <TableCell>{sub.class?.name || sub.classId} {sub.section?.name || ''}</TableCell>
-                                            <TableCell>
-                                                <Chip label={`Period ${sub.periodNumber}`} size="small" color="primary" />
-                                            </TableCell>
-                                            <TableCell>
-                                                <Chip
-                                                    label={sub.status?.charAt(0).toUpperCase() + sub.status?.slice(1)}
-                                                    size="small"
-                                                    color={getStatusColor(sub.status)}
-                                                />
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    )}
-                </Paper>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
             </TabPanel>
 
             {/* Create Substitute Dialog */}
-            <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>Assign Substitute Teacher</DialogTitle>
+            <Dialog
+                open={createDialogOpen}
+                onClose={() => setCreateDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+                fullScreen={isMobile}
+            >
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" fontWeight={600}>Assign Substitute Teacher</Typography>
+                    {isMobile && (
+                        <IconButton onClick={() => setCreateDialogOpen(false)} size="small">
+                            <CloseIcon />
+                        </IconButton>
+                    )}
+                </DialogTitle>
                 <DialogContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mt: 1 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
                         <AppSelect
                             label="Original Teacher (Absent)"
                             value={formData.originalTeacherId}
@@ -343,40 +485,44 @@ const SubstituteManagement = () => {
                             onChange={(e) => setFormData({ ...formData, substituteTeacherId: e.target.value as string })}
                         />
 
-                        <AppSelect
-                            label="Class"
-                            value={formData.classId}
-                            options={classes.map((c: any) => ({ value: c.classId, label: c.name }))}
-                            onChange={(e) => setFormData({ ...formData, classId: e.target.value as string, sectionId: '' })}
-                        />
+                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                            <AppSelect
+                                label="Class"
+                                value={formData.classId}
+                                options={classes.map((c: any) => ({ value: c.classId, label: c.name }))}
+                                onChange={(e) => setFormData({ ...formData, classId: e.target.value as string, sectionId: '' })}
+                            />
 
-                        <AppSelect
-                            label="Section"
-                            value={formData.sectionId}
-                            disabled={!formData.classId}
-                            options={sections.map((s: any) => ({ value: s.sectionId, label: s.name }))}
-                            onChange={(e) => setFormData({ ...formData, sectionId: e.target.value as string })}
-                        />
+                            <AppSelect
+                                label="Section"
+                                value={formData.sectionId}
+                                disabled={!formData.classId}
+                                options={sections.map((s: any) => ({ value: s.sectionId, label: s.name }))}
+                                onChange={(e) => setFormData({ ...formData, sectionId: e.target.value as string })}
+                            />
+                        </Box>
 
-                        <AppSelect
-                            label="Day"
-                            value={formData.dayOfWeek}
-                            options={config?.workingDays?.map((day: string) => ({
-                                value: day,
-                                label: day.charAt(0).toUpperCase() + day.slice(1)
-                            })) || []}
-                            onChange={(e) => setFormData({ ...formData, dayOfWeek: e.target.value as string })}
-                        />
+                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                            <AppSelect
+                                label="Day"
+                                value={formData.dayOfWeek}
+                                options={config?.workingDays?.map((day: string) => ({
+                                    value: day,
+                                    label: day.charAt(0).toUpperCase() + day.slice(1)
+                                })) || []}
+                                onChange={(e) => setFormData({ ...formData, dayOfWeek: e.target.value as string })}
+                            />
 
-                        <AppSelect
-                            label="Period"
-                            value={formData.periodNumber}
-                            options={regularPeriods.map((p: any) => ({
-                                value: p.periodNumber,
-                                label: `${p.name} (${p.startTime} - ${p.endTime})`
-                            }))}
-                            onChange={(e) => setFormData({ ...formData, periodNumber: Number(e.target.value) })}
-                        />
+                            <AppSelect
+                                label="Period"
+                                value={formData.periodNumber}
+                                options={regularPeriods.map((p: any) => ({
+                                    value: p.periodNumber,
+                                    label: `${p.name} (${p.startTime} - ${p.endTime})`
+                                }))}
+                                onChange={(e) => setFormData({ ...formData, periodNumber: Number(e.target.value) })}
+                            />
+                        </Box>
 
                         <AppInput
                             label="Reason for Substitution"

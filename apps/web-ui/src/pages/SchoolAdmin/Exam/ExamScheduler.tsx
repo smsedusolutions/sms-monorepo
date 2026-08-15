@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import {
     Box,
-    Card,
     Typography,
     Button,
     Dialog,
@@ -50,6 +49,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { pdf } from '@react-pdf/renderer';
 import { useAuth } from '../../../context/AuthContext';
 import { useUrlTab } from '../../../hooks/useUrlTab';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 import {
     useCreateExam,
     useUpdateExam,
@@ -77,22 +77,25 @@ import type { CreateExamRequest, CreateScheduleRequest, Exam } from '../../../ty
 // ==========================================
 
 const ExamScheduler = () => {
+    const isMobile = useIsMobile();
     const { user } = useAuth();
     const schoolId = user?.schoolId || '';
     const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
             {selectedExam ? (
                 <ExamDetailView
                     schoolId={schoolId}
                     exam={selectedExam}
                     onBack={() => setSelectedExam(null)}
+                    isMobile={isMobile}
                 />
             ) : (
                 <ExamListView
                     schoolId={schoolId}
                     onSelect={setSelectedExam}
+                    isMobile={isMobile}
                 />
             )}
         </Box>
@@ -100,10 +103,10 @@ const ExamScheduler = () => {
 };
 
 // ==========================================
-// VIEW 1: EXAM LIST - Redesigned with gradient cards
+// VIEW 1: EXAM LIST
 // ==========================================
 
-const ExamListView = ({ schoolId, onSelect }: { schoolId: string, onSelect: (exam: Exam) => void }) => {
+const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSelect: (exam: Exam) => void, isMobile: boolean }) => {
     const [open, setOpen] = useState(false);
     const { data: exams, isLoading } = useGetExams(schoolId);
 
@@ -225,162 +228,143 @@ const ExamListView = ({ schoolId, onSelect }: { schoolId: string, onSelect: (exa
         });
     };
 
-    // Get status color and gradient
-    const getStatusStyles = (status: string) => {
-        switch (status) {
-            case 'published':
-                return { gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: 'success' };
-            case 'ongoing':
-                return { gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'primary' };
-            case 'scheduled':
-                return { gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'secondary' };
-            case 'draft':
-                return { gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)', color: 'warning' };
-            default:
-                return { gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'default' };
+    const getStatusColor = (status: string) => {
+        switch (status?.toLowerCase()) {
+            case 'published': return 'success';
+            case 'ongoing': return 'info';
+            case 'scheduled': return 'primary';
+            case 'draft': return 'warning';
+            default: return 'default';
         }
     };
 
     return (
         <>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h5" fontWeight={600}>Exam Scheduler</Typography>
-                <Button variant="contained" startIcon={<AddCircleIcon />} onClick={() => setOpen(true)}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+                {!isMobile ? (
+                    <Typography variant="h5" fontWeight={700} color="#0f172a">Exam Scheduler</Typography>
+                ) : (
+                    <Box />
+                )}
+                <Button variant="contained" startIcon={<AddCircleIcon />} onClick={() => setOpen(true)} size="small" sx={{ textTransform: 'none', fontWeight: 600 }}>
                     Create New Exam
                 </Button>
             </Box>
 
             {isLoading ? (
-                <Grid container spacing={3}>
+                <Grid container spacing={2}>
                     {[1, 2, 3].map((i) => (
                         <Grid key={i} size={{ xs: 12, md: 6, lg: 4 }}>
-                            <Skeleton variant="rounded" height={180} />
+                            <Skeleton variant="rounded" height={160} sx={{ borderRadius: 2 }} />
                         </Grid>
                     ))}
                 </Grid>
             ) : !exams?.data?.length ? (
-                <Paper sx={{ p: 4, textAlign: 'center' }}>
+                <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
                     <Typography color="text.secondary">No exams created yet. Click "Create New Exam" to get started.</Typography>
                 </Paper>
             ) : (
-                <Grid container spacing={3}>
+                <Grid container spacing={2}>
                     {exams.data.map((exam: any) => {
-                        const styles = getStatusStyles(exam.status);
+                        const statusColor = getStatusColor(exam.status);
                         return (
                             <Grid key={exam._id} size={{ xs: 12, md: 6, lg: 4 }}>
-                                <Card
+                                <Paper
+                                    variant="outlined"
                                     sx={{
-                                        borderRadius: 3,
-                                        overflow: 'hidden',
+                                        p: 2,
+                                        borderRadius: 2,
+                                        borderColor: '#e2e8f0',
                                         cursor: 'pointer',
-                                        position: 'relative',
-                                        transition: 'all 0.3s ease',
+                                        transition: 'all 0.2s ease',
                                         '&:hover': {
-                                            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                                            transform: 'translateY(-4px)'
-                                        },
-                                        '&:hover .action-buttons': {
-                                            opacity: 1
+                                            borderColor: 'primary.main',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
                                         }
                                     }}
                                     onClick={() => onSelect(exam)}
                                 >
-                                    {/* Action Buttons Overlay */}
-                                    <Box
-                                        className="action-buttons"
-                                        sx={{
-                                            position: 'absolute',
-                                            top: 8,
-                                            right: 8,
-                                            display: 'flex',
-                                            gap: 1,
-                                            opacity: 0,
-                                            transition: 'opacity 0.3s ease',
-                                            zIndex: 10
-                                        }}
-                                    >
-                                        <IconButton
-                                            size="small"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleEdit(exam);
-                                            }}
-                                            sx={{
-                                                bgcolor: 'background.paper',
-                                                boxShadow: 2,
-                                                '&:hover': { bgcolor: 'primary.light' }
-                                            }}
-                                        >
-                                            <EditIcon fontSize="small" />
-                                        </IconButton>
-                                        <IconButton
-                                            size="small"
-                                            onClick={(e) => handleDeleteClick(exam, e)}
-                                            sx={{
-                                                bgcolor: 'background.paper',
-                                                boxShadow: 2,
-                                                '&:hover': { bgcolor: 'error.light', color: 'error.contrastText' }
-                                            }}
-                                        >
-                                            <DeleteIcon fontSize="small" />
-                                        </IconButton>
-                                    </Box>
-
-                                    {/* Card Header with gradient */}
-                                    <Box
-                                        sx={{
-                                            background: styles.gradient,
-                                            color: 'black',
-                                            p: 2,
-                                        }}
-                                    >
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                            <Box>
-                                                <Typography variant="h6" fontWeight={600} sx={{ mb: 0.5 }}>
-                                                    {exam.name}
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                                    {exam.typeId?.name || 'Exam'} | {exam.termId?.name || 'Term'}
-                                                </Typography>
-                                            </Box>
-                                            <Chip
-                                                label={exam.status}
-                                                size="small"
-                                                sx={{
-                                                    bgcolor: 'rgba(255,255,255,0.2)',
-                                                    color: 'black',
-                                                    fontWeight: 600,
-                                                    textTransform: 'capitalize'
-                                                }}
-                                            />
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+                                        <Box sx={{ flex: 1, pr: 1 }}>
+                                            <Typography variant="subtitle1" fontWeight={700} color="#0f172a">
+                                                {exam.name}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                                {exam.typeId?.name || 'Exam'} • {exam.termId?.name || 'Term'}
+                                            </Typography>
                                         </Box>
+                                        <Chip
+                                            label={exam.status || 'draft'}
+                                            size="small"
+                                            color={statusColor as any}
+                                            sx={{
+                                                height: 22,
+                                                fontSize: '0.75rem',
+                                                fontWeight: 600,
+                                                textTransform: 'capitalize'
+                                            }}
+                                        />
                                     </Box>
 
-                                    {/* Card Body */}
-                                    <Box sx={{ p: 2 }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                                            <CalendarMonthIcon fontSize="small" color="action" />
-                                            <Typography variant="body2" color="text.secondary">
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, my: 1.5 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            <CalendarMonthIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                                            <Typography variant="caption" color="text.secondary">
                                                 {new Date(exam.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                                                 {' - '}
                                                 {new Date(exam.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                             </Typography>
                                         </Box>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            <ClassIcon fontSize="small" color="action" />
-                                            <Typography variant="body2" color="text.secondary">
+                                            <ClassIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                                            <Typography variant="caption" color="text.secondary">
                                                 {exam.classes?.length || 0} Classes Participating
                                             </Typography>
                                         </Box>
                                     </Box>
-                                </Card>
+
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            pt: 1,
+                                            borderTop: '1px solid #f1f5f9'
+                                        }}
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <Typography variant="caption" color="primary" fontWeight={600} sx={{ cursor: 'pointer' }} onClick={() => onSelect(exam)}>
+                                            View Schedule →
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                                            <IconButton
+                                                size="small"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEdit(exam);
+                                                }}
+                                                sx={{ p: 0.5 }}
+                                            >
+                                                <EditIcon sx={{ fontSize: 18 }} />
+                                            </IconButton>
+                                            <IconButton
+                                                size="small"
+                                                color="error"
+                                                onClick={(e) => handleDeleteClick(exam, e)}
+                                                sx={{ p: 0.5 }}
+                                            >
+                                                <DeleteIcon sx={{ fontSize: 18 }} />
+                                            </IconButton>
+                                        </Box>
+                                    </Box>
+                                </Paper>
                             </Grid>
                         );
                     })}
                 </Grid>
             )}
 
-            <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+            <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth fullScreen={isMobile}>
                 <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>{editingExam ? 'Modify Exam Profile' : 'Register New Exam Event'}</Typography>
                     <IconButton onClick={handleClose} size="small">
@@ -554,96 +538,115 @@ const AdmitCardTile = React.memo(({
     handleViewAdmitCard: (reg: any) => void;
 }) => {
     return (
-        <Card
-            elevation={0}
+        <Paper
+            variant="outlined"
             sx={{
-                borderRadius: 3,
-                overflow: 'hidden',
-                border: '1px solid #e2e8f0',
+                p: 2,
+                borderRadius: 2,
+                borderColor: '#e2e8f0',
                 bgcolor: '#ffffff',
-                transition: 'all 0.3s ease',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                height: '100%',
                 '&:hover': {
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                    transform: 'translateY(-4px)'
+                    borderColor: 'primary.main',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
                 }
             }}
         >
-            {/* Card Header */}
-            <Box
-                sx={{
-                    background: reg.admitCardGenerated
-                        ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                        : 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
-                    color: reg.admitCardGenerated ? 'white' : 'text.secondary',
-                    p: 2,
-                    textAlign: 'center'
-                }}
-            >
-                <Avatar
-                    src={reg.student?.profileImage}
+            <Box>
+                {/* Top Row: Avatar, Name, ID & Status Chips */}
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 1.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                        <Avatar
+                            src={reg.student?.profileImage}
+                            sx={{
+                                width: 42,
+                                height: 42,
+                                bgcolor: '#e0e7ff',
+                                color: '#4338ca',
+                                fontWeight: 700,
+                                fontSize: '0.95rem',
+                                border: '1px solid #c7d2fe'
+                            }}
+                        >
+                            {reg.student?.firstName?.[0] || 'S'}
+                        </Avatar>
+                        <Box>
+                            <Typography variant="subtitle2" fontWeight={700} color="#0f172a" noWrap sx={{ maxWidth: { xs: 150, sm: 180 } }}>
+                                {reg.student?.firstName} {reg.student?.lastName}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                {reg.studentId}
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 0.5 }}>
+                        <Chip
+                            label={reg.admitCardGenerated ? "Generated" : "Pending"}
+                            color={reg.admitCardGenerated ? "success" : "warning"}
+                            size="small"
+                            sx={{ height: 20, fontSize: '0.7rem', fontWeight: 600 }}
+                        />
+                        <Chip
+                            label={reg.isEligible ? "Eligible" : "Not Eligible"}
+                            color={reg.isEligible ? "primary" : "error"}
+                            size="small"
+                            variant="outlined"
+                            sx={{ height: 20, fontSize: '0.7rem', fontWeight: 600 }}
+                        />
+                    </Box>
+                </Box>
+
+                {/* Details Row: Class & Roll No */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 1, px: 1.25, bgcolor: '#f8fafc', borderRadius: 1.5, mb: 1.5 }}>
+                    <Box>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
+                            Class
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600} color="#1e293b">
+                            {getClassSectionName(reg.classId, reg.sectionId)}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ textAlign: 'right' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: '0.7rem' }}>
+                            Roll No
+                        </Typography>
+                        <Typography variant="body2" fontWeight={600} color="#1e293b">
+                            {reg.rollNumber || '—'}
+                        </Typography>
+                    </Box>
+                </Box>
+            </Box>
+
+            {/* Action Button */}
+            {reg.admitCardGenerated && (
+                <Button
+                    fullWidth
+                    variant="outlined"
+                    size="small"
+                    startIcon={<VisibilityIcon fontSize="small" />}
+                    onClick={() => handleViewAdmitCard(reg)}
                     sx={{
-                        width: 60,
-                        height: 60,
-                        mx: 'auto',
-                        mb: 1,
-                        border: '3px solid rgba(255,255,255,0.3)'
+                        borderRadius: 1.5,
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        py: 0.75,
+                        borderColor: '#cbd5e1',
+                        color: 'primary.main',
+                        '&:hover': {
+                            borderColor: 'primary.main',
+                            bgcolor: 'primary.50'
+                        }
                     }}
                 >
-                    {reg.student?.firstName?.[0] || 'S'}
-                </Avatar>
-                <Typography variant="subtitle1" fontWeight={600} noWrap>
-                    {reg.student?.firstName} {reg.student?.lastName}
-                </Typography>
-                <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                    {reg.studentId}
-                </Typography>
-            </Box>
-
-            {/* Card Body */}
-            <Box sx={{ p: 2 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography variant="caption" color="text.secondary">Class</Typography>
-                    <Typography variant="body2" fontWeight={500}>
-                        {getClassSectionName(reg.classId, reg.sectionId)}
-                    </Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography variant="caption" color="text.secondary">Roll No</Typography>
-                    <Typography variant="body2" fontWeight={500}>{reg.rollNumber || 'N/A'}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                    <Chip
-                        label={reg.admitCardGenerated ? "Generated" : "Pending"}
-                        color={reg.admitCardGenerated ? "success" : "warning"}
-                        size="small"
-                        sx={{ fontWeight: 600 }}
-                    />
-                    <Chip
-                        label={reg.isEligible ? "Eligible" : "Not Eligible"}
-                        color={reg.isEligible ? "primary" : "error"}
-                        size="small"
-                        variant="outlined"
-                        sx={{ fontWeight: 600 }}
-                    />
-                </Box>
-
-                {reg.admitCardGenerated && (
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        startIcon={<VisibilityIcon />}
-                        onClick={() => handleViewAdmitCard(reg)}
-                        sx={{
-                            borderRadius: 2,
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            fontWeight: 600
-                        }}
-                    >
-                        View Admit Card
-                    </Button>
-                )}
-            </Box>
-        </Card>
+                    View Admit Card
+                </Button>
+            )}
+        </Paper>
     );
 });
 
@@ -688,10 +691,10 @@ const VirtualizedAdmitCardGrid = ({
 
     if (regLoading && registrations.length === 0) {
         return (
-            <Grid container spacing={3}>
+            <Grid container spacing={{ xs: 1.5, sm: 2 }}>
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                     <Grid key={i} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
-                        <Skeleton variant="rounded" height={220} sx={{ borderRadius: 3 }} />
+                        <Skeleton variant="rounded" height={140} sx={{ borderRadius: 2 }} />
                     </Grid>
                 ))}
             </Grid>
@@ -700,54 +703,36 @@ const VirtualizedAdmitCardGrid = ({
 
     if (!registrations || registrations.length === 0) {
         return (
-            <Grid size={{ xs: 12 }}>
-                <Paper elevation={0} sx={{ p: 5, textAlign: 'center', borderRadius: 4, border: '1px solid #e2e8f0', bgcolor: '#ffffff' }}>
-                    <Typography variant="h6" fontWeight={700} color="#1e293b">No Admit Cards Found</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                        Admit cards will appear here once generated or matching your search filter.
-                    </Typography>
-                </Paper>
-            </Grid>
+            <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', borderRadius: 2, bgcolor: '#ffffff' }}>
+                <Typography variant="subtitle1" fontWeight={700} color="#1e293b">No Admit Cards Found</Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+                    Admit cards will appear here once generated or matching your search filter.
+                </Typography>
+            </Paper>
         );
     }
 
     return (
         <Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
                 <Chip
                     label={`Displaying ${registrations.length} of ${total || registrations.length} Admit Cards`}
                     size="small"
                     color="primary"
                     variant="outlined"
-                    sx={{ fontWeight: 700 }}
+                    sx={{ fontWeight: 600, height: 22, fontSize: '0.75rem' }}
                 />
             </Box>
 
-            {/* Scrollable Container for Card Grid ONLY */}
+            {/* Scrollable Container for Card Grid */}
             <Box
                 sx={{
-                    maxHeight: 'calc(100vh - 310px)',
-                    overflowY: 'auto',
-                    pr: 1,
+                    pr: { xs: 0, sm: 1 },
                     pt: 0.5,
                     pb: 2,
-                    '&::-webkit-scrollbar': {
-                        width: '6px',
-                    },
-                    '&::-webkit-scrollbar-track': {
-                        background: '#f1f5f9',
-                        borderRadius: '10px',
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                        background: '#cbd5e1',
-                        borderRadius: '10px',
-                        '&:hover': {
-                            background: '#94a3b8',
-                        },
-                    },
                 }}
             >
-                <Grid container spacing={3}>
+                <Grid container spacing={{ xs: 1.5, sm: 2 }}>
                     {registrations.map((reg: any) => (
                         <Grid key={reg._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
                             <AdmitCardTile
@@ -763,24 +748,24 @@ const VirtualizedAdmitCardGrid = ({
                 <Box
                     ref={observerTarget}
                     sx={{
-                        py: 4,
+                        py: 3,
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        minHeight: 80
+                        minHeight: 60
                     }}
                 >
                     {hasMore ? (
                         <Stack direction="row" spacing={1.5} alignItems="center">
-                            <CircularProgress size={24} color="primary" />
-                            <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                                Fetching next page from API... ({registrations.length} / {total})
+                            <CircularProgress size={20} color="primary" />
+                            <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                Fetching... ({registrations.length} / {total})
                             </Typography>
                         </Stack>
                     ) : total > 24 ? (
-                        <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                            ✓ All {total} admit cards loaded from API
+                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                            ✓ All {total} admit cards loaded
                         </Typography>
                     ) : null}
                 </Box>
@@ -793,7 +778,7 @@ const VirtualizedAdmitCardGrid = ({
 // VIEW 2: EXAM DETAIL / SCHEDULE
 // ==========================================
 
-const ExamDetailView = ({ schoolId, exam, onBack }: { schoolId: string, exam: Exam, onBack: () => void }) => {
+const ExamDetailView = ({ schoolId, exam, onBack, isMobile }: { schoolId: string, exam: Exam, onBack: () => void, isMobile: boolean }) => {
     const [tabValue, setTabValue] = useUrlTab(0, ['schedule', 'admit-cards']);
     const [open, setOpen] = useState(false);
     const [editingSchedule, setEditingSchedule] = useState<any>(null);
@@ -921,11 +906,11 @@ const ExamDetailView = ({ schoolId, exam, onBack }: { schoolId: string, exam: Ex
     };
 
     const getSubjectName = (subjectId: string): string => {
-        const subjectInfo = subjects?.data?.find((s: any) => s._id === subjectId || s.subjectId === subjectId);
-        return subjectInfo?.name || subjectId;
+        const sub = subjects?.data?.find((s: any) => s._id === subjectId || s.subjectId === subjectId);
+        return sub?.name || subjectId;
     };
 
-    const [formData, setFormData] = useState<CreateScheduleRequest>({
+    const [formData, setFormData] = useState<CreateScheduleRequest & { _id?: string }>({
         examId: exam.examId,
         classId: '',
         subjectId: '',
@@ -1077,76 +1062,123 @@ const ExamDetailView = ({ schoolId, exam, onBack }: { schoolId: string, exam: Ex
 
     return (
         <>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-                <IconButton onClick={onBack} sx={{ mr: 1 }}><ArrowBackIcon /></IconButton>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1.5 }}>
+                <IconButton onClick={onBack} sx={{ mr: 0.5 }} size="small"><ArrowBackIcon /></IconButton>
                 <Box sx={{ flexGrow: 1 }}>
-                    <Typography variant="h5" fontWeight={600}>{exam.name}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        {typeof exam.typeId === 'object' ? exam.typeId?.name : 'Exam'} | {typeof exam.termId === 'object' ? exam.termId?.name : 'Term'}
+                    <Typography variant="h6" fontWeight={700} color="#0f172a">{exam.name}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        {typeof exam.typeId === 'object' ? exam.typeId?.name : 'Exam'} • {typeof exam.termId === 'object' ? exam.termId?.name : 'Term'}
                     </Typography>
                 </Box>
-                <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Button variant="outlined" startIcon={<CardMembershipIcon />} onClick={handleGenerateAdmitCards} disabled={generateAdmitCards.isPending}>
-                        {generateAdmitCards.isPending ? 'Generating...' : 'Generate Admit Cards'}
+                <Box sx={{ display: 'flex', gap: 1, width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'stretch', sm: 'flex-end' } }}>
+                    <Button
+                        variant="outlined"
+                        startIcon={<CardMembershipIcon />}
+                        onClick={handleGenerateAdmitCards}
+                        disabled={generateAdmitCards.isPending}
+                        size="small"
+                        sx={{ flex: { xs: 1, sm: 'none' }, textTransform: 'none', fontWeight: 600 }}
+                    >
+                        {generateAdmitCards.isPending ? 'Generating...' : 'Admit Cards'}
                     </Button>
-                    <Button variant="contained" startIcon={<AddCircleIcon />} onClick={() => setOpen(true)}>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddCircleIcon />}
+                        onClick={() => setOpen(true)}
+                        size="small"
+                        sx={{ flex: { xs: 1, sm: 'none' }, textTransform: 'none', fontWeight: 600 }}
+                    >
                         Schedule Subject
                     </Button>
                 </Box>
             </Box>
 
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                <Tabs value={tabValue} onChange={(_e, value) => setTabValue(value)}>
-                    <Tab label="Exam Schedule" />
-                    <Tab label="Admit Cards" />
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+                <Tabs value={tabValue} onChange={(_e, value) => setTabValue(value)} textColor="primary" indicatorColor="primary">
+                    <Tab label="Exam Schedule" sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1 }} />
+                    <Tab label="Admit Cards" sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1 }} />
                 </Tabs>
             </Box>
 
             {tabValue === 0 && (
-                <TableContainer component={Paper} elevation={0} variant="outlined">
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Date</TableCell>
-                                <TableCell>Time</TableCell>
-                                <TableCell>Class</TableCell>
-                                <TableCell>Subject</TableCell>
-                                <TableCell>Room</TableCell>
-                                <TableCell>Invigilators</TableCell>
-                                <TableCell>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {isLoading ? (
-                                <TableRow><TableCell colSpan={7} align="center">Loading...</TableCell></TableRow>
-                            ) : schedule?.data?.map((sch: any) => (
-                                <TableRow key={sch._id}>
-                                    <TableCell>{new Date(sch.date).toLocaleDateString()}</TableCell>
-                                    <TableCell>{sch.startTime} - {sch.endTime}</TableCell>
-                                    <TableCell>{getClassName(sch.classId)}</TableCell>
-                                    <TableCell>{getSubjectName(sch.subjectId)}</TableCell>
-                                    <TableCell>{sch.roomId?.name || 'N/A'}</TableCell>
-                                    <TableCell>
-                                        {sch.invigilators?.map((inv: any) => `${inv.firstName} ${inv.lastName}`).join(', ')}
-                                    </TableCell>
-                                    <TableCell>
-                                        <IconButton size="small" color="primary" onClick={() => handleEditSchedule(sch)}><EditIcon /></IconButton>
-                                        <IconButton size="small" color="error"><DeleteIcon /></IconButton>
-                                    </TableCell>
+                isLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                        <Typography color="text.secondary">Loading schedule...</Typography>
+                    </Box>
+                ) : schedule?.data?.length === 0 ? (
+                    <Paper variant="outlined" sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
+                        <Typography color="text.secondary">No exams scheduled yet</Typography>
+                    </Paper>
+                ) : isMobile ? (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        {schedule?.data?.map((sch: any) => (
+                            <Paper key={sch._id} variant="outlined" sx={{ p: 1.5, borderRadius: 2, borderColor: '#e2e8f0' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
+                                    <Box>
+                                        <Typography variant="body1" fontWeight={700} color="#0f172a">
+                                            {getClassName(sch.classId)} • {getSubjectName(sch.subjectId)}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {new Date(sch.date).toLocaleDateString()} • {sch.startTime} - {sch.endTime}
+                                        </Typography>
+                                    </Box>
+                                    <IconButton size="small" color="primary" onClick={() => handleEditSchedule(sch)} sx={{ p: 0.5 }}>
+                                        <EditIcon sx={{ fontSize: 18 }} />
+                                    </IconButton>
+                                </Box>
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, pt: 0.5, borderTop: '1px solid #f1f5f9' }}>
+                                    <Typography variant="caption" color="text.secondary">
+                                        Room: <strong>{sch.roomId?.name || 'N/A'}</strong>
+                                    </Typography>
+                                    {sch.invigilators?.length > 0 && (
+                                        <Typography variant="caption" color="text.secondary">
+                                            • Invigilators: <strong>{sch.invigilators.map((inv: any) => `${inv.firstName} ${inv.lastName}`).join(', ')}</strong>
+                                        </Typography>
+                                    )}
+                                </Box>
+                            </Paper>
+                        ))}
+                    </Box>
+                ) : (
+                    <TableContainer component={Paper} elevation={0} variant="outlined" sx={{ borderRadius: 2 }}>
+                        <Table size="small">
+                            <TableHead>
+                                <TableRow sx={{ bgcolor: 'grey.100' }}>
+                                    <TableCell><strong>Date</strong></TableCell>
+                                    <TableCell><strong>Time</strong></TableCell>
+                                    <TableCell><strong>Class</strong></TableCell>
+                                    <TableCell><strong>Subject</strong></TableCell>
+                                    <TableCell><strong>Room</strong></TableCell>
+                                    <TableCell><strong>Invigilators</strong></TableCell>
+                                    <TableCell><strong>Actions</strong></TableCell>
                                 </TableRow>
-                            ))}
-                            {schedule?.data?.length === 0 && (
-                                <TableRow><TableCell colSpan={7} align="center">No exams scheduled yet</TableCell></TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                                {schedule?.data?.map((sch: any) => (
+                                    <TableRow key={sch._id}>
+                                        <TableCell>{new Date(sch.date).toLocaleDateString()}</TableCell>
+                                        <TableCell>{sch.startTime} - {sch.endTime}</TableCell>
+                                        <TableCell>{getClassName(sch.classId)}</TableCell>
+                                        <TableCell>{getSubjectName(sch.subjectId)}</TableCell>
+                                        <TableCell>{sch.roomId?.name || 'N/A'}</TableCell>
+                                        <TableCell>
+                                            {sch.invigilators?.map((inv: any) => `${inv.firstName} ${inv.lastName}`).join(', ')}
+                                        </TableCell>
+                                        <TableCell>
+                                            <IconButton size="small" color="primary" onClick={() => handleEditSchedule(sch)}><EditIcon fontSize="small" /></IconButton>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )
             )}
 
             {tabValue === 1 && (
                 <Box>
                     {/* Search Input */}
-                    <Box sx={{ mb: 3 }}>
+                    <Box sx={{ mb: 2 }}>
                         <TextField
                             placeholder="Search by name, ID, or roll number..."
                             value={searchInput}
@@ -1177,7 +1209,7 @@ const ExamDetailView = ({ schoolId, exam, onBack }: { schoolId: string, exam: Ex
             )}
 
             {/* Schedule Dialog */}
-            <Dialog open={open} onClose={() => { setOpen(false); setEditingSchedule(null); }} maxWidth="md" fullWidth>
+            <Dialog open={open} onClose={() => { setOpen(false); setEditingSchedule(null); }} maxWidth="md" fullWidth fullScreen={isMobile}>
                 <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>{editingSchedule ? 'Modify Assessment Schedule' : 'Schedule Subject Assessment'}</Typography>
                     <IconButton onClick={() => { setOpen(false); setEditingSchedule(null); }} size="small">
@@ -1380,7 +1412,8 @@ const ExamDetailView = ({ schoolId, exam, onBack }: { schoolId: string, exam: Ex
                 onClose={() => setAdmitCardDialogOpen(false)}
                 maxWidth="md"
                 fullWidth
-                PaperProps={{ sx: { borderRadius: 2, mt: 10 } }}
+                fullScreen={isMobile}
+                PaperProps={{ sx: { borderRadius: isMobile ? 0 : 2, mt: isMobile ? 0 : 10 } }}
             >
                 <DialogContent sx={{ p: 0 }}>
                     {selectedStudent && (

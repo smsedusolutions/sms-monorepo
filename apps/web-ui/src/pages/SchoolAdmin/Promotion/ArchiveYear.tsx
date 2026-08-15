@@ -2,8 +2,6 @@ import { useState } from "react";
 import {
     Box,
     Button,
-    Card,
-    CardContent,
     Checkbox,
     FormControlLabel,
     FormGroup,
@@ -11,12 +9,16 @@ import {
     Typography,
     CircularProgress,
     Alert,
+    Paper,
+    Stack,
 } from "@mui/material";
 import TokenService from "../../../queries/token/tokenService";
 import { useArchiveYear } from "../../../queries/Promotion";
 import { useNotificationStore } from "../../../stores/notificationStore";
+import { useIsMobile } from "../../../hooks/useIsMobile";
 
 const ArchiveYear = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || "";
     const { showNotification } = useNotificationStore();
 
@@ -67,115 +69,136 @@ const ArchiveYear = () => {
     };
 
     return (
-        <Box sx={{ maxWidth: 800 }}>
-            <Typography variant="h6" gutterBottom fontWeight="medium" sx={{ mb: 3 }}>
-                Archive Academic Year
-            </Typography>
+        <Box sx={{ maxWidth: 800, mx: 'auto' }}>
+            {!isMobile && (
+                <Typography variant="h6" fontWeight={700} color="#0f172a" sx={{ mb: 2 }}>
+                    Archive Academic Year
+                </Typography>
+            )}
 
-            <Alert severity="warning" sx={{ mb: 4 }}>
+            <Alert severity="warning" sx={{ mb: 2.5, borderRadius: 2 }}>
                 This is a critical year-end task. Archiving the academic year updates the school's active status configuration to start a new calendar cycle. Please complete the checklist below before performing this operation.
             </Alert>
 
-            <Card sx={{ mb: 4 }}>
-                <CardContent>
-                    <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                        Pre-Archive Checklist
-                    </Typography>
-                    <FormGroup sx={{ mt: 2, gap: 1 }}>
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={checklist.promoted}
-                                    onChange={() => handleChecklistChange("promoted")}
-                                />
-                            }
-                            label="I have promoted all passing students from the active classes."
-                        />
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={checklist.repeating}
-                                    onChange={() => handleChecklistChange("repeating")}
-                                />
-                            }
-                            label="I have confirmed and marked all repeating (detained) students."
-                        />
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={checklist.graduated}
-                                    onChange={() => handleChecklistChange("graduated")}
-                                />
-                            }
-                            label="I have marked the outgoing batches as Graduated."
-                        />
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={checklist.exams}
-                                    onChange={() => handleChecklistChange("exams")}
-                                />
-                            }
-                            label="All final-term exam results have been published."
-                        />
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={checklist.fees}
-                                    onChange={() => handleChecklistChange("fees")}
-                                />
-                            }
-                            label="I have audited pending school fees balance logs."
-                        />
-                    </FormGroup>
-                </CardContent>
-            </Card>
+            <Paper
+                variant="outlined"
+                sx={{
+                    p: { xs: 2, sm: 2.5 },
+                    borderRadius: 2,
+                    borderColor: '#e2e8f0',
+                    bgcolor: '#ffffff',
+                    mb: 2.5,
+                }}
+            >
+                <Typography variant="subtitle1" fontWeight={700} color="#0f172a" sx={{ mb: 1.5 }}>
+                    Pre-Archive Checklist
+                </Typography>
+                <FormGroup sx={{ gap: 0.5 }}>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                size="small"
+                                checked={checklist.promoted}
+                                onChange={() => handleChecklistChange("promoted")}
+                            />
+                        }
+                        label={<Typography variant="body2">I have promoted all passing students from the active classes.</Typography>}
+                    />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                size="small"
+                                checked={checklist.repeating}
+                                onChange={() => handleChecklistChange("repeating")}
+                            />
+                        }
+                        label={<Typography variant="body2">I have confirmed and marked all repeating (detained) students.</Typography>}
+                    />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                size="small"
+                                checked={checklist.graduated}
+                                onChange={() => handleChecklistChange("graduated")}
+                            />
+                        }
+                        label={<Typography variant="body2">I have marked the outgoing batches as Graduated.</Typography>}
+                    />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                size="small"
+                                checked={checklist.exams}
+                                onChange={() => handleChecklistChange("exams")}
+                            />
+                        }
+                        label={<Typography variant="body2">All final-term exam results have been published.</Typography>}
+                    />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                size="small"
+                                checked={checklist.fees}
+                                onChange={() => handleChecklistChange("fees")}
+                            />
+                        }
+                        label={<Typography variant="body2">I have audited pending school fees balance logs.</Typography>}
+                    />
+                </FormGroup>
+            </Paper>
 
-            <Card>
-                <CardContent sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                    <Typography variant="subtitle1" fontWeight="bold">
-                        Academic Transition Parameters
-                    </Typography>
+            <Paper
+                variant="outlined"
+                sx={{
+                    p: { xs: 2, sm: 2.5 },
+                    borderRadius: 2,
+                    borderColor: '#e2e8f0',
+                    bgcolor: '#ffffff',
+                }}
+            >
+                <Typography variant="subtitle1" fontWeight={700} color="#0f172a" sx={{ mb: 2 }}>
+                    Academic Transition Parameters
+                </Typography>
 
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        <TextField
-                            label="Next Academic Year to Start"
-                            required
-                            placeholder="e.g., 2026-27"
-                            value={newAcademicYear}
-                            onChange={(e) => setNewAcademicYear(e.target.value)}
-                            disabled={!isChecklistComplete}
-                        />
+                <Stack spacing={2}>
+                    <TextField
+                        label="Next Academic Year to Start"
+                        required
+                        placeholder="e.g., 2026-27"
+                        value={newAcademicYear}
+                        onChange={(e) => setNewAcademicYear(e.target.value)}
+                        disabled={!isChecklistComplete}
+                        size="small"
+                    />
 
-                        <TextField
-                            label="Archive Description / Log Notes"
-                            multiline
-                            rows={3}
-                            placeholder="Provide any description about archiving this year"
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            disabled={!isChecklistComplete}
-                        />
+                    <TextField
+                        label="Archive Description / Log Notes"
+                        multiline
+                        rows={2}
+                        placeholder="Provide any description about archiving this year"
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        disabled={!isChecklistComplete}
+                        size="small"
+                    />
 
-                        <Button
-                            variant="contained"
-                            color="error"
-                            size="large"
-                            onClick={handleArchive}
-                            disabled={!isChecklistComplete || !newAcademicYear || archiveMutation.isPending}
-                        >
-                            {archiveMutation.isPending ? (
-                                <CircularProgress size={24} color="inherit" />
-                            ) : (
-                                "Close & Archive Academic Year"
-                            )}
-                        </Button>
-                    </Box>
-                </CardContent>
-            </Card>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        onClick={handleArchive}
+                        disabled={!isChecklistComplete || !newAcademicYear || archiveMutation.isPending}
+                        sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 600, py: 1 }}
+                    >
+                        {archiveMutation.isPending ? (
+                            <CircularProgress size={20} color="inherit" />
+                        ) : (
+                            "Close & Archive Academic Year"
+                        )}
+                    </Button>
+                </Stack>
+            </Paper>
         </Box>
     );
 };
 
 export default ArchiveYear;
-// Export ArchiveYear component

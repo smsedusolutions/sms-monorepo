@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import {
     Box,
     Typography,
-    Card,
-    CardContent,
     Chip,
     Alert,
     Skeleton,
@@ -20,6 +18,7 @@ import {
     Checkbox,
     Stack,
     Paper,
+    IconButton,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -27,11 +26,14 @@ import {
     Edit as EditIcon,
     Delete as DeleteIcon,
     Warning as WarningIcon,
+    Close as CloseIcon,
+    AttachFile as AttachFileIcon,
 } from '@mui/icons-material';
 import { useGetAnnouncements, useDeleteAnnouncement, useCreateAnnouncement, useUpdateAnnouncement } from '../../../queries/Announcement';
 import { useGetClasses } from '../../../queries/Class';
 import TokenService from '../../../queries/token/tokenService';
 import { useUrlTab } from '../../../hooks/useUrlTab';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 import FileUpload from '../../../components/FileUpload/FileUpload';
 import { IMAGEKIT_FOLDERS } from '../../../utils/imagekit';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -50,6 +52,7 @@ const categoryColors: Record<AnnouncementCategory, 'default' | 'primary' | 'seco
 };
 
 const SchoolAdminAnnouncements: React.FC = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
     const role = TokenService.getRole();
 
@@ -181,172 +184,299 @@ const SchoolAdminAnnouncements: React.FC = () => {
 
     if (error) {
         return (
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ p: isMobile ? 1.5 : 3 }}>
                 <Alert severity="error">Failed to load announcements. Please try again later.</Alert>
             </Box>
         );
     }
 
     return (
-        <Box sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <AnnouncementIcon color="primary" />
-                        <Typography variant="h4" fontWeight={600}>
-                            Announcements
+        <Box sx={{ p: isMobile ? 1.5 : 3 }}>
+            {/* Desktop Header */}
+            {!isMobile && (
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    <Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <AnnouncementIcon color="primary" />
+                            <Typography variant="h4" fontWeight={700}>
+                                Announcements
+                            </Typography>
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">
+                            Manage school announcements and circulars
                         </Typography>
                     </Box>
-                    <Typography variant="body1" color="text.secondary">
-                        Manage school announcements and circulars
-                    </Typography>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={handleOpenCreateDialog}
+                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                    >
+                        Create Announcement
+                    </Button>
                 </Box>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={handleOpenCreateDialog}
-                >
-                    Create Announcement
-                </Button>
-            </Box>
+            )}
 
-            <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} sx={{ mb: 3 }}>
-                <Tab label="Active" />
-                <Tab label="Archived" />
-                <Tab label="All" />
-            </Tabs>
+            {/* Mobile / Desktop Action Bar & Tabs */}
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    borderBottom: '1px solid #e2e8f0',
+                    mb: 2,
+                    pb: isMobile ? 0.5 : 0,
+                    gap: 1,
+                }}
+            >
+                <Tabs
+                    value={tabValue}
+                    onChange={(_, v) => setTabValue(v)}
+                    sx={{
+                        minHeight: 40,
+                        '& .MuiTab-root': {
+                            minHeight: 40,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            fontSize: '0.88rem',
+                            px: isMobile ? 1.5 : 2.5,
+                            color: '#64748b',
+                            '&.Mui-selected': {
+                                color: 'primary.main',
+                                fontWeight: 700,
+                            },
+                        },
+                    }}
+                >
+                    <Tab label="Active" />
+                    <Tab label="Archived" />
+                    <Tab label="All" />
+                </Tabs>
+
+                {isMobile && (
+                    <Button
+                        size="small"
+                        variant="contained"
+                        startIcon={<AddIcon fontSize="small" />}
+                        onClick={handleOpenCreateDialog}
+                        sx={{
+                            borderRadius: 1.5,
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            fontSize: '0.8rem',
+                            py: 0.5,
+                            px: 1.25,
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        Create
+                    </Button>
+                )}
+            </Box>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr', lg: '1fr 1fr 1fr' }, gap: 2 }}>
                 {isLoading ? (
                     [1, 2, 3].map((i) => (
-                        <Card key={i}>
-                            <CardContent>
-                                <Skeleton variant="text" width="70%" height={30} />
-                                <Skeleton variant="text" width="40%" />
-                                <Skeleton variant="text" width="100%" />
-                            </CardContent>
-                        </Card>
+                        <Paper key={i} variant="outlined" sx={{ p: 2, borderRadius: 2, borderColor: '#e2e8f0' }}>
+                            <Skeleton variant="text" width="70%" height={28} />
+                            <Skeleton variant="text" width="40%" height={20} sx={{ mb: 1 }} />
+                            <Skeleton variant="rectangular" height={60} sx={{ borderRadius: 1, mb: 1 }} />
+                            <Skeleton variant="text" width="50%" height={18} />
+                        </Paper>
                     ))
                 ) : announcements.length === 0 ? (
                     <Box sx={{ gridColumn: '1 / -1' }}>
-                        <Card>
-                            <CardContent sx={{ textAlign: 'center', py: 6 }}>
-                                <AnnouncementIcon sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
-                                <Typography variant="h6" color="text.secondary">
-                                    No announcements found
-                                </Typography>
-                                <Button
-                                    variant="contained"
-                                    startIcon={<AddIcon />}
-                                    sx={{ mt: 2 }}
-                                    onClick={handleOpenCreateDialog}
-                                >
-                                    Create First Announcement
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    </Box>
-                ) : (
-                    announcements.map((ann: Announcement) => (
-                        <Card
-                            key={ann.announcementId}
+                        <Paper
+                            variant="outlined"
                             sx={{
-                                height: '100%',
-                                borderTop: 4,
-                                borderColor: ann.priority === 'urgent' ? 'error.main' :
-                                    ann.priority === 'high' ? 'warning.main' : 'primary.main',
+                                p: { xs: 3, sm: 5 },
+                                textAlign: 'center',
+                                borderRadius: 2.5,
+                                borderColor: '#e2e8f0',
+                                bgcolor: '#ffffff',
                             }}
                         >
-                            <CardContent>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 1 }}>
-                                    <Typography variant="h6" fontWeight={600} noWrap>
+                            <AnnouncementIcon sx={{ fontSize: 48, color: '#94a3b8', mb: 1.5 }} />
+                            <Typography variant="h6" fontWeight={700} color="#1e293b">
+                                No announcements found
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2.5, maxWidth: 400, mx: 'auto' }}>
+                                There are no {tabValue === 0 ? 'active' : tabValue === 1 ? 'archived' : ''} announcements for this school.
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={<AddIcon />}
+                                onClick={handleOpenCreateDialog}
+                                sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 600 }}
+                            >
+                                Create Announcement
+                            </Button>
+                        </Paper>
+                    </Box>
+                ) : (
+                    announcements.map((ann: Announcement) => {
+                        const audienceLabel = ann.targetAudience === 'specific_class'
+                            ? 'Specific Classes'
+                            : ann.targetAudience.charAt(0).toUpperCase() + ann.targetAudience.slice(1);
+
+                        return (
+                            <Paper
+                                key={ann.announcementId}
+                                variant="outlined"
+                                sx={{
+                                    p: 2,
+                                    borderRadius: 2,
+                                    borderColor: '#e2e8f0',
+                                    bgcolor: '#ffffff',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    justifyContent: 'space-between',
+                                    transition: 'all 0.2s ease',
+                                    borderLeft: `4px solid ${
+                                        ann.priority === 'urgent' ? '#ef4444' :
+                                        ann.priority === 'high' ? '#f59e0b' : '#6366f1'
+                                    }`,
+                                    '&:hover': {
+                                        borderColor: '#cbd5e1',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                                    },
+                                }}
+                            >
+                                <Box>
+                                    {/* Top Badges */}
+                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1, gap: 1 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
+                                            <Chip
+                                                size="small"
+                                                label={ann.category}
+                                                color={categoryColors[ann.category]}
+                                                sx={{ height: 22, fontSize: '0.72rem', fontWeight: 600, textTransform: 'capitalize' }}
+                                            />
+                                            {ann.priority === 'urgent' && (
+                                                <Chip
+                                                    size="small"
+                                                    label="Urgent"
+                                                    color="error"
+                                                    icon={<WarningIcon sx={{ fontSize: '14px !important' }} />}
+                                                    sx={{ height: 22, fontSize: '0.72rem', fontWeight: 700 }}
+                                                />
+                                            )}
+                                            {ann.priority === 'high' && (
+                                                <Chip
+                                                    size="small"
+                                                    label="High Priority"
+                                                    color="warning"
+                                                    sx={{ height: 22, fontSize: '0.72rem', fontWeight: 600 }}
+                                                />
+                                            )}
+                                        </Box>
+                                        <Chip
+                                            size="small"
+                                            label={ann.status}
+                                            color={ann.status === 'active' ? 'success' : 'default'}
+                                            variant="outlined"
+                                            sx={{ height: 20, fontSize: '0.7rem', fontWeight: 600, textTransform: 'capitalize' }}
+                                        />
+                                    </Box>
+
+                                    {/* Title */}
+                                    <Typography variant="subtitle1" fontWeight={700} color="#0f172a" sx={{ mb: 0.5 }}>
                                         {ann.title}
                                     </Typography>
-                                    {ann.priority === 'urgent' && (
-                                        <Chip size="small" label="Urgent" color="error" icon={<WarningIcon />} />
+
+                                    {/* Content excerpt */}
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                        sx={{
+                                            mb: 1.5,
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 3,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
+                                            lineHeight: 1.5,
+                                        }}
+                                    >
+                                        {ann.content}
+                                    </Typography>
+
+                                    {/* Attachments preview pill if any */}
+                                    {ann.attachments && ann.attachments.length > 0 && (
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1.5 }}>
+                                            <Chip
+                                                size="small"
+                                                icon={<AttachFileIcon sx={{ fontSize: '14px !important' }} />}
+                                                label={`${ann.attachments.length} Attachment${ann.attachments.length > 1 ? 's' : ''}`}
+                                                variant="outlined"
+                                                sx={{ height: 22, fontSize: '0.72rem', bgcolor: '#f8fafc' }}
+                                            />
+                                        </Box>
                                     )}
                                 </Box>
 
-                                <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
-                                    <Chip
-                                        size="small"
-                                        label={ann.category}
-                                        color={categoryColors[ann.category]}
-                                        variant="outlined"
-                                    />
-                                    <Chip
-                                        size="small"
-                                        label={ann.targetAudience === 'specific_class' ? 'Specific Classes' : ann.targetAudience}
-                                        variant="outlined"
-                                    />
-                                    <Chip
-                                        size="small"
-                                        label={ann.status}
-                                        color={ann.status === 'active' ? 'success' : 'default'}
-                                    />
-                                </Box>
-
-                                <Typography
-                                    variant="body2"
-                                    color="text.secondary"
-                                    sx={{
-                                        mb: 2,
-                                        display: '-webkit-box',
-                                        WebkitLineClamp: 2,
-                                        WebkitBoxOrient: 'vertical',
-                                        overflow: 'hidden',
-                                    }}
-                                >
-                                    {ann.content}
-                                </Typography>
-
-                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-                                    Published: {formatDate(ann.publishDate)} • By {ann.createdByName || 'Admin'}
-                                </Typography>
-
-                                {(role === 'sch_admin' || ann.createdBy === TokenService.getUserId()) && (
-                                    <Box sx={{ display: 'flex', gap: 1 }}>
-                                        <Button
-                                            size="small"
-                                            startIcon={<EditIcon />}
-                                            onClick={() => handleOpenEditDialog(ann)}
-                                        >
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            size="small"
-                                            color="error"
-                                            startIcon={<DeleteIcon />}
-                                            onClick={() => {
-                                                setSelectedAnnouncement(ann);
-                                                setDeleteDialogOpen(true);
-                                            }}
-                                        >
-                                            Archive
-                                        </Button>
+                                {/* Bottom Metadata & Actions */}
+                                <Box sx={{ pt: 1.5, borderTop: '1px solid #f1f5f9' }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {formatDate(ann.publishDate)} • {ann.createdByName || 'Admin'}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary" fontWeight={500}>
+                                            Audience: {audienceLabel}
+                                        </Typography>
                                     </Box>
-                                )}
-                            </CardContent>
-                        </Card>
-                    ))
+
+                                    {(role === 'sch_admin' || ann.createdBy === TokenService.getUserId()) && (
+                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                startIcon={<EditIcon fontSize="small" />}
+                                                onClick={() => handleOpenEditDialog(ann)}
+                                                sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 600, fontSize: '0.78rem', py: 0.4 }}
+                                            >
+                                                Edit
+                                            </Button>
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                color="error"
+                                                startIcon={<DeleteIcon fontSize="small" />}
+                                                onClick={() => {
+                                                    setSelectedAnnouncement(ann);
+                                                    setDeleteDialogOpen(true);
+                                                }}
+                                                sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 600, fontSize: '0.78rem', py: 0.4 }}
+                                            >
+                                                Archive
+                                            </Button>
+                                        </Box>
+                                    )}
+                                </Box>
+                            </Paper>
+                        );
+                    })
                 )}
             </Box>
 
             {/* Archive Confirmation Dialog */}
-            <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-                <DialogTitle>Archive Announcement</DialogTitle>
+            <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
+                <DialogTitle sx={{ fontWeight: 700 }}>Archive Announcement</DialogTitle>
                 <DialogContent>
-                    <Typography>
+                    <Typography variant="body2" color="text.secondary">
                         Are you sure you want to archive "{selectedAnnouncement?.title}"?
                     </Typography>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+                <DialogActions sx={{ px: 2.5, pb: 2 }}>
+                    <Button onClick={() => setDeleteDialogOpen(false)} color="inherit" sx={{ textTransform: 'none', fontWeight: 600 }}>
+                        Cancel
+                    </Button>
                     <Button
                         color="error"
                         variant="contained"
                         onClick={handleDelete}
                         disabled={deleteAnnouncement.isPending}
+                        sx={{ borderRadius: 1.5, textTransform: 'none', fontWeight: 600 }}
                     >
                         Archive
                     </Button>
@@ -354,11 +484,24 @@ const SchoolAdminAnnouncements: React.FC = () => {
             </Dialog>
 
             {/* Create/Edit Form Dialog */}
-            <Dialog open={formDialogOpen} onClose={handleCloseFormDialog} maxWidth="md" fullWidth>
-                <DialogTitle>{editMode ? 'Edit Announcement' : 'Create Announcement'}</DialogTitle>
-                <DialogContent dividers>
+            <Dialog
+                open={formDialogOpen}
+                onClose={handleCloseFormDialog}
+                maxWidth="md"
+                fullWidth
+                fullScreen={isMobile}
+            >
+                <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1.5, pt: 2, px: { xs: 2, sm: 3 } }}>
+                    <Typography variant="h6" fontWeight={700} color="#0f172a">
+                        {editMode ? 'Edit Announcement' : 'Create Announcement'}
+                    </Typography>
+                    <IconButton onClick={handleCloseFormDialog} size="small" sx={{ color: 'text.secondary' }}>
+                        <CloseIcon fontSize="small" />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent dividers sx={{ p: { xs: 2, sm: 3 } }}>
                     <LocalizationProvider dateAdapter={AdapterDateFns}>
-                        <Stack spacing={3} sx={{ mt: 1 }}>
+                        <Stack spacing={2.5} sx={{ mt: 0.5 }}>
                             <TextField
                                 fullWidth
                                 label="Announcement Title"
@@ -366,15 +509,17 @@ const SchoolAdminAnnouncements: React.FC = () => {
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                                 required
                                 placeholder="Enter a descriptive title"
+                                size="small"
                             />
 
-                            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                                 <TextField
                                     select
                                     fullWidth
                                     label="Category"
                                     value={formData.category}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, category: e.target.value as AnnouncementCategory }))}
+                                    size="small"
                                 >
                                     <MenuItem value="general">General</MenuItem>
                                     <MenuItem value="academic">Academic</MenuItem>
@@ -391,6 +536,7 @@ const SchoolAdminAnnouncements: React.FC = () => {
                                     label="Priority"
                                     value={formData.priority}
                                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, priority: e.target.value as AnnouncementPriority }))}
+                                    size="small"
                                 >
                                     <MenuItem value="low">Low</MenuItem>
                                     <MenuItem value="normal">Normal</MenuItem>
@@ -404,7 +550,7 @@ const SchoolAdminAnnouncements: React.FC = () => {
                                         value={formData.expiryDate}
                                         onChange={(date: Date | null) => setFormData(prev => ({ ...prev, expiryDate: date }))}
                                         slotProps={{
-                                            textField: { fullWidth: true }
+                                            textField: { fullWidth: true, size: 'small' }
                                         }}
                                     />
                                 </Box>
@@ -416,6 +562,7 @@ const SchoolAdminAnnouncements: React.FC = () => {
                                 label="Target Audience"
                                 value={formData.targetAudience}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, targetAudience: e.target.value as AnnouncementTargetAudience }))}
+                                size="small"
                             >
                                 <MenuItem value="all">All</MenuItem>
                                 <MenuItem value="parents">Parents</MenuItem>
@@ -425,11 +572,11 @@ const SchoolAdminAnnouncements: React.FC = () => {
                             </TextField>
 
                             {formData.targetAudience === 'specific_class' && (
-                                <Paper variant="outlined" sx={{ p: 2, bgcolor: 'grey.50' }}>
-                                    <Typography variant="subtitle2" gutterBottom color="primary">
+                                <Paper variant="outlined" sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: 2 }}>
+                                    <Typography variant="subtitle2" gutterBottom color="primary" fontWeight={600}>
                                         Select Target Classes *
                                     </Typography>
-                                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                                    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
                                         {classes.map((cls: any) => (
                                             <FormControlLabel
                                                 key={cls.classId}
@@ -466,7 +613,7 @@ const SchoolAdminAnnouncements: React.FC = () => {
                             <TextField
                                 fullWidth
                                 multiline
-                                rows={5}
+                                rows={4}
                                 label="Announcement Content"
                                 value={formData.content}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFormData(prev => ({ ...prev, content: e.target.value }))}
@@ -485,15 +632,15 @@ const SchoolAdminAnnouncements: React.FC = () => {
                         </Stack>
                     </LocalizationProvider>
                 </DialogContent>
-                <DialogActions sx={{ px: 3, py: 2 }}>
-                    <Button onClick={handleCloseFormDialog} color="inherit">
+                <DialogActions sx={{ px: { xs: 2, sm: 3 }, py: 1.5, bgcolor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
+                    <Button onClick={handleCloseFormDialog} color="inherit" sx={{ textTransform: 'none', fontWeight: 600 }}>
                         Cancel
                     </Button>
                     <Button
                         variant="contained"
                         onClick={handleFormSubmit}
                         disabled={createAnnouncement.isPending || updateAnnouncement.isPending}
-                        sx={{ minWidth: 120 }}
+                        sx={{ minWidth: 100, borderRadius: 1.5, textTransform: 'none', fontWeight: 600 }}
                     >
                         {createAnnouncement.isPending || updateAnnouncement.isPending ? 'Saving...' : (editMode ? 'Update' : 'Create')}
                     </Button>
