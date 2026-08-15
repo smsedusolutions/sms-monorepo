@@ -53,9 +53,20 @@ export const MobileAppLayout: React.FC<MobileAppLayoutProps> = ({
         />
       )}
 
-      {/* Main Scrollable Viewport */}
-      <main className="mobile-content-scroll">
-        <Box sx={{ width: '100%', maxWidth: '100%', mx: 'auto' }}>
+      {/* Main Scrollable Viewport / Chat Viewport */}
+      <main className={location.pathname.includes('/chat') ? 'mobile-content-chat' : 'mobile-content-scroll'}>
+        <Box
+          sx={{
+            width: '100%',
+            maxWidth: '100%',
+            mx: 'auto',
+            height: location.pathname.includes('/chat') ? '100%' : 'auto',
+            display: location.pathname.includes('/chat') ? 'flex' : 'block',
+            flexDirection: 'column',
+            flex: location.pathname.includes('/chat') ? 1 : 'unset',
+            minHeight: 0,
+          }}
+        >
           {children}
         </Box>
       </main>
