@@ -23,7 +23,7 @@ import { useGetTeacherStatus, useTeacherCheckIn, useTeacherCheckOut } from '../.
 import { useGetSchoolById } from '../../../queries/School';
 import TokenService from '../../../queries/token/tokenService';
 import type { TeacherAttendance } from '../../../types';
-import AppNoticeDialog, { AppNoticeDialogProps } from '../../../components/shared/AppNoticeDialog';
+import AppNoticeDialog, { type AppNoticeDialogProps } from '../../../components/shared/AppNoticeDialog';
 import { checkIsWithinWorkingHours } from '../../../utils/timeUtils';
 
 interface LocationState {

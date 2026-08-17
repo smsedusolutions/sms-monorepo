@@ -6,7 +6,6 @@ import {
     EventNote as LeaveIcon,
     CheckCircle as AttendanceIcon,
     Schedule as TimetableIcon,
-    Help as RequestIcon,
     ArrowForward as ArrowForwardIcon,
     CheckCircle as PresentIcon,
     Cancel as AbsentIcon,
@@ -32,6 +31,7 @@ import { useGetTeachers } from '../../queries/Teacher';
 
 const StudentDashboard: React.FC = () => {
     const navigate = useNavigate();
+    const [supportDialogOpen, setSupportDialogOpen] = useState(false);
     const user = TokenService.getUser();
     const userName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Student';
     const schoolId = TokenService.getSchoolId() || '';
