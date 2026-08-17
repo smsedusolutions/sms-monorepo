@@ -186,7 +186,37 @@ const SubjectsPage = () => {
       id: "className",
       label: "Assigned Class",
       minWidth: 150,
-      format: (value) => value || "General",
+      format: (value, row) => {
+        const names = row.classNames && row.classNames.length > 0
+          ? row.classNames
+          : (value && value !== "General" ? (value as string).split(", ") : []);
+
+        if (names.length === 0) {
+          return (
+            <Chip
+              label="General"
+              size="small"
+              variant="outlined"
+              sx={{ color: "text.secondary", fontWeight: 500 }}
+            />
+          );
+        }
+
+        return (
+          <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+            {names.map((name: string, idx: number) => (
+              <Chip
+                key={idx}
+                label={name}
+                size="small"
+                color="info"
+                variant="outlined"
+                sx={{ fontWeight: 600 }}
+              />
+            ))}
+          </Box>
+        );
+      },
     },
     {
       id: "assignedTeacherName",

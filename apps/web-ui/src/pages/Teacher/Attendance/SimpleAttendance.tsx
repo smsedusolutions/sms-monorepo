@@ -34,6 +34,8 @@ import { AppButton } from '../../../components/shared/AppButton';
 import { format } from 'date-fns';
 import { useIsMobile } from '../../../hooks/useIsMobile';
 import MobileStickyActionBar from '../../../components/mobile/navigation/MobileStickyActionBar';
+import useTeacherAttendanceGuard from '../../../hooks/useTeacherAttendanceGuard';
+import AppNoticeDialog from '../../../components/shared/AppNoticeDialog';
 
 interface AttendanceRecord {
   studentId: string;
@@ -41,7 +43,11 @@ interface AttendanceRecord {
   remarks?: string;
 }
 
-const SimpleAttendance = () => {
+interface SimpleAttendanceProps {
+  onGoToCheckIn?: () => void;
+}
+
+const SimpleAttendance: React.FC<SimpleAttendanceProps> = ({ onGoToCheckIn }) => {
   const isMobile = useIsMobile();
   const schoolId = TokenService.getSchoolId() || "";
   const teacherId = TokenService.getTeacherId() || "";
@@ -155,10 +161,14 @@ const SimpleAttendance = () => {
     }
   }, [students, existingAttendanceData]);
 
+  // Teacher attendance validation guard (working hours + check-in)
+  const { validateAction, noticeState } = useTeacherAttendanceGuard(schoolId, onGoToCheckIn);
+
   // Mutation for saving attendance
   const markAttendance = useMarkSimpleAttendance(schoolId);
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
+    if (!validateAction()) return;
     setAttendance((prev) => ({
       ...prev,
       [studentId]: {
@@ -170,6 +180,7 @@ const SimpleAttendance = () => {
   };
 
   const handleMarkAll = (status: AttendanceStatus) => {
+    if (!validateAction()) return;
     const updated: Record<string, AttendanceRecord> = {};
     students.forEach((student: Student) => {
       updated[student.studentId] = {
@@ -181,6 +192,7 @@ const SimpleAttendance = () => {
   };
 
   const handleSave = async () => {
+    if (!validateAction()) return;
     if (!selectedClass) {
       setSnackbar({
         open: true,
@@ -530,6 +542,8 @@ const SimpleAttendance = () => {
           {snackbar.message}
         </Alert>
       </Snackbar>
+
+      <AppNoticeDialog {...noticeState} />
     </Box>
   );
 };

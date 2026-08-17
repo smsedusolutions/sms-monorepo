@@ -170,9 +170,12 @@ export interface CreateSchoolAdminPayload {
 
 export interface UpdateSchoolAdminPayload {
   username?: string;
+  firstName?: string;
+  lastName?: string;
   email?: string;
   password?: string;
   contactNumber?: string;
+  phone?: string;
   profileImage?: string;
   status?: "active" | "inactive";
 }
@@ -474,6 +477,9 @@ export interface Subject {
   assignedTeacherId?: string;
   assignedTeacherIds?: string[];
   classes?: string[];
+  classId?: string;
+  className?: string;
+  classNames?: string[];
   isSubSubject?: boolean;
   parentSubjectId?: string | null;
   createdAt?: string;

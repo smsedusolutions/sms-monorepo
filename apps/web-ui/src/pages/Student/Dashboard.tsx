@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Box, Typography, Grid, Skeleton, Alert, Avatar, Paper, Button, Stack, Chip, Divider } from '@mui/material';
 import {
     School as ClassIcon,
@@ -16,10 +16,12 @@ import {
     CalendarMonth as CalendarIcon,
     Assignment as AssignmentIcon,
     Warning as OverdueIcon,
+    HeadsetMic as SupportIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Chart } from 'react-google-charts';
 import { AppCard } from '../../components/shared/AppCard';
+import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
 import TokenService from '../../queries/token/tokenService';
 import { useGetSimpleStudentAttendance } from '../../queries/Attendance';
 import { useGetClassTimetable, useGetActiveConfig } from '../../queries/Timetable';
@@ -604,16 +606,16 @@ const StudentDashboard: React.FC = () => {
                     ))
                 ) : (
                     [
-                        { title: 'Attendance Analytics', value: `${percentage}%`, subtitle: 'Attendance report & charts', icon: <AttendanceIcon />, color: '#10b981', to: '/student/attendance' },
-                        { title: 'My Timetable', value: 'Schedule', subtitle: 'Daily class schedule', icon: <TimetableIcon />, color: '#3b82f6', to: '/student/timetable' },
-                        { title: 'My Exams', value: 'Exams', subtitle: 'Schedules & hall tickets', icon: <ResultsIcon />, color: '#8b5cf6', to: '/student/exam/my-exams' },
-                        { title: 'Leave Application', value: 'Leave', subtitle: 'Apply & view status', icon: <LeaveIcon />, color: '#f59e0b', to: '/student/leave/apply' },
-                        { title: 'My Requests', value: 'Requests', subtitle: 'Track service requests', icon: <RequestIcon />, color: '#ec4899', to: '/student/my-requests' },
-                        { title: 'My Profile', value: 'Profile', subtitle: 'Personal details & ID', icon: <ClassIcon />, color: '#06b6d4', to: '/student/profile' },
+                        { title: 'Attendance Analytics', value: `${percentage}%`, subtitle: 'Attendance report & charts', icon: <AttendanceIcon />, color: '#10b981', onClick: () => navigate('/student/attendance') },
+                        { title: 'My Timetable', value: 'Schedule', subtitle: 'Daily class schedule', icon: <TimetableIcon />, color: '#3b82f6', onClick: () => navigate('/student/timetable') },
+                        { title: 'My Exams', value: 'Exams', subtitle: 'Schedules & hall tickets', icon: <ResultsIcon />, color: '#8b5cf6', onClick: () => navigate('/student/exam/my-exams') },
+                        { title: 'Leave Application', value: 'Leave', subtitle: 'Apply & view status', icon: <LeaveIcon />, color: '#f59e0b', onClick: () => navigate('/student/leave/apply') },
+                        { title: 'Open Support Ticket', value: 'Support', subtitle: 'Submit ticket or query', icon: <SupportIcon />, color: '#6366f1', onClick: () => setSupportDialogOpen(true) },
+                        { title: 'My Profile', value: 'Profile', subtitle: 'Personal details & ID', icon: <ClassIcon />, color: '#06b6d4', onClick: () => navigate('/student/profile') },
                     ].map((item) => (
                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.title}>
                             <AppCard
-                                onClick={() => navigate(item.to)}
+                                onClick={item.onClick}
                                 sx={{
                                     p: 3,
                                     height: '100%',
@@ -638,6 +640,16 @@ const StudentDashboard: React.FC = () => {
                     ))
                 )}
             </Grid>
+
+            <RequestChangeDialog
+                open={supportDialogOpen}
+                onClose={() => setSupportDialogOpen(false)}
+                schoolId={schoolId}
+                userId={studentId || user?.userId || ''}
+                userName={userName}
+                userType="student"
+                fieldType="general"
+            />
         </Box>
     );
 };

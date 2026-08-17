@@ -28,12 +28,14 @@ import {
 
 import { useUserStore } from "../../stores/userStore";
 import { useNotification } from "../../hooks/useNotification";
-import { PhoneInput } from "../../components/shared/PhoneInput";
+import { PhoneInput, formatPhoneNumber } from "../../components/shared/PhoneInput";
 import TokenService from "../../queries/token/tokenService";
+import { useUpdateSchoolAdmin } from "../../queries/SchoolAdmin";
 
 const SchoolAdminProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const notify = useNotification();
+  const updateSchoolAdmin = useUpdateSchoolAdmin();
 
   // Get user and school data from Zustand store
   const {
@@ -41,6 +43,7 @@ const SchoolAdminProfile = () => {
     school,
     isLoading: adminLoading,
     error: adminError,
+    fetchProfile,
   } = useUserStore();
 
   // Derivations for legacy compatibility and clear naming
@@ -56,7 +59,7 @@ const SchoolAdminProfile = () => {
     ? `${admin.firstName} ${admin.lastName || ""}`.trim()
     : admin?.username || admin?.email?.split("@")[0] || "Admin";
   const userEmail = admin?.email || "";
-  const userPhone = admin?.phone || "";
+  const userPhone = admin?.contactNumber || admin?.phone || admin?.phoneNumber || "";
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -82,10 +85,34 @@ const SchoolAdminProfile = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSave = () => {
-    // TODO: Implement save profile API
-    setIsEditing(false);
-    notify.success("Profile updated successfully!");
+  const handleSave = async () => {
+    if (!userId) {
+      notify.error("User ID is missing");
+      return;
+    }
+
+    try {
+      const res = await updateSchoolAdmin.mutateAsync({
+        userId,
+        data: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          contactNumber: formData.phone,
+          phone: formData.phone,
+        },
+      });
+
+      if (res && res.success !== false) {
+        await fetchProfile(true);
+        setIsEditing(false);
+        notify.success("Profile updated successfully!");
+      } else {
+        notify.error(res?.message || "Failed to update profile");
+      }
+    } catch (err: any) {
+      notify.error(err?.message || "Failed to update profile");
+    }
   };
 
   const handleCancel = () => {
@@ -93,7 +120,7 @@ const SchoolAdminProfile = () => {
       firstName: admin?.firstName || "",
       lastName: admin?.lastName || "",
       email: admin?.email || "",
-      phone: admin?.phoneNumber || admin?.phone || "",
+      phone: admin?.contactNumber || admin?.phone || admin?.phoneNumber || "",
     });
     setIsEditing(false);
   };
@@ -260,14 +287,21 @@ const SchoolAdminProfile = () => {
               </Button>
               <Button
                 variant="contained"
-                startIcon={<SaveIcon />}
+                disabled={updateSchoolAdmin.isPending}
+                startIcon={
+                  updateSchoolAdmin.isPending ? (
+                    <CircularProgress size={20} color="inherit" />
+                  ) : (
+                    <SaveIcon />
+                  )
+                }
                 onClick={handleSave}
                 sx={{
                   bgcolor: "rgba(255,255,255,0.2)",
                   "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
                 }}
               >
-                Save
+                {updateSchoolAdmin.isPending ? "Saving..." : "Save"}
               </Button>
             </Box>
           )}
@@ -469,7 +503,7 @@ const SchoolAdminProfile = () => {
                           Phone
                         </Typography>
                         <Typography variant="body1" fontWeight={500}>
-                          {userPhone || "Not provided"}
+                          {userPhone ? formatPhoneNumber(userPhone) : "Not provided"}
                         </Typography>
                       </Box>
                     </Box>

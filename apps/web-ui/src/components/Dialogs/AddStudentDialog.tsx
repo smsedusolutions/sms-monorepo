@@ -343,10 +343,32 @@ const StudentDialog: React.FC<StudentDialogProps> = ({ open, onClose, schoolId, 
                             value={selectedParent}
                             onChange={handleParentSelect}
                             loading={parentLoading}
-                            getOptionLabel={(option) => `${option.firstName} ${option.lastName} (${option.phone || option.email || 'N/A'})`}
+                            filterOptions={(x) => x}
+                            isOptionEqualToValue={(option, value) => option.parentId === value.parentId}
+                            getOptionLabel={(option) => {
+                                if (typeof option === 'string') return option;
+                                const name = `${option.firstName || ''} ${option.lastName || ''}`.trim();
+                                const details = [option.email, option.phone, option.parentId].filter(Boolean).join(' • ');
+                                return details ? `${name} (${details})` : name;
+                            }}
                             onInputChange={(_, value) => setParentSearchQuery(value)}
+                            renderOption={(props, option) => {
+                                const { key, ...restProps } = props as any;
+                                return (
+                                    <Box component="li" key={key || option.parentId} {...restProps}>
+                                        <Box>
+                                            <Typography variant="body2" fontWeight={600}>
+                                                {option.firstName} {option.lastName}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {[option.email, option.phone, option.parentId].filter(Boolean).join(' | ')}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                );
+                            }}
                             renderInput={(params) => (
-                                <AppInput {...params} label="Link Parent Account" placeholder="Search by name, email, or phone..." />
+                                <AppInput {...params} label="Link Parent Account" placeholder="Search by name, email, or ID..." />
                             )}
                         />
 

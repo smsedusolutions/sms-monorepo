@@ -97,8 +97,9 @@ const LoginPage: React.FC = () => {
       student: '/student',
       parent: '/parent',
       driver: '/driver',
+      principal: '/principal',
     };
-    return map[role] ? `${map[role]}/dashboard` : '/';
+    return map[role.toLowerCase()] ? `${map[role.toLowerCase()]}/dashboard` : '/';
   };
 
   const handleSubmit = (e: React.FormEvent) => {

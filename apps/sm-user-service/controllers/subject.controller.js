@@ -79,7 +79,21 @@ const createSubject = async (req, res) => {
     }
 
     // Determine target classes list
-    const targetClasses = Array.isArray(classes) ? classes : [];
+    let targetClasses = Array.isArray(classes) ? classes : [];
+
+    // If this is a sub-subject, inherit parent subject's assigned classes if available
+    if (isSubSubject && parentSubjectId) {
+      const parentSubject = await SubjectModel.findOne({
+        $or: [{ subjectId: parentSubjectId }, { _id: parentSubjectId }],
+      });
+      if (parentSubject && Array.isArray(parentSubject.classes) && parentSubject.classes.length > 0) {
+        if (targetClasses.length === 0) {
+          targetClasses = [...parentSubject.classes];
+        } else {
+          targetClasses = Array.from(new Set([...targetClasses, ...parentSubject.classes]));
+        }
+      }
+    }
 
     // Generate subjectId
     const subjectId = await generateSubjectId(SubjectModel);
@@ -166,11 +180,33 @@ const getAllSubjects = async (req, res) => {
     // Build query filters
     const query = {};
     if (status) query.status = status;
-    if (classId) query.classId = classId;
+
+    if (classId) {
+      if (classId === "general") {
+        query.$or = [
+          { classes: { $exists: false } },
+          { classes: { $size: 0 } },
+          { classId: { $exists: false } },
+          { classId: null },
+          { classId: "" },
+        ];
+      } else {
+        query.$or = [
+          { classes: classId },
+          { classId: classId },
+        ];
+      }
+    }
     
     if (search) {
       const searchRegex = new RegExp(search, "i");
-      query.$or = [{ name: searchRegex }, { code: searchRegex }];
+      const searchConditions = [{ name: searchRegex }, { code: searchRegex }];
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, { $or: searchConditions }];
+        delete query.$or;
+      } else {
+        query.$or = searchConditions;
+      }
     }
 
     const subjects = await SubjectModel.find(query).sort({ name: 1 });
@@ -193,7 +229,7 @@ const getAllSubjects = async (req, res) => {
     const TeacherModel = schoolDb.model("Teacher", teacherSchema);
 
     const teacherQuery = { status: "active" };
-    if (filterClassId) {
+    if (filterClassId && filterClassId !== "general") {
       // Regex to match "classId#sectionId" for the filtered class
       teacherQuery.classes = { $regex: new RegExp(`^${filterClassId}#`) };
     }
@@ -203,22 +239,46 @@ const getAllSubjects = async (req, res) => {
 
     // Fetch classes to populate className
     const { ClassSchema: classSchema } = require("@sms/shared");
-    const ClassModel = schoolDb.model("Class", classSchema);
-    const allClasses = await ClassModel.find({ schoolId }).select("classId name");
+    const ClassModel = schoolDb.models.Class || schoolDb.model("Class", classSchema);
+    const allClasses = await ClassModel.find().select("classId name _id");
     const classMap = {};
     allClasses.forEach(c => {
-      classMap[c.classId] = c.name;
+      if (c.classId) classMap[c.classId] = c.name;
+      if (c._id) classMap[c._id.toString()] = c.name;
+    });
+
+    // Build parent classes map for fallback inheritance
+    const parentClassesMap = new Map();
+    subjects.forEach((s) => {
+      if (!s.isSubSubject) {
+        if (s.subjectId) parentClassesMap.set(s.subjectId, s.classes || []);
+        if (s._id) parentClassesMap.set(s._id.toString(), s.classes || []);
+      }
     });
 
     const mappedSubjects = subjects.map((s) => {
       const subjectObj = s.toObject();
       
-      // Populate className
-      if (subjectObj.classId) {
-        subjectObj.className = classMap[subjectObj.classId] || "General";
-      } else {
-        subjectObj.className = "General";
+      let effectiveClasses = Array.isArray(subjectObj.classes) ? subjectObj.classes : [];
+      // If sub-subject has no assigned classes, inherit parent's assigned classes
+      if (subjectObj.isSubSubject && subjectObj.parentSubjectId && effectiveClasses.length === 0) {
+        effectiveClasses = parentClassesMap.get(subjectObj.parentSubjectId) || [];
       }
+
+      // Populate className and classNames array
+      let assignedClassNames = [];
+      if (effectiveClasses.length > 0) {
+        assignedClassNames = effectiveClasses
+          .map((cId) => classMap[cId])
+          .filter(Boolean);
+      } else if (subjectObj.classId && classMap[subjectObj.classId]) {
+        assignedClassNames = [classMap[subjectObj.classId]];
+      }
+
+      subjectObj.classNames = assignedClassNames;
+      subjectObj.className = assignedClassNames.length > 0
+        ? assignedClassNames.join(", ")
+        : "General";
 
       // Find all teachers who have this subjectId in their subjects array
       const assignedTeachers = allTeachers.filter((t) =>
@@ -418,22 +478,48 @@ const updateSubjectById = async (req, res) => {
       );
     }
 
-    // Bidirectional sync: Update classes' subjects array
+    // Bidirectional sync: Update classes' subjects array & child sub-subjects
     if (updateData.classes && Array.isArray(updateData.classes)) {
+      const parentIdentifiers = [subjectId, existingSubject._id?.toString()].filter(Boolean);
+
+      // Auto-sync updated classes to all child sub-subjects
+      await SubjectModel.updateMany(
+        { parentSubjectId: { $in: parentIdentifiers } },
+        { $set: { classes: updateData.classes } }
+      );
+
+      // Find all child sub-subject IDs for ClassModel sync
+      const childSubjects = await SubjectModel.find({
+        parentSubjectId: { $in: parentIdentifiers }
+      }).select("subjectId");
+      const childSubjectIds = childSubjects.map(c => c.subjectId).filter(Boolean);
+      const allSyncedSubjectIds = Array.from(new Set([subjectId, ...childSubjectIds]));
+
+      const mongoose = require("mongoose");
+      const validObjectIds = updateData.classes.filter((cId) => mongoose.Types.ObjectId.isValid(cId));
+
+      const classInMatch = [{ classId: { $in: updateData.classes } }];
+      const classNinMatch = [{ classId: { $nin: updateData.classes } }];
+
+      if (validObjectIds.length > 0) {
+        classInMatch.push({ _id: { $in: validObjectIds } });
+        classNinMatch.push({ _id: { $nin: validObjectIds } });
+      }
+
       const { ClassSchema: classSchema } = require("@sms/shared");
       const ClassModel = schoolDb.models.Class || schoolDb.model("Class", classSchema);
 
-      // 1. Remove subjectId from classes no longer in updateData.classes
+      // 1. Remove synced subject IDs from classes no longer in updateData.classes
       await ClassModel.updateMany(
-        { subjects: subjectId, classId: { $nin: updateData.classes } },
-        { $pull: { subjects: subjectId } }
+        { subjects: { $in: allSyncedSubjectIds }, $and: classNinMatch },
+        { $pull: { subjects: { $in: allSyncedSubjectIds } } }
       );
 
-      // 2. Add subjectId to classes in updateData.classes
+      // 2. Add synced subject IDs to classes in updateData.classes
       if (updateData.classes.length > 0) {
         await ClassModel.updateMany(
-          { classId: { $in: updateData.classes } },
-          { $addToSet: { subjects: subjectId } }
+          { $or: classInMatch },
+          { $addToSet: { subjects: { $each: allSyncedSubjectIds } } }
         );
       }
     }

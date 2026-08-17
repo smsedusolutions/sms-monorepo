@@ -32,6 +32,8 @@ import TokenService from '../../../queries/token/tokenService';
 import { AppSelect } from '../../../components/shared/AppSelect';
 import { AppButton } from '../../../components/shared/AppButton';
 import { format } from 'date-fns';
+import useTeacherAttendanceGuard from '../../../hooks/useTeacherAttendanceGuard';
+import AppNoticeDialog from '../../../components/shared/AppNoticeDialog';
 
 type PeriodStatus = "present" | "absent" | "late";
 
@@ -41,7 +43,11 @@ interface AttendanceRecord {
     remarks?: string;
 }
 
-const PeriodAttendance = () => {
+interface PeriodAttendanceProps {
+    onGoToCheckIn?: () => void;
+}
+
+const PeriodAttendance: React.FC<PeriodAttendanceProps> = ({ onGoToCheckIn }) => {
     const schoolId = TokenService.getSchoolId() || '';
     const teacherId = TokenService.getTeacherId() || '';
 
@@ -101,7 +107,11 @@ const PeriodAttendance = () => {
         }
     }, [existingAttendance]);
 
+    // Teacher attendance validation guard (working hours + check-in)
+    const { validateAction, noticeState } = useTeacherAttendanceGuard(schoolId, onGoToCheckIn);
+
     const handleStatusChange = (studentId: string, status: PeriodStatus) => {
+        if (!validateAction()) return;
         setAttendance(prev => ({
             ...prev,
             [studentId]: { ...prev[studentId], studentId, status },
@@ -109,6 +119,7 @@ const PeriodAttendance = () => {
     };
 
     const handleMarkAll = (status: PeriodStatus) => {
+        if (!validateAction()) return;
         const updated: Record<string, AttendanceRecord> = {};
         students.forEach((s: Student) => {
             updated[s.studentId] = { studentId: s.studentId, status };
@@ -117,6 +128,7 @@ const PeriodAttendance = () => {
     };
 
     const handleSave = async () => {
+        if (!validateAction()) return;
         if (!selectedClass || !selectedSubject) {
             setSnackbar({ open: true, message: 'Please select class and subject', severity: 'error' });
             return;
@@ -293,6 +305,8 @@ const PeriodAttendance = () => {
             <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
                 <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
             </Snackbar>
+
+            <AppNoticeDialog {...noticeState} />
         </Box>
     );
 };

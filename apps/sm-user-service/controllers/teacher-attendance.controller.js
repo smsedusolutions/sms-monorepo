@@ -71,12 +71,44 @@ const teacherCheckIn = async (req, res) => {
             });
         }
 
-        // Get school details for location validation
+        // Get school details for location & working hours validation
         const school = await School.findOne({ schoolId });
         if (!school) {
             return res.status(404).json({
                 success: false,
                 message: "School not found",
+            });
+        }
+
+        // Validate working hours
+        const workingHours = school.attendanceSettings?.workingHours || { start: "08:00", end: "16:00" };
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        const [startH, startM] = (workingHours.start || '08:00').split(':').map(Number);
+        const [endH, endM] = (workingHours.end || '16:00').split(':').map(Number);
+
+        const startMinutes = (isNaN(startH) ? 8 : startH) * 60 + (isNaN(startM) ? 0 : startM);
+        const endMinutes = (isNaN(endH) ? 16 : endH) * 60 + (isNaN(endM) ? 0 : endM);
+
+        const format12Hour = (timeStr) => {
+            if (!timeStr) return '';
+            const [hStr, mStr] = timeStr.split(':');
+            let h = parseInt(hStr, 10);
+            const m = parseInt(mStr || '0', 10);
+            if (isNaN(h)) return timeStr;
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            h = h % 12;
+            if (h === 0) h = 12;
+            const minPart = m > 0 ? `:${String(m).padStart(2, '0')}` : '';
+            return `${h}${minPart} ${ampm}`;
+        };
+        const formattedRange = `${format12Hour(workingHours.start || '08:00')} - ${format12Hour(workingHours.end || '16:00')}`;
+
+        if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
+            return res.status(403).json({
+                success: false,
+                message: `Teacher check-in is only allowed during school working hours (${formattedRange}).`,
             });
         }
 
@@ -110,7 +142,6 @@ const teacherCheckIn = async (req, res) => {
         const AttendanceModel = await getAttendanceModel(schoolId);
         const endOfDay = new Date(today);
         endOfDay.setHours(23, 59, 59, 999);
-        const now = new Date();
 
         // Check if already checked in
         let attendance = await AttendanceModel.findOne({

@@ -23,6 +23,8 @@ import { useGetTeacherStatus, useTeacherCheckIn, useTeacherCheckOut } from '../.
 import { useGetSchoolById } from '../../../queries/School';
 import TokenService from '../../../queries/token/tokenService';
 import type { TeacherAttendance } from '../../../types';
+import AppNoticeDialog, { AppNoticeDialogProps } from '../../../components/shared/AppNoticeDialog';
+import { checkIsWithinWorkingHours } from '../../../utils/timeUtils';
 
 interface LocationState {
     latitude: number | null;
@@ -134,7 +136,36 @@ const TeacherSelfCheckIn = () => {
 
     const [checkInError, setCheckInError] = useState<string | null>(null);
 
+    const [noticeState, setNoticeState] = useState<AppNoticeDialogProps>({
+        open: false,
+        onClose: () => setNoticeState(prev => ({ ...prev, open: false })),
+        title: '',
+        message: '',
+    });
+
+    const validateWorkingHours = (): boolean => {
+        const start = school?.attendanceSettings?.workingHours?.start || '08:00';
+        const end = school?.attendanceSettings?.workingHours?.end || '16:00';
+        const { isWithin, formattedRange } = checkIsWithinWorkingHours(start, end);
+
+        if (!isWithin) {
+            setNoticeState({
+                open: true,
+                onClose: () => setNoticeState(prev => ({ ...prev, open: false })),
+                type: 'warning',
+                title: 'Outside School Working Hours',
+                message: 'Teacher check-in is only allowed during school working hours.',
+                badgeText: `Working Hours: ${formattedRange}`,
+                primaryActionLabel: 'Understood',
+                onPrimaryAction: () => setNoticeState(prev => ({ ...prev, open: false })),
+            });
+            return false;
+        }
+        return true;
+    };
+
     const handleCheckIn = async () => {
+        if (!validateWorkingHours()) return;
         setCheckInError(null);
         try {
             await checkInMutation.mutateAsync({
@@ -161,6 +192,7 @@ const TeacherSelfCheckIn = () => {
     };
 
     const handleCheckOut = async () => {
+        if (!validateWorkingHours()) return;
         try {
             await checkOutMutation.mutateAsync();
             refetchStatus();
@@ -369,6 +401,8 @@ const TeacherSelfCheckIn = () => {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
+
+            <AppNoticeDialog {...noticeState} />
         </Box>
     );
 };

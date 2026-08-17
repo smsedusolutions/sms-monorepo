@@ -3,6 +3,39 @@ import { InputAdornment, Box, Typography } from '@mui/material';
 import { AppInput, type AppInputProps } from './AppInput';
 
 /**
+ * Normalizes any phone number input/value string:
+ * - Strips non-digits
+ * - Removes leading +91 / 91 country code if digits length > 10
+ * - Removes leading 0 if digits length > 10
+ * - Caps result to 10 digits
+ */
+export const cleanPhoneNumber = (val: string | number | undefined | null): string => {
+  if (val === undefined || val === null) return '';
+  const str = String(val).trim();
+  if (str === '+91' || str === '+91-' || str === '+91 ') return '';
+  
+  let digits = str.replace(/\D/g, '');
+
+  if (digits === '91' && (str.startsWith('+91') || str.startsWith('91'))) {
+    return '';
+  }
+  
+  if (digits.startsWith('91') && digits.length > 10) {
+    digits = digits.slice(2);
+  } else if (digits.startsWith('0') && digits.length > 10) {
+    digits = digits.slice(1);
+  }
+  
+  return digits.slice(0, 10);
+};
+
+export const formatPhoneNumber = (val: string | number | undefined | null): string => {
+  const cleaned = cleanPhoneNumber(val);
+  if (!cleaned) return '';
+  return `+91 ${cleaned}`;
+};
+
+/**
  * A standardized Phone Input component for the SMS system.
  * Features:
  * - Enforced numeric-only input.
@@ -11,9 +44,10 @@ import { AppInput, type AppInputProps } from './AppInput';
  * - Premium look with visual adornment.
  */
 export const PhoneInput: React.FC<AppInputProps> = ({ onChange, value, ...props }) => {
+  const displayValue = cleanPhoneNumber(value as string);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only allow digits and limit to 10
-    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+    const val = cleanPhoneNumber(e.target.value);
 
     if (onChange) {
       // Create a modified event to pass back up
@@ -32,7 +66,7 @@ export const PhoneInput: React.FC<AppInputProps> = ({ onChange, value, ...props 
   return (
     <AppInput
       {...props}
-      value={value}
+      value={displayValue}
       onChange={handleChange}
       type="text"
       placeholder="00000 00000"

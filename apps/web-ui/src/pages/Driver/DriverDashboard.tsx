@@ -6,18 +6,20 @@ import {
 } from '@mui/material';
 import { 
     PlayArrow as StartIcon, Stop as StopIcon, 
-    MyLocation as GpsIcon
+    MyLocation as GpsIcon, HeadsetMic as SupportIcon
 } from '@mui/icons-material';
 import { io, Socket } from 'socket.io-client';
 import axios from 'axios';
 import TokenService from '../../queries/token/tokenService';
 import { useUserStore } from '../../stores/userStore';
 import { useUpdateTripStatus } from '../../queries/transport';
+import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
 
 const TRANSPORT_API = "http://localhost:5004/api/transport";
 const SOCKET_URL = "http://localhost:5004";
 
 const DriverDashboard: React.FC = () => {
+    const [supportDialogOpen, setSupportDialogOpen] = useState(false);
     const [isTripActive, setIsTripActive] = useState(false);
     const [currentRoute, setCurrentRoute] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -152,17 +154,28 @@ const DriverDashboard: React.FC = () => {
             <Grid container spacing={4}>
                 {/* Profile Header */}
                 <Grid size={{ xs: 12 }}>
-                    <Paper sx={{ p: 3, borderRadius: '24px', display: 'flex', alignItems: 'center', gap: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                        <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main', fontSize: '2rem' }}>
-                            {user?.firstName?.[0]}
-                        </Avatar>
-                        <Box>
-                            <Typography variant="h4" sx={{ fontWeight: 800 }}>Welcome, {user?.firstName}!</Typography>
-                            <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                                <Chip label="Verified Driver" color="success" size="small" sx={{ fontWeight: 700 }} />
-                                <Chip label={isTripActive ? "On Duty" : "Off Duty"} color={isTripActive ? "primary" : "default"} size="small" />
+                    <Paper sx={{ p: 3, borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main', fontSize: '2rem' }}>
+                                {user?.firstName?.[0]}
+                            </Avatar>
+                            <Box>
+                                <Typography variant="h4" sx={{ fontWeight: 800 }}>Welcome, {user?.firstName}!</Typography>
+                                <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                                    <Chip label="Verified Driver" color="success" size="small" sx={{ fontWeight: 700 }} />
+                                    <Chip label={isTripActive ? "On Duty" : "Off Duty"} color={isTripActive ? "primary" : "default"} size="small" />
+                                </Box>
                             </Box>
                         </Box>
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            startIcon={<SupportIcon />}
+                            onClick={() => setSupportDialogOpen(true)}
+                            sx={{ borderRadius: '12px', fontWeight: 700, textTransform: 'none' }}
+                        >
+                            Open Support Ticket
+                        </Button>
                     </Paper>
                 </Grid>
 
@@ -268,6 +281,16 @@ const DriverDashboard: React.FC = () => {
                     </Grid>
                 )}
             </Grid>
+
+            <RequestChangeDialog
+                open={supportDialogOpen}
+                onClose={() => setSupportDialogOpen(false)}
+                schoolId={schoolId}
+                userId={userId}
+                userName={`${user?.firstName || 'Driver'} ${user?.lastName || ''}`.trim()}
+                userType="teacher"
+                fieldType="general"
+            />
         </Box>
     );
 };
