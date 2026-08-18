@@ -32,6 +32,7 @@ import { useGetExams, useGetExamSchedule } from '../../../queries/Exam';
 import { useGetSubjects } from '../../../queries/Subject';
 import TokenService from '../../../queries/token/tokenService';
 import { useUrlTab } from '../../../hooks/useUrlTab';
+import { useAcademicYear } from '../../../hooks/useAcademicYear';
 
 const fmtDate = (d: string | Date) => {
     if (!d) return '-';
@@ -298,6 +299,7 @@ const ExamScheduleCard = ({
     getSubjectName: (id: string) => string;
     isMobile: boolean;
 }) => {
+    const { currentAcademicYear } = useAcademicYear();
     const { data: scheduleData, isLoading } = useGetExamSchedule(schoolId, exam.examId);
 
     const examSchedule = useMemo(() => {
@@ -352,7 +354,7 @@ const ExamScheduleCard = ({
                             {exam.name}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                            {exam.typeId?.name || 'Examination'} • {exam.termId?.name || 'Term'} • Academic Year: {exam.academicYear || '2026-2027'}
+                            {exam.typeId?.name || 'Examination'} • {exam.termId?.name || 'Term'} • Academic Year: {exam.academicYear || currentAcademicYear}
                         </Typography>
                     </Box>
                     <Chip

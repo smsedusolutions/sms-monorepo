@@ -42,6 +42,7 @@ import {
     useCreateAdjustment
 } from '../../../../queries/Fee';
 import { useGetClasses } from '../../../../queries/Class';
+import { useAcademicYear } from '../../../../hooks/useAcademicYear';
 import { AppTable } from '../../../../components/shared/AppTable';
 import { useIsMobile } from '../../../../hooks/useIsMobile';
 import type { StudentFeeAccount } from '../../../../types/fee.types';
@@ -58,9 +59,17 @@ const ADJUSTMENT_TYPES = [
 const FeeAssignments: React.FC = () => {
     const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
+    const { academicYears, currentAcademicYear } = useAcademicYear();
 
     // Filters
-    const [academicYear, setAcademicYear] = useState('2026-2027');
+    const [academicYear, setAcademicYear] = useState('');
+
+    React.useEffect(() => {
+        if (!academicYear && currentAcademicYear) {
+            setAcademicYear(currentAcademicYear);
+        }
+    }, [currentAcademicYear, academicYear]);
+
     const [classId, setClassId] = useState('');
     const [status, setStatus] = useState('');
     const [search, setSearch] = useState('');
@@ -324,12 +333,15 @@ const FeeAssignments: React.FC = () => {
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <FormControl fullWidth size="small">
                                 <InputLabel>Academic Year</InputLabel>
-                                <Select value={academicYear} label="Academic Year" onChange={(e) => {
+                                <Select value={academicYear || currentAcademicYear} label="Academic Year" onChange={(e) => {
                                     setAcademicYear(e.target.value);
                                     setPage(1);
                                 }}>
-                                    <MenuItem value="2026-2027">2026-2027</MenuItem>
-                                    <MenuItem value="2027-2028">2027-2028</MenuItem>
+                                    {academicYears.map((ay) => (
+                                        <MenuItem key={ay._id || ay.code} value={ay.code}>
+                                            {ay.name} {ay.isCurrent ? '(Current)' : ''}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
                         </Grid>

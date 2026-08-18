@@ -35,7 +35,6 @@ import {
     Badge as RollIcon,
 } from '@mui/icons-material';
 import { pdf } from '@react-pdf/renderer';
-import { useAuth } from '../../../context/AuthContext';
 import {
     useGetAdmitCard,
     useGetStudentReportCard,
@@ -46,13 +45,14 @@ import { useGetSubjects } from '../../../queries/Subject';
 import TokenService from '../../../queries/token/tokenService';
 import { useUserStore } from '../../../stores/userStore';
 import { AdmitCardPDF } from '../../../components/PDFLayouts';
+import { useAcademicYear } from '../../../hooks/useAcademicYear';
 
 const MyExams = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const { user } = useAuth();
-    const schoolId = user?.schoolId || '';
-    const studentId = user?.userId || '';
+    const user = TokenService.getUser();
+    const schoolId = TokenService.getSchoolId() || '';
+    const studentId = user?.studentId || '';
 
     const { data: reportCardData, isLoading: reportLoading } = useGetStudentReportCard(schoolId, studentId);
     const { data: examsData, isLoading: examsLoading, error: examsError } = useGetExams(schoolId);
@@ -231,6 +231,7 @@ const AdmitCardBlock = ({
     });
 
     const { user: student } = useUserStore();
+    const { currentAcademicYear } = useAcademicYear();
     const { data: admitCard, isLoading } = useGetAdmitCard(schoolId, exam.examId, studentId);
     const { data: scheduleData } = useGetExamSchedule(schoolId, exam.examId);
     const { data: subjectsData } = useGetSubjects(schoolId);
@@ -306,7 +307,7 @@ const AdmitCardBlock = ({
                     examName={exam.name}
                     examType={exam.typeId?.name || 'Examination'}
                     examTerm={exam.termId?.name || 'Term'}
-                    academicYear={exam.academicYear || '2026-2027'}
+                    academicYear={exam.academicYear || currentAcademicYear}
                     startDate={exam.startDate}
                     endDate={exam.endDate}
                     examSchedule={examSchedule.map((sch: any) => ({
@@ -467,7 +468,7 @@ const AdmitCardBlock = ({
                                 {exam.name} — {exam.typeId?.name || 'Examination'}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                                Academic Year {exam.academicYear || '2026-2027'} • {exam.termId?.name || 'Term'}
+                                Academic Year {exam.academicYear || currentAcademicYear} • {exam.termId?.name || 'Term'}
                             </Typography>
                         </Box>
 

@@ -41,6 +41,7 @@ import {
     useAssignFeeStructure
 } from '../../../../queries/Fee';
 import { useGetClasses } from '../../../../queries/Class';
+import { useAcademicYear } from '../../../../hooks/useAcademicYear';
 import { AppTable } from '../../../../components/shared/AppTable';
 import type { FeeStructure, FeeCategory } from '../../../../types/fee.types';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
@@ -64,6 +65,7 @@ const LATE_FEE_FREQUENCY_OPTIONS = [
 const FeeStructures: React.FC = () => {
     const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
+    const { academicYears, currentAcademicYear } = useAcademicYear();
     const [searchTerm, setSearchTerm] = useState('');
     const [openDialog, setOpenDialog] = useState(false);
     const [editStructure, setEditStructure] = useState<FeeStructure | null>(null);
@@ -136,7 +138,7 @@ const FeeStructures: React.FC = () => {
     const { control, handleSubmit, reset, watch, setValue } = useForm({
         defaultValues: {
             name: '',
-            academicYear: '2026-2027',
+            academicYear: currentAcademicYear,
             applicableClasses: [] as string[],
             installmentEnabled: false,
             lateFeeEnabled: false,
@@ -168,7 +170,7 @@ const FeeStructures: React.FC = () => {
         setEditStructure(null);
         reset({
             name: '',
-            academicYear: '2026-2027',
+            academicYear: currentAcademicYear,
             applicableClasses: [],
             installmentEnabled: false,
             lateFeeEnabled: false,
@@ -403,8 +405,11 @@ const FeeStructures: React.FC = () => {
                                     control={control}
                                     render={({ field }: any) => (
                                         <TextField {...field} select label="Academic Year" fullWidth>
-                                            <MenuItem value="2026-2027">2026-2027</MenuItem>
-                                            <MenuItem value="2027-2028">2027-2028</MenuItem>
+                                            {academicYears.map((ay) => (
+                                                <MenuItem key={ay._id || ay.code} value={ay.code}>
+                                                    {ay.name} {ay.isCurrent ? '(Current)' : ''}
+                                                </MenuItem>
+                                            ))}
                                         </TextField>
                                     )}
                                 />

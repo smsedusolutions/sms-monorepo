@@ -36,6 +36,7 @@ module.exports = {
     PeriodSwapSchema: require('./period-swap.model'),
 
     // Exam Management
+    AcademicYearSchema: require('./academic-year.model'),
     ExamTermSchema: require('./exam-term.model'),
     ExamTypeSchema: require('./exam-type.model'),
     GradingSystemSchema: require('./grading-system.model'),

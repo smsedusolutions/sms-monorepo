@@ -28,11 +28,13 @@ import { exportReportCardPDF } from '../../utils/reportCardPdfExport';
 import TokenService from '../../queries/token/tokenService';
 import { useGetExams, useGetStudentReportCard } from '../../queries/Exam';
 import { useGetSubjects } from '../../queries/Subject';
+import { useAcademicYear } from '../../hooks/useAcademicYear';
 
 const StudentResults = () => {
     const user = TokenService.getUser();
     const schoolId = TokenService.getSchoolId() || '';
     const studentId = user?.studentId || '';
+    const { currentAcademicYear } = useAcademicYear();
 
     const { data: reportData, isLoading: loadingReport } = useGetStudentReportCard(schoolId, studentId);
     const { data: examsData, isLoading: loadingExams } = useGetExams(schoolId);
@@ -215,7 +217,7 @@ const StudentResults = () => {
                                 admissionNumber: report?.student?.admissionNumber,
                                 className: report?.student?.classId || 'Class',
                                 sectionName: report?.student?.sectionId,
-                                academicYear: report?.academicYear || '2025-2026',
+                                academicYear: report?.academicYear || currentAcademicYear,
                                 examName: exam.name,
                                 termName: exam.term,
                                 results,

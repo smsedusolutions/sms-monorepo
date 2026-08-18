@@ -34,6 +34,7 @@ import { useGetClasses } from '../../../queries/Class';
 import { useGetTeacherById } from '../../../queries/Teacher';
 import TokenService from '../../../queries/token/tokenService';
 import { useUrlTab } from '../../../hooks/useUrlTab';
+import { useAcademicYear } from '../../../hooks/useAcademicYear';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -490,6 +491,7 @@ const TeacherExamScheduler: React.FC = () => {
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const schoolId = TokenService.getSchoolId() || '';
     const teacherId = TokenService.getUserId() || '';
+    const { currentAcademicYear } = useAcademicYear();
 
     const [selectedTab, setSelectedTab] = useUrlTab(0, ['ongoing', 'upcoming', 'completed']);
 
@@ -763,7 +765,7 @@ const TeacherExamScheduler: React.FC = () => {
                                         {exam.name}
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary">
-                                        {exam.termId?.name || exam.term || 'Term'} • Academic Year {exam.academicYear || '2026-2027'}
+                                        {exam.termId?.name || exam.term || 'Term'} • Academic Year {exam.academicYear || currentAcademicYear}
                                     </Typography>
                                 </Box>
                                 <Chip

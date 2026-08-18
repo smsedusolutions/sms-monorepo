@@ -36,10 +36,12 @@ import { useGetStudentReportCard } from '../../../queries/Exam';
 import { useGetSubjects } from '../../../queries/Subject';
 import TokenService from '../../../queries/token/tokenService';
 import { exportReportCardPDF } from '../../../utils/reportCardPdfExport';
+import { useAcademicYear } from '../../../hooks/useAcademicYear';
 
 const ParentExamResults: React.FC = () => {
     const navigate = useNavigate();
     const schoolId = TokenService.getSchoolId() || '';
+    const { currentAcademicYear } = useAcademicYear();
     const { selectedChild, setSelectedChild, children: contextChildren, isLoading: loadingChild } = useChildSelector();
 
     const { data: reportCardData, isLoading: reportLoading, error } = useGetStudentReportCard(
@@ -306,7 +308,7 @@ const ParentExamResults: React.FC = () => {
                                                     admissionNumber: (selectedChild as any)?.admissionNumber || reportCard?.student?.admissionNumber,
                                                     className: selectedChild?.className || reportCard?.student?.classId || 'Class',
                                                     sectionName: selectedChild?.sectionName || reportCard?.student?.sectionId,
-                                                    academicYear: reportCard?.academicYear || '2025-2026',
+                                                    academicYear: reportCard?.academicYear || currentAcademicYear,
                                                     examName: examResult.name,
                                                     termName: examResult.term,
                                                     results: formattedResults

@@ -68,6 +68,7 @@ import { useGetSubjects } from '../../../queries/Subject';
 import { useGetTeachers } from '../../../queries/Teacher';
 import { useGetAllRooms } from '../../../queries/Timetable';
 import { useGetSchoolById } from '../../../queries/School';
+import { useAcademicYear } from '../../../hooks/useAcademicYear';
 import { AdmitCardPDF } from '../../../components/PDFLayouts';
 import { sortClassesNumerically, compareClassesNumerically } from '../../../utils/classSort';
 
@@ -109,6 +110,7 @@ const ExamScheduler = () => {
 
 const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSelect: (exam: Exam) => void, isMobile: boolean }) => {
     const [open, setOpen] = useState(false);
+    const { academicYearOptions, currentAcademicYear } = useAcademicYear();
     const { data: exams, isLoading } = useGetExams(schoolId);
 
     const { data: terms } = useGetExamTerms(schoolId);
@@ -122,7 +124,7 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
         name: '',
         typeId: '',
         termId: '',
-        academicYear: '2025-2026',
+        academicYear: currentAcademicYear,
         classes: [],
         startDate: '',
         endDate: '',
@@ -202,7 +204,7 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
                     setOpen(false);
                     setEditingExam(null);
                     setFormData({
-                        name: '', typeId: '', termId: '', academicYear: '2025-2026',
+                        name: '', typeId: '', termId: '', academicYear: currentAcademicYear,
                         classes: [], startDate: '', endDate: '', gradingSystemId: '', status: 'draft'
                     });
                 }
@@ -212,7 +214,7 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
                 onSuccess: () => {
                     setOpen(false);
                     setFormData({
-                        name: '', typeId: '', termId: '', academicYear: '2025-2026',
+                        name: '', typeId: '', termId: '', academicYear: currentAcademicYear,
                         classes: [], startDate: '', endDate: '', gradingSystemId: '', status: 'draft'
                     });
                 }
@@ -224,7 +226,7 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
         setOpen(false);
         setEditingExam(null);
         setFormData({
-            name: '', typeId: '', termId: '', academicYear: '2025-2026',
+            name: '', typeId: '', termId: '', academicYear: currentAcademicYear,
             classes: [], startDate: '', endDate: '', gradingSystemId: '', status: 'draft'
         });
     };
@@ -387,7 +389,15 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
                         />
 
                         <Grid container spacing={2}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
+                                <AppSelect
+                                    label="Academic Year"
+                                    value={formData.academicYear}
+                                    options={academicYearOptions}
+                                    onChange={(e) => setFormData({ ...formData, academicYear: e.target.value as string })}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <AppSelect
                                     label="Administrative Term"
                                     value={formData.termId}
@@ -395,7 +405,7 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
                                     onChange={(e) => setFormData({ ...formData, termId: e.target.value as string })}
                                 />
                             </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <AppSelect
                                     label="Examination Category"
                                     value={formData.typeId}
@@ -780,6 +790,7 @@ const VirtualizedAdmitCardGrid = ({
 // ==========================================
 
 const ExamDetailView = ({ schoolId, exam, onBack, isMobile }: { schoolId: string, exam: Exam, onBack: () => void, isMobile: boolean }) => {
+    const { currentAcademicYear } = useAcademicYear();
     const [tabValue, setTabValue] = useUrlTab(0, ['schedule', 'admit-cards']);
     const [open, setOpen] = useState(false);
     const [editingSchedule, setEditingSchedule] = useState<any>(null);
@@ -1032,7 +1043,7 @@ const ExamDetailView = ({ schoolId, exam, onBack, isMobile }: { schoolId: string
                     examName={exam.name}
                     examType={typeof exam.typeId === 'object' ? exam.typeId?.name : 'Examination'}
                     examTerm={typeof exam.termId === 'object' ? exam.termId?.name : 'Term'}
-                    academicYear={exam.academicYear || '2025-2026'}
+                    academicYear={exam.academicYear || currentAcademicYear}
                     startDate={exam.startDate}
                     endDate={exam.endDate}
                     examSchedule={(filteredStudentSchedule || []).map((sch: any) => ({
@@ -1460,7 +1471,7 @@ const ExamDetailView = ({ schoolId, exam, onBack, isMobile }: { schoolId: string
                                     {exam.name} - {typeof exam.typeId === 'object' ? exam.typeId?.name : 'Examination'}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Academic Year: {exam.academicYear || '2025-2026'} | {typeof exam.termId === 'object' ? exam.termId?.name : 'Term'}
+                                    Academic Year: {exam.academicYear || currentAcademicYear} | {typeof exam.termId === 'object' ? exam.termId?.name : 'Term'}
                                 </Typography>
                             </Box>
 

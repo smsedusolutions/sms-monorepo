@@ -1,6 +1,6 @@
 // apps/web-ui/src/pages/SchoolAdmin/Fees/Reports/index.tsx
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Box,
     Typography,
@@ -29,14 +29,22 @@ import { useUrlTab } from '../../../../hooks/useUrlTab';
 import { AppTable } from '../../../../components/shared/AppTable';
 
 import { useIsMobile } from '../../../../hooks/useIsMobile';
+import { useAcademicYear } from '../../../../hooks/useAcademicYear';
 
 const FeeReports: React.FC = () => {
     const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
+    const { academicYears, currentAcademicYear } = useAcademicYear();
     const [activeTab, setActiveTab] = useUrlTab(0, ['pending', 'today', 'monthly', 'classwise', 'discounts', 'defaulters']);
 
     // Filters
-    const [academicYear, setAcademicYear] = useState('2026-2027');
+    const [academicYear, setAcademicYear] = useState('');
+
+    useEffect(() => {
+        if (!academicYear && currentAcademicYear) {
+            setAcademicYear(currentAcademicYear);
+        }
+    }, [currentAcademicYear, academicYear]);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
@@ -93,11 +101,14 @@ const FeeReports: React.FC = () => {
                                 select
                                 fullWidth
                                 label="Academic Year"
-                                value={academicYear}
+                                value={academicYear || currentAcademicYear}
                                 onChange={(e) => setAcademicYear(e.target.value)}
                             >
-                                <MenuItem value="2026-2027">2026-2027</MenuItem>
-                                <MenuItem value="2027-2028">2027-2028</MenuItem>
+                                {academicYears.map((ay) => (
+                                    <MenuItem key={ay._id || ay.code} value={ay.code}>
+                                        {ay.name} {ay.isCurrent ? '(Current)' : ''}
+                                    </MenuItem>
+                                ))}
                             </TextField>
                         </Grid>
                         <Grid size={{ xs: 6, sm: 4 }}>
@@ -200,10 +211,12 @@ const FeeReports: React.FC = () => {
 
                     <AppTable
                         columns={[
-                            { name: 'Month / Year', cell: (row: any) => {
-                                const monthNames = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-                                return `${monthNames[row._id.month]} ${row._id.year}`;
-                            }},
+                            {
+                                name: 'Month / Year', cell: (row: any) => {
+                                    const monthNames = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                                    return `${monthNames[row._id.month]} ${row._id.year}`;
+                                }
+                            },
                             { name: 'Transaction Count', selector: (row: any) => row.transactionCount },
                             { name: 'Total Amount Received', selector: (row: any) => formatCurrency(row.totalAmount), cell: (row: any) => <Typography variant="body2" fontWeight={700} color="success.main">{formatCurrency(row.totalAmount)}</Typography> }
                         ]}

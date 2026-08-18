@@ -29,6 +29,9 @@ import { useGetClasses } from "../../../queries/Class";
 import { useBulkPromote } from "../../../queries/Promotion";
 import { useNotificationStore } from "../../../stores/notificationStore";
 import { useIsMobile } from "../../../hooks/useIsMobile";
+import { useAcademicYear } from "../../../hooks/useAcademicYear";
+import { AppSelect } from "../../../components/shared/AppSelect";
+import { useNavigate } from "react-router-dom";
 
 interface ClassMapping {
     classId: string;
@@ -37,11 +40,20 @@ interface ClassMapping {
 }
 
 const BulkPromotion = () => {
+    const navigate = useNavigate();
     const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || "";
     const { showNotification } = useNotificationStore();
+    const { upcomingAcademicYearOptions, nextAcademicYear } = useAcademicYear();
 
     const [newAcademicYear, setNewAcademicYear] = useState("");
+
+    useEffect(() => {
+        if (!newAcademicYear && nextAcademicYear) {
+            setNewAcademicYear(nextAcademicYear);
+        }
+    }, [nextAcademicYear, newAcademicYear]);
+
     const [notes, setNotes] = useState("");
     const [mappings, setMappings] = useState<ClassMapping[]>([]);
     const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -144,15 +156,22 @@ const BulkPromotion = () => {
                 }}
             >
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }}>
-                    <TextField
-                        label="New Academic Year"
-                        required
-                        placeholder="e.g., 2026-27"
-                        value={newAcademicYear}
-                        onChange={(e) => setNewAcademicYear(e.target.value)}
-                        size="small"
-                        sx={{ minWidth: { xs: '100%', sm: 200 } }}
-                    />
+                    <Box sx={{ minWidth: { xs: '100%', sm: 220 } }}>
+                        <AppSelect
+                            label="New Academic Year"
+                            required
+                            value={newAcademicYear || nextAcademicYear}
+                            options={upcomingAcademicYearOptions}
+                            onChange={(e) => {
+                                const val = e.target.value as string;
+                                if (val === '__create_new__') {
+                                    navigate('/school-admin/exam/config?tab=years', { state: { openAddAcademicYear: true } });
+                                } else {
+                                    setNewAcademicYear(val);
+                                }
+                            }}
+                        />
+                    </Box>
                     <TextField
                         label="Notes / Remarks"
                         placeholder="Describe this year-end process"

@@ -46,7 +46,6 @@ import {
 } from '@mui/icons-material';
 import {
     useGetExams,
-    useGetExamTerms,
     useGetExamPublishStatus,
     useFinalPublishExam,
     useRollbackSubjectPublish,
@@ -57,6 +56,7 @@ import TokenService from '../../../queries/token/tokenService';
 import type { Exam, ExamPublishSubjectItem } from '../../../types/exam.types';
 import { compareClassesNumerically } from '../../../utils/classSort';
 import { exportReportCardPDF } from '../../../utils/reportCardPdfExport';
+import { useAcademicYear } from '../../../hooks/useAcademicYear';
 
 // ─── View Marks Modal Component ──────────────────────────────────────────────
 interface ViewMarksDialogProps {
@@ -236,6 +236,7 @@ const ViewMarksDialog: React.FC<ViewMarksDialogProps> = ({ open, onClose, school
 // ─── Main Component ──────────────────────────────────────────────────────────
 const ExamResults: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
+    const { academicYears } = useAcademicYear();
 
     const [activeTab, setActiveTab] = useState(0);
     const [selectedExamId, setSelectedExamId] = useState('');
@@ -262,10 +263,8 @@ const ExamResults: React.FC = () => {
 
     // Queries & Mutations
     const { data: examsData, isLoading: examsLoading } = useGetExams(schoolId, yearFilter || undefined);
-    const { data: termsData } = useGetExamTerms(schoolId);
 
     const exams: Exam[] = examsData?.data || [];
-    const terms = termsData?.data || [];
 
     // Auto-select first exam if none selected
     React.useEffect(() => {
@@ -384,13 +383,12 @@ const ExamResults: React.FC = () => {
                                         label="Academic Year"
                                         onChange={(e) => { setYearFilter(e.target.value); }}
                                     >
-                                        <MenuItem value="">All Years</MenuItem>
-                                        {terms
-                                            .map((t) => t.academicYear)
-                                            .filter((v, i, a) => a.indexOf(v) === i)
-                                            .map((year) => (
-                                                <MenuItem key={year} value={year}>{year}</MenuItem>
-                                            ))}
+                                        <MenuItem value="">All Academic Years</MenuItem>
+                                        {academicYears.map((ay) => (
+                                            <MenuItem key={ay._id || ay.code} value={ay.code}>
+                                                {ay.name} {ay.isCurrent ? '(Current)' : ''}
+                                            </MenuItem>
+                                        ))}
                                     </Select>
                                 </FormControl>
                             </Grid>

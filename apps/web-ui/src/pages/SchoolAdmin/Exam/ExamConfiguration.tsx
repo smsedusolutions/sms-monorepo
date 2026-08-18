@@ -30,10 +30,12 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CancelIcon from '@mui/icons-material/Cancel';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
+import StarIcon from '@mui/icons-material/Star';
 import { AppInput } from '../../../components/shared/AppInput';
 import { AppSelect } from '../../../components/shared/AppSelect';
 import { AppButton } from '../../../components/shared/AppButton';
 import { AppDatePicker } from '../../../components/shared/AppDatePicker';
+import { FormControlLabel, Switch } from '@mui/material';
 import { format, parse, isValid, startOfDay } from 'date-fns';
 import { useAuth } from '../../../context/AuthContext';
 import {
@@ -48,14 +50,26 @@ import {
     useGetGradingSystems,
     useDeleteGradingSystem
 } from '../../../queries/Exam';
+import {
+    useGetAcademicYears,
+    useCreateAcademicYear,
+    useUpdateAcademicYear,
+    useSetCurrentAcademicYear,
+    useDeleteAcademicYear
+} from '../../../queries/AcademicYear';
+import { useAcademicYear } from '../../../hooks/useAcademicYear';
 import { useCreateRoom, useDeleteRoom, useGetAllRooms, useUpdateRoom } from '../../../queries/Timetable';
 import { useGetClasses } from '../../../queries/Class';
 import type { CreateExamTermRequest, CreateExamTypeRequest, GradeRange } from '../../../types/exam.types';
 import type { CreateRoomRequest } from '../../../types/timetable.types';
+import type { AcademicYear } from '../../../types/academicYear.types';
+import ConfirmationDialog from '../../../components/Dialogs/ConfirmationDialog';
+import Tooltip from '@mui/material/Tooltip';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { useUrlTab } from '../../../hooks/useUrlTab';
 import { useIsMobile } from '../../../hooks/useIsMobile';
+import { useLocation } from 'react-router-dom';
 
 // ==========================================
 // EXAM CONFIGURATION PAGE
@@ -63,9 +77,17 @@ import { useIsMobile } from '../../../hooks/useIsMobile';
 
 const ExamConfiguration = () => {
     const isMobile = useIsMobile();
-    const [activeTab, setActiveTab] = useUrlTab(0, ['terms', 'types', 'grading', 'rooms']);
+    const location = useLocation();
+    const autoOpenAddYear = !!(location.state as any)?.openAddAcademicYear;
+    const [activeTab, setActiveTab] = useUrlTab(0, ['years', 'terms', 'types', 'grading', 'rooms']);
     const { user } = useAuth();
     const schoolId = user?.schoolId || '';
+
+    React.useEffect(() => {
+        if (autoOpenAddYear && activeTab !== 0) {
+            setActiveTab(0);
+        }
+    }, [autoOpenAddYear, activeTab, setActiveTab]);
 
     const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
         setActiveTab(newValue);
@@ -75,7 +97,7 @@ const ExamConfiguration = () => {
         <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
             {!isMobile && (
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
-                    <Typography variant="h5" fontWeight={700} color="#0f172a">Exam Configuration</Typography>
+                    <Typography variant="h5" fontWeight={700} color="#0f172a">Academic & Exam Configuration</Typography>
                 </Box>
             )}
 
@@ -89,6 +111,7 @@ const ExamConfiguration = () => {
                     scrollButtons="auto"
                     sx={{ minHeight: 40 }}
                 >
+                    <Tab label="Academic Years" sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1 }} />
                     <Tab label="Exam Terms" sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1 }} />
                     <Tab label="Exam Types" sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1 }} />
                     <Tab label="Grading Systems" sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1 }} />
@@ -97,17 +120,372 @@ const ExamConfiguration = () => {
             </Box>
 
             <Box role="tabpanel" hidden={activeTab !== 0}>
-                {activeTab === 0 && <ExamTermsTab schoolId={schoolId} isMobile={isMobile} />}
+                {activeTab === 0 && <AcademicYearsTab schoolId={schoolId} isMobile={isMobile} autoOpenAddYear={autoOpenAddYear} />}
             </Box>
             <Box role="tabpanel" hidden={activeTab !== 1}>
-                {activeTab === 1 && <ExamTypesTab schoolId={schoolId} isMobile={isMobile} />}
+                {activeTab === 1 && <ExamTermsTab schoolId={schoolId} isMobile={isMobile} />}
             </Box>
             <Box role="tabpanel" hidden={activeTab !== 2}>
-                {activeTab === 2 && <GradingSystemsTab schoolId={schoolId} isMobile={isMobile} />}
+                {activeTab === 2 && <ExamTypesTab schoolId={schoolId} isMobile={isMobile} />}
             </Box>
             <Box role="tabpanel" hidden={activeTab !== 3}>
-                {activeTab === 3 && <RoomsTab schoolId={schoolId} isMobile={isMobile} />}
+                {activeTab === 3 && <GradingSystemsTab schoolId={schoolId} isMobile={isMobile} />}
             </Box>
+            <Box role="tabpanel" hidden={activeTab !== 4}>
+                {activeTab === 4 && <RoomsTab schoolId={schoolId} isMobile={isMobile} />}
+            </Box>
+        </Box>
+    );
+};
+
+// ==========================================
+// TAB 0: ACADEMIC YEARS
+// ==========================================
+
+const AcademicYearsTab = ({ schoolId, isMobile, autoOpenAddYear }: { schoolId: string; isMobile: boolean; autoOpenAddYear?: boolean }) => {
+    const [open, setOpen] = useState(autoOpenAddYear || false);
+    const [editingYear, setEditingYear] = useState<AcademicYear | null>(null);
+
+    React.useEffect(() => {
+        if (autoOpenAddYear) {
+            setOpen(true);
+            window.history.replaceState({}, document.title);
+        }
+    }, [autoOpenAddYear]);
+    const { data: yearsData, isLoading } = useGetAcademicYears(schoolId);
+    const createYear = useCreateAcademicYear(schoolId);
+    const updateYear = useUpdateAcademicYear(schoolId);
+    const setCurrentYear = useSetCurrentAcademicYear(schoolId);
+    const deleteYear = useDeleteAcademicYear(schoolId);
+
+    const years = yearsData?.data || [];
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const [confirmDialog, setConfirmDialog] = useState<{
+        open: boolean;
+        title: string;
+        description: string;
+        variant: 'primary' | 'danger' | 'warning';
+        confirmLabel?: string;
+        onConfirm: () => void;
+    }>({
+        open: false,
+        title: '',
+        description: '',
+        variant: 'primary',
+        onConfirm: () => {}
+    });
+
+    const [formData, setFormData] = useState({
+        name: '',
+        code: '',
+        startDate: '',
+        endDate: '',
+        isCurrent: false,
+        status: 'active',
+        description: ''
+    });
+
+    const handleEdit = (year: AcademicYear) => {
+        setEditingYear(year);
+        setFormData({
+            name: year.name,
+            code: year.code,
+            startDate: year.startDate?.split('T')[0] || '',
+            endDate: year.endDate?.split('T')[0] || '',
+            isCurrent: year.isCurrent,
+            status: year.status || 'active',
+            description: year.description || ''
+        });
+        setErrors({});
+        setOpen(true);
+    };
+
+    const handleDelete = (year: AcademicYear) => {
+        if (year.isCurrent) {
+            return;
+        }
+        setConfirmDialog({
+            open: true,
+            title: 'Delete Academic Year',
+            description: `Are you sure you want to delete academic year '${year.name}'? This action cannot be undone.`,
+            variant: 'danger',
+            confirmLabel: 'Delete Year',
+            onConfirm: () => {
+                deleteYear.mutate(year._id || year.academicYearId);
+                setConfirmDialog((prev) => ({ ...prev, open: false }));
+            }
+        });
+    };
+
+    const handleSetCurrent = (year: AcademicYear) => {
+        if (year.status === 'completed' || year.status === 'archived') {
+            return;
+        }
+        setConfirmDialog({
+            open: true,
+            title: 'Set Current Academic Year',
+            description: `Set '${year.name}' as the active current academic year across the school?`,
+            variant: 'primary',
+            confirmLabel: 'Set as Current',
+            onConfirm: () => {
+                setCurrentYear.mutate(year._id || year.academicYearId);
+                setConfirmDialog((prev) => ({ ...prev, open: false }));
+            }
+        });
+    };
+
+    const validate = (): boolean => {
+        const newErrors: Record<string, string> = {};
+        if (!formData.name?.trim()) newErrors.name = 'Name is required';
+        if (!formData.startDate) newErrors.startDate = 'Start date is required';
+        if (!formData.endDate) newErrors.endDate = 'End date is required';
+
+        if (formData.startDate && formData.endDate) {
+            const start = parse(formData.startDate, 'yyyy-MM-dd', new Date());
+            const end = parse(formData.endDate, 'yyyy-MM-dd', new Date());
+            if (end < start) newErrors.endDate = 'End date cannot be before start date';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = () => {
+        if (!validate()) return;
+        const payload = {
+            name: formData.name.trim(),
+            code: (formData.code || formData.name).trim(),
+            startDate: formData.startDate,
+            endDate: formData.endDate,
+            isCurrent: formData.isCurrent,
+            status: formData.status,
+            description: formData.description
+        };
+
+        if (editingYear) {
+            updateYear.mutate({ id: editingYear._id || editingYear.academicYearId, data: payload }, {
+                onSuccess: () => {
+                    handleClose();
+                }
+            });
+        } else {
+            createYear.mutate(payload, {
+                onSuccess: () => {
+                    handleClose();
+                }
+            });
+        }
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+        setEditingYear(null);
+        setFormData({
+            name: '',
+            code: '',
+            startDate: '',
+            endDate: '',
+            isCurrent: false,
+            status: 'active',
+            description: ''
+        });
+        setErrors({});
+    };
+
+    return (
+        <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+                <Box>
+                    <Typography variant="h6" fontWeight={700} color="#0f172a">Academic Years List</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        Manage school academic years and configure the currently active academic cycle
+                    </Typography>
+                </Box>
+                <AppButton variant="contained" startIcon={<AddCircleIcon />} onClick={() => setOpen(true)} size="small" sx={{ textTransform: 'none', fontWeight: 600 }}>
+                    Add Academic Year
+                </AppButton>
+            </Box>
+
+            {years.length === 0 && !isLoading ? (
+                <Paper elevation={0} variant="outlined" sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
+                    <Typography color="text.secondary">No academic years configured yet. Click 'Add Academic Year' to create one.</Typography>
+                </Paper>
+            ) : (
+                <TableContainer component={Paper} elevation={0} variant="outlined" sx={{ borderRadius: 2 }}>
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow sx={{ bgcolor: 'grey.100' }}>
+                                <TableCell><strong>Academic Year</strong></TableCell>
+                                <TableCell><strong>Code</strong></TableCell>
+                                <TableCell><strong>Duration</strong></TableCell>
+                                <TableCell align="center"><strong>Status</strong></TableCell>
+                                <TableCell align="center"><strong>Current Year</strong></TableCell>
+                                <TableCell align="right"><strong>Actions</strong></TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {years.map((year: AcademicYear) => (
+                                <TableRow key={year._id || year.academicYearId} hover sx={{ bgcolor: year.isCurrent ? 'rgba(37, 99, 235, 0.04)' : 'inherit' }}>
+                                    <TableCell sx={{ fontWeight: year.isCurrent ? 700 : 500 }}>
+                                        {year.name}
+                                    </TableCell>
+                                    <TableCell>{year.code}</TableCell>
+                                    <TableCell>
+                                        <Typography variant="body2" sx={{ fontSize: '0.8125rem' }}>
+                                            {year.startDate ? new Date(year.startDate).toLocaleDateString() : '—'}
+                                            {' – '}
+                                            {year.endDate ? new Date(year.endDate).toLocaleDateString() : '—'}
+                                        </Typography>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <Chip
+                                            label={year.status || 'active'}
+                                            size="small"
+                                            color={year.status === 'active' ? 'success' : year.status === 'upcoming' ? 'info' : 'default'}
+                                            sx={{ textTransform: 'capitalize', fontWeight: 600, fontSize: '0.72rem' }}
+                                        />
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        {year.isCurrent ? (
+                                            <Chip
+                                                icon={<StarIcon sx={{ fontSize: '15px !important' }} />}
+                                                label="Current Active Year"
+                                                size="small"
+                                                color="primary"
+                                                sx={{ fontWeight: 700, fontSize: '0.75rem' }}
+                                            />
+                                        ) : year.status === 'completed' || year.status === 'archived' ? (
+                                            <Tooltip title="Completed academic years cannot be set as current">
+                                                <span>
+                                                    <Button
+                                                        size="small"
+                                                        variant="outlined"
+                                                        color="inherit"
+                                                        disabled
+                                                        sx={{ textTransform: 'none', fontSize: '0.72rem', py: 0.2, px: 1, borderRadius: 1.5, opacity: 0.5 }}
+                                                    >
+                                                        Completed
+                                                    </Button>
+                                                </span>
+                                            </Tooltip>
+                                        ) : (
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                color="primary"
+                                                onClick={() => handleSetCurrent(year)}
+                                                disabled={setCurrentYear.isPending}
+                                                sx={{ textTransform: 'none', fontSize: '0.72rem', py: 0.2, px: 1, borderRadius: 1.5 }}
+                                            >
+                                                Set as Current
+                                            </Button>
+                                        )}
+                                    </TableCell>
+                                    <TableCell align="right">
+                                        <IconButton size="small" color="primary" onClick={() => handleEdit(year)}><EditIcon fontSize="small" /></IconButton>
+                                        <IconButton size="small" color="error" onClick={() => handleDelete(year)} disabled={year.isCurrent}><DeleteIcon fontSize="small" /></IconButton>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
+
+            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm" fullScreen={isMobile}>
+                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="h6" fontWeight={600}>{editingYear ? 'Edit Academic Year' : 'Add New Academic Year'}</Typography>
+                    {isMobile && (
+                        <IconButton onClick={handleClose} size="small">
+                            <CloseIcon />
+                        </IconButton>
+                    )}
+                </DialogTitle>
+                <DialogContent>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+                        <AppInput
+                            label="Academic Year Name"
+                            placeholder="e.g. 2025-2026"
+                            fullWidth
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value, code: formData.code || e.target.value })}
+                            error={!!errors.name}
+                            helperText={errors.name}
+                        />
+                        <AppInput
+                            label="Year Code"
+                            placeholder="e.g. 2025-2026"
+                            fullWidth
+                            value={formData.code}
+                            onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                        />
+                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                            <AppDatePicker
+                                label="Start Date"
+                                value={formData.startDate ? parse(formData.startDate, 'yyyy-MM-dd', new Date()) : null}
+                                onChange={(date) => setFormData({ ...formData, startDate: date ? format(date, 'yyyy-MM-dd') : '' })}
+                                error={!!errors.startDate}
+                                helperText={errors.startDate}
+                            />
+                            <AppDatePicker
+                                label="End Date"
+                                value={formData.endDate ? parse(formData.endDate, 'yyyy-MM-dd', new Date()) : null}
+                                onChange={(date) => setFormData({ ...formData, endDate: date ? format(date, 'yyyy-MM-dd') : '' })}
+                                error={!!errors.endDate}
+                                helperText={errors.endDate}
+                            />
+                        </Box>
+                        <AppSelect
+                            label="Status"
+                            value={formData.status}
+                            options={[
+                                { label: 'Active', value: 'active' },
+                                { label: 'Upcoming', value: 'upcoming' },
+                                { label: 'Completed', value: 'completed' },
+                                { label: 'Archived', value: 'archived' }
+                            ]}
+                            onChange={(e) => setFormData({ ...formData, status: e.target.value as string })}
+                        />
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={formData.isCurrent}
+                                    onChange={(e) => setFormData({ ...formData, isCurrent: e.target.checked })}
+                                    color="primary"
+                                />
+                            }
+                            label="Set as Current Active Academic Year"
+                        />
+                        <AppInput
+                            label="Description (Optional)"
+                            placeholder="e.g. Academic cycle for standard sessions"
+                            fullWidth
+                            multiline
+                            rows={2}
+                            value={formData.description}
+                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions sx={{ p: 2 }}>
+                    <AppButton variant="outlined" onClick={handleClose}>Cancel</AppButton>
+                    <AppButton variant="contained" onClick={handleSubmit} disabled={createYear.isPending || updateYear.isPending}>
+                        {editingYear ? 'Save Changes' : 'Create Academic Year'}
+                    </AppButton>
+                </DialogActions>
+            </Dialog>
+
+            <ConfirmationDialog
+                open={confirmDialog.open}
+                onClose={() => setConfirmDialog((prev) => ({ ...prev, open: false }))}
+                onConfirm={confirmDialog.onConfirm}
+                title={confirmDialog.title}
+                description={confirmDialog.description}
+                variant={confirmDialog.variant}
+                confirmLabel={confirmDialog.confirmLabel}
+                isLoading={setCurrentYear.isPending || deleteYear.isPending}
+            />
         </Box>
     );
 };
@@ -119,6 +497,7 @@ const ExamConfiguration = () => {
 const ExamTermsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: boolean }) => {
     const [open, setOpen] = useState(false);
     const [editingTerm, setEditingTerm] = useState<any>(null);
+    const { academicYearOptions, currentAcademicYear } = useAcademicYear();
     const { data: terms, isLoading } = useGetExamTerms(schoolId);
     const createTerm = useCreateExamTerm(schoolId);
     const updateTerm = useUpdateExamTerm(schoolId);
@@ -127,7 +506,7 @@ const ExamTermsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: bool
 
     const [formData, setFormData] = useState<CreateExamTermRequest>({
         name: '',
-        academicYear: '2025-2026',
+        academicYear: currentAcademicYear,
         startDate: '',
         endDate: ''
     });
@@ -189,14 +568,14 @@ const ExamTermsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: bool
                 onSuccess: () => {
                     setOpen(false);
                     setEditingTerm(null);
-                    setFormData({ name: '', academicYear: '2025-2026', startDate: '', endDate: '' });
+                    setFormData({ name: '', academicYear: currentAcademicYear, startDate: '', endDate: '' });
                 }
             });
         } else {
             createTerm.mutate(formData, {
                 onSuccess: () => {
                     setOpen(false);
-                    setFormData({ name: '', academicYear: '2025-2026', startDate: '', endDate: '' });
+                    setFormData({ name: '', academicYear: currentAcademicYear, startDate: '', endDate: '' });
                 }
             });
         }
@@ -205,7 +584,7 @@ const ExamTermsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: bool
     const handleClose = () => {
         setOpen(false);
         setEditingTerm(null);
-        setFormData({ name: '', academicYear: '2025-2026', startDate: '', endDate: '' });
+        setFormData({ name: '', academicYear: currentAcademicYear, startDate: '', endDate: '' });
         setErrors({});
     };
 
@@ -311,11 +690,11 @@ const ExamTermsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: bool
                             error={!!errors.name}
                             helperText={errors.name}
                         />
-                        <AppInput
+                        <AppSelect
                             label="Academic Year"
-                            fullWidth
                             value={formData.academicYear}
-                            onChange={(e) => handleFieldChange('academicYear', e.target.value)}
+                            options={academicYearOptions}
+                            onChange={(e) => handleFieldChange('academicYear', e.target.value as string)}
                             error={!!errors.academicYear}
                             helperText={errors.academicYear}
                         />
