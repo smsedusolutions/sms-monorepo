@@ -150,29 +150,46 @@ const DriverDashboard: React.FC = () => {
     if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 8 }}><CircularProgress /></Box>;
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 4 }, background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', minHeight: '100vh' }}>
-            <Grid container spacing={4}>
+        <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1200, mx: 'auto', minHeight: '100vh' }}>
+            <Grid container spacing={{ xs: 2, sm: 2.5 }}>
                 {/* Profile Header */}
                 <Grid size={{ xs: 12 }}>
-                    <Paper sx={{ p: 3, borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                            <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main', fontSize: '2rem' }}>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: { xs: 2, sm: 2.5 },
+                            borderRadius: 3,
+                            display: 'flex',
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            alignItems: { xs: 'flex-start', sm: 'center' },
+                            justifyContent: 'space-between',
+                            gap: 2,
+                            bgcolor: '#ffffff',
+                            border: '1px solid #e2e8f0',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.02)'
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <Avatar sx={{ width: { xs: 48, sm: 56 }, height: { xs: 48, sm: 56 }, bgcolor: 'primary.main', fontSize: { xs: '1.25rem', sm: '1.5rem' }, fontWeight: 700 }}>
                                 {user?.firstName?.[0]}
                             </Avatar>
                             <Box>
-                                <Typography variant="h4" sx={{ fontWeight: 800 }}>Welcome, {user?.firstName}!</Typography>
-                                <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                                    <Chip label="Verified Driver" color="success" size="small" sx={{ fontWeight: 700 }} />
-                                    <Chip label={isTripActive ? "On Duty" : "Off Duty"} color={isTripActive ? "primary" : "default"} size="small" />
+                                <Typography variant="h5" sx={{ fontWeight: 800, fontSize: { xs: '1.2rem', sm: '1.45rem' }, lineHeight: 1.2 }}>
+                                    Welcome, {user?.firstName}!
+                                </Typography>
+                                <Box sx={{ display: 'flex', gap: 1, mt: 0.5, flexWrap: 'wrap' }}>
+                                    <Chip label="Verified Driver" color="success" size="small" sx={{ fontWeight: 700, height: 22, fontSize: '0.7rem' }} />
+                                    <Chip label={isTripActive ? "On Duty" : "Off Duty"} color={isTripActive ? "primary" : "default"} size="small" sx={{ height: 22, fontSize: '0.7rem' }} />
                                 </Box>
                             </Box>
                         </Box>
                         <Button
                             variant="outlined"
                             color="primary"
-                            startIcon={<SupportIcon />}
+                            size="small"
+                            startIcon={<SupportIcon sx={{ fontSize: 18 }} />}
                             onClick={() => setSupportDialogOpen(true)}
-                            sx={{ borderRadius: '12px', fontWeight: 700, textTransform: 'none' }}
+                            sx={{ borderRadius: 2, fontWeight: 700, textTransform: 'none', fontSize: '0.8rem', py: 0.5, alignSelf: { xs: 'stretch', sm: 'auto' } }}
                         >
                             Open Support Ticket
                         </Button>
@@ -181,20 +198,24 @@ const DriverDashboard: React.FC = () => {
 
                 {/* Trip Control Card */}
                 <Grid size={{ xs: 12, md: 7 }}>
-                    <Card sx={{ borderRadius: '24px', height: '100%', boxShadow: '0 10px 30px rgba(0,0,0,0.08)' }}>
-                        <CardContent sx={{ p: 4 }}>
-                            <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Active Trip Control</Typography>
+                    <Card elevation={0} sx={{ borderRadius: 3, height: '100%', border: '1px solid #e2e8f0', bgcolor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                        <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>Active Trip Control</Typography>
                             
                             {!currentRoute ? (
-                                <Alert severity="warning" sx={{ borderRadius: '12px' }}>
+                                <Alert severity="warning" sx={{ borderRadius: 2 }}>
                                     No route currently assigned to you. Please contact administration.
                                 </Alert>
                             ) : (
                                 <Box>
-                                    <Box sx={{ mb: 4, p: 3, bgcolor: 'rgba(99, 102, 241, 0.05)', borderRadius: '16px', border: '1px solid rgba(99, 102, 241, 0.1)' }}>
-                                        <Typography variant="subtitle2" color="primary" sx={{ fontWeight: 700, mb: 1 }}>CURRENT ASSIGNMENT</Typography>
-                                        <Typography variant="h4" sx={{ fontWeight: 800, color: '#1e293b' }}>{currentRoute.name}</Typography>
-                                        <Typography variant="body1" color="textSecondary">Vehicle: {currentRoute.vehicle?.name || "Bus 12"} ({currentRoute.vehicle?.plateNumber || "KA05LS7929"})</Typography>
+                                    <Box sx={{ mb: 2.5, p: 2, bgcolor: 'rgba(99, 102, 241, 0.05)', borderRadius: 2.5, border: '1px solid rgba(99, 102, 241, 0.12)' }}>
+                                        <Typography variant="caption" color="primary" sx={{ fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', display: 'block', mb: 0.25 }}>
+                                            CURRENT ASSIGNMENT
+                                        </Typography>
+                                        <Typography variant="h5" sx={{ fontWeight: 800, color: '#1e293b', fontSize: { xs: '1.2rem', sm: '1.4rem' } }}>{currentRoute.name}</Typography>
+                                        <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5, fontSize: '0.825rem' }}>
+                                            Vehicle: <b>{currentRoute.vehicle?.name || "Bus 12"}</b> ({currentRoute.vehicle?.plateNumber || "KA05LS7929"})
+                                        </Typography>
                                     </Box>
 
                                     <Box sx={{ display: 'flex', gap: 2 }}>
@@ -202,10 +223,10 @@ const DriverDashboard: React.FC = () => {
                                             <Button 
                                                 variant="contained" 
                                                 fullWidth 
-                                                size="large"
+                                                size="medium"
                                                 startIcon={<StartIcon />}
                                                 onClick={handleStartTrip}
-                                                sx={{ py: 2, borderRadius: '16px', fontSize: '1.1rem', fontWeight: 700, textTransform: 'none', boxShadow: '0 8px 16px rgba(99, 102, 241, 0.3)' }}
+                                                sx={{ py: 1.25, borderRadius: 2.5, fontSize: '0.95rem', fontWeight: 700, textTransform: 'none', bgcolor: '#4f46e5', '&:hover': { bgcolor: '#4338ca' } }}
                                             >
                                                 Start Trip / Check-In
                                             </Button>
@@ -214,10 +235,10 @@ const DriverDashboard: React.FC = () => {
                                                 variant="contained" 
                                                 color="error"
                                                 fullWidth 
-                                                size="large"
+                                                size="medium"
                                                 startIcon={<StopIcon />}
                                                 onClick={handleStopTrip}
-                                                sx={{ py: 2, borderRadius: '16px', fontSize: '1.1rem', fontWeight: 700, textTransform: 'none' }}
+                                                sx={{ py: 1.25, borderRadius: 2.5, fontSize: '0.95rem', fontWeight: 700, textTransform: 'none' }}
                                             >
                                                 End Trip / Check-Out
                                             </Button>
@@ -231,21 +252,22 @@ const DriverDashboard: React.FC = () => {
 
                 {/* Route Details */}
                 <Grid size={{ xs: 12, md: 5 }}>
-                    <Card sx={{ borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.08)' }}>
-                        <CardContent sx={{ p: 4 }}>
-                            <Typography variant="h5" sx={{ fontWeight: 700, mb: 3 }}>Route Schedule</Typography>
-                            {currentRoute?.stops ? (
-                                <List>
+                    <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                        <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
+                            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>Route Schedule</Typography>
+                            {currentRoute?.stops && currentRoute.stops.length > 0 ? (
+                                <List disablePadding>
                                     {currentRoute.stops.map((stop: any, idx: number) => (
                                         <React.Fragment key={idx}>
-                                            <ListItem sx={{ px: 0 }}>
-                                                <ListItemIcon>
+                                            <ListItem sx={{ px: 0, py: 1 }}>
+                                                <ListItemIcon sx={{ minWidth: 38 }}>
                                                     <Box sx={{ 
-                                                        width: 32, height: 32, borderRadius: '50%', 
-                                                        bgcolor: idx === 0 ? 'primary.main' : 'rgba(0,0,0,0.05)', 
+                                                        width: 26, height: 26, borderRadius: '50%', 
+                                                        bgcolor: idx === 0 ? 'primary.main' : 'rgba(0,0,0,0.06)', 
                                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                         color: idx === 0 ? 'white' : 'text.primary',
-                                                        fontWeight: 700
+                                                        fontWeight: 700,
+                                                        fontSize: '0.75rem'
                                                     }}>
                                                         {idx + 1}
                                                     </Box>
@@ -253,16 +275,17 @@ const DriverDashboard: React.FC = () => {
                                                 <ListItemText 
                                                     primary={stop.name} 
                                                     secondary={`Scheduled: ${stop.arrivalTime || '08:00 AM'}`}
-                                                    primaryTypographyProps={{ fontWeight: 700 }}
+                                                    primaryTypographyProps={{ fontWeight: 700, fontSize: '0.85rem' }}
+                                                    secondaryTypographyProps={{ fontSize: '0.72rem' }}
                                                 />
-                                                <Chip label="On Time" size="small" variant="outlined" color="success" />
+                                                <Chip label="On Time" size="small" variant="outlined" color="success" sx={{ height: 20, fontSize: '0.65rem' }} />
                                             </ListItem>
-                                            {idx < currentRoute.stops.length - 1 && <Divider variant="inset" component="li" />}
+                                            {idx < currentRoute.stops.length - 1 && <Divider component="li" />}
                                         </React.Fragment>
                                     ))}
                                 </List>
                             ) : (
-                                <Typography color="textSecondary">No stops information available.</Typography>
+                                <Typography variant="body2" color="textSecondary" sx={{ fontSize: '0.8rem' }}>No stops information available.</Typography>
                             )}
                         </CardContent>
                     </Card>
@@ -271,12 +294,12 @@ const DriverDashboard: React.FC = () => {
                 {/* Status Bar */}
                 {isTripActive && (
                     <Grid size={{ xs: 12 }}>
-                        <Paper sx={{ p: 2, borderRadius: '16px', bgcolor: 'primary.main', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                <GpsIcon className="animate-pulse" />
-                                <Typography sx={{ fontWeight: 700 }}>GPS Tracking Active - Parents are being notified of your location</Typography>
+                        <Paper elevation={0} sx={{ p: 1.75, borderRadius: 2.5, bgcolor: '#4f46e5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                <GpsIcon sx={{ fontSize: 20 }} />
+                                <Typography sx={{ fontWeight: 700, fontSize: '0.85rem' }}>GPS Tracking Active - Parents receiving live updates</Typography>
                             </Box>
-                            <Typography variant="caption" sx={{ opacity: 0.8 }}>Last Update: {new Date().toLocaleTimeString()}</Typography>
+                            <Typography variant="caption" sx={{ opacity: 0.9, fontSize: '0.75rem' }}>Last Update: {new Date().toLocaleTimeString()}</Typography>
                         </Paper>
                     </Grid>
                 )}

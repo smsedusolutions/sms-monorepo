@@ -5,7 +5,7 @@ const FeePaymentRepository = require('../repositories/feePayment.repository');
 const FeeReceiptRepository = require('../repositories/feeReceipt.repository');
 const { getSchoolDbConnection } = require("../configs/db");
 const { getSchoolDbName } = require("../utils/schoolDbHelper");
-const { SchoolModel, StudentSchema } = require("@sms/shared/models");
+const { SchoolModel, StudentSchema, ParentSchema } = require("@sms/shared/models");
 const { generateReceiptId } = require('../utils/generateId');
 const { generateReceiptNumber } = require('../utils/receiptNumberGenerator');
 const { createTransaction } = require('../utils/transactionHelper');
@@ -26,6 +26,19 @@ class FeePaymentService {
             return schoolDb.model("Student");
         } catch (e) {
             return schoolDb.model("Student", StudentSchema);
+        }
+    }
+
+    /**
+     * Resolves parent model dynamically
+     */
+    async _getParentModel(schoolId) {
+        const schoolDbName = await getSchoolDbName(schoolId);
+        const schoolDb = getSchoolDbConnection(schoolDbName);
+        try {
+            return schoolDb.model("Parent");
+        } catch (e) {
+            return schoolDb.model("Parent", ParentSchema);
         }
     }
 
@@ -251,18 +264,54 @@ class FeePaymentService {
      * Gets student payments with boundary access checks
      */
     async getPaymentsByStudent(schoolId, studentId, requester) {
-        if (requester?.role === 'student' && requester?.studentId !== studentId) {
-            const error = new Error('Unauthorized access');
-            error.statusCode = 403;
-            throw error;
-        }
-        if (requester?.role === 'parent') {
-            const StudentModel = await this._getStudentModel(schoolId);
-            const targetStudent = await StudentModel.findOne({ schoolId, studentId }).lean();
-            if (!targetStudent || targetStudent.parentId !== requester?.parentId) {
+        if (requester && !['sch_admin', 'principal', 'accountant', 'super_admin', 'admin'].includes(requester.role)) {
+            if (requester.role === 'student' && requester.studentId !== studentId) {
                 const error = new Error('Unauthorized access');
                 error.statusCode = 403;
                 throw error;
+            }
+            if (requester.role === 'parent') {
+                const effectiveParentId = requester.parentId || requester.userId;
+                let hasAccess = false;
+
+                if (Array.isArray(requester.studentIds) && requester.studentIds.includes(studentId)) {
+                    hasAccess = true;
+                }
+
+                if (!hasAccess) {
+                    const StudentModel = await this._getStudentModel(schoolId);
+                    const targetStudent = await StudentModel.findOne({ schoolId, studentId }).lean();
+                    if (targetStudent && targetStudent.parentId && (
+                        targetStudent.parentId === effectiveParentId ||
+                        targetStudent.parentId === requester.parentId ||
+                        targetStudent.parentId === requester.userId
+                    )) {
+                        hasAccess = true;
+                    }
+
+                    if (!hasAccess) {
+                        const ParentModel = await this._getParentModel(schoolId);
+                        const parentDoc = await ParentModel.findOne({
+                            $or: [
+                                { parentId: effectiveParentId },
+                                { userId: requester.userId },
+                                { email: requester.email }
+                            ].filter(Boolean)
+                        }).lean();
+
+                        if (parentDoc && Array.isArray(parentDoc.studentIds) && parentDoc.studentIds.includes(studentId)) {
+                            hasAccess = true;
+                        } else if (targetStudent && parentDoc && targetStudent.parentId === parentDoc.parentId) {
+                            hasAccess = true;
+                        }
+                    }
+                }
+
+                if (!hasAccess) {
+                    const error = new Error('Unauthorized access');
+                    error.statusCode = 403;
+                    throw error;
+                }
             }
         }
 

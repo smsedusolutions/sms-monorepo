@@ -131,39 +131,43 @@ const ParentTeachers: React.FC = () => {
 
             {/* ── Multi-Child Switcher Bar ── */}
             {contextChildren.length > 1 && (
-                <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
-                    <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1, display: 'block' }}>
+                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+                    <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, display: 'block' }}>
                         Select Child
                     </Typography>
-                    <Stack direction="row" spacing={1.5} flexWrap="wrap">
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
                         {contextChildren.map((child) => {
-                            const isSelected = selectedChild.studentId === child.studentId;
+                            const isSelected = selectedChild?.studentId === child.studentId;
                             return (
                                 <Button
                                     key={child.studentId}
                                     variant={isSelected ? 'contained' : 'outlined'}
+                                    size="small"
                                     onClick={() => setSelectedChild(child)}
-                                    startIcon={<BadgeIcon />}
+                                    startIcon={<BadgeIcon fontSize="small" />}
                                     sx={{
-                                        borderRadius: 2.5,
-                                        fontWeight: 700,
+                                        borderRadius: '20px',
+                                        fontWeight: 600,
                                         textTransform: 'none',
-                                        px: 2.5,
+                                        px: 2,
                                         py: 0.75,
-                                        bgcolor: isSelected ? '#2563eb' : '#ffffff',
-                                        borderColor: isSelected ? '#2563eb' : '#cbd5e1',
+                                        fontSize: '0.8125rem',
+                                        flexShrink: 0,
+                                        bgcolor: isSelected ? '#4f46e5' : '#ffffff',
                                         color: isSelected ? '#ffffff' : '#475569',
+                                        borderColor: isSelected ? '#4f46e5' : '#cbd5e1',
+                                        boxShadow: isSelected ? '0 2px 8px rgba(79, 70, 229, 0.25)' : 'none',
                                         '&:hover': {
-                                            bgcolor: isSelected ? '#1d4ed8' : '#f1f5f9',
-                                            borderColor: isSelected ? '#1d4ed8' : '#94a3b8',
+                                            bgcolor: isSelected ? '#4338ca' : '#f1f5f9',
+                                            borderColor: isSelected ? '#4338ca' : '#94a3b8',
                                         }
                                     }}
                                 >
-                                    {child.firstName} {child.lastName} {child.className ? `(${child.className}-${child.sectionName})` : ''}
+                                    {child.firstName} {child.lastName} {child.className ? `(${child.className}${child.sectionName ? `-${child.sectionName}` : ''})` : ''}
                                 </Button>
                             );
                         })}
-                    </Stack>
+                    </Box>
                 </Paper>
             )}
 

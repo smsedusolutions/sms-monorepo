@@ -133,29 +133,31 @@ const StudentDashboard: React.FC = () => {
     const isOverdue = (dueDate: string) => new Date(dueDate) < new Date();
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 1300, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1300, mx: 'auto' }}>
             {/* Welcome Header */}
-            <Box sx={{ mb: { xs: 3, md: 4 }, mt: 1 }}>
+            <Box sx={{ mb: { xs: 2, sm: 3 }, mt: 0.5 }}>
                 <Typography
                     variant="h4"
                     fontWeight={800}
                     sx={{
-                        mb: 0.5,
+                        mb: 0.25,
                         background: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
-                        fontSize: { xs: '1.75rem', md: '2.5rem' }
+                        fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
+                        letterSpacing: '-0.02em',
+                        lineHeight: 1.2
                     }}
                 >
                     Welcome back, {userName}!
                 </Typography>
-                <Typography variant="body1" color="text.secondary" fontWeight={400}>
+                <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                     Here is your daily schedule, homework, and announcements for today.
                 </Typography>
             </Box>
 
             {attendanceError && (
-                <Alert severity="error" sx={{ mb: 3, borderRadius: 3 }}>
+                <Alert severity="error" sx={{ mb: 2, borderRadius: 2.5 }}>
                     Failed to load dashboard data. Please try again later.
                 </Alert>
             )}
@@ -165,57 +167,59 @@ const StudentDashboard: React.FC = () => {
                 elevation={0}
                 onClick={() => navigate('/student/attendance')}
                 sx={{
-                    p: 3,
-                    mb: 4,
-                    borderRadius: 4,
+                    p: { xs: 2, sm: 2.5 },
+                    mb: { xs: 2, sm: 3 },
+                    borderRadius: 3,
                     border: '1px solid #e2e8f0',
                     bgcolor: '#ffffff',
-                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.04)',
+                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.03)',
                     cursor: 'pointer',
-                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                    transition: 'transform 0.18s ease, box-shadow 0.18s ease',
                     '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 12px 28px rgba(0, 0, 0, 0.08)',
+                        transform: 'translateY(-1.5px)',
+                        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.06)',
                     }
                 }}
             >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#eff6ff' }}>
-                            <AttendanceIcon sx={{ color: '#2563eb', fontSize: 24 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.75, flexWrap: 'wrap', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                        <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <AttendanceIcon sx={{ color: '#2563eb', fontSize: 20 }} />
                         </Box>
                         <Box>
-                            <Typography variant="h6" fontWeight={700} color="#1e293b">
+                            <Typography variant="subtitle1" fontWeight={700} color="#1e293b" sx={{ fontSize: { xs: '0.95rem', sm: '1.05rem' }, lineHeight: 1.2 }}>
                                 My Attendance Summary
                             </Typography>
-                            <Typography variant="caption" color="text.secondary">
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
                                 Last 30 Days records & statistics
                             </Typography>
                         </Box>
                     </Box>
                     <Button
-                        variant="contained"
+                        variant="outlined"
                         size="small"
-                        endIcon={<ArrowForwardIcon />}
+                        endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
                         onClick={() => navigate('/student/attendance')}
                         sx={{
-                            bgcolor: '#2563eb',
-                            '&:hover': { bgcolor: '#1d4ed8' },
-                            borderRadius: 2.5,
-                            fontWeight: 700,
-                            px: 2.5,
-                            py: 0.8,
+                            borderColor: '#cbd5e1',
+                            color: '#334155',
+                            borderRadius: 2,
+                            fontWeight: 600,
+                            px: 1.5,
+                            py: 0.35,
+                            fontSize: '0.75rem',
                             textTransform: 'none',
+                            '&:hover': { borderColor: '#94a3b8', bgcolor: '#f8fafc' }
                         }}
                     >
-                        View Full Attendance
+                        Details
                     </Button>
                 </Box>
 
                 {attendanceLoading ? (
-                    <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 3 }} />
+                    <Skeleton variant="rectangular" height={130} sx={{ borderRadius: 2.5 }} />
                 ) : (
-                    <Grid container spacing={3} alignItems="center">
+                    <Grid container spacing={2} alignItems="center">
                         <Grid size={{ xs: 12, sm: 4 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
                                 <Chart
@@ -225,21 +229,21 @@ const StudentDashboard: React.FC = () => {
                                         pieHole: 0.65,
                                         colors: ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6'],
                                         legend: 'none',
-                                        chartArea: { width: '90%', height: '90%' },
+                                        chartArea: { width: '92%', height: '92%' },
                                         backgroundColor: 'transparent',
                                         pieSliceBorderColor: 'transparent',
                                     }}
-                                    width="150px"
-                                    height="150px"
+                                    width="135px"
+                                    height="135px"
                                 />
                                 <Box sx={{
                                     position: 'absolute', display: 'flex', flexDirection: 'column',
                                     alignItems: 'center', justifyContent: 'center', textAlign: 'center', pointerEvents: 'none'
                                 }}>
-                                    <Typography variant="h4" fontWeight={800} sx={{ color: percentageColor, lineHeight: 1 }}>
+                                    <Typography variant="h5" fontWeight={800} sx={{ color: percentageColor, lineHeight: 1, fontSize: '1.35rem' }}>
                                         {percentage}%
                                     </Typography>
-                                    <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ mt: 0.5 }}>
+                                    <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ mt: 0.25, fontSize: '0.68rem' }}>
                                         Rate
                                     </Typography>
                                 </Box>
@@ -247,33 +251,33 @@ const StudentDashboard: React.FC = () => {
                         </Grid>
 
                         <Grid size={{ xs: 12, sm: 8 }}>
-                            <Grid container spacing={2}>
+                            <Grid container spacing={1}>
                                 <Grid size={{ xs: 6, sm: 3 }}>
-                                    <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#ecfdf5', border: '1px solid #a7f3d0', textAlign: 'center' }}>
-                                        <PresentIcon sx={{ color: '#10b981', fontSize: 22, mb: 0.5 }} />
-                                        <Typography variant="h5" fontWeight={800} color="#10b981">{summary?.present || 0}</Typography>
-                                        <Typography variant="caption" fontWeight={600} color="#065f46">Present</Typography>
+                                    <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#ecfdf5', border: '1px solid #a7f3d0', textAlign: 'center' }}>
+                                        <PresentIcon sx={{ color: '#10b981', fontSize: 18, mb: 0.25 }} />
+                                        <Typography variant="h6" fontWeight={800} color="#10b981" sx={{ fontSize: '1.1rem' }}>{summary?.present || 0}</Typography>
+                                        <Typography variant="caption" fontWeight={600} color="#065f46" sx={{ fontSize: '0.7rem' }}>Present</Typography>
                                     </Box>
                                 </Grid>
                                 <Grid size={{ xs: 6, sm: 3 }}>
-                                    <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#fef2f2', border: '1px solid #fecaca', textAlign: 'center' }}>
-                                        <AbsentIcon sx={{ color: '#ef4444', fontSize: 22, mb: 0.5 }} />
-                                        <Typography variant="h5" fontWeight={800} color="#ef4444">{summary?.absent || 0}</Typography>
-                                        <Typography variant="caption" fontWeight={600} color="#991b1b">Absent</Typography>
+                                    <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#fef2f2', border: '1px solid #fecaca', textAlign: 'center' }}>
+                                        <AbsentIcon sx={{ color: '#ef4444', fontSize: 18, mb: 0.25 }} />
+                                        <Typography variant="h6" fontWeight={800} color="#ef4444" sx={{ fontSize: '1.1rem' }}>{summary?.absent || 0}</Typography>
+                                        <Typography variant="caption" fontWeight={600} color="#991b1b" sx={{ fontSize: '0.7rem' }}>Absent</Typography>
                                     </Box>
                                 </Grid>
                                 <Grid size={{ xs: 6, sm: 3 }}>
-                                    <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#fffbeb', border: '1px solid #fde68a', textAlign: 'center' }}>
-                                        <LateIcon sx={{ color: '#f59e0b', fontSize: 22, mb: 0.5 }} />
-                                        <Typography variant="h5" fontWeight={800} color="#f59e0b">{summary?.late || 0}</Typography>
-                                        <Typography variant="caption" fontWeight={600} color="#92400e">Late</Typography>
+                                    <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#fffbeb', border: '1px solid #fde68a', textAlign: 'center' }}>
+                                        <LateIcon sx={{ color: '#f59e0b', fontSize: 18, mb: 0.25 }} />
+                                        <Typography variant="h6" fontWeight={800} color="#f59e0b" sx={{ fontSize: '1.1rem' }}>{summary?.late || 0}</Typography>
+                                        <Typography variant="caption" fontWeight={600} color="#92400e" sx={{ fontSize: '0.7rem' }}>Late</Typography>
                                     </Box>
                                 </Grid>
                                 <Grid size={{ xs: 6, sm: 3 }}>
-                                    <Box sx={{ p: 2, borderRadius: 2.5, bgcolor: '#f5f3ff', border: '1px solid #ddd6fe', textAlign: 'center' }}>
-                                        <LeaveIcon sx={{ color: '#8b5cf6', fontSize: 22, mb: 0.5 }} />
-                                        <Typography variant="h5" fontWeight={800} color="#8b5cf6">{summary?.leave || 0}</Typography>
-                                        <Typography variant="caption" fontWeight={600} color="#5b21b6">Leave</Typography>
+                                    <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#f5f3ff', border: '1px solid #ddd6fe', textAlign: 'center' }}>
+                                        <LeaveIcon sx={{ color: '#8b5cf6', fontSize: 18, mb: 0.25 }} />
+                                        <Typography variant="h6" fontWeight={800} color="#8b5cf6" sx={{ fontSize: '1.1rem' }}>{summary?.leave || 0}</Typography>
+                                        <Typography variant="caption" fontWeight={600} color="#5b21b6" sx={{ fontSize: '0.7rem' }}>Leave</Typography>
                                     </Box>
                                 </Grid>
                             </Grid>
@@ -283,16 +287,16 @@ const StudentDashboard: React.FC = () => {
             </Paper>
 
             {/* ── 3 Main Dashboard Cards: Timetable, Homework, Announcements ── */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid container spacing={{ xs: 2, sm: 2.5 }} sx={{ mb: { xs: 2, sm: 3 } }}>
 
                 {/* 1. Today's Classes & Timetable */}
                 <Grid size={{ xs: 12, lg: 4 }}>
                     <Paper
                         elevation={0}
                         sx={{
-                            p: 3,
+                            p: { xs: 2, sm: 2.5 },
                             height: '100%',
-                            borderRadius: 4,
+                            borderRadius: 3,
                             border: '1px solid #e2e8f0',
                             bgcolor: '#ffffff',
                             boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
@@ -300,76 +304,76 @@ const StudentDashboard: React.FC = () => {
                             flexDirection: 'column',
                         }}
                     >
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                            <Stack direction="row" spacing={1.5} alignItems="center">
-                                <Avatar sx={{ bgcolor: '#eff6ff', color: '#2563eb', width: 40, height: 40 }}>
-                                    <TimetableIcon fontSize="small" />
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                            <Stack direction="row" spacing={1.25} alignItems="center">
+                                <Avatar sx={{ bgcolor: '#eff6ff', color: '#2563eb', width: 36, height: 36 }}>
+                                    <TimetableIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box>
-                                    <Typography variant="subtitle1" fontWeight={700} color="#1e293b">
+                                    <Typography variant="subtitle2" fontWeight={700} color="#1e293b" sx={{ fontSize: '0.9rem' }}>
                                         Today's Classes
                                     </Typography>
-                                    <Typography variant="caption" color="text.secondary">
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem' }}>
                                         {todayFormattedDate}
                                     </Typography>
                                 </Box>
                             </Stack>
-                            <Chip label={`${todayPeriods.length} periods`} size="small" color="primary" variant="outlined" />
+                            <Chip label={`${todayPeriods.length} periods`} size="small" color="primary" variant="outlined" sx={{ height: 22, fontSize: '0.7rem' }} />
                         </Box>
 
-                        <Divider sx={{ mb: 2 }} />
+                        <Divider sx={{ mb: 1.5 }} />
 
                         {timetableLoading ? (
-                            <Stack spacing={1.5}>
-                                {[1, 2, 3].map(i => <Skeleton key={i} variant="rectangular" height={50} sx={{ borderRadius: 2 }} />)}
+                            <Stack spacing={1}>
+                                {[1, 2, 3].map(i => <Skeleton key={i} variant="rectangular" height={44} sx={{ borderRadius: 2 }} />)}
                             </Stack>
                         ) : todayPeriods.length === 0 ? (
-                            <Box sx={{ py: 4, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <CalendarIcon sx={{ fontSize: 40, color: '#cbd5e1', mb: 1 }} />
-                                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                            <Box sx={{ py: 3, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                                <CalendarIcon sx={{ fontSize: 32, color: '#cbd5e1', mb: 0.5 }} />
+                                <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.8rem' }}>
                                     No classes scheduled for today ({todayDayName}).
                                 </Typography>
                             </Box>
                         ) : (
-                            <Stack spacing={1.5} sx={{ flex: 1 }}>
+                            <Stack spacing={1} sx={{ flex: 1 }}>
                                 {todayPeriods.map((period: any) => (
                                     <Box
                                         key={period._id || `${period.periodNumber}-${period.subjectName}`}
                                         sx={{
-                                            p: 1.5,
-                                            borderRadius: 2.5,
+                                            p: 1.25,
+                                            borderRadius: 2,
                                             bgcolor: '#f8fafc',
                                             border: '1px solid #f1f5f9',
                                             display: 'flex',
                                             alignItems: 'center',
-                                            justify: 'space-between',
+                                            justifyContent: 'space-between',
                                             gap: 1,
-                                            transition: 'background-color 0.2s',
+                                            transition: 'background-color 0.18s',
                                             '&:hover': { bgcolor: '#f1f5f9' }
                                         }}
                                     >
-                                        <Box sx={{ minWidth: 70 }}>
-                                            <Typography variant="caption" fontWeight={700} color="primary.main" sx={{ display: 'block' }}>
+                                        <Box sx={{ minWidth: 60 }}>
+                                            <Typography variant="caption" fontWeight={700} color="primary.main" sx={{ display: 'block', fontSize: '0.75rem' }}>
                                                 P{period.periodNumber}
                                             </Typography>
                                             {period.startTime && (
-                                                <Typography variant="caption" color="text.secondary">
+                                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.68rem' }}>
                                                     {period.startTime}
                                                 </Typography>
                                             )}
                                         </Box>
                                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                                            <Typography variant="body2" fontWeight={700} noWrap color="#1e293b">
+                                            <Typography variant="body2" fontWeight={700} noWrap color="#1e293b" sx={{ fontSize: '0.825rem' }}>
                                                 {getSubjectName(period)}
                                             </Typography>
                                             {getTeacherName(period) && (
-                                                <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
-                                                    Teacher: {getTeacherName(period)}
+                                                <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', fontSize: '0.7rem' }}>
+                                                    {getTeacherName(period)}
                                                 </Typography>
                                             )}
                                         </Box>
                                         {period.roomName && (
-                                            <Chip label={period.roomName} size="small" variant="outlined" sx={{ height: 22, fontSize: '0.65rem' }} />
+                                            <Chip label={period.roomName} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.65rem' }} />
                                         )}
                                     </Box>
                                 ))}
@@ -381,7 +385,7 @@ const StudentDashboard: React.FC = () => {
                             variant="outlined"
                             size="small"
                             onClick={() => navigate('/student/timetable')}
-                            sx={{ mt: 2, borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                            sx={{ mt: 1.5, borderRadius: 2, textTransform: 'none', fontWeight: 600, fontSize: '0.775rem', py: 0.5 }}
                         >
                             View Full Weekly Timetable
                         </Button>
@@ -393,9 +397,9 @@ const StudentDashboard: React.FC = () => {
                     <Paper
                         elevation={0}
                         sx={{
-                            p: 3,
+                            p: { xs: 2, sm: 2.5 },
                             height: '100%',
-                            borderRadius: 4,
+                            borderRadius: 3,
                             border: '1px solid #e2e8f0',
                             bgcolor: '#ffffff',
                             boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
@@ -403,38 +407,38 @@ const StudentDashboard: React.FC = () => {
                             flexDirection: 'column',
                         }}
                     >
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                            <Stack direction="row" spacing={1.5} alignItems="center">
-                                <Avatar sx={{ bgcolor: '#fff7ed', color: '#ea580c', width: 40, height: 40 }}>
-                                    <HomeworkIcon fontSize="small" />
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                            <Stack direction="row" spacing={1.25} alignItems="center">
+                                <Avatar sx={{ bgcolor: '#fff7ed', color: '#ea580c', width: 36, height: 36 }}>
+                                    <HomeworkIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box>
-                                    <Typography variant="subtitle1" fontWeight={700} color="#1e293b">
+                                    <Typography variant="subtitle2" fontWeight={700} color="#1e293b" sx={{ fontSize: '0.9rem' }}>
                                         Pending Homework
                                     </Typography>
-                                    <Typography variant="caption" color="text.secondary">
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem' }}>
                                         Active assignments
                                     </Typography>
                                 </Box>
                             </Stack>
-                            <Chip label={`${recentHomework.length} active`} size="small" color="warning" variant="outlined" />
+                            <Chip label={`${recentHomework.length} active`} size="small" color="warning" variant="outlined" sx={{ height: 22, fontSize: '0.7rem' }} />
                         </Box>
 
-                        <Divider sx={{ mb: 2 }} />
+                        <Divider sx={{ mb: 1.5 }} />
 
                         {homeworkLoading ? (
-                            <Stack spacing={1.5}>
-                                {[1, 2, 3].map(i => <Skeleton key={i} variant="rectangular" height={50} sx={{ borderRadius: 2 }} />)}
+                            <Stack spacing={1}>
+                                {[1, 2, 3].map(i => <Skeleton key={i} variant="rectangular" height={44} sx={{ borderRadius: 2 }} />)}
                             </Stack>
                         ) : recentHomework.length === 0 ? (
-                            <Box sx={{ py: 4, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <AssignmentIcon sx={{ fontSize: 40, color: '#cbd5e1', mb: 1 }} />
-                                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                            <Box sx={{ py: 3, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                                <AssignmentIcon sx={{ fontSize: 32, color: '#cbd5e1', mb: 0.5 }} />
+                                <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.8rem' }}>
                                     No pending homework! All caught up. 🎉
                                 </Typography>
                             </Box>
                         ) : (
-                            <Stack spacing={1.5} sx={{ flex: 1 }}>
+                            <Stack spacing={1} sx={{ flex: 1 }}>
                                 {recentHomework.map((hw: any) => {
                                     const overdue = isOverdue(hw.dueDate);
                                     return (
@@ -442,37 +446,37 @@ const StudentDashboard: React.FC = () => {
                                             key={hw._id || hw.homeworkId}
                                             onClick={() => navigate('/student/homework')}
                                             sx={{
-                                                p: 1.5,
-                                                borderRadius: 2.5,
+                                                p: 1.25,
+                                                borderRadius: 2,
                                                 bgcolor: overdue ? '#fef2f2' : '#f8fafc',
                                                 border: '1px solid',
                                                 borderColor: overdue ? '#fecaca' : '#f1f5f9',
                                                 cursor: 'pointer',
-                                                transition: 'background-color 0.2s',
+                                                transition: 'background-color 0.18s',
                                                 '&:hover': { bgcolor: overdue ? '#fee2e2' : '#f1f5f9' }
                                             }}
                                         >
-                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.25 }}>
                                                 <Chip
                                                     label={getSubjectName(hw)}
                                                     size="small"
                                                     color={overdue ? 'error' : 'warning'}
-                                                    sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700 }}
+                                                    sx={{ height: 18, fontSize: '0.625rem', fontWeight: 700 }}
                                                 />
                                                 {overdue && (
                                                     <Chip
                                                         label="Overdue"
                                                         size="small"
                                                         color="error"
-                                                        icon={<OverdueIcon fontSize="small" />}
-                                                        sx={{ height: 20, fontSize: '0.65rem' }}
+                                                        icon={<OverdueIcon sx={{ fontSize: '12px !important' }} />}
+                                                        sx={{ height: 18, fontSize: '0.625rem' }}
                                                     />
                                                 )}
                                             </Box>
-                                            <Typography variant="body2" fontWeight={700} noWrap color="#1e293b">
+                                            <Typography variant="body2" fontWeight={700} noWrap color="#1e293b" sx={{ fontSize: '0.825rem' }}>
                                                 {hw.title}
                                             </Typography>
-                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25, fontSize: '0.7rem' }}>
                                                 Due: {new Date(hw.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                                             </Typography>
                                         </Box>
@@ -487,7 +491,7 @@ const StudentDashboard: React.FC = () => {
                             size="small"
                             color="warning"
                             onClick={() => navigate('/student/homework')}
-                            sx={{ mt: 2, borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                            sx={{ mt: 1.5, borderRadius: 2, textTransform: 'none', fontWeight: 600, fontSize: '0.775rem', py: 0.5 }}
                         >
                             View All Homework
                         </Button>
@@ -499,9 +503,9 @@ const StudentDashboard: React.FC = () => {
                     <Paper
                         elevation={0}
                         sx={{
-                            p: 3,
+                            p: { xs: 2, sm: 2.5 },
                             height: '100%',
-                            borderRadius: 4,
+                            borderRadius: 3,
                             border: '1px solid #e2e8f0',
                             bgcolor: '#ffffff',
                             boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
@@ -509,69 +513,69 @@ const StudentDashboard: React.FC = () => {
                             flexDirection: 'column',
                         }}
                     >
-                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                            <Stack direction="row" spacing={1.5} alignItems="center">
-                                <Avatar sx={{ bgcolor: '#f3e8ff', color: '#9333ea', width: 40, height: 40 }}>
-                                    <AnnouncementIcon fontSize="small" />
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                            <Stack direction="row" spacing={1.25} alignItems="center">
+                                <Avatar sx={{ bgcolor: '#f3e8ff', color: '#9333ea', width: 36, height: 36 }}>
+                                    <AnnouncementIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box>
-                                    <Typography variant="subtitle1" fontWeight={700} color="#1e293b">
+                                    <Typography variant="subtitle2" fontWeight={700} color="#1e293b" sx={{ fontSize: '0.9rem' }}>
                                         Announcements
                                     </Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        School circulars & updates
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem' }}>
+                                        School circulars
                                     </Typography>
                                 </Box>
                             </Stack>
-                            <Chip label={`${recentAnnouncements.length} new`} size="small" color="secondary" variant="outlined" />
+                            <Chip label={`${recentAnnouncements.length} new`} size="small" color="secondary" variant="outlined" sx={{ height: 22, fontSize: '0.7rem' }} />
                         </Box>
 
-                        <Divider sx={{ mb: 2 }} />
+                        <Divider sx={{ mb: 1.5 }} />
 
                         {announcementsLoading ? (
-                            <Stack spacing={1.5}>
-                                {[1, 2, 3].map(i => <Skeleton key={i} variant="rectangular" height={50} sx={{ borderRadius: 2 }} />)}
+                            <Stack spacing={1}>
+                                {[1, 2, 3].map(i => <Skeleton key={i} variant="rectangular" height={44} sx={{ borderRadius: 2 }} />)}
                             </Stack>
                         ) : recentAnnouncements.length === 0 ? (
-                            <Box sx={{ py: 4, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <AnnouncementIcon sx={{ fontSize: 40, color: '#cbd5e1', mb: 1 }} />
-                                <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                            <Box sx={{ py: 3, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                                <AnnouncementIcon sx={{ fontSize: 32, color: '#cbd5e1', mb: 0.5 }} />
+                                <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.8rem' }}>
                                     No announcements at the moment.
                                 </Typography>
                             </Box>
                         ) : (
-                            <Stack spacing={1.5} sx={{ flex: 1 }}>
+                            <Stack spacing={1} sx={{ flex: 1 }}>
                                 {recentAnnouncements.map((ann: any) => (
                                     <Box
                                         key={ann._id || ann.announcementId}
                                         onClick={() => navigate('/student/announcements')}
                                         sx={{
-                                            p: 1.5,
-                                            borderRadius: 2.5,
+                                            p: 1.25,
+                                            borderRadius: 2,
                                             bgcolor: '#f8fafc',
                                             border: '1px solid #f1f5f9',
                                             cursor: 'pointer',
-                                            transition: 'background-color 0.2s',
+                                            transition: 'background-color 0.18s',
                                             '&:hover': { bgcolor: '#f1f5f9' }
                                         }}
                                     >
-                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.25 }}>
                                             <Chip
                                                 label={ann.category || 'General'}
                                                 size="small"
                                                 color="secondary"
                                                 variant="outlined"
-                                                sx={{ height: 20, fontSize: '0.65rem', textTransform: 'capitalize', fontWeight: 700 }}
+                                                sx={{ height: 18, fontSize: '0.625rem', textTransform: 'capitalize', fontWeight: 700 }}
                                             />
-                                            <Typography variant="caption" color="text.secondary">
+                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.68rem' }}>
                                                 {new Date(ann.createdAt || ann.publishDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                                             </Typography>
                                         </Box>
-                                        <Typography variant="body2" fontWeight={700} noWrap color="#1e293b">
+                                        <Typography variant="body2" fontWeight={700} noWrap color="#1e293b" sx={{ fontSize: '0.825rem' }}>
                                             {ann.title}
                                         </Typography>
                                         {ann.content && (
-                                            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', mt: 0.25 }}>
+                                            <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', mt: 0.25, fontSize: '0.7rem' }}>
                                                 {ann.content}
                                             </Typography>
                                         )}
@@ -586,7 +590,7 @@ const StudentDashboard: React.FC = () => {
                             size="small"
                             color="secondary"
                             onClick={() => navigate('/student/announcements')}
-                            sx={{ mt: 2, borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                            sx={{ mt: 1.5, borderRadius: 2, textTransform: 'none', fontWeight: 600, fontSize: '0.775rem', py: 0.5 }}
                         >
                             View All Announcements
                         </Button>
@@ -596,46 +600,48 @@ const StudentDashboard: React.FC = () => {
             </Grid>
 
             {/* Academic Navigation Grid */}
-            <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>Quick Access & Modules</Typography>
-            <Grid container spacing={3}>
+            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>Quick Access & Modules</Typography>
+            <Grid container spacing={{ xs: 1.5, sm: 2 }}>
                 {attendanceLoading ? (
                     [1, 2, 3, 4, 5, 6].map((i) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
-                            <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 4 }} />
+                        <Grid size={{ xs: 6, sm: 6, md: 4 }} key={i}>
+                            <Skeleton variant="rectangular" height={90} sx={{ borderRadius: 2.5 }} />
                         </Grid>
                     ))
                 ) : (
                     [
-                        { title: 'Attendance Analytics', value: `${percentage}%`, subtitle: 'Attendance report & charts', icon: <AttendanceIcon />, color: '#10b981', onClick: () => navigate('/student/attendance') },
+                        { title: 'Attendance', value: `${percentage}%`, subtitle: 'Report & charts', icon: <AttendanceIcon />, color: '#10b981', onClick: () => navigate('/student/attendance') },
                         { title: 'My Timetable', value: 'Schedule', subtitle: 'Daily class schedule', icon: <TimetableIcon />, color: '#3b82f6', onClick: () => navigate('/student/timetable') },
                         { title: 'My Exams', value: 'Exams', subtitle: 'Schedules & hall tickets', icon: <ResultsIcon />, color: '#8b5cf6', onClick: () => navigate('/student/exam/my-exams') },
                         { title: 'Leave Application', value: 'Leave', subtitle: 'Apply & view status', icon: <LeaveIcon />, color: '#f59e0b', onClick: () => navigate('/student/leave/apply') },
-                        { title: 'Open Support Ticket', value: 'Support', subtitle: 'Submit ticket or query', icon: <SupportIcon />, color: '#6366f1', onClick: () => setSupportDialogOpen(true) },
+                        { title: 'Support Ticket', value: 'Support', subtitle: 'Submit query', icon: <SupportIcon />, color: '#6366f1', onClick: () => setSupportDialogOpen(true) },
                         { title: 'My Profile', value: 'Profile', subtitle: 'Personal details & ID', icon: <ClassIcon />, color: '#06b6d4', onClick: () => navigate('/student/profile') },
                     ].map((item) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.title}>
-                            <AppCard
+                        <Grid size={{ xs: 6, sm: 6, md: 4 }} key={item.title}>
+                            <Paper
+                                elevation={0}
                                 onClick={item.onClick}
                                 sx={{
-                                    p: 3,
+                                    p: { xs: 1.5, sm: 2 },
                                     height: '100%',
-                                    borderRadius: 4,
-                                    bgcolor: 'rgba(255, 255, 255, 0.9)',
-                                    border: '1px solid rgba(226, 232, 240, 0.8)',
-                                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.03)',
-                                    transition: 'all 0.2s ease',
-                                    '&:hover': { transform: 'translateY(-3px)', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }
+                                    borderRadius: 2.5,
+                                    bgcolor: '#ffffff',
+                                    border: '1px solid #e2e8f0',
+                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
+                                    transition: 'all 0.18s ease-in-out',
+                                    cursor: 'pointer',
+                                    '&:hover': { transform: 'translateY(-2px)', borderColor: '#cbd5e1', boxShadow: '0 4px 14px rgba(0,0,0,0.06)' }
                                 }}
                             >
-                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
-                                    <Avatar sx={{ bgcolor: `${item.color}15`, color: item.color, width: 46, height: 46, borderRadius: 2.5 }}>
-                                        {React.cloneElement(item.icon as any, { sx: { fontSize: 24 } })}
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                    <Avatar sx={{ bgcolor: `${item.color}15`, color: item.color, width: { xs: 36, sm: 40 }, height: { xs: 36, sm: 40 }, borderRadius: 2 }}>
+                                        {React.cloneElement(item.icon as any, { sx: { fontSize: { xs: 18, sm: 22 } } })}
                                     </Avatar>
-                                    <ArrowForwardIcon sx={{ color: '#cbd5e1', fontSize: 20 }} />
+                                    <ArrowForwardIcon sx={{ color: '#cbd5e1', fontSize: 16 }} />
                                 </Box>
-                                <Typography variant="h6" fontWeight={700} sx={{ mb: 0.5 }}>{item.title}</Typography>
-                                <Typography variant="caption" color="text.secondary" fontWeight={500}>{item.subtitle}</Typography>
-                            </AppCard>
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: { xs: '0.825rem', sm: '0.9rem' }, mb: 0.25 }} noWrap>{item.title}</Typography>
+                                <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.7rem' }} noWrap>{item.subtitle}</Typography>
+                            </Paper>
                         </Grid>
                     ))
                 )}

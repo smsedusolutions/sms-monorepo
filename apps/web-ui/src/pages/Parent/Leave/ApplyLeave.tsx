@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Box,
     Typography,
@@ -35,7 +35,7 @@ type ChildOption = Student & { className?: string; sectionName?: string };
 const ParentApplyLeave: React.FC = () => {
     const navigate = useNavigate();
     const schoolId = TokenService.getSchoolId() || '';
-    const { selectedChild, children, isLoading: loadingChildren } = useChildSelector();
+    const { children, isLoading: loadingChildren } = useChildSelector();
 
     const isMultiSelect = children.length > 1;
 
@@ -52,13 +52,27 @@ const ParentApplyLeave: React.FC = () => {
 
     const applyLeave = useApplyLeave(schoolId);
 
+    const autocompleteOptions = useMemo<ChildOption[]>(() => {
+        if (!isMultiSelect) return children;
+        const selectAllItem: ChildOption = {
+            studentId: '__SELECT_ALL__',
+            schoolId,
+            firstName: 'Select All',
+            lastName: `(${children.length} Children)`,
+            class: '',
+            section: '',
+            gender: 'other',
+            status: 'active',
+        };
+        return [selectAllItem, ...children];
+    }, [isMultiSelect, children, schoolId]);
+
     useEffect(() => {
-        if (children.length === 1 && selectedStudents.length === 0) {
+        // Pre-select only when there is exactly one child. If multiple, leave empty for parent to choose.
+        if (children.length === 1) {
             setSelectedStudents([children[0]]);
-        } else if (selectedChild && selectedStudents.length === 0) {
-            setSelectedStudents([selectedChild]);
         }
-    }, [children, selectedChild]);
+    }, [children]);
 
     useEffect(() => {
         if (hasBeenSubmitted) {
@@ -145,59 +159,117 @@ const ParentApplyLeave: React.FC = () => {
                                 <Grid container spacing={3}>
                                     <Grid size={{ xs: 12 }}>
                                         {isMultiSelect ? (
-                                            <Autocomplete
-                                                multiple
-                                                id="select-children"
-                                                options={children}
-                                                value={selectedStudents}
-                                                onChange={(_event, newValue) => {
-                                                    setSelectedStudents(newValue as any);
-                                                }}
-                                                disableCloseOnSelect
-                                                getOptionLabel={getChildLabel}
-                                                isOptionEqualToValue={(option, value) =>
-                                                    option.studentId === value.studentId
-                                                }
-                                                renderOption={(props, option, { selected }) => {
-                                                    const { key, ...restProps } = props;
-                                                    return (
-                                                        <li key={key} {...restProps}>
-                                                            <Checkbox
-                                                                icon={<CheckBoxOutlineBlank fontSize="small" />}
-                                                                checkedIcon={<CheckBoxIcon fontSize="small" />}
-                                                                style={{ marginRight: 8 }}
-                                                                checked={selected}
-                                                            />
-                                                            {getChildLabel(option)}
-                                                        </li>
-                                                    );
-                                                }}
-                                                renderTags={(value, getTagProps) =>
-                                                    value.map((option, index) => {
-                                                        const { key, ...chipProps } = getTagProps({ index });
+                                            <Box>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                                                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.8125rem' }}>
+                                                        Select Children
+                                                    </Typography>
+                                                    <Button
+                                                        size="small"
+                                                        variant="text"
+                                                        onClick={() => {
+                                                            if (selectedStudents.length === children.length) {
+                                                                setSelectedStudents([]);
+                                                            } else {
+                                                                setSelectedStudents([...children]);
+                                                            }
+                                                        }}
+                                                        sx={{ textTransform: 'none', fontSize: '0.75rem', py: 0, px: 0.75, fontWeight: 600 }}
+                                                    >
+                                                        {selectedStudents.length === children.length ? 'Deselect All' : `Select All (${children.length})`}
+                                                    </Button>
+                                                </Box>
+                                                <Autocomplete
+                                                    multiple
+                                                    id="select-children"
+                                                    options={autocompleteOptions}
+                                                    value={selectedStudents}
+                                                    onChange={(_event, newValue) => {
+                                                        const hasSelectAll = newValue.some(v => v.studentId === '__SELECT_ALL__');
+                                                        if (hasSelectAll) {
+                                                            if (selectedStudents.length === children.length) {
+                                                                setSelectedStudents([]);
+                                                            } else {
+                                                                setSelectedStudents([...children]);
+                                                            }
+                                                        } else {
+                                                            setSelectedStudents(newValue.filter(v => v.studentId !== '__SELECT_ALL__') as any);
+                                                        }
+                                                    }}
+                                                    disableCloseOnSelect
+                                                    getOptionLabel={getChildLabel}
+                                                    isOptionEqualToValue={(option, value) =>
+                                                        option.studentId === value.studentId
+                                                    }
+                                                    renderOption={(props, option) => {
+                                                        const { key, ...restProps } = props;
+                                                        if (option.studentId === '__SELECT_ALL__') {
+                                                            const isAllSelected = children.length > 0 && selectedStudents.length === children.length;
+                                                            const isIndeterminate = selectedStudents.length > 0 && selectedStudents.length < children.length;
+                                                            return (
+                                                                <li
+                                                                    key={key}
+                                                                    {...restProps}
+                                                                    style={{
+                                                                        borderBottom: '1px solid rgba(0,0,0,0.08)',
+                                                                        fontWeight: 600,
+                                                                        backgroundColor: isAllSelected ? 'rgba(79, 70, 229, 0.04)' : undefined,
+                                                                    }}
+                                                                >
+                                                                    <Checkbox
+                                                                        icon={<CheckBoxOutlineBlank fontSize="small" />}
+                                                                        checkedIcon={<CheckBoxIcon fontSize="small" />}
+                                                                        indeterminate={isIndeterminate}
+                                                                        style={{ marginRight: 8 }}
+                                                                        checked={isAllSelected}
+                                                                    />
+                                                                    <Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                                                                        Select All Children ({children.length})
+                                                                    </Typography>
+                                                                </li>
+                                                            );
+                                                        }
+                                                        const isSelected = selectedStudents.some(s => s.studentId === option.studentId);
                                                         return (
-                                                            <Chip
-                                                                key={key}
-                                                                label={`${option.firstName} ${option.lastName}`}
-                                                                size="small"
-                                                                color="primary"
-                                                                variant="outlined"
-                                                                {...chipProps}
-                                                            />
+                                                            <li key={key} {...restProps}>
+                                                                <Checkbox
+                                                                    icon={<CheckBoxOutlineBlank fontSize="small" />}
+                                                                    checkedIcon={<CheckBoxIcon fontSize="small" />}
+                                                                    style={{ marginRight: 8 }}
+                                                                    checked={isSelected}
+                                                                />
+                                                                {getChildLabel(option)}
+                                                            </li>
                                                         );
-                                                    })
-                                                }
-                                                renderInput={(params) => (
-                                                    <AppInput
-                                                        {...params}
-                                                        label="Select Children"
-                                                        placeholder={selectedStudents.length === 0 ? 'Select one or more children' : ''}
-                                                        error={!!errors.students}
-                                                        helperText={errors.students}
-                                                    />
-                                                )}
-                                                loading={loadingChildren}
-                                            />
+                                                    }}
+                                                    renderTags={(value, getTagProps) =>
+                                                        value
+                                                            .filter(opt => opt.studentId !== '__SELECT_ALL__')
+                                                            .map((option, index) => {
+                                                                const { key, ...chipProps } = getTagProps({ index });
+                                                                return (
+                                                                    <Chip
+                                                                        key={key}
+                                                                        label={`${option.firstName} ${option.lastName}`}
+                                                                        size="small"
+                                                                        color="primary"
+                                                                        variant="outlined"
+                                                                        {...chipProps}
+                                                                    />
+                                                                );
+                                                            })
+                                                    }
+                                                    renderInput={(params) => (
+                                                        <AppInput
+                                                            {...params}
+                                                            placeholder={selectedStudents.length === 0 ? 'Select one or more children' : ''}
+                                                            error={!!errors.students}
+                                                            helperText={errors.students}
+                                                        />
+                                                    )}
+                                                    loading={loadingChildren}
+                                                />
+                                            </Box>
                                         ) : (
                                             <AppInput
                                                 fullWidth

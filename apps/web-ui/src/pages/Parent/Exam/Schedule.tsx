@@ -112,31 +112,39 @@ const ParentExamSchedule: React.FC = () => {
 
             {/* Child Selector Pills */}
             {contextChildren.length > 1 && (
-                <Paper elevation={0} sx={{ p: 1.5, mb: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
-                    <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1, display: 'block' }}>
+                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+                    <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, display: 'block' }}>
                         Select Child
                     </Typography>
-                    <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 0.5 }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
                         {contextChildren.map((child) => {
-                            const isSelected = selectedChild.studentId === child.studentId;
+                            const isSelected = selectedChild?.studentId === child.studentId;
                             return (
                                 <Button
                                     key={child.studentId}
                                     variant={isSelected ? 'contained' : 'outlined'}
                                     size="small"
                                     onClick={() => setSelectedChild(child)}
-                                    startIcon={<BadgeIcon />}
+                                    startIcon={<BadgeIcon fontSize="small" />}
                                     sx={{
-                                        borderRadius: 2,
+                                        borderRadius: '20px',
                                         fontWeight: 600,
                                         textTransform: 'none',
-                                        px: 1.75,
-                                        py: 0.5,
-                                        whiteSpace: 'nowrap',
-                                        fontSize: '0.8rem',
+                                        px: 2,
+                                        py: 0.75,
+                                        fontSize: '0.8125rem',
+                                        flexShrink: 0,
+                                        bgcolor: isSelected ? '#4f46e5' : '#ffffff',
+                                        color: isSelected ? '#ffffff' : '#475569',
+                                        borderColor: isSelected ? '#4f46e5' : '#cbd5e1',
+                                        boxShadow: isSelected ? '0 2px 8px rgba(79, 70, 229, 0.25)' : 'none',
+                                        '&:hover': {
+                                            bgcolor: isSelected ? '#4338ca' : '#f1f5f9',
+                                            borderColor: isSelected ? '#4338ca' : '#94a3b8',
+                                        }
                                     }}
                                 >
-                                    {child.firstName} {child.lastName} {child.className ? `(${child.className})` : ''}
+                                    {child.firstName} {child.lastName} {child.className ? `(${child.className}${child.sectionName ? `-${child.sectionName}` : ''})` : ''}
                                 </Button>
                             );
                         })}
