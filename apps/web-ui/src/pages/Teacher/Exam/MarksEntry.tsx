@@ -35,6 +35,8 @@ import {
     Warning as WarningIcon,
     Assignment as MarksIcon,
     Lock as LockIcon,
+    Publish as PublishIcon,
+    CheckCircle as CheckCircleIcon,
 } from '@mui/icons-material';
 import { AppNoticeDialog } from '../../../components/shared/AppNoticeDialog';
 import { useAuth } from '../../../context/AuthContext';
@@ -43,33 +45,19 @@ import {
     useGetExamSchedule,
     useGetSubjectResults,
     useSubmitMarks,
+    useTeacherPublishSubject,
 } from '../../../queries/Exam';
 import { useGetStudents } from '../../../queries/Student';
 import { useGetTeacherById } from '../../../queries/Teacher';
 import { useGetSubjects } from '../../../queries/Subject';
 import { useGetClasses } from '../../../queries/Class';
+import { compareClassesNumerically } from '../../../utils/classSort';
 
 import type { SubmitMarksRequest } from '../../../types/exam.types';
 
 // ─── Toast Helper ──────────────────────────────────────────────────────────────
 type ToastSeverity = 'success' | 'error' | 'warning' | 'info';
 interface ToastState { open: boolean; message: string; severity: ToastSeverity; }
-
-// ─── Class Rank Extraction for Natural Sorting ─────────────────────────────────
-const extractClassRank = (name: string): number => {
-    const lower = (name || '').toLowerCase().trim();
-    if (lower.includes('play') || lower.includes('daycare')) return -50;
-    if (lower.includes('nursery') || lower.includes('pre-kg') || lower.includes('prekg')) return -40;
-    if (lower.includes('lkg') || lower.includes('jr') || lower.includes('junior')) return -30;
-    if (lower.includes('ukg') || lower.includes('sr') || lower.includes('senior')) return -20;
-    if (lower.includes('kg') || lower.includes('kindergarten')) return -10;
-
-    const match = lower.match(/\d+/);
-    if (match) {
-        return parseInt(match[0], 10);
-    }
-    return 999;
-};
 
 // ─── Numeric Input Helper ──────────────────────────────────────────────────────
 const toNumericString = (value: string): string => value.replace(/[^0-9.]/g, '');
@@ -177,17 +165,7 @@ const MarksEntry = () => {
     // ── Sort Schedules Numerically by Class Name ──────────────────────────────
     const sortedFilteredSchedules = useMemo(() => {
         return [...filteredSchedules].sort((a: any, b: any) => {
-            const classA = getClassName(a.classId);
-            const classB = getClassName(b.classId);
-
-            const rankA = extractClassRank(classA);
-            const rankB = extractClassRank(classB);
-
-            if (rankA !== rankB) {
-                return rankA - rankB;
-            }
-
-            const classComp = classA.localeCompare(classB, undefined, { numeric: true, sensitivity: 'base' });
+            const classComp = compareClassesNumerically(getClassName(a.classId), getClassName(b.classId));
             if (classComp !== 0) return classComp;
 
             const subA = getSubjectName(a.subjectId);
@@ -218,6 +196,7 @@ const MarksEntry = () => {
     const isDataLoading = studentsLoading || resultsLoading || studentsFetching || resultsFetching;
 
     const submitMarks = useSubmitMarks(schoolId);
+    const teacherPublish = useTeacherPublishSubject(schoolId);
 
     // ── Marks Grid State ──────────────────────────────────────────────────────
     const [marksGrid, setMarksGrid] = useState<any[]>([]);
@@ -225,6 +204,13 @@ const MarksEntry = () => {
     const [errors, setErrors] = useState<Record<number, Record<string, string>>>({});
     const [submitAttempted, setSubmitAttempted] = useState(false);
     const [noticeDialogOpen, setNoticeDialogOpen] = useState(false);
+    const [publishConfirmOpen, setPublishConfirmOpen] = useState(false);
+
+    // ── Publication Lifecycle Status ──────────────────────────────────────────
+    const currentPublishStatus = (resultsData as any)?.schedule?.publishStatus || selectedSchedule?.publishStatus || 'draft';
+    const isTeacherPublished = currentPublishStatus === 'teacher_published';
+    const isFinalPublished = currentPublishStatus === 'final_published';
+    const isPublished = isTeacherPublished || isFinalPublished;
 
     // ── Check if Exam Timing allows Marks Entry (1 hour after exam end time) ───
     const unlockStatus = useMemo(() => {
@@ -361,6 +347,10 @@ const MarksEntry = () => {
             setNoticeDialogOpen(true);
             return;
         }
+        if (isPublished) {
+            showToast('Marks are published and locked for editing.', 'warning');
+            return;
+        }
 
         const newGrid = [...marksGrid];
 
@@ -447,6 +437,10 @@ const MarksEntry = () => {
         if (!selectedSchedule) return;
         if (!unlockStatus.isUnlocked) {
             setNoticeDialogOpen(true);
+            return;
+        }
+        if (isPublished) {
+            showToast('Marks for this subject have already been published and cannot be modified.', 'warning');
             return;
         }
         setSubmitAttempted(true);
@@ -654,6 +648,24 @@ const MarksEntry = () => {
                                         sx={{ fontWeight: 600, fontSize: '0.75rem', height: 24, cursor: 'pointer' }}
                                     />
                                 )}
+                                {isTeacherPublished && (
+                                    <Chip
+                                        size="small"
+                                        icon={<CheckCircleIcon sx={{ fontSize: '14px !important' }} />}
+                                        label="Submitted to Admin"
+                                        color="info"
+                                        sx={{ fontWeight: 700, fontSize: '0.75rem', height: 24 }}
+                                    />
+                                )}
+                                {isFinalPublished && (
+                                    <Chip
+                                        size="small"
+                                        icon={<CheckCircleIcon sx={{ fontSize: '14px !important' }} />}
+                                        label="Final Published"
+                                        color="success"
+                                        sx={{ fontWeight: 700, fontSize: '0.75rem', height: 24 }}
+                                    />
+                                )}
                                 <Chip
                                     size="small"
                                     label={`Theory Max: ${selectedSchedule?.maxMarksTheory ?? 0}`}
@@ -685,19 +697,56 @@ const MarksEntry = () => {
                             </Stack>
                         </Box>
 
-                        {/* Desktop Save Button */}
+                        {/* Desktop Action Buttons */}
                         {!isMobile && (
-                            <Button
-                                variant="contained"
-                                startIcon={<SaveIcon />}
-                                onClick={handleSubmit}
-                                disabled={!hasChanges || submitMarks.isPending || isDataLoading || !unlockStatus.isUnlocked}
-                                sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2, px: 2.5 }}
-                            >
-                                {submitMarks.isPending ? 'Saving...' : 'Save Marks'}
-                            </Button>
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                                {!isPublished && !hasChanges && resultsData?.data && resultsData.data.length > 0 && (
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        startIcon={<PublishIcon />}
+                                        onClick={() => setPublishConfirmOpen(true)}
+                                        disabled={!unlockStatus.isUnlocked || teacherPublish.isPending || isDataLoading}
+                                        sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2, px: 2 }}
+                                    >
+                                        {teacherPublish.isPending ? 'Publishing...' : 'Publish to Admin'}
+                                    </Button>
+                                )}
+                                {!isPublished && (
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<SaveIcon />}
+                                        onClick={handleSubmit}
+                                        disabled={!hasChanges || submitMarks.isPending || isDataLoading || !unlockStatus.isUnlocked}
+                                        sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2, px: 2.5 }}
+                                    >
+                                        {submitMarks.isPending ? 'Saving...' : 'Save Marks'}
+                                    </Button>
+                                )}
+                            </Stack>
                         )}
                     </Box>
+
+                    {/* Publication Status Banners */}
+                    {isTeacherPublished && (
+                        <Alert
+                            severity="info"
+                            icon={<CheckCircleIcon fontSize="inherit" />}
+                            sx={{ mb: 2, borderRadius: 2, fontWeight: 500 }}
+                        >
+                            <strong>Submitted to Administration:</strong> Marks for this subject have been published and submitted to the School Admin &amp; Principal for final review. Marks editing is now locked.
+                        </Alert>
+                    )}
+
+                    {isFinalPublished && (
+                        <Alert
+                            severity="success"
+                            icon={<CheckCircleIcon fontSize="inherit" />}
+                            sx={{ mb: 2, borderRadius: 2, fontWeight: 500 }}
+                        >
+                            <strong>Final Published:</strong> Marks for this subject have been finally published and are visible to students and parents.
+                        </Alert>
+                    )}
 
                     {/* Locked Exam Warning Banner */}
                     {!unlockStatus.isUnlocked && (
@@ -771,7 +820,7 @@ const MarksEntry = () => {
                                                 size="small"
                                                 value={row.attendanceStatus}
                                                 onChange={(e) => handleMarkChange(index, 'attendanceStatus', e.target.value)}
-                                                disabled={!unlockStatus.isUnlocked}
+                                                disabled={!unlockStatus.isUnlocked || isPublished}
                                                 sx={{
                                                     height: 28,
                                                     fontSize: '0.75rem',
@@ -802,7 +851,7 @@ const MarksEntry = () => {
                                                     fullWidth
                                                     value={isAbsent ? '—' : row.theory}
                                                     onChange={(e) => handleMarkChange(index, 'theory', e.target.value)}
-                                                    disabled={isAbsent || !unlockStatus.isUnlocked}
+                                                    disabled={isAbsent || !unlockStatus.isUnlocked || isPublished}
                                                     error={!!theoryErr}
                                                     helperText={theoryErr || ''}
                                                     placeholder={`0–${row.maxTheory}`}
@@ -826,7 +875,7 @@ const MarksEntry = () => {
                                                         fullWidth
                                                         value={isAbsent ? '—' : row.practical}
                                                         onChange={(e) => handleMarkChange(index, 'practical', e.target.value)}
-                                                        disabled={isAbsent || !unlockStatus.isUnlocked}
+                                                        disabled={isAbsent || !unlockStatus.isUnlocked || isPublished}
                                                         error={!!practicalErr}
                                                         helperText={practicalErr || ''}
                                                         placeholder={`0–${row.maxPractical}`}
@@ -846,7 +895,7 @@ const MarksEntry = () => {
                                             value={row.remarks}
                                             onChange={(e) => handleMarkChange(index, 'remarks', e.target.value)}
                                             placeholder="Remarks (optional)"
-                                            disabled={isAbsent || !unlockStatus.isUnlocked}
+                                            disabled={isAbsent || !unlockStatus.isUnlocked || isPublished}
                                             sx={{ mt: 0.5, '& .MuiInputBase-input': { fontSize: '0.8125rem', py: 0.75 } }}
                                         />
                                     </Paper>
@@ -891,7 +940,7 @@ const MarksEntry = () => {
                                                         size="small"
                                                         value={row.attendanceStatus}
                                                         onChange={(e) => handleMarkChange(index, 'attendanceStatus', e.target.value)}
-                                                        disabled={!unlockStatus.isUnlocked}
+                                                        disabled={!unlockStatus.isUnlocked || isPublished}
                                                         variant="outlined"
                                                         sx={{ minWidth: 100, height: 32, fontSize: '0.8125rem' }}
                                                     >
@@ -914,7 +963,7 @@ const MarksEntry = () => {
                                                             size="small"
                                                             value={isAbsent ? '—' : row.theory}
                                                             onChange={(e) => handleMarkChange(index, 'theory', e.target.value)}
-                                                            disabled={isAbsent || !unlockStatus.isUnlocked}
+                                                            disabled={isAbsent || !unlockStatus.isUnlocked || isPublished}
                                                             error={!!getFieldError(index, 'theory')}
                                                             placeholder={`0–${row.maxTheory}`}
                                                             sx={{
@@ -947,7 +996,7 @@ const MarksEntry = () => {
                                                                 size="small"
                                                                 value={isAbsent ? '—' : row.practical}
                                                                 onChange={(e) => handleMarkChange(index, 'practical', e.target.value)}
-                                                                disabled={isAbsent || !unlockStatus.isUnlocked}
+                                                                disabled={isAbsent || !unlockStatus.isUnlocked || isPublished}
                                                                 error={!!getFieldError(index, 'practical')}
                                                                 placeholder={`0–${row.maxPractical}`}
                                                                 sx={{
@@ -974,7 +1023,7 @@ const MarksEntry = () => {
                                                         value={row.remarks}
                                                         onChange={(e) => handleMarkChange(index, 'remarks', e.target.value)}
                                                         placeholder="Optional"
-                                                        disabled={isAbsent || !unlockStatus.isUnlocked}
+                                                        disabled={isAbsent || !unlockStatus.isUnlocked || isPublished}
                                                         fullWidth
                                                         sx={{ '& .MuiInputBase-input': { fontSize: '0.8125rem' } }}
                                                     />
@@ -1010,27 +1059,98 @@ const MarksEntry = () => {
                     }}
                 >
                     <Box sx={{ flex: 1 }}>
-                        <Typography variant="caption" fontWeight={600} color={hasChanges ? 'warning.main' : 'text.secondary'}>
-                            {hasChanges ? 'Unsaved marks' : 'All marks saved'}
+                        <Typography variant="caption" fontWeight={600} color={isTeacherPublished ? 'info.main' : isFinalPublished ? 'success.main' : hasChanges ? 'warning.main' : 'text.secondary'}>
+                            {isTeacherPublished
+                                ? 'Submitted to Admin'
+                                : isFinalPublished
+                                ? 'Final Published'
+                                : hasChanges
+                                ? 'Unsaved marks'
+                                : 'All marks saved'}
                         </Typography>
                     </Box>
-                    <Button
-                        variant="contained"
-                        startIcon={<SaveIcon />}
-                        onClick={handleSubmit}
-                        disabled={!hasChanges || submitMarks.isPending || !unlockStatus.isUnlocked}
-                        sx={{
-                            borderRadius: 2,
-                            fontWeight: 700,
-                            textTransform: 'none',
-                            px: 3,
-                            py: 1,
-                        }}
-                    >
-                        {submitMarks.isPending ? 'Saving...' : 'Save Marks'}
-                    </Button>
+                    {!isPublished && (
+                        <>
+                            {!hasChanges && resultsData?.data && resultsData.data.length > 0 && (
+                                <Button
+                                    variant="outlined"
+                                    color="primary"
+                                    startIcon={<PublishIcon />}
+                                    onClick={() => setPublishConfirmOpen(true)}
+                                    disabled={!unlockStatus.isUnlocked || teacherPublish.isPending}
+                                    sx={{
+                                        borderRadius: 2,
+                                        fontWeight: 700,
+                                        textTransform: 'none',
+                                        px: 2,
+                                        py: 1,
+                                    }}
+                                >
+                                    Publish
+                                </Button>
+                            )}
+                            <Button
+                                variant="contained"
+                                startIcon={<SaveIcon />}
+                                onClick={handleSubmit}
+                                disabled={!hasChanges || submitMarks.isPending || !unlockStatus.isUnlocked}
+                                sx={{
+                                    borderRadius: 2,
+                                    fontWeight: 700,
+                                    textTransform: 'none',
+                                    px: 2.5,
+                                    py: 1,
+                                }}
+                            >
+                                {submitMarks.isPending ? 'Saving...' : 'Save Marks'}
+                            </Button>
+                        </>
+                    )}
                 </Paper>
             )}
+
+            {/* Teacher Publish Confirmation Dialog */}
+            <Dialog open={publishConfirmOpen} onClose={() => setPublishConfirmOpen(false)} maxWidth="xs" PaperProps={{ sx: { borderRadius: 2 } }}>
+                <DialogTitle sx={{ pb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <PublishIcon color="primary" fontSize="small" />
+                    <Typography variant="subtitle1" fontWeight={700}>Publish Marks to Administration</Typography>
+                </DialogTitle>
+                <DialogContent sx={{ pt: 0 }}>
+                    <DialogContentText variant="body2" sx={{ lineHeight: 1.6 }}>
+                        Are you sure you want to publish marks for <strong>{selectedSchedule ? getSubjectName(selectedSchedule.subjectId) : 'this subject'}</strong> ({selectedSchedule ? getClassName(selectedSchedule.classId) : ''})?
+                        <br /><br />
+                        Once published, these marks will be submitted to the School Admin and Principal for final review, and you will no longer be able to edit them.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions sx={{ px: 2.5, pb: 2.5, gap: 1 }}>
+                    <Button size="small" onClick={() => setPublishConfirmOpen(false)} sx={{ textTransform: 'none' }}>
+                        Cancel
+                    </Button>
+                    <Button
+                        size="small"
+                        variant="contained"
+                        startIcon={<PublishIcon />}
+                        disabled={teacherPublish.isPending}
+                        onClick={() => {
+                            teacherPublish.mutate(
+                                { examId: selectedExamId, scheduleId: selectedScheduleId },
+                                {
+                                    onSuccess: () => {
+                                        setPublishConfirmOpen(false);
+                                        showToast('Marks published to administration successfully!', 'success');
+                                    },
+                                    onError: (err: any) => {
+                                        showToast(err?.message || 'Failed to publish marks', 'error');
+                                    }
+                                }
+                            );
+                        }}
+                        sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2 }}
+                    >
+                        {teacherPublish.isPending ? 'Publishing...' : 'Yes, Publish'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Unsaved Changes Confirmation Dialog */}
             <Dialog open={unsavedDialogOpen} onClose={() => setUnsavedDialogOpen(false)} maxWidth="xs" PaperProps={{ sx: { borderRadius: 2 } }}>

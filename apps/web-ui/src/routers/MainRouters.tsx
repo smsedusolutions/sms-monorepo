@@ -240,6 +240,7 @@ const MainRouters = () => {
           {/* Exam Management Routes (Admin) */}
           <Route path="/school-admin/exam/config" element={<ExamConfiguration />} />
           <Route path="/school-admin/exam/scheduler" element={<ExamScheduler />} />
+          <Route path="/school-admin/exam/results" element={<PrincipalExamResults />} />
 
           {/* Announcements Routes (Admin) */}
           <Route path="/school-admin/announcements" element={<SchoolAdminAnnouncements />} />

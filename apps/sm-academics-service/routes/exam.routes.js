@@ -20,7 +20,14 @@ const {
 } = require('../controllers/exam-registration.controller');
 
 const {
-    submitMarks, getSubjectResults, publishResults, getStudentReportCard
+    submitMarks,
+    teacherPublishSubject,
+    getSubjectResults,
+    publishResults,
+    rollbackSubjectPublish,
+    getExamPublishStatus,
+    getStudentReportCard,
+    remindTeacherForMarksEntry
 } = require('../controllers/exam-result.controller');
 
 // ==========================================
@@ -178,10 +185,16 @@ router.post(
     authorizeRoles('sch_admin', 'teacher', 'principal'),
     submitMarks
 );
+router.post(
+    '/results/teacher-publish',
+    Authenticated,
+    authorizeRoles('sch_admin', 'teacher', 'principal'),
+    teacherPublishSubject
+);
 router.get(
     '/results/subject/:examId/:scheduleId',
     Authenticated,
-    authorizeRoles('sch_admin', 'teacher', 'principal'),
+    authorizeRoles('sch_admin', 'teacher', 'principal', 'student', 'parent'),
     getSubjectResults
 );
 router.post(
@@ -190,10 +203,28 @@ router.post(
     authorizeRoles('sch_admin', 'principal'),
     publishResults
 );
+router.post(
+    '/results/rollback',
+    Authenticated,
+    authorizeRoles('sch_admin', 'principal'),
+    rollbackSubjectPublish
+);
+router.get(
+    '/results/publish-status/:examId',
+    Authenticated,
+    authorizeRoles('sch_admin', 'principal', 'teacher'),
+    getExamPublishStatus
+);
 router.get(
     '/results/report-card/:studentId',
     Authenticated,
     getStudentReportCard
+);
+router.post(
+    '/results/remind-teacher',
+    Authenticated,
+    authorizeRoles('sch_admin', 'principal'),
+    remindTeacherForMarksEntry
 );
 
 module.exports = router;

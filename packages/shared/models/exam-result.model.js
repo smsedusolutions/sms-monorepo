@@ -68,9 +68,39 @@ const ExamResultSchema = new Schema({
         type: Date,
         default: Date.now
     },
+    publishStatus: {
+        type: String,
+        enum: ['draft', 'teacher_published', 'final_published'],
+        default: 'draft'
+    },
+    teacherPublishedAt: {
+        type: Date
+    },
+    teacherPublishedBy: {
+        type: String
+    },
+    finalPublishedAt: {
+        type: Date
+    },
+    finalPublishedBy: {
+        type: String
+    },
     isPublished: {
         type: Boolean,
         default: false
+    },
+    isEncrypted: {
+        type: Boolean,
+        default: false
+    },
+    encryptedMarks: {
+        type: String
+    },
+    encryptionIv: {
+        type: String
+    },
+    encryptionAuthTag: {
+        type: String
     }
 }, { timestamps: true });
 

@@ -80,6 +80,7 @@ import TokenService from "../../../queries/token/tokenService";
 import { useNotificationStore } from "../../../stores/notificationStore";
 import { useTimeSettingsStore } from "../../../stores/timeSettingsStore";
 import { formatSingleTime } from "../../../utils/timeUtils";
+import { sortClassesNumerically } from "../../../utils/classSort";
 import { useUrlTab } from "../../../hooks/useUrlTab";
 import ConfirmationDialog from "../../../components/Dialogs/ConfirmationDialog";
 import { AppButton } from "../../../components/shared/AppButton";
@@ -543,9 +544,7 @@ const TimetableMaster = () => {
 
   const config = configData?.data;
   const classes = useMemo(() => {
-    return (classesData?.data || []).sort((a: any, b: any) =>
-      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
-    );
+    return sortClassesNumerically(classesData?.data || []);
   }, [classesData]);
 
   const teachers = teachersData?.data || [];
@@ -553,7 +552,9 @@ const TimetableMaster = () => {
   const entries = timetableData?.data?.entries || [];
   const teachersOnLeave = teachersOnLeaveData?.data?.teacherIds || [];
   const substitutes = substitutesData?.data || [];
-  const activeClasses = activeClassesData?.data || [];
+  const activeClasses = useMemo(() => {
+    return sortClassesNumerically(activeClassesData?.data || []);
+  }, [activeClassesData]);
 
   const getTeacherDisplayName = (entry: TimetableEntry) => {
     if (!entry) return "";

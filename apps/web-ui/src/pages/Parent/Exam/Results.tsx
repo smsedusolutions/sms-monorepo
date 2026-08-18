@@ -28,11 +28,14 @@ import {
     ArrowForward as ArrowForwardIcon,
     Badge as BadgeIcon,
     AssignmentTurnedIn as ReportIcon,
+    Download as DownloadIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useChildSelector } from '../../../context/ChildSelectorContext';
 import { useGetStudentReportCard } from '../../../queries/Exam';
+import { useGetSubjects } from '../../../queries/Subject';
 import TokenService from '../../../queries/token/tokenService';
+import { exportReportCardPDF } from '../../../utils/reportCardPdfExport';
 
 const ParentExamResults: React.FC = () => {
     const navigate = useNavigate();
@@ -43,6 +46,13 @@ const ParentExamResults: React.FC = () => {
         schoolId,
         selectedChild?.studentId || ''
     );
+    const { data: subjectsData } = useGetSubjects(schoolId);
+    const subjects = subjectsData?.data || [];
+
+    const getSubjectName = (subjectId: string): string => {
+        const sub = subjects.find((s: any) => s.subjectId === subjectId || s._id === subjectId);
+        return sub?.name || subjectId;
+    };
 
     const reportCard = reportCardData?.data;
     const examResults = reportCard?.exams || [];
@@ -266,13 +276,47 @@ const ParentExamResults: React.FC = () => {
                                             {examResult.term} | {examResult.type}
                                         </Typography>
                                     </Box>
-                                    <Chip
-                                        label="Published"
-                                        color="success"
-                                        size="small"
-                                        icon={<TrendingIcon />}
-                                        sx={{ fontWeight: 700, px: 1 }}
-                                    />
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        <Chip
+                                            label="Published"
+                                            color="success"
+                                            size="small"
+                                            icon={<TrendingIcon />}
+                                            sx={{ fontWeight: 700, px: 1 }}
+                                        />
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            color="primary"
+                                            startIcon={<DownloadIcon />}
+                                            onClick={() => {
+                                                const formattedResults = (examResult.results || []).map((r: any) => ({
+                                                    subjectName: getSubjectName(r.subjectId),
+                                                    totalMarks: r.marksObtained ?? 0,
+                                                    maxMarks: r.maxMarks || 100,
+                                                    grade: r.grade,
+                                                    gradePoints: r.points,
+                                                    remarks: r.remarks
+                                                }));
+
+                                                exportReportCardPDF({
+                                                    schoolName: 'Demo International School',
+                                                    studentName: selectedChild ? `${selectedChild.firstName} ${selectedChild.lastName}` : (reportCard?.student?.name || 'Student'),
+                                                    rollNumber: selectedChild?.rollNumber || reportCard?.student?.rollNumber,
+                                                    admissionNumber: (selectedChild as any)?.admissionNumber || reportCard?.student?.admissionNumber,
+                                                    className: selectedChild?.className || reportCard?.student?.classId || 'Class',
+                                                    sectionName: selectedChild?.sectionName || reportCard?.student?.sectionId,
+                                                    academicYear: reportCard?.academicYear || '2025-2026',
+                                                    examName: examResult.name,
+                                                    termName: examResult.term,
+                                                    results: formattedResults
+                                                });
+                                            }}
+                                            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                                        >
+                                            Download PDF
+                                        </Button>
+                                    </Box>
                                 </Box>
 
                                 {/* Overall Performance Summary */}
@@ -333,8 +377,8 @@ const ParentExamResults: React.FC = () => {
 
                                                 return (
                                                     <TableRow key={result.subjectId || index} hover>
-                                                        <TableCell sx={{ fontWeight: 600 }}>{result.subjectId}</TableCell>
-                                                        <TableCell align="right">{result.maxMarks || '-'}</TableCell>
+                                                        <TableCell sx={{ fontWeight: 600 }}>{getSubjectName(result.subjectId)}</TableCell>
+                                                        <TableCell align="right">{result.maxMarks || 100}</TableCell>
                                                         <TableCell align="right">
                                                             <Typography variant="body2" fontWeight={700}>{result.marksObtained || '-'}</Typography>
                                                         </TableCell>

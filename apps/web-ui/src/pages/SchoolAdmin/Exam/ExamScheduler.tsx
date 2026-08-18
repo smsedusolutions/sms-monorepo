@@ -69,6 +69,7 @@ import { useGetTeachers } from '../../../queries/Teacher';
 import { useGetAllRooms } from '../../../queries/Timetable';
 import { useGetSchoolById } from '../../../queries/School';
 import { AdmitCardPDF } from '../../../components/PDFLayouts';
+import { sortClassesNumerically, compareClassesNumerically } from '../../../utils/classSort';
 
 import type { CreateExamRequest, CreateScheduleRequest, Exam } from '../../../types/exam.types';
 
@@ -437,7 +438,7 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
                             multiple
                             label="Participating Classes"
                             value={formData.classes}
-                            options={classes?.data?.map((c: any) => ({ value: c.classId, label: c.name })) || []}
+                            options={sortClassesNumerically(classes?.data || []).map((c: any) => ({ value: c.classId, label: c.name }))}
                             onChange={(e) => {
                                 const val = typeof e.target.value === 'string' ? e.target.value.split(',') : (e.target.value as string[]);
                                 setFormData({ ...formData, classes: val });
@@ -850,12 +851,13 @@ const ExamDetailView = ({ schoolId, exam, onBack, isMobile }: { schoolId: string
     const { data: rooms } = useGetAllRooms(schoolId);
     const { data: allClasses, isLoading: classesLoading } = useGetClasses(schoolId);
 
-    // Robust filtering for exam classes - check both classId and mongo _id
+    // Robust filtering for exam classes - check both classId and mongo _id, sorted numerically
     const examClasses = React.useMemo(() => {
         if (!allClasses?.data || !exam.classes) return [];
-        return allClasses.data.filter((c: any) =>
+        const filtered = allClasses.data.filter((c: any) =>
             exam.classes.includes(c.classId) || exam.classes.includes(c._id)
         );
+        return sortClassesNumerically(filtered);
     }, [allClasses, exam.classes]);
 
     // School details
@@ -1111,7 +1113,10 @@ const ExamDetailView = ({ schoolId, exam, onBack, isMobile }: { schoolId: string
                     </Paper>
                 ) : isMobile ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                        {schedule?.data?.map((sch: any) => (
+                        {[...(schedule?.data || [])].sort((a: any, b: any) =>
+                            compareClassesNumerically(getClassName(a.classId), getClassName(b.classId)) ||
+                            new Date(a.date).getTime() - new Date(b.date).getTime()
+                        ).map((sch: any) => (
                             <Paper key={sch._id} variant="outlined" sx={{ p: 1.5, borderRadius: 2, borderColor: '#e2e8f0' }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
                                     <Box>
@@ -1154,7 +1159,10 @@ const ExamDetailView = ({ schoolId, exam, onBack, isMobile }: { schoolId: string
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {schedule?.data?.map((sch: any) => (
+                                {[...(schedule?.data || [])].sort((a: any, b: any) =>
+                                    compareClassesNumerically(getClassName(a.classId), getClassName(b.classId)) ||
+                                    new Date(a.date).getTime() - new Date(b.date).getTime()
+                                ).map((sch: any) => (
                                     <TableRow key={sch._id}>
                                         <TableCell>{new Date(sch.date).toLocaleDateString()}</TableCell>
                                         <TableCell>{sch.startTime} - {sch.endTime}</TableCell>

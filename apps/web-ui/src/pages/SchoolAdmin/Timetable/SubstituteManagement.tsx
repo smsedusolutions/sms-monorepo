@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
     Box,
     Typography,
@@ -37,6 +37,7 @@ import {
 } from '../../../queries/Timetable';
 import { useGetTeachers } from '../../../queries/Teacher';
 import { useGetClasses } from '../../../queries/Class';
+import { sortClassesNumerically } from '../../../utils/classSort';
 import TokenService from '../../../queries/token/tokenService';
 import { AppInput } from '../../../components/shared/AppInput';
 import { AppSelect } from '../../../components/shared/AppSelect';
@@ -116,7 +117,7 @@ const SubstituteManagement = () => {
     const substitutes = substitutesData?.data || [];
     const history = historyData?.data || [];
     const teachers = teachersData?.data || [];
-    const classes = classesData?.data || [];
+    const classes = useMemo(() => sortClassesNumerically(classesData?.data || []), [classesData]);
 
     // Get sections for selected class
     const selectedClassObj = classes.find((c: any) => c.classId === formData.classId);
