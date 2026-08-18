@@ -25,6 +25,7 @@ import { useGetStudents } from '../../queries/Student';
 import { useGetSubjects } from '../../queries/Subject';
 import TokenService from '../../queries/token/tokenService';
 import type { Class, Student, Section } from '../../types';
+import { compareClassesNumerically } from '../../utils/classSort';
 
 const TeacherClasses = () => {
     const schoolId = TokenService.getSchoolId() || '';
@@ -111,7 +112,10 @@ const TeacherClasses = () => {
         });
     });
 
-    const teacherAssignments = Array.from(assignmentMap.values());
+    const teacherAssignments = Array.from(assignmentMap.values()).sort((a, b) =>
+        compareClassesNumerically(a.class.name, b.class.name) ||
+        (a.section.name || '').localeCompare(b.section.name || '', undefined, { numeric: true, sensitivity: 'base' })
+    );
     const isLoading = loadingTeacher || loadingClasses || loadingStudents || loadingSubjects;
 
     return (

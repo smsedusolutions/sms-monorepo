@@ -28,21 +28,33 @@ import {
     ArrowForward as ArrowForwardIcon,
     Badge as BadgeIcon,
     AssignmentTurnedIn as ReportIcon,
+    Download as DownloadIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useChildSelector } from '../../../context/ChildSelectorContext';
 import { useGetStudentReportCard } from '../../../queries/Exam';
+import { useGetSubjects } from '../../../queries/Subject';
 import TokenService from '../../../queries/token/tokenService';
+import { exportReportCardPDF } from '../../../utils/reportCardPdfExport';
+import { useAcademicYear } from '../../../hooks/useAcademicYear';
 
 const ParentExamResults: React.FC = () => {
     const navigate = useNavigate();
     const schoolId = TokenService.getSchoolId() || '';
+    const { currentAcademicYear } = useAcademicYear();
     const { selectedChild, setSelectedChild, children: contextChildren, isLoading: loadingChild } = useChildSelector();
 
     const { data: reportCardData, isLoading: reportLoading, error } = useGetStudentReportCard(
         schoolId,
         selectedChild?.studentId || ''
     );
+    const { data: subjectsData } = useGetSubjects(schoolId);
+    const subjects = subjectsData?.data || [];
+
+    const getSubjectName = (subjectId: string): string => {
+        const sub = subjects.find((s: any) => s.subjectId === subjectId || s._id === subjectId);
+        return sub?.name || subjectId;
+    };
 
     const reportCard = reportCardData?.data;
     const examResults = reportCard?.exams || [];
@@ -95,39 +107,43 @@ const ParentExamResults: React.FC = () => {
 
             {/* ── Multi-Child Switcher Bar ── */}
             {contextChildren.length > 1 && (
-                <Paper elevation={0} sx={{ p: 2, mb: 3, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
-                    <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1, display: 'block' }}>
+                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+                    <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, display: 'block' }}>
                         Select Child
                     </Typography>
-                    <Stack direction="row" spacing={1.5} flexWrap="wrap">
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
                         {contextChildren.map((child) => {
-                            const isSelected = selectedChild.studentId === child.studentId;
+                            const isSelected = selectedChild?.studentId === child.studentId;
                             return (
                                 <Button
                                     key={child.studentId}
                                     variant={isSelected ? 'contained' : 'outlined'}
+                                    size="small"
                                     onClick={() => setSelectedChild(child)}
-                                    startIcon={<BadgeIcon />}
+                                    startIcon={<BadgeIcon fontSize="small" />}
                                     sx={{
-                                        borderRadius: 2.5,
-                                        fontWeight: 700,
+                                        borderRadius: '20px',
+                                        fontWeight: 600,
                                         textTransform: 'none',
-                                        px: 2.5,
+                                        px: 2,
                                         py: 0.75,
-                                        bgcolor: isSelected ? '#2563eb' : '#ffffff',
-                                        borderColor: isSelected ? '#2563eb' : '#cbd5e1',
+                                        fontSize: '0.8125rem',
+                                        flexShrink: 0,
+                                        bgcolor: isSelected ? '#4f46e5' : '#ffffff',
                                         color: isSelected ? '#ffffff' : '#475569',
+                                        borderColor: isSelected ? '#4f46e5' : '#cbd5e1',
+                                        boxShadow: isSelected ? '0 2px 8px rgba(79, 70, 229, 0.25)' : 'none',
                                         '&:hover': {
-                                            bgcolor: isSelected ? '#1d4ed8' : '#f1f5f9',
-                                            borderColor: isSelected ? '#1d4ed8' : '#94a3b8',
+                                            bgcolor: isSelected ? '#4338ca' : '#f1f5f9',
+                                            borderColor: isSelected ? '#4338ca' : '#94a3b8',
                                         }
                                     }}
                                 >
-                                    {child.firstName} {child.lastName} {child.className ? `(${child.className}-${child.sectionName})` : ''}
+                                    {child.firstName} {child.lastName} {child.className ? `(${child.className}${child.sectionName ? `-${child.sectionName}` : ''})` : ''}
                                 </Button>
                             );
                         })}
-                    </Stack>
+                    </Box>
                 </Paper>
             )}
 
@@ -266,13 +282,47 @@ const ParentExamResults: React.FC = () => {
                                             {examResult.term} | {examResult.type}
                                         </Typography>
                                     </Box>
-                                    <Chip
-                                        label="Published"
-                                        color="success"
-                                        size="small"
-                                        icon={<TrendingIcon />}
-                                        sx={{ fontWeight: 700, px: 1 }}
-                                    />
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        <Chip
+                                            label="Published"
+                                            color="success"
+                                            size="small"
+                                            icon={<TrendingIcon />}
+                                            sx={{ fontWeight: 700, px: 1 }}
+                                        />
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            color="primary"
+                                            startIcon={<DownloadIcon />}
+                                            onClick={() => {
+                                                const formattedResults = (examResult.results || []).map((r: any) => ({
+                                                    subjectName: getSubjectName(r.subjectId),
+                                                    totalMarks: r.marksObtained ?? 0,
+                                                    maxMarks: r.maxMarks || 100,
+                                                    grade: r.grade,
+                                                    gradePoints: r.points,
+                                                    remarks: r.remarks
+                                                }));
+
+                                                exportReportCardPDF({
+                                                    schoolName: 'Demo International School',
+                                                    studentName: selectedChild ? `${selectedChild.firstName} ${selectedChild.lastName}` : (reportCard?.student?.name || 'Student'),
+                                                    rollNumber: selectedChild?.rollNumber || reportCard?.student?.rollNumber,
+                                                    admissionNumber: (selectedChild as any)?.admissionNumber || reportCard?.student?.admissionNumber,
+                                                    className: selectedChild?.className || reportCard?.student?.classId || 'Class',
+                                                    sectionName: selectedChild?.sectionName || reportCard?.student?.sectionId,
+                                                    academicYear: reportCard?.academicYear || currentAcademicYear,
+                                                    examName: examResult.name,
+                                                    termName: examResult.term,
+                                                    results: formattedResults
+                                                });
+                                            }}
+                                            sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                                        >
+                                            Download PDF
+                                        </Button>
+                                    </Box>
                                 </Box>
 
                                 {/* Overall Performance Summary */}
@@ -333,8 +383,8 @@ const ParentExamResults: React.FC = () => {
 
                                                 return (
                                                     <TableRow key={result.subjectId || index} hover>
-                                                        <TableCell sx={{ fontWeight: 600 }}>{result.subjectId}</TableCell>
-                                                        <TableCell align="right">{result.maxMarks || '-'}</TableCell>
+                                                        <TableCell sx={{ fontWeight: 600 }}>{getSubjectName(result.subjectId)}</TableCell>
+                                                        <TableCell align="right">{result.maxMarks || 100}</TableCell>
                                                         <TableCell align="right">
                                                             <Typography variant="body2" fontWeight={700}>{result.marksObtained || '-'}</Typography>
                                                         </TableCell>

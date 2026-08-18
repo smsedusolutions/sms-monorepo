@@ -27,8 +27,10 @@ import TokenService from '../../../../queries/token/tokenService';
 import { useGetFeeAssignments, useRecordPayment } from '../../../../queries/Fee';
 import { AppTable } from '../../../../components/shared/AppTable';
 import type { StudentFeeAccount } from '../../../../types/fee.types';
+import { useIsMobile } from '../../../../hooks/useIsMobile';
 
 const CollectPayment: React.FC = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
     const [searchQuery, setSearchQuery] = useState('');
     const [page, setPage] = useState(1);
@@ -155,18 +157,18 @@ const CollectPayment: React.FC = () => {
 
     if (selectedStudent) {
         return (
-            <Box sx={{ p: { xs: 2, sm: 3 } }}>
-                <Box sx={{ mb: 4 }}>
-                    <Typography variant="h4" fontWeight={700} color="text.primary">Collect Student Fees</Typography>
-                    <Typography variant="body2" color="text.secondary">Enter collections parameters, partial splits, checks, late overrides.</Typography>
+            <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
+                <Box sx={{ mb: 3 }}>
+                    <Typography variant="h4" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '1.4rem', sm: '2rem' } }}>Collect Student Fees</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>Enter collections parameters, partial splits, checks, late overrides.</Typography>
                 </Box>
 
-                <Card sx={{ borderRadius: 4, border: '1px solid #f2f5f9', p: 3, boxShadow: 'none', bgcolor: '#fff', mb: 4 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                        <Typography variant="h6" fontWeight={700}>
+                <Card sx={{ borderRadius: 3, border: '1px solid #f2f5f9', p: { xs: 1.5, sm: 3 }, boxShadow: 'none', bgcolor: '#fff', mb: 4 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, mb: 3, gap: 1.5 }}>
+                        <Typography variant="h6" fontWeight={700} sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                             Collecting Fees for: <span style={{ color: '#3b82f6' }}>{selectedStudent.studentName}</span> ({selectedStudent.className})
                         </Typography>
-                        <Button variant="outlined" size="small" startIcon={<CloseIcon />} onClick={() => setSelectedStudent(null)}>
+                        <Button variant="outlined" size="small" startIcon={<CloseIcon />} onClick={() => setSelectedStudent(null)} fullWidth={isMobile}>
                             Change Student
                         </Button>
                     </Box>
@@ -174,43 +176,48 @@ const CollectPayment: React.FC = () => {
                     <Grid container spacing={3}>
                         {/* Selected line items list */}
                         <Grid size={{ xs: 12, lg: 8 }}>
-                            <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none', mb: 3 }}>
-                                <CardContent>
+                            <Card sx={{ borderRadius: 3, border: '1px solid #f1f5f9', boxShadow: 'none', mb: 3 }}>
+                                <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                                     <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>Select Fee Categories to Collect</Typography>
-                                    <Stack spacing={2.5}>
+                                    <Stack spacing={2}>
                                         {selectedStudent.feeBreakdown.filter(i => i.balanceAmount > 0).map(item => {
                                             const selection = selectedItems[item.feeCategoryId] || { selected: false, payAmount: item.balanceAmount, lateFee: 0 };
                                             return (
-                                                <Box key={item.feeCategoryId} sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 2, borderBottom: '1px solid #f1f5f9', pb: 2 }}>
-                                                    <FormControlLabel
-                                                        control={<Checkbox checked={selection.selected} onChange={(e) => handleCheckboxChange(item.feeCategoryId, e.target.checked)} />}
-                                                        label={
-                                                            <Box>
-                                                                <Typography variant="body2" fontWeight={600}>{item.categoryName}</Typography>
-                                                                <Typography variant="caption" color="text.secondary">Dues: {formatCurrency(item.balanceAmount)}</Typography>
-                                                            </Box>
-                                                        }
-                                                        sx={{ flex: 1, minWidth: 200 }}
-                                                    />
+                                                <Box key={item.feeCategoryId} sx={{ p: 1.5, border: '1px solid #f1f5f9', borderRadius: 2, bgcolor: '#fafafa' }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: selection.selected ? 1.5 : 0 }}>
+                                                        <FormControlLabel
+                                                            control={<Checkbox checked={selection.selected} onChange={(e) => handleCheckboxChange(item.feeCategoryId, e.target.checked)} />}
+                                                            label={
+                                                                <Box>
+                                                                    <Typography variant="body2" fontWeight={600}>{item.categoryName}</Typography>
+                                                                    <Typography variant="caption" color="text.secondary">Dues: {formatCurrency(item.balanceAmount)}</Typography>
+                                                                </Box>
+                                                            }
+                                                        />
+                                                    </Box>
                                                     {selection.selected && (
-                                                        <Stack direction="row" spacing={2}>
-                                                            <TextField
-                                                                type="number"
-                                                                size="small"
-                                                                label="Paying"
-                                                                value={selection.payAmount}
-                                                                onChange={(e) => handlePayAmountChange(item.feeCategoryId, Number(e.target.value))}
-                                                                sx={{ width: 120 }}
-                                                            />
-                                                            <TextField
-                                                                type="number"
-                                                                size="small"
-                                                                label="Late Fee"
-                                                                value={selection.lateFee}
-                                                                onChange={(e) => handleLateFeeChange(item.feeCategoryId, Number(e.target.value))}
-                                                                sx={{ width: 100 }}
-                                                            />
-                                                        </Stack>
+                                                        <Grid container spacing={1.5}>
+                                                            <Grid size={{ xs: 6, sm: 6 }}>
+                                                                <TextField
+                                                                    type="number"
+                                                                    size="small"
+                                                                    label="Paying (₹)"
+                                                                    fullWidth
+                                                                    value={selection.payAmount}
+                                                                    onChange={(e) => handlePayAmountChange(item.feeCategoryId, Number(e.target.value))}
+                                                                />
+                                                            </Grid>
+                                                            <Grid size={{ xs: 6, sm: 6 }}>
+                                                                <TextField
+                                                                    type="number"
+                                                                    size="small"
+                                                                    label="Late Fee (₹)"
+                                                                    fullWidth
+                                                                    value={selection.lateFee}
+                                                                    onChange={(e) => handleLateFeeChange(item.feeCategoryId, Number(e.target.value))}
+                                                                />
+                                                            </Grid>
+                                                        </Grid>
                                                     )}
                                                 </Box>
                                             );
@@ -329,55 +336,51 @@ const CollectPayment: React.FC = () => {
     }
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight={700} color="text.primary">Payment Collection Counter</Typography>
-                <Typography variant="body2" color="text.secondary">Search and select a student profile to record physical and digital payments.</Typography>
+        <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h4" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '1.4rem', sm: '2rem' } }}>Payment Collection Counter</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>Search and select a student profile to record physical and digital payments.</Typography>
             </Box>
 
-            <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                <CardContent sx={{ p: 0 }}>
-                    <Box sx={{ p: 2 }}>
-                        <TextField
-                            size="small"
-                            placeholder="Search by student name or roll number..."
-                            value={searchQuery}
-                            onChange={(e) => {
-                                setSearchQuery(e.target.value);
-                                setPage(1);
-                            }}
-                            sx={{ width: { xs: '100%', sm: 320 } }}
-                        />
-                    </Box>
-                    <AppTable
-                        columns={[
-                            { name: 'Student Name', selector: (row: StudentFeeAccount) => row.studentName, cell: (row: StudentFeeAccount) => <Typography variant="body2" fontWeight={600}>{row.studentName}</Typography> },
-                            { name: 'Class', selector: (row: StudentFeeAccount) => row.className },
-                            // { name: 'Structure Assigned', selector: (row: StudentFeeAccount) => row.feeStructureName },
-                            { name: 'Net Dues Balance', selector: (row: StudentFeeAccount) => row.totalBalance, cell: (row: StudentFeeAccount) => <Typography variant="body2" fontWeight={700} color={row.totalBalance > 0 ? 'error.main' : 'success.main'}>{formatCurrency(row.totalBalance)}</Typography> },
-                            {
-                                name: 'Action',
-                                cell: (row: StudentFeeAccount) => (
-                                    <Button variant="contained" size="small" disabled={row.totalBalance <= 0} onClick={() => handleSelectStudent(row)}>
-                                        Collect Payment
-                                    </Button>
-                                )
-                            }
-                        ]}
-                        data={students}
-                        isLoading={isLoadingStudents}
-                        emptyMessage="No student fee accounts found."
-                        paginationServer={true}
-                        paginationTotalRows={studentsData?.pagination?.totalRecords || studentsData?.pagination?.total || 0}
-                        onChangePage={(newPage) => setPage(newPage)}
-                        onChangeRowsPerPage={(newLimit) => {
-                            setLimit(newLimit);
-                            setPage(1);
-                        }}
-                        paginationPerPage={limit}
-                    />
-                </CardContent>
-            </Card>
+            <Box sx={{ mb: 2 }}>
+                <TextField
+                    size="small"
+                    placeholder="Search by student name or roll number..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setPage(1);
+                    }}
+                    sx={{ width: { xs: '100%', sm: 320 } }}
+                />
+            </Box>
+
+            <AppTable
+                columns={[
+                    { name: 'Student Name', selector: (row: StudentFeeAccount) => row.studentName, cell: (row: StudentFeeAccount) => <Typography variant="body2" fontWeight={600}>{row.studentName}</Typography> },
+                    { name: 'Class', selector: (row: StudentFeeAccount) => row.className },
+                    { name: 'Net Dues Balance', selector: (row: StudentFeeAccount) => row.totalBalance, cell: (row: StudentFeeAccount) => <Typography variant="body2" fontWeight={700} color={row.totalBalance > 0 ? 'error.main' : 'success.main'}>{formatCurrency(row.totalBalance)}</Typography> },
+                    {
+                        name: 'Action',
+                        cell: (row: StudentFeeAccount) => (
+                            <Button variant="contained" size="small" disabled={row.totalBalance <= 0} onClick={() => handleSelectStudent(row)}>
+                                Collect Payment
+                            </Button>
+                        )
+                    }
+                ]}
+                data={students}
+                isLoading={isLoadingStudents}
+                emptyMessage="No student fee accounts found."
+                paginationServer={true}
+                paginationTotalRows={studentsData?.pagination?.totalRecords || studentsData?.pagination?.total || 0}
+                onChangePage={(newPage) => setPage(newPage)}
+                onChangeRowsPerPage={(newLimit) => {
+                    setLimit(newLimit);
+                    setPage(1);
+                }}
+                paginationPerPage={limit}
+            />
 
             <Snackbar open={toast.open} autoHideDuration={4000} onClose={() => setToast(t => ({ ...t, open: false }))} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
                 <Alert severity={toast.severity}>{toast.message}</Alert>

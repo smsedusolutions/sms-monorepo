@@ -3,7 +3,7 @@
 const FeeReceiptRepository = require('../repositories/feeReceipt.repository');
 const { getSchoolDbConnection } = require("../configs/db");
 const { getSchoolDbName } = require("../utils/schoolDbHelper");
-const { StudentSchema } = require("@sms/shared/models");
+const { StudentSchema, ParentSchema } = require("@sms/shared/models");
 const { generateReceiptPDF } = require('../utils/pdfGenerator');
 
 /**
@@ -26,25 +26,79 @@ class FeeReceiptService {
     }
 
     /**
+     * Resolves parent model dynamically
+     */
+    async _getParentModel(schoolId) {
+        const schoolDbName = await getSchoolDbName(schoolId);
+        const schoolDb = getSchoolDbConnection(schoolDbName);
+        try {
+            return schoolDb.model("Parent");
+        } catch (e) {
+            return schoolDb.model("Parent", ParentSchema);
+        }
+    }
+
+    /**
      * Asserts query requester belongs to the matching student ID boundary
      */
     async _assertRequesterAccess(schoolId, studentId, requester) {
         if (!requester) return;
 
-        if (requester.role === 'student' && requester.studentId !== studentId) {
-            const error = new Error('Unauthorized access to receipt details');
-            error.statusCode = 403;
-            throw error;
+        // School Admin, Accountant, Principal, Admin
+        if (['sch_admin', 'principal', 'accountant', 'super_admin', 'admin'].includes(requester.role)) {
+            return;
         }
 
-        if (requester.role === 'parent') {
-            const StudentModel = await this._getStudentModel(schoolId);
-            const targetStudent = await StudentModel.findOne({ schoolId, studentId }).lean();
-            if (!targetStudent || targetStudent.parentId !== requester.parentId) {
-                const error = new Error('Unauthorized access to child receipt details');
+        if (requester.role === 'student') {
+            if (requester.studentId && requester.studentId !== studentId) {
+                const error = new Error('Unauthorized access to receipt details');
                 error.statusCode = 403;
                 throw error;
             }
+            return;
+        }
+
+        if (requester.role === 'parent') {
+            const effectiveParentId = requester.parentId || requester.userId;
+
+            // 1. Direct match from JWT token studentIds
+            if (Array.isArray(requester.studentIds) && requester.studentIds.includes(studentId)) {
+                return;
+            }
+
+            // 2. Direct match on Student's parentId
+            const StudentModel = await this._getStudentModel(schoolId);
+            const targetStudent = await StudentModel.findOne({ schoolId, studentId }).lean();
+            if (targetStudent && targetStudent.parentId && (
+                targetStudent.parentId === effectiveParentId ||
+                targetStudent.parentId === requester.parentId ||
+                targetStudent.parentId === requester.userId
+            )) {
+                return;
+            }
+
+            // 3. Match from Parent document in DB
+            const ParentModel = await this._getParentModel(schoolId);
+            const parentDoc = await ParentModel.findOne({
+                $or: [
+                    { parentId: effectiveParentId },
+                    { userId: requester.userId },
+                    { email: requester.email }
+                ].filter(Boolean)
+            }).lean();
+
+            if (parentDoc && Array.isArray(parentDoc.studentIds) && parentDoc.studentIds.includes(studentId)) {
+                return;
+            }
+
+            // If target student found and parent document exists, permit access
+            if (targetStudent && parentDoc && targetStudent.parentId === parentDoc.parentId) {
+                return;
+            }
+
+            const error = new Error('Unauthorized access to child receipt details');
+            error.statusCode = 403;
+            throw error;
         }
     }
 

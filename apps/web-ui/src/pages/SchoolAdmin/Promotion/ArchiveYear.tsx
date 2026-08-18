@@ -16,11 +16,16 @@ import TokenService from "../../../queries/token/tokenService";
 import { useArchiveYear } from "../../../queries/Promotion";
 import { useNotificationStore } from "../../../stores/notificationStore";
 import { useIsMobile } from "../../../hooks/useIsMobile";
+import { useAcademicYear } from "../../../hooks/useAcademicYear";
+import { AppSelect } from "../../../components/shared/AppSelect";
+import { useNavigate } from "react-router-dom";
 
 const ArchiveYear = () => {
+    const navigate = useNavigate();
     const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || "";
     const { showNotification } = useNotificationStore();
+    const { upcomingAcademicYearOptions, nextAcademicYear } = useAcademicYear();
 
     const [newAcademicYear, setNewAcademicYear] = useState("");
     const [notes, setNotes] = useState("");
@@ -161,14 +166,20 @@ const ArchiveYear = () => {
                 </Typography>
 
                 <Stack spacing={2}>
-                    <TextField
+                    <AppSelect
                         label="Next Academic Year to Start"
                         required
-                        placeholder="e.g., 2026-27"
-                        value={newAcademicYear}
-                        onChange={(e) => setNewAcademicYear(e.target.value)}
+                        value={newAcademicYear || nextAcademicYear}
+                        options={upcomingAcademicYearOptions}
+                        onChange={(e) => {
+                            const val = e.target.value as string;
+                            if (val === '__create_new__') {
+                                navigate('/school-admin/exam/config?tab=years', { state: { openAddAcademicYear: true } });
+                            } else {
+                                setNewAcademicYear(val);
+                            }
+                        }}
                         disabled={!isChecklistComplete}
-                        size="small"
                     />
 
                     <TextField

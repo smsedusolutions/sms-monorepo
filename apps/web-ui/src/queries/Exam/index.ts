@@ -7,6 +7,10 @@ import type {
     CreateGradingSystemRequest,
     CreateScheduleRequest,
     SubmitMarksRequest,
+    TeacherPublishRequest,
+    FinalPublishRequest,
+    RollbackPublishRequest,
+    ExamPublishStatusData,
     ApiResponse,
     ExamTerm,
     ExamType,
@@ -25,7 +29,8 @@ const EXAM_KEYS = {
     EXAMS: "exams",
     SCHEDULE: "examSchedule",
     RESULTS: "examResults",
-    ADMIT_CARD: "admitCard"
+    ADMIT_CARD: "admitCard",
+    PUBLISH_STATUS: "examPublishStatus"
 };
 
 // ==========================================
@@ -218,14 +223,69 @@ export const useSubmitMarks = (schoolId: string) => {
         mutationFn: (data: SubmitMarksRequest) => useApi("POST", `/api/academics/school/${schoolId}/results/submit`, data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.RESULTS] });
+            queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.SCHEDULE] });
+            queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.PUBLISH_STATUS] });
         }
+    });
+};
+
+export const useTeacherPublishSubject = (schoolId: string) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: TeacherPublishRequest) => useApi("POST", `/api/academics/school/${schoolId}/results/teacher-publish`, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.RESULTS] });
+            queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.SCHEDULE] });
+            queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.PUBLISH_STATUS] });
+        }
+    });
+};
+
+export const useFinalPublishExam = (schoolId: string) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: FinalPublishRequest) => useApi("POST", `/api/academics/school/${schoolId}/results/publish`, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.RESULTS] });
+            queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.SCHEDULE] });
+            queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.EXAMS] });
+            queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.PUBLISH_STATUS] });
+        }
+    });
+};
+
+export const useRollbackSubjectPublish = (schoolId: string) => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: (data: RollbackPublishRequest) => useApi("POST", `/api/academics/school/${schoolId}/results/rollback`, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.RESULTS] });
+            queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.SCHEDULE] });
+            queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.EXAMS] });
+            queryClient.invalidateQueries({ queryKey: [EXAM_KEYS.PUBLISH_STATUS] });
+        }
+    });
+};
+
+export const useRemindTeacherMarks = (schoolId: string) => {
+    return useMutation({
+        mutationFn: (data: { examId: string; scheduleId: string }) =>
+            useApi("POST", `/api/academics/school/${schoolId}/results/remind-teacher`, data)
+    });
+};
+
+export const useGetExamPublishStatus = (schoolId: string, examId: string) => {
+    return useQuery({
+        queryKey: [EXAM_KEYS.PUBLISH_STATUS, schoolId, examId],
+        queryFn: () => useApi<ApiResponse<ExamPublishStatusData>>("GET", `/api/academics/school/${schoolId}/results/publish-status/${examId}`),
+        enabled: !!schoolId && !!examId
     });
 };
 
 export const useGetSubjectResults = (schoolId: string, examId: string, scheduleId: string) => {
     return useQuery({
         queryKey: [EXAM_KEYS.RESULTS, schoolId, examId, scheduleId],
-        queryFn: () => useApi<ApiResponse<ExamResult[]>>("GET", `/api/academics/school/${schoolId}/results/subject/${examId}/${scheduleId}`),
+        queryFn: () => useApi<ApiResponse<ExamResult[]> & { schedule?: { publishStatus: string; teacherPublishedAt?: string; teacherPublishedBy?: string; finalPublishedAt?: string; finalPublishedBy?: string } }>("GET", `/api/academics/school/${schoolId}/results/subject/${examId}/${scheduleId}`),
         enabled: !!schoolId && !!examId && !!scheduleId
     });
 };

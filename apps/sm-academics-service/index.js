@@ -7,6 +7,7 @@ const { connectDB, ensureDbConnection } = require('./configs/db');
 const timetableRoutes = require('./routes/timetable.routes');
 const examRoutes = require('./routes/exam.routes');
 const homeworkRoutes = require('./routes/homework.routes');
+const academicYearRoutes = require('./routes/academic-year.routes');
 const { commonRateLimiter } = require('@sms/shared/middlewares');
 
 const app = express();
@@ -46,6 +47,7 @@ app.use(ensureDbConnection);
 // Routes (school-specific)
 app.use('/api/academics/school/:schoolId', timetableRoutes);
 app.use('/api/academics/school/:schoolId', examRoutes);
+app.use('/api/academics/school/:schoolId', academicYearRoutes);
 app.use('/api/academics/school/:schoolId/homework', homeworkRoutes);
 
 // Health check endpoint

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Box,
     Typography,
@@ -50,6 +50,7 @@ import {
 import type { Period, Shift } from '../../../types/timetable.types';
 import TokenService from '../../../queries/token/tokenService';
 import { useIsMobile } from '../../../hooks/useIsMobile';
+import { useAcademicYear } from '../../../hooks/useAcademicYear';
 import MobileCardList from '../../../components/mobile/data/MobileCardList';
 import MobileCardItem from '../../../components/mobile/data/MobileCardItem';
 
@@ -382,11 +383,19 @@ const PeriodDialog = ({ open, onClose, onSave, editData, shifts, nextPeriodNumbe
 const TimetableConfigPage = () => {
     const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
+    const { academicYearOptions, currentAcademicYear } = useAcademicYear();
     const { data: configData, isLoading, error } = useGetActiveConfig(schoolId);
     const createConfig = useCreateConfig(schoolId);
     const [periodDialogOpen, setPeriodDialogOpen] = useState(false);
     const [editPeriod, setEditPeriod] = useState<Period | null>(null);
     const [newAcademicYear, setNewAcademicYear] = useState('');
+
+    React.useEffect(() => {
+        if (!newAcademicYear && currentAcademicYear) {
+            setNewAcademicYear(currentAcademicYear);
+        }
+    }, [currentAcademicYear, newAcademicYear]);
+
     const [workingDays, setWorkingDays] = useState<string[]>(['monday', 'tuesday', 'wednesday', 'thursday', 'friday']);
 
     const config = configData?.data;
@@ -506,12 +515,11 @@ const TimetableConfigPage = () => {
                     </Alert>
                     <Grid container spacing={2} alignItems="center">
                         <Grid size={{ xs: 12, md: 4 }}>
-                            <AppInput
+                            <AppSelect
                                 label="Academic Year"
-                                fullWidth
-                                value={newAcademicYear}
-                                onChange={(e) => setNewAcademicYear(e.target.value)}
-                                placeholder="e.g., 2025-2026"
+                                value={newAcademicYear || currentAcademicYear}
+                                options={academicYearOptions}
+                                onChange={(e) => setNewAcademicYear(e.target.value as string)}
                             />
                         </Grid>
                         <Grid size={{ xs: 12, md: 6 }}>

@@ -23,6 +23,7 @@ import { AppInput } from '../shared/AppInput';
 import { AppSelect } from '../shared/AppSelect';
 import { AppButton } from '../shared/AppButton';
 import { AppMultiSelect } from '../shared/AppMultiSelect';
+import { sortClassesNumerically } from '../../utils/classSort';
 
 interface SubjectDialogProps {
     open: boolean;
@@ -170,8 +171,7 @@ export const AddSubjectDialog: React.FC<SubjectDialogProps> = ({
         "Operation failed";
 
     // Build option arrays for AppMultiSelect
-    const classOptions = classes
-        .filter((c: Class) => c.status === 'active')
+    const classOptions = sortClassesNumerically(classes.filter((c: Class) => c.status === 'active'))
         .map((c: Class) => ({ id: c.classId || (c as any)._id, label: c.name }));
 
     const teacherOptions = teachers

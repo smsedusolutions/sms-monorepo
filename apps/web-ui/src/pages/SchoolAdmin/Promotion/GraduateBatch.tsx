@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
     Box,
     Button,
@@ -26,16 +26,26 @@ import { useGetClasses } from "../../../queries/Class";
 import { useGetPromotionPreview, useGraduateBatch } from "../../../queries/Promotion";
 import { useNotificationStore } from "../../../stores/notificationStore";
 import { useIsMobile } from "../../../hooks/useIsMobile";
+import { useAcademicYear } from "../../../hooks/useAcademicYear";
+import { AppSelect } from "../../../components/shared/AppSelect";
 
 const GraduateBatch = () => {
     const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || "";
     const { showNotification } = useNotificationStore();
+    const { academicYearOptions, currentAcademicYear } = useAcademicYear();
 
     // States
     const [selectedClassId, setSelectedClassId] = useState("");
     const [selectedSectionId, setSelectedSectionId] = useState("");
     const [newAcademicYear, setNewAcademicYear] = useState("");
+
+    useEffect(() => {
+        if (!newAcademicYear && currentAcademicYear) {
+            setNewAcademicYear(currentAcademicYear);
+        }
+    }, [currentAcademicYear, newAcademicYear]);
+
     const [notes, setNotes] = useState("");
     const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
 
@@ -172,13 +182,12 @@ const GraduateBatch = () => {
                                 </Select>
                             </FormControl>
 
-                            <TextField
+                            <AppSelect
                                 label="Graduation Year"
                                 required
-                                placeholder="e.g., 2025-26"
-                                value={newAcademicYear}
-                                onChange={(e) => setNewAcademicYear(e.target.value)}
-                                size="small"
+                                value={newAcademicYear || currentAcademicYear}
+                                options={academicYearOptions}
+                                onChange={(e) => setNewAcademicYear(e.target.value as string)}
                             />
 
                             <TextField

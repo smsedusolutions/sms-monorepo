@@ -40,6 +40,7 @@ import {
 import { useGetClasses } from "../../../queries/Class";
 import { useGetTeachers } from "../../../queries/Teacher";
 import { useGetSubjects } from "../../../queries/Subject";
+import { sortClassesNumerically } from "../../../utils/classSort";
 import TokenService from "../../../queries/token/tokenService";
 import { useNotificationStore } from "../../../stores/notificationStore";
 import { useTimeSettingsStore } from "../../../stores/timeSettingsStore";
@@ -86,7 +87,7 @@ const TimetableDraftPreview = () => {
   const submitForApproval = useSubmitTimetableForApproval(schoolId);
 
   const config = configData?.data;
-  const classes = classesData?.data || [];
+  const classes = useMemo(() => sortClassesNumerically(classesData?.data || []), [classesData]);
   const teachers = teachersData?.data || [];
   const subjects = subjectsData?.data || [];
   const draft = draftData?.data;

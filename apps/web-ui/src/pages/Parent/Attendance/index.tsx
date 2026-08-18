@@ -249,95 +249,95 @@ const ParentAttendance: React.FC = () => {
     const years = Array.from({ length: 5 }, (_, i) => now.getFullYear() - i);
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 1400, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
             {/* Page Header */}
-            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2, mb: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                    <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: '#eff6ff' }}>
-                        <CalendarIcon sx={{ color: '#2563eb', fontSize: 28 }} />
+            <Box sx={{ display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between', flexDirection: { xs: 'column', sm: 'row' }, gap: 1.5, mb: { xs: 2, sm: 2.5 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                    <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <CalendarIcon sx={{ color: '#2563eb', fontSize: { xs: 22, sm: 26 } }} />
                     </Box>
                     <Box>
-                        <Typography variant="h4" fontWeight={800} color="#1e293b">Attendance</Typography>
-                        <Typography variant="body2" color="text.secondary">
+                        <Typography variant="h4" fontWeight={800} color="#1e293b" sx={{ fontSize: { xs: '1.35rem', sm: '1.75rem' }, letterSpacing: '-0.02em', lineHeight: 1.2 }}>Attendance</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: { xs: '0.75rem', sm: '0.825rem' } }}>
                             {selectedChild.firstName}'s attendance report — {dateRangeLabel}
                         </Typography>
                     </Box>
                 </Box>
-                <ButtonGroup variant="contained" size="small" disableElevation>
+                <ButtonGroup variant="contained" size="small" disableElevation sx={{ width: { xs: '100%', sm: 'auto' } }}>
                     <Button
-                        startIcon={<PdfIcon />}
+                        startIcon={<PdfIcon sx={{ fontSize: 15 }} />}
                         onClick={handleExportPDF}
                         disabled={!rawAttendance.length || exporting === 'pdf'}
-                        sx={{ bgcolor: '#dc2626', '&:hover': { bgcolor: '#b91c1c' } }}
+                        sx={{ bgcolor: '#dc2626', '&:hover': { bgcolor: '#b91c1c' }, borderRadius: '6px 0 0 6px', fontWeight: 600, fontSize: '0.72rem', py: 0.4, flex: 1 }}
                     >
-                        {exporting === 'pdf' ? 'Generating…' : 'Export PDF'}
+                        {exporting === 'pdf' ? '...' : 'PDF'}
                     </Button>
                     <Button
-                        startIcon={<ExcelIcon />}
+                        startIcon={<ExcelIcon sx={{ fontSize: 15 }} />}
                         onClick={handleExportExcel}
                         disabled={!rawAttendance.length || exporting === 'excel'}
-                        sx={{ bgcolor: '#16a34a', '&:hover': { bgcolor: '#15803d' } }}
+                        sx={{ bgcolor: '#16a34a', '&:hover': { bgcolor: '#15803d' }, borderRadius: '0 6px 6px 0', fontWeight: 600, fontSize: '0.72rem', py: 0.4, flex: 1 }}
                     >
-                        {exporting === 'excel' ? 'Generating…' : 'Export Excel'}
+                        {exporting === 'excel' ? '...' : 'Excel'}
                     </Button>
                 </ButtonGroup>
             </Box>
 
             {/* ── Filter Bar ── */}
-            <Paper elevation={0} sx={{ p: 2.5, mb: 3, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <FilterIcon sx={{ color: '#64748b', fontSize: 18 }} />
-                    <Typography variant="subtitle2" fontWeight={700} color="#475569">Filters</Typography>
+            <Paper elevation={0} sx={{ p: { xs: 1.5, sm: 2 }, mb: { xs: 2, sm: 2.5 }, borderRadius: 2.5, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1.25 }}>
+                    <FilterIcon sx={{ color: '#64748b', fontSize: 16 }} />
+                    <Typography variant="caption" fontWeight={700} color="#475569" sx={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>Filters</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.25, alignItems: 'center' }}>
                     {/* Mode toggle */}
                     <ToggleButtonGroup
                         value={filterMode}
                         exclusive
                         onChange={(_, v) => v && setFilterMode(v)}
                         size="small"
-                        sx={{ bgcolor: '#fff', border: '1px solid #e2e8f0', borderRadius: 2 }}
+                        sx={{ bgcolor: '#fff', border: '1px solid #e2e8f0', borderRadius: 2, height: 32 }}
                     >
-                        <ToggleButton value="monthly" sx={{ px: 2, fontWeight: 600 }}>Monthly</ToggleButton>
-                        <ToggleButton value="range" sx={{ px: 2, fontWeight: 600 }}>Date Range</ToggleButton>
+                        <ToggleButton value="monthly" sx={{ px: 1.5, fontWeight: 600, fontSize: '0.72rem' }}>Monthly</ToggleButton>
+                        <ToggleButton value="range" sx={{ px: 1.5, fontWeight: 600, fontSize: '0.72rem' }}>Date Range</ToggleButton>
                     </ToggleButtonGroup>
 
                     {filterMode === 'monthly' ? (
                         <>
-                            <FormControl size="small" sx={{ minWidth: 140 }}>
-                                <InputLabel>Month</InputLabel>
-                                <Select value={selectedMonth} label="Month" onChange={e => setSelectedMonth(Number(e.target.value))}>
-                                    {MONTHS.map(m => <MenuItem key={m.value} value={m.value}>{m.label}</MenuItem>)}
+                            <FormControl size="small" sx={{ minWidth: 120 }}>
+                                <InputLabel sx={{ fontSize: '0.8rem' }}>Month</InputLabel>
+                                <Select value={selectedMonth} label="Month" onChange={e => setSelectedMonth(Number(e.target.value))} sx={{ height: 32, fontSize: '0.8rem' }}>
+                                    {MONTHS.map(m => <MenuItem key={m.value} value={m.value} sx={{ fontSize: '0.8rem' }}>{m.label}</MenuItem>)}
                                 </Select>
                             </FormControl>
-                            <FormControl size="small" sx={{ minWidth: 100 }}>
-                                <InputLabel>Year</InputLabel>
-                                <Select value={selectedYear} label="Year" onChange={e => setSelectedYear(Number(e.target.value))}>
-                                    {years.map(y => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+                            <FormControl size="small" sx={{ minWidth: 85 }}>
+                                <InputLabel sx={{ fontSize: '0.8rem' }}>Year</InputLabel>
+                                <Select value={selectedYear} label="Year" onChange={e => setSelectedYear(Number(e.target.value))} sx={{ height: 32, fontSize: '0.8rem' }}>
+                                    {years.map(y => <MenuItem key={y} value={y} sx={{ fontSize: '0.8rem' }}>{y}</MenuItem>)}
                                 </Select>
                             </FormControl>
                         </>
                     ) : (
                         <>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="caption" color="text.secondary" fontWeight={600}>From</Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: '0.72rem' }}>From</Typography>
                                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
                                     max={endDate}
-                                    style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13 }} />
+                                    style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12, height: 32 }} />
                             </Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="caption" color="text.secondary" fontWeight={600}>To</Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: '0.72rem' }}>To</Typography>
                                 <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
                                     min={startDate} max={now.toISOString().split('T')[0]}
-                                    style={{ padding: '8px 10px', borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 13 }} />
+                                    style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12, height: 32 }} />
                             </Box>
                         </>
                     )}
 
-                    <Divider orientation="vertical" flexItem />
+                    <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' } }} />
 
                     {/* Status filter */}
-                    <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap' }}>
+                    <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', width: { xs: '100%', sm: 'auto' } }}>
                         {(['all', 'present', 'absent', 'late', 'half_day', 'leave'] as StatusFilter[]).map(s => (
                             <Chip
                                 key={s}
@@ -346,6 +346,8 @@ const ParentAttendance: React.FC = () => {
                                 onClick={() => setStatusFilter(s)}
                                 sx={{
                                     fontWeight: 600,
+                                    fontSize: '0.68rem',
+                                    height: 24,
                                     cursor: 'pointer',
                                     bgcolor: statusFilter === s
                                         ? (s === 'all' ? '#2563eb' : STATUS_COLORS[s])
@@ -364,20 +366,20 @@ const ParentAttendance: React.FC = () => {
             </Paper>
 
             {isLoading ? (
-                <Grid container spacing={3}>
+                <Grid container spacing={{ xs: 1.5, sm: 2 }}>
                     {[1, 2, 3, 4].map(i => (
-                        <Grid size={{ xs: 12, sm: 6, md: 3 }} key={i}>
-                            <Skeleton variant="rectangular" height={110} sx={{ borderRadius: 3 }} />
+                        <Grid size={{ xs: 6, sm: 6, md: 3 }} key={i}>
+                            <Skeleton variant="rectangular" height={85} sx={{ borderRadius: 2.5 }} />
                         </Grid>
                     ))}
                     <Grid size={{ xs: 12 }}>
-                        <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 3 }} />
+                        <Skeleton variant="rectangular" height={220} sx={{ borderRadius: 2.5 }} />
                     </Grid>
                 </Grid>
             ) : (
                 <>
-                    {/* ── Stat Cards ── */}
-                    <Grid container spacing={2.5} sx={{ mb: 3 }}>
+                    {/* ── Stat Cards - 2x2 on mobile ── */}
+                    <Grid container spacing={{ xs: 1, sm: 1.5 }} sx={{ mb: { xs: 2, sm: 2.5 } }}>
                         {[
                             { label: 'Present', value: summary?.present || 0, color: '#10b981', bg: '#ecfdf5', icon: <CheckCircleIcon /> },
                             { label: 'Absent', value: summary?.absent || 0, color: '#ef4444', bg: '#fef2f2', icon: <CancelIcon /> },
@@ -385,13 +387,13 @@ const ParentAttendance: React.FC = () => {
                             { label: 'Total Days', value: summary?.total || 0, color: '#6366f1', bg: '#eef2ff', icon: <CalendarIcon /> },
                         ].map(stat => (
                             <Grid size={{ xs: 6, sm: 3 }} key={stat.label}>
-                                <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: stat.bg, height: '100%' }}>
-                                    <CardContent>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: 0.5 }}>{stat.label}</Typography>
-                                            <Box sx={{ color: stat.color }}>{stat.icon}</Box>
+                                <Card elevation={0} sx={{ borderRadius: 2.5, border: `1px solid ${stat.color}25`, bgcolor: stat.bg, height: '100%' }}>
+                                    <CardContent sx={{ p: { xs: 1.25, sm: 1.5 }, '&:last-child': { pb: { xs: 1.25, sm: 1.5 } } }}>
+                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                                            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.68rem' }}>{stat.label}</Typography>
+                                            <Box sx={{ color: stat.color, display: 'flex' }}>{React.cloneElement(stat.icon, { sx: { fontSize: 18 } })}</Box>
                                         </Box>
-                                        <Typography variant="h3" fontWeight={800} sx={{ color: stat.color, lineHeight: 1 }}>{stat.value}</Typography>
+                                        <Typography variant="h5" fontWeight={800} sx={{ color: stat.color, lineHeight: 1, fontSize: { xs: '1.25rem', sm: '1.6rem' } }}>{stat.value}</Typography>
                                     </CardContent>
                                 </Card>
                             </Grid>
@@ -399,59 +401,59 @@ const ParentAttendance: React.FC = () => {
                     </Grid>
 
                     {/* ── Attendance % + Streak Cards ── */}
-                    <Grid container spacing={2.5} sx={{ mb: 3 }}>
+                    <Grid container spacing={{ xs: 1, sm: 1.5 }} sx={{ mb: { xs: 2, sm: 2.5 } }}>
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', p: 2.5 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                                    <Typography variant="subtitle1" fontWeight={700}>Attendance Rate</Typography>
-                                    <Box sx={{ px: 2, py: 0.5, borderRadius: 20, bgcolor: percentageColor + '18', color: percentageColor }}>
-                                        <Typography variant="h5" fontWeight={800}>{summary?.percentage || 0}%</Typography>
+                            <Card elevation={0} sx={{ borderRadius: 2.5, border: '1px solid #e2e8f0', p: { xs: 1.5, sm: 2 }, bgcolor: '#ffffff' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                                    <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: { xs: '0.85rem', sm: '0.95rem' } }}>Attendance Rate</Typography>
+                                    <Box sx={{ px: 1.5, py: 0.25, borderRadius: 20, bgcolor: percentageColor + '18', color: percentageColor }}>
+                                        <Typography variant="subtitle1" fontWeight={800} sx={{ fontSize: '0.9rem' }}>{summary?.percentage || 0}%</Typography>
                                     </Box>
                                 </Box>
                                 <LinearProgress
                                     variant="determinate"
                                     value={Math.min(pct, 100)}
-                                    sx={{ height: 12, borderRadius: 6, bgcolor: '#f1f5f9', '& .MuiLinearProgress-bar': { bgcolor: percentageColor, borderRadius: 6 } }}
+                                    sx={{ height: 8, borderRadius: 4, bgcolor: '#f1f5f9', '& .MuiLinearProgress-bar': { bgcolor: percentageColor, borderRadius: 4 } }}
                                 />
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                                    <Typography variant="caption" color="text.secondary">0%</Typography>
-                                    <Typography variant="caption" color="text.secondary">Target: 90%</Typography>
-                                    <Typography variant="caption" color="text.secondary">100%</Typography>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>0%</Typography>
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>Target: 90%</Typography>
+                                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>100%</Typography>
                                 </Box>
                                 {pct < 75 && (
-                                    <Alert severity="warning" sx={{ mt: 1.5, py: 0.5, borderRadius: 2 }}>
+                                    <Alert severity="warning" sx={{ mt: 1, py: 0.25, borderRadius: 1.5, fontSize: '0.72rem' }}>
                                         Attendance is below 75%. Please ensure regular attendance.
                                     </Alert>
                                 )}
                             </Card>
                         </Grid>
                         <Grid size={{ xs: 6, md: 3 }}>
-                            <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #fde68a', bgcolor: '#fffbeb', p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                                <StreakIcon sx={{ color: '#f59e0b', fontSize: 36, mb: 1 }} />
-                                <Typography variant="h4" fontWeight={800} color="#92400e">{currentStreak}</Typography>
-                                <Typography variant="caption" fontWeight={600} color="#a16207">Current Streak</Typography>
-                                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>consecutive days</Typography>
+                            <Card elevation={0} sx={{ borderRadius: 2.5, border: '1px solid #fde68a', bgcolor: '#fffbeb', p: { xs: 1.25, sm: 1.75 }, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                                <StreakIcon sx={{ color: '#f59e0b', fontSize: 24, mb: 0.5 }} />
+                                <Typography variant="h6" fontWeight={800} color="#92400e" sx={{ fontSize: { xs: '1.1rem', sm: '1.35rem' }, lineHeight: 1 }}>{currentStreak}</Typography>
+                                <Typography variant="caption" fontWeight={700} color="#a16207" sx={{ fontSize: '0.68rem', mt: 0.25 }}>Current Streak</Typography>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.62rem' }}>consecutive days</Typography>
                             </Card>
                         </Grid>
                         <Grid size={{ xs: 6, md: 3 }}>
-                            <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #bbf7d0', bgcolor: '#f0fdf4', p: 2.5, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                                <TrendIcon sx={{ color: '#10b981', fontSize: 36, mb: 1 }} />
-                                <Typography variant="h4" fontWeight={800} color="#065f46">{longestStreak}</Typography>
-                                <Typography variant="caption" fontWeight={600} color="#047857">Best Streak</Typography>
-                                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>in this period</Typography>
+                            <Card elevation={0} sx={{ borderRadius: 2.5, border: '1px solid #bbf7d0', bgcolor: '#f0fdf4', p: { xs: 1.25, sm: 1.75 }, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
+                                <TrendIcon sx={{ color: '#10b981', fontSize: 24, mb: 0.5 }} />
+                                <Typography variant="h6" fontWeight={800} color="#065f46" sx={{ fontSize: { xs: '1.1rem', sm: '1.35rem' }, lineHeight: 1 }}>{longestStreak}</Typography>
+                                <Typography variant="caption" fontWeight={700} color="#047857" sx={{ fontSize: '0.68rem', mt: 0.25 }}>Best Streak</Typography>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.62rem' }}>in this period</Typography>
                             </Card>
                         </Grid>
                     </Grid>
 
                     {/* ── Charts Row ── */}
-                    <Grid container spacing={2.5} sx={{ mb: 3 }}>
+                    <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mb: { xs: 2, sm: 2.5 } }}>
                         {/* Donut Chart */}
                         <Grid size={{ xs: 12, md: 5 }}>
-                            <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', p: 2 }}>
-                                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>Attendance Breakdown</Typography>
+                            <Card elevation={0} sx={{ borderRadius: 2.5, border: '1px solid #e2e8f0', p: { xs: 1.5, sm: 2 }, bgcolor: '#ffffff' }}>
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1, fontSize: '0.85rem' }}>Attendance Breakdown</Typography>
                                 {rawAttendance.length === 0 ? (
-                                    <Box sx={{ textAlign: 'center', py: 6 }}>
-                                        <Typography color="text.secondary">No data available</Typography>
+                                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>No data available</Typography>
                                     </Box>
                                 ) : (
                                     <Chart
@@ -460,14 +462,14 @@ const ParentAttendance: React.FC = () => {
                                         options={{
                                             pieHole: 0.55,
                                             colors: ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'],
-                                            legend: { position: 'right', textStyle: { fontSize: 12 } },
-                                            chartArea: { width: '80%', height: '80%' },
+                                            legend: { position: 'right', textStyle: { fontSize: 11 } },
+                                            chartArea: { width: '85%', height: '85%' },
                                             pieSliceBorderColor: '#fff',
                                             backgroundColor: 'transparent',
                                             tooltip: { trigger: 'focus' },
                                         }}
                                         width="100%"
-                                        height="240px"
+                                        height="180px"
                                     />
                                 )}
                             </Card>
@@ -475,11 +477,11 @@ const ParentAttendance: React.FC = () => {
 
                         {/* Weekly Bar Chart */}
                         <Grid size={{ xs: 12, md: 7 }}>
-                            <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', p: 2 }}>
-                                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>Week-by-Week Breakdown</Typography>
+                            <Card elevation={0} sx={{ borderRadius: 2.5, border: '1px solid #e2e8f0', p: { xs: 1.5, sm: 2 }, bgcolor: '#ffffff' }}>
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1, fontSize: '0.85rem' }}>Week-by-Week Breakdown</Typography>
                                 {weeklyData.length === 0 ? (
-                                    <Box sx={{ textAlign: 'center', py: 6 }}>
-                                        <Typography color="text.secondary">No data available</Typography>
+                                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>No data available</Typography>
                                     </Box>
                                 ) : (
                                     <Chart
@@ -487,15 +489,15 @@ const ParentAttendance: React.FC = () => {
                                         data={barData}
                                         options={{
                                             colors: ['#10b981', '#ef4444', '#f59e0b'],
-                                            legend: { position: 'top', textStyle: { fontSize: 11 } },
-                                            chartArea: { width: '80%', height: '70%' },
+                                            legend: { position: 'top', textStyle: { fontSize: 10 } },
+                                            chartArea: { width: '85%', height: '70%' },
                                             bar: { groupWidth: '70%' },
                                             backgroundColor: 'transparent',
-                                            vAxis: { minValue: 0, format: '0', gridlines: { color: '#f1f5f9' } },
-                                            hAxis: { textStyle: { fontSize: 11 } },
+                                            vAxis: { minValue: 0, format: '0', gridlines: { color: '#f1f5f9' }, textStyle: { fontSize: 10 } },
+                                            hAxis: { textStyle: { fontSize: 10 } },
                                         }}
                                         width="100%"
-                                        height="240px"
+                                        height="180px"
                                     />
                                 )}
                             </Card>
@@ -503,22 +505,22 @@ const ParentAttendance: React.FC = () => {
 
                         {/* Day-of-week heatmap */}
                         <Grid size={{ xs: 12, md: 5 }}>
-                            <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', p: 2.5 }}>
-                                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>Day-of-Week Attendance Rate</Typography>
-                                <Stack spacing={1.5}>
+                            <Card elevation={0} sx={{ borderRadius: 2.5, border: '1px solid #e2e8f0', p: { xs: 1.5, sm: 2 }, bgcolor: '#ffffff' }}>
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5, fontSize: '0.85rem' }}>Day-of-Week Attendance Rate</Typography>
+                                <Stack spacing={1}>
                                     {dayOfWeekData.map(d => (
-                                        <Box key={d.day} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                            <Typography variant="body2" fontWeight={600} sx={{ width: 36, color: '#475569' }}>{d.day}</Typography>
-                                            <Box sx={{ flex: 1, position: 'relative', height: 20, borderRadius: 10, bgcolor: '#f1f5f9', overflow: 'hidden' }}>
+                                        <Box key={d.day} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                            <Typography variant="caption" fontWeight={600} sx={{ width: 32, color: '#475569', fontSize: '0.75rem' }}>{d.day}</Typography>
+                                            <Box sx={{ flex: 1, position: 'relative', height: 16, borderRadius: 8, bgcolor: '#f1f5f9', overflow: 'hidden' }}>
                                                 <Box sx={{
                                                     position: 'absolute', left: 0, top: 0, bottom: 0,
                                                     width: `${d.rate}%`,
-                                                    borderRadius: 10,
+                                                    borderRadius: 8,
                                                     bgcolor: d.rate >= 90 ? '#10b981' : d.rate >= 75 ? '#f59e0b' : '#ef4444',
                                                     transition: 'width 0.6s ease',
                                                 }} />
                                             </Box>
-                                            <Typography variant="body2" fontWeight={700} sx={{ width: 40, textAlign: 'right', color: d.rate >= 90 ? '#10b981' : d.rate >= 75 ? '#f59e0b' : '#ef4444' }}>
+                                            <Typography variant="caption" fontWeight={700} sx={{ width: 36, textAlign: 'right', fontSize: '0.75rem', color: d.rate >= 90 ? '#10b981' : d.rate >= 75 ? '#f59e0b' : '#ef4444' }}>
                                                 {d.total > 0 ? `${d.rate}%` : '—'}
                                             </Typography>
                                         </Box>
@@ -529,11 +531,11 @@ const ParentAttendance: React.FC = () => {
 
                         {/* Trend line chart */}
                         <Grid size={{ xs: 12, md: 7 }}>
-                            <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', p: 2 }}>
-                                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>Daily Attendance Trend</Typography>
+                            <Card elevation={0} sx={{ borderRadius: 2.5, border: '1px solid #e2e8f0', p: { xs: 1.5, sm: 2 }, bgcolor: '#ffffff' }}>
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1, fontSize: '0.85rem' }}>Daily Attendance Trend</Typography>
                                 {rawAttendance.length < 2 ? (
-                                    <Box sx={{ textAlign: 'center', py: 6 }}>
-                                        <Typography color="text.secondary">Not enough data for trend chart</Typography>
+                                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>Not enough data for trend chart</Typography>
                                     </Box>
                                 ) : (
                                     <Chart
@@ -542,15 +544,15 @@ const ParentAttendance: React.FC = () => {
                                         options={{
                                             colors: ['#6366f1'],
                                             legend: { position: 'none' },
-                                            chartArea: { width: '85%', height: '70%' },
+                                            chartArea: { width: '88%', height: '70%' },
                                             backgroundColor: 'transparent',
                                             areaOpacity: 0.2,
-                                            vAxis: { minValue: 0, maxValue: 1, ticks: [0, 0.5, 1], format: '0.#', gridlines: { color: '#f1f5f9' } },
-                                            hAxis: { textStyle: { fontSize: 9 }, slantedText: true, slantedTextAngle: 45 },
+                                            vAxis: { minValue: 0, maxValue: 1, ticks: [0, 0.5, 1], format: '0.#', gridlines: { color: '#f1f5f9' }, textStyle: { fontSize: 9 } },
+                                            hAxis: { textStyle: { fontSize: 8.5 }, slantedText: true, slantedTextAngle: 45 },
                                             curveType: 'function',
                                         }}
                                         width="100%"
-                                        height="240px"
+                                        height="180px"
                                     />
                                 )}
                             </Card>
@@ -558,41 +560,41 @@ const ParentAttendance: React.FC = () => {
                     </Grid>
 
                     {/* ── Daily Records Table ── */}
-                    <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0' }}>
-                        <CardContent>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
-                                <Typography variant="subtitle1" fontWeight={700}>
+                    <Card elevation={0} sx={{ borderRadius: 2.5, border: '1px solid #e2e8f0', bgcolor: '#ffffff' }}>
+                        <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5, flexWrap: 'wrap', gap: 1 }}>
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>
                                     Daily Records
                                     {statusFilter !== 'all' && (
                                         <Chip
                                             size="small"
                                             label={STATUS_LABELS[statusFilter]}
                                             onDelete={() => setStatusFilter('all')}
-                                            sx={{ ml: 1, bgcolor: STATUS_BG[statusFilter], color: STATUS_COLORS[statusFilter], fontWeight: 600 }}
+                                            sx={{ ml: 1, bgcolor: STATUS_BG[statusFilter], color: STATUS_COLORS[statusFilter], fontWeight: 600, height: 22, fontSize: '0.68rem' }}
                                         />
                                     )}
                                 </Typography>
-                                <Typography variant="caption" color="text.secondary">
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem' }}>
                                     {attendance.length} records
                                 </Typography>
                             </Box>
 
                             {attendance.length === 0 ? (
-                                <Box sx={{ py: 5, textAlign: 'center' }}>
-                                    <CalendarIcon sx={{ fontSize: 48, color: '#cbd5e1', mb: 1.5 }} />
-                                    <Typography color="text.secondary">
+                                <Box sx={{ py: 4, textAlign: 'center' }}>
+                                    <CalendarIcon sx={{ fontSize: 36, color: '#cbd5e1', mb: 1 }} />
+                                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
                                         {rawAttendance.length === 0 ? 'No attendance records for this period' : 'No records match the selected filter'}
                                     </Typography>
                                 </Box>
                             ) : (
-                                <TableContainer>
+                                <TableContainer sx={{ overflowX: 'auto' }}>
                                     <Table size="small">
                                         <TableHead>
                                             <TableRow sx={{ bgcolor: '#f8fafc' }}>
-                                                <TableCell sx={{ fontWeight: 700, color: '#475569' }}>Date</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, color: '#475569' }}>Day</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, color: '#475569' }}>Status</TableCell>
-                                                <TableCell sx={{ fontWeight: 700, color: '#475569' }}>Remarks</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', py: 1 }}>Date</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', py: 1 }}>Day</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', py: 1 }}>Status</TableCell>
+                                                <TableCell sx={{ fontWeight: 700, color: '#475569', fontSize: '0.75rem', py: 1 }}>Remarks</TableCell>
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
@@ -604,22 +606,22 @@ const ParentAttendance: React.FC = () => {
                                                     const bg = STATUS_BG[record.status] || '#f8fafc';
                                                     return (
                                                         <TableRow key={index} hover sx={{ '&:hover': { bgcolor: '#f8fafc' } }}>
-                                                            <TableCell sx={{ fontWeight: 600, color: '#1e293b' }}>
+                                                            <TableCell sx={{ fontWeight: 600, color: '#1e293b', fontSize: '0.75rem', py: 0.75 }}>
                                                                 {date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                                                             </TableCell>
-                                                            <TableCell sx={{ color: '#64748b' }}>
-                                                                {date.toLocaleDateString('en-IN', { weekday: 'long' })}
+                                                            <TableCell sx={{ color: '#64748b', fontSize: '0.75rem', py: 0.75 }}>
+                                                                {date.toLocaleDateString('en-IN', { weekday: 'short' })}
                                                             </TableCell>
-                                                            <TableCell>
+                                                            <TableCell sx={{ py: 0.75 }}>
                                                                 <Tooltip title={record.status.replace('_', ' ')}>
                                                                     <Chip
                                                                         size="small"
                                                                         label={STATUS_LABELS[record.status] || record.status}
-                                                                        sx={{ bgcolor: bg, color, fontWeight: 700, border: `1px solid ${color}30`, minWidth: 80 }}
+                                                                        sx={{ bgcolor: bg, color, fontWeight: 700, border: `1px solid ${color}30`, minWidth: 65, height: 22, fontSize: '0.68rem' }}
                                                                     />
                                                                 </Tooltip>
                                                             </TableCell>
-                                                            <TableCell sx={{ color: '#64748b', fontStyle: (record.remarks ? 'normal' : 'italic') }}>
+                                                            <TableCell sx={{ color: '#64748b', fontStyle: (record.remarks ? 'normal' : 'italic'), fontSize: '0.75rem', py: 0.75 }}>
                                                                 {record.remarks || '—'}
                                                             </TableCell>
                                                         </TableRow>
@@ -634,21 +636,21 @@ const ParentAttendance: React.FC = () => {
 
                     {/* Export bottom bar */}
                     {rawAttendance.length > 0 && (
-                        <Box sx={{ mt: 3, p: 2.5, borderRadius: 3, bgcolor: '#f0f9ff', border: '1px solid #bae6fd', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+                        <Box sx={{ mt: 2.5, p: 2, borderRadius: 2.5, bgcolor: '#f0f9ff', border: '1px solid #bae6fd', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1.5 }}>
                             <Box>
-                                <Typography variant="subtitle2" fontWeight={700} color="#0c4a6e">Export Attendance Report</Typography>
-                                <Typography variant="caption" color="#0369a1">Download as PDF (single-page summary) or Excel (day-wise color-coded)</Typography>
+                                <Typography variant="subtitle2" fontWeight={700} color="#0c4a6e" sx={{ fontSize: '0.85rem' }}>Export Attendance Report</Typography>
+                                <Typography variant="caption" color="#0369a1" sx={{ fontSize: '0.72rem' }}>Download as PDF or Excel format</Typography>
                             </Box>
-                            <Box sx={{ display: 'flex', gap: 1.5 }}>
-                                <Button variant="contained" startIcon={<PdfIcon />} onClick={handleExportPDF}
+                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                <Button variant="contained" size="small" startIcon={<PdfIcon sx={{ fontSize: 15 }} />} onClick={handleExportPDF}
                                     disabled={exporting === 'pdf'}
-                                    sx={{ bgcolor: '#dc2626', '&:hover': { bgcolor: '#b91c1c' }, borderRadius: 2, fontWeight: 700 }}>
-                                    {exporting === 'pdf' ? 'Generating…' : 'PDF Report'}
+                                    sx={{ bgcolor: '#dc2626', '&:hover': { bgcolor: '#b91c1c' }, borderRadius: 2, fontWeight: 700, fontSize: '0.72rem', py: 0.4 }}>
+                                    {exporting === 'pdf' ? '...' : 'PDF Report'}
                                 </Button>
-                                <Button variant="contained" startIcon={<ExcelIcon />} onClick={handleExportExcel}
+                                <Button variant="contained" size="small" startIcon={<ExcelIcon sx={{ fontSize: 15 }} />} onClick={handleExportExcel}
                                     disabled={exporting === 'excel'}
-                                    sx={{ bgcolor: '#16a34a', '&:hover': { bgcolor: '#15803d' }, borderRadius: 2, fontWeight: 700 }}>
-                                    {exporting === 'excel' ? 'Generating…' : 'Excel Report'}
+                                    sx={{ bgcolor: '#16a34a', '&:hover': { bgcolor: '#15803d' }, borderRadius: 2, fontWeight: 700, fontSize: '0.72rem', py: 0.4 }}>
+                                    {exporting === 'excel' ? '...' : 'Excel Report'}
                                 </Button>
                             </Box>
                         </Box>

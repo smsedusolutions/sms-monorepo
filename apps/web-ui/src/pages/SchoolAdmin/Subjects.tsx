@@ -21,6 +21,7 @@ import { useGetClasses } from "../../queries/Class";
 import type { Subject, Class } from "../../types";
 import TokenService from "../../queries/token/tokenService";
 import { useNotificationStore } from "../../stores/notificationStore";
+import { sortClassesNumerically } from "../../utils/classSort";
 
 const SubjectsPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -318,7 +319,7 @@ const SubjectsPage = () => {
           >
             <MenuItem value="">All Classes</MenuItem>
             <MenuItem value="general">General (No Class)</MenuItem>
-            {classes.filter((c: Class) => c.status === "active").map((c: Class) => (
+            {sortClassesNumerically(classes.filter((c: Class) => c.status === "active")).map((c: Class) => (
               <MenuItem key={c.classId} value={c.classId}>
                 {c.name}
               </MenuItem>

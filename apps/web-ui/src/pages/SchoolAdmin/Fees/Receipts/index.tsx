@@ -5,8 +5,6 @@ import {
     Box,
     Typography,
     Button,
-    Card,
-    CardContent,
     TextField,
     Chip,
     Stack,
@@ -37,8 +35,10 @@ import {
 } from '../../../../queries/Fee';
 import { AppTable } from '../../../../components/shared/AppTable';
 import type { StudentFeeAccount, FeeReceipt } from '../../../../types/fee.types';
+import { useIsMobile } from '../../../../hooks/useIsMobile';
 
 const Receipts: React.FC = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
     const [searchTerm, setSearchTerm] = useState('');
     const { data: assignmentsData, isLoading: isLoadingStudents } = useGetFeeAssignments(schoolId, { search: searchTerm });
@@ -150,68 +150,74 @@ const Receipts: React.FC = () => {
     const receipt = receiptDetailsData?.data;
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight={700} color="text.primary">
+        <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h4" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '1.4rem', sm: '2rem' } }}>
                     Fee Receipts
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                     Browse, print, and audit legal fee receipt files linked to student transactions.
                 </Typography>
             </Box>
 
             {!selectedStudent ? (
-                <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                    <CardContent sx={{ p: 0 }}>
-                        <Box sx={{ p: 2 }}>
-                            <TextField
-                                size="small"
-                                placeholder="Search student name..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                InputProps={{ startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} /> }}
-                                sx={{ width: { xs: '100%', sm: 300 } }}
-                            />
-                        </Box>
-                        <AppTable
-                            columns={studentColumns}
-                            data={assignmentsData?.data || []}
-                            isLoading={isLoadingStudents}
-                            emptyMessage="No search results matching."
+                <Box>
+                    <Box sx={{ mb: 2 }}>
+                        <TextField
+                            size="small"
+                            placeholder="Search student name..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            InputProps={{ startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} /> }}
+                            sx={{ width: { xs: '100%', sm: 300 } }}
                         />
-                    </CardContent>
-                </Card>
+                    </Box>
+                    <AppTable
+                        columns={studentColumns}
+                        data={assignmentsData?.data || []}
+                        isLoading={isLoadingStudents}
+                        emptyMessage="No search results matching."
+                    />
+                </Box>
             ) : (
                 <Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                        <IconButton onClick={() => setSelectedStudent(null)} color="primary">
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 3 }}>
+                        <IconButton onClick={() => setSelectedStudent(null)} color="primary" sx={{ mt: 0.5 }}>
                             <ArrowBackIcon />
                         </IconButton>
                         <Box>
-                            <Typography variant="h6" fontWeight={700}>
+                            <Typography variant="h6" fontWeight={700} sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
                                 Receipts for: {selectedStudent.studentName}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                                 Class: {selectedStudent.className} | Roll: {selectedStudent.rollNumber || 'N/A'}
                             </Typography>
                         </Box>
                     </Box>
 
-                    <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                        <CardContent sx={{ p: 0 }}>
-                            <AppTable
-                                columns={receiptColumns}
-                                data={receiptsData?.data || []}
-                                isLoading={isLoadingReceipts}
-                                emptyMessage="No receipts generated for this student yet."
-                            />
-                        </CardContent>
-                    </Card>
+                    <AppTable
+                        columns={receiptColumns}
+                        data={receiptsData?.data || []}
+                        isLoading={isLoadingReceipts}
+                        emptyMessage="No receipts generated for this student yet."
+                    />
                 </Box>
             )}
 
             {/* Receipt Preview Dialog */}
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="sm">
+            <Dialog
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
+                fullWidth
+                maxWidth="sm"
+                fullScreen={isMobile}
+                PaperProps={{
+                    sx: {
+                        borderRadius: isMobile ? 0 : 3,
+                        maxHeight: isMobile ? '100dvh' : '90vh',
+                    }
+                }}
+            >
                 <DialogTitle fontWeight={700} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     Receipt Preview
                     <IconButton onClick={() => setOpenDialog(false)}><CloseIcon /></IconButton>
@@ -273,7 +279,7 @@ const Receipts: React.FC = () => {
                         <Typography color="text.secondary">Failed to load details.</Typography>
                     )}
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ px: 3, py: 2 }}>
                     {receipt && (
                         <Button variant="contained" startIcon={<PrintIcon />} onClick={() => handleDownloadPDF(receipt.receiptId)}>
                             Print / Open PDF

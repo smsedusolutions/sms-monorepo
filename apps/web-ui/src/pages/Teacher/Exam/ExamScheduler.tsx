@@ -5,20 +5,20 @@ import {
     Paper,
     Chip,
     Grid,
-    Tabs,
-    Tab,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
     TableRow,
-    Card,
-    CardContent,
     Skeleton,
     Alert,
     Stack,
-    Avatar,
+    Divider,
+    useTheme,
+    useMediaQuery,
+    ToggleButton,
+    ToggleButtonGroup,
 } from '@mui/material';
 import {
     Event as EventIcon,
@@ -26,7 +26,7 @@ import {
     Class as ClassIcon,
     Security as InvigilatorIcon,
     CalendarMonth as CalendarIcon,
-    School as SchoolIcon,
+    MeetingRoom as RoomIcon,
 } from '@mui/icons-material';
 import { useGetExams, useGetExamSchedule } from '../../../queries/Exam';
 import { useGetSubjects } from '../../../queries/Subject';
@@ -34,14 +34,34 @@ import { useGetClasses } from '../../../queries/Class';
 import { useGetTeacherById } from '../../../queries/Teacher';
 import TokenService from '../../../queries/token/tokenService';
 import { useUrlTab } from '../../../hooks/useUrlTab';
+import { useAcademicYear } from '../../../hooks/useAcademicYear';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
-const fmtDate = (d: string | Date) =>
-    new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+const fmtDate = (d: string | Date) => {
+    if (!d) return '-';
+    return new Date(d).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+};
 
-const fmtDay = (d: string | Date) =>
-    new Date(d).toLocaleDateString('en-IN', { weekday: 'long' });
+const fmtDay = (d: string | Date) => {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('en-US', { weekday: 'short' });
+};
+
+const extractClassRank = (name: string): number => {
+    const lower = (name || '').toLowerCase().trim();
+    if (lower.includes('play') || lower.includes('daycare')) return -50;
+    if (lower.includes('nursery') || lower.includes('pre-kg') || lower.includes('prekg')) return -40;
+    if (lower.includes('lkg') || lower.includes('jr') || lower.includes('junior')) return -30;
+    if (lower.includes('ukg') || lower.includes('sr') || lower.includes('senior')) return -20;
+    if (lower.includes('kg') || lower.includes('kindergarten')) return -10;
+
+    const match = lower.match(/\d+/);
+    if (match) {
+        return parseInt(match[0], 10);
+    }
+    return 999;
+};
 
 const statusColor = (status: string): 'success' | 'warning' | 'info' | 'default' => {
     if (status === 'ongoing') return 'success';
@@ -50,19 +70,7 @@ const statusColor = (status: string): 'success' | 'warning' | 'info' | 'default'
     return 'default';
 };
 
-// ─── per-exam schedule panel ──────────────────────────────────────────────────
-
-interface ExamPanelProps {
-    exam: any;
-    schoolId: string;
-    teacherIds: string[];
-    teacherSubjectIds: string[];
-    teacherClassIds: string[];
-    getSubjectName: (id: string) => string;
-    getClassName: (id: string) => string;
-}
-
-// Helper to check if a teacher is assigned in an invigilators array (which can be strings or populated objects)
+// Helper to check if a teacher is assigned in an invigilators array
 const isInvigilatorAssigned = (invigilators: any[], teacherIds: string[]): boolean => {
     if (!Array.isArray(invigilators)) return false;
     return invigilators.some((inv: any) => {
@@ -87,8 +95,9 @@ const getRoomDisplay = (roomId: any): string => {
     return String(roomId);
 };
 
-// Reusable schedule table
-const ScheduleTable: React.FC<{
+// ─── Reusable Schedule Table / Card List ─────────────────────────────────────
+
+const ScheduleView: React.FC<{
     rows: any[];
     teacherIds: string[];
     showSubject?: boolean;
@@ -98,13 +107,121 @@ const ScheduleTable: React.FC<{
     getSubjectName: (id: string) => string;
     getClassName: (id: string) => string;
     emptyText: string;
-}> = ({ rows, teacherIds, showSubject = true, showClass = true, showInvigBadge = false, headerColor = 'primary', getSubjectName, getClassName, emptyText }) => {
-    if (!rows.length) return (
-        <Alert severity="info" sx={{ m: 2, borderRadius: 2 }}>{emptyText}</Alert>
-    );
+}> = ({
+    rows,
+    teacherIds,
+    showSubject = true,
+    showClass = true,
+    showInvigBadge = false,
+    headerColor = 'primary',
+    getSubjectName,
+    getClassName,
+    emptyText
+}) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+    if (!rows.length) {
+        return emptyText ? (
+            <Alert severity="info" sx={{ mx: 2, my: 1.5, borderRadius: 2 }}>{emptyText}</Alert>
+        ) : null;
+    }
 
     const sorted = [...rows].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
+    if (isMobile) {
+        return (
+            <Stack spacing={1.25} sx={{ px: { xs: 1.5, sm: 2 }, pb: 2 }}>
+                {sorted.map((s: any) => {
+                    const isInvig = isInvigilatorAssigned(s.invigilators, teacherIds);
+                    const subjectName = getSubjectName(s.subjectId);
+                    const className = getClassName(s.classId);
+                    const roomName = getRoomDisplay(s.roomId);
+
+                    return (
+                        <Paper
+                            key={s._id}
+                            elevation={0}
+                            sx={{
+                                p: 1.5,
+                                borderRadius: 2,
+                                border: '1px solid',
+                                borderColor: isInvig && showInvigBadge ? 'error.light' : 'divider',
+                                bgcolor: isInvig && showInvigBadge ? '#fff5f5' : 'background.paper',
+                            }}
+                        >
+                            {/* Top row: Subject + Class Badge */}
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1, gap: 1 }}>
+                                {showSubject && (
+                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary">
+                                        {subjectName}
+                                    </Typography>
+                                )}
+                                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', ml: 'auto' }}>
+                                    {showClass && (
+                                        <Chip
+                                            label={className}
+                                            size="small"
+                                            color="primary"
+                                            variant="outlined"
+                                            sx={{ height: 22, fontSize: '0.7rem', fontWeight: 600 }}
+                                        />
+                                    )}
+                                    {showInvigBadge && isInvig && (
+                                        <Chip
+                                            label="Duty Assigned"
+                                            size="small"
+                                            color="error"
+                                            icon={<InvigilatorIcon sx={{ fontSize: 13 }} />}
+                                            sx={{ height: 22, fontSize: '0.7rem', fontWeight: 700 }}
+                                        />
+                                    )}
+                                </Box>
+                            </Box>
+
+                            {/* Middle row: Date & Time bar */}
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    p: 0.75,
+                                    bgcolor: 'grey.50',
+                                    borderRadius: 1.5,
+                                    mb: 0.75,
+                                    flexWrap: 'wrap',
+                                }}
+                            >
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <CalendarIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                    <Typography variant="caption" fontWeight={600} color="text.primary">
+                                        {fmtDate(s.date)} ({fmtDay(s.date)})
+                                    </Typography>
+                                </Box>
+                                <Divider orientation="vertical" flexItem sx={{ height: 12, my: 'auto' }} />
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <TimeIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                                    <Typography variant="caption" fontWeight={600} color="primary.main">
+                                        {s.startTime} – {s.endTime}
+                                    </Typography>
+                                </Box>
+                            </Box>
+
+                            {/* Bottom row: Room */}
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <RoomIcon sx={{ fontSize: 14, color: 'text.disabled' }} />
+                                <Typography variant="caption" color="text.secondary">
+                                    Room: <strong>{roomName}</strong>
+                                </Typography>
+                            </Box>
+                        </Paper>
+                    );
+                })}
+            </Stack>
+        );
+    }
+
+    // Desktop Table
     return (
         <TableContainer component={Paper} variant="outlined" sx={{ mx: 2, mb: 2, borderRadius: 2 }}>
             <Table size="small">
@@ -123,7 +240,7 @@ const ScheduleTable: React.FC<{
                     {sorted.map((s: any) => {
                         const isInvig = isInvigilatorAssigned(s.invigilators, teacherIds);
                         return (
-                            <TableRow key={s._id} hover sx={isInvig && showInvigBadge ? { bgcolor: 'error.50' } : undefined}>
+                            <TableRow key={s._id} hover sx={isInvig && showInvigBadge ? { bgcolor: '#fff5f5' } : undefined}>
                                 <TableCell>
                                     <Typography variant="body2" fontWeight={600}>{fmtDate(s.date)}</Typography>
                                 </TableCell>
@@ -153,7 +270,11 @@ const ScheduleTable: React.FC<{
                                 </TableCell>
                                 {showInvigBadge && (
                                     <TableCell>
-                                        <Chip label="Assigned" size="small" color="error" icon={<InvigilatorIcon />} />
+                                        {isInvig ? (
+                                            <Chip label="Assigned" size="small" color="error" icon={<InvigilatorIcon />} />
+                                        ) : (
+                                            <Typography variant="caption" color="text.disabled">—</Typography>
+                                        )}
                                     </TableCell>
                                 )}
                             </TableRow>
@@ -165,26 +286,42 @@ const ScheduleTable: React.FC<{
     );
 };
 
+// ─── Per-Exam Schedule Panel ──────────────────────────────────────────────────
+
+interface ExamPanelProps {
+    exam: any;
+    schoolId: string;
+    teacherIds: string[];
+    teacherSubjectIds: string[];
+    teacherClassIds: string[];
+    getSubjectName: (id: string) => string;
+    getClassName: (id: string) => string;
+}
+
 const ExamPanel: React.FC<ExamPanelProps> = ({
-    exam, schoolId, teacherIds,
-    teacherSubjectIds, teacherClassIds,
-    getSubjectName, getClassName
+    exam,
+    schoolId,
+    teacherIds,
+    teacherSubjectIds,
+    teacherClassIds,
+    getSubjectName,
+    getClassName
 }) => {
-    const [innerTab, setInnerTab] = useUrlTab(0, ['my-classes', 'invigilation', 'all-schedules'], 'subtab');
+    const [innerTab, setInnerTab] = useUrlTab(0, ['my-classes', 'my-subjects', 'invigilation'], 'subtab');
     const { data: scheduleData, isLoading } = useGetExamSchedule(schoolId, exam.examId);
     const allSchedules: any[] = scheduleData?.data || [];
 
-    // Tab 1: Subjects I teach — filter by subjectId in teacher's subjects
-    const mySubjectSchedules = useMemo(() =>
-        allSchedules.filter((s: any) => teacherSubjectIds.includes(s.subjectId)),
-        [allSchedules, teacherSubjectIds]);
-
-    // Tab 2: Classes I manage — filter by classId in teacher's classes
+    // Tab 1: Classes I manage
     const myClassSchedules = useMemo(() =>
         allSchedules.filter((s: any) => teacherClassIds.includes(s.classId)),
         [allSchedules, teacherClassIds]);
 
-    // Tab 3: Invigilator duties — filter by any matching teacher ID in invigilators[]
+    // Tab 2: Subjects I teach
+    const mySubjectSchedules = useMemo(() =>
+        allSchedules.filter((s: any) => teacherSubjectIds.includes(s.subjectId)),
+        [allSchedules, teacherSubjectIds]);
+
+    // Tab 3: Invigilator duties
     const invigilatorSchedules = useMemo(() =>
         allSchedules.filter((s: any) => isInvigilatorAssigned(s.invigilators, teacherIds)),
         [allSchedules, teacherIds]);
@@ -200,100 +337,96 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
     );
 
     return (
-        <Box sx={{ pb: 2 }}>
-            {/* Inner 3-tab bar */}
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'grey.50' }}>
-                <Tabs
+        <Box sx={{ pb: 1 }}>
+            {/* Sub-tab Navigation */}
+            <Box sx={{ px: { xs: 1.5, sm: 2 }, pt: 1.5, pb: 1 }}>
+                <ToggleButtonGroup
                     value={innerTab}
-                    onChange={(_, v) => setInnerTab(v)}
-                    sx={{ px: 2, minHeight: 42 }}
-                    TabIndicatorProps={{ style: { height: 3 } }}
+                    exclusive
+                    onChange={(_, val) => val !== null && setInnerTab(val)}
+                    size="small"
+                    fullWidth
+                    sx={{
+                        display: 'flex',
+                        gap: 0.5,
+                        '& .MuiToggleButton-root': {
+                            flex: 1,
+                            py: 0.6,
+                            px: 1,
+                            fontSize: { xs: '0.75rem', sm: '0.8rem' },
+                            fontWeight: 600,
+                            borderRadius: '8px !important',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            bgcolor: 'grey.50',
+                            color: 'text.secondary',
+                            '&.Mui-selected': {
+                                bgcolor: 'primary.main',
+                                color: '#ffffff',
+                                borderColor: 'primary.main',
+                                '&:hover': { bgcolor: 'primary.dark' },
+                            },
+                        },
+                    }}
                 >
-                    <Tab
-                        sx={{ minHeight: 42, fontSize: '0.8rem' }}
-                        label={
-                            <Stack direction="row" spacing={0.8} alignItems="center">
-                                <span>🏫 My Classes</span>
-                                <Chip label={myClassSchedules.length} size="small" color="info" sx={{ height: 18, fontSize: '0.65rem' }} />
-                            </Stack>
-                        }
-                    />
-                    <Tab
-                        sx={{ minHeight: 42, fontSize: '0.8rem' }}
-                        label={
-                            <Stack direction="row" spacing={0.8} alignItems="center">
-                                <span>📘 My Subjects</span>
-                                <Chip label={mySubjectSchedules.length} size="small" color="primary" sx={{ height: 18, fontSize: '0.65rem' }} />
-                            </Stack>
-                        }
-                    />
-                    <Tab
-                        sx={{ minHeight: 42, fontSize: '0.8rem' }}
-                        label={
-                            <Stack direction="row" spacing={0.8} alignItems="center">
-                                <span>🛡️ Invigilator</span>
-                                <Chip label={invigilatorSchedules.length} size="small" color="error" sx={{ height: 18, fontSize: '0.65rem' }} />
-                            </Stack>
-                        }
-                    />
-                </Tabs>
+                    <ToggleButton value={0}>
+                        🏫 Classes ({myClassSchedules.length})
+                    </ToggleButton>
+                    <ToggleButton value={1}>
+                        📘 Subjects ({mySubjectSchedules.length})
+                    </ToggleButton>
+                    <ToggleButton value={2}>
+                        🛡️ Invigilation ({invigilatorSchedules.length})
+                    </ToggleButton>
+                </ToggleButtonGroup>
             </Box>
 
-            {/* Tab 1: My Subjects */}
-            {innerTab === 1 && (
-                <Box sx={{ pt: 1.5 }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ px: 2, display: 'block', mb: 1 }}>
-                        Exam slots for subjects you are assigned to teach.
-                    </Typography>
-                    <ScheduleTable
-                        rows={mySubjectSchedules}
-                        teacherIds={teacherIds}
-                        showClass={true}
-                        showSubject={true}
-                        headerColor="primary"
-                        getSubjectName={getSubjectName}
-                        getClassName={getClassName}
-                        emptyText="No exam slots found for your assigned subjects in this exam."
-                    />
-                </Box>
-            )}
-
-            {/* Tab 2: My Classes — each class in its own section */}
+            {/* Tab 0: My Classes */}
             {innerTab === 0 && (() => {
                 if (myClassSchedules.length === 0) return (
-                    <Alert severity="info" sx={{ m: 2, borderRadius: 2 }}>
+                    <Alert severity="info" sx={{ mx: 2, my: 1.5, borderRadius: 2 }}>
                         No exam slots found for your assigned classes in this exam.
                     </Alert>
                 );
 
-                // Group schedules by classId
                 const byClass = myClassSchedules.reduce((acc: Record<string, any[]>, s: any) => {
                     if (!acc[s.classId]) acc[s.classId] = [];
                     acc[s.classId].push(s);
                     return acc;
                 }, {} as Record<string, any[]>);
 
+                const sortedByClass = Object.entries(byClass).sort(([classIdA], [classIdB]) => {
+                    const nameA = getClassName(classIdA);
+                    const nameB = getClassName(classIdB);
+                    const rankA = extractClassRank(nameA);
+                    const rankB = extractClassRank(nameB);
+                    if (rankA !== rankB) return rankA - rankB;
+                    return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+                });
+
                 return (
-                    <Box sx={{ pt: 1 }}>
-                        <Typography variant="caption" color="text.secondary" sx={{ px: 2, display: 'block', mb: 1 }}>
-                            All exam slots grouped by class. Each class's timetable is shown separately.
-                        </Typography>
-                        {Object.entries(byClass).map(([classId, rows]) => (
-                            <Box key={classId} sx={{ mb: 3 }}>
-                                {/* Class header */}
+                    <Box sx={{ pt: 0.5 }}>
+                        {sortedByClass.map(([classId, rows]) => (
+                            <Box key={classId} sx={{ mb: 1.5 }}>
                                 <Box sx={{
-                                    display: 'flex', alignItems: 'center', gap: 1.5,
-                                    px: 2, py: 1, mx: 2, mb: 0.5,
+                                    display: 'flex', alignItems: 'center', gap: 1,
+                                    px: 1.5, py: 0.75, mx: { xs: 1.5, sm: 2 }, mb: 1,
                                     bgcolor: 'info.50', borderRadius: 2,
-                                    border: '1px solid', borderColor: 'info.200',
+                                    border: '1px solid', borderColor: '#bae6fd',
                                 }}>
-                                    <ClassIcon sx={{ color: 'info.main', fontSize: 18 }} />
-                                    <Typography variant="subtitle2" fontWeight={700} color="info.main">
+                                    <ClassIcon sx={{ color: 'info.main', fontSize: 16 }} />
+                                    <Typography variant="subtitle2" fontWeight={700} color="info.dark">
                                         {getClassName(classId)}
                                     </Typography>
-                                    <Chip label={`${rows.length} exam${rows.length !== 1 ? 's' : ''}`} size="small" color="info" variant="outlined" sx={{ ml: 'auto' }} />
+                                    <Chip
+                                        label={`${rows.length} exam${rows.length !== 1 ? 's' : ''}`}
+                                        size="small"
+                                        color="info"
+                                        variant="outlined"
+                                        sx={{ ml: 'auto', height: 20, fontSize: '0.7rem' }}
+                                    />
                                 </Box>
-                                <ScheduleTable
+                                <ScheduleView
                                     rows={rows}
                                     teacherIds={teacherIds}
                                     showClass={false}
@@ -309,19 +442,31 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
                 );
             })()}
 
+            {/* Tab 1: My Subjects */}
+            {innerTab === 1 && (
+                <Box sx={{ pt: 0.5 }}>
+                    <ScheduleView
+                        rows={mySubjectSchedules}
+                        teacherIds={teacherIds}
+                        showClass={true}
+                        showSubject={true}
+                        headerColor="primary"
+                        getSubjectName={getSubjectName}
+                        getClassName={getClassName}
+                        emptyText="No exam slots found for your assigned subjects in this exam."
+                    />
+                </Box>
+            )}
 
-            {/* Tab 3: Invigilator Duties */}
+            {/* Tab 2: Invigilator Duties */}
             {innerTab === 2 && (
-                <Box sx={{ pt: 1.5 }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ px: 2, display: 'block', mb: 1 }}>
-                        Exam slots where you are assigned as an invigilator.
-                    </Typography>
+                <Box sx={{ pt: 0.5 }}>
                     {invigilatorSchedules.length === 0 ? (
-                        <Alert severity="success" sx={{ mx: 2, borderRadius: 2 }}>
+                        <Alert severity="success" sx={{ mx: 2, my: 1.5, borderRadius: 2 }}>
                             ✅ You have no invigilator duty assigned for this exam.
                         </Alert>
                     ) : (
-                        <ScheduleTable
+                        <ScheduleView
                             rows={invigilatorSchedules}
                             teacherIds={teacherIds}
                             showClass={true}
@@ -339,11 +484,14 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
     );
 };
 
-// ─── main page ────────────────────────────────────────────────────────────────
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
 const TeacherExamScheduler: React.FC = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const schoolId = TokenService.getSchoolId() || '';
     const teacherId = TokenService.getUserId() || '';
+    const { currentAcademicYear } = useAcademicYear();
 
     const [selectedTab, setSelectedTab] = useUrlTab(0, ['ongoing', 'upcoming', 'completed']);
 
@@ -354,7 +502,7 @@ const TeacherExamScheduler: React.FC = () => {
 
     const teacher = teacherData?.data;
 
-    // All ID variants for this teacher (TCH-xxx, _id, userId, etc.)
+    // All ID variants for this teacher
     const teacherIds: string[] = useMemo(() => {
         const ids = new Set<string>();
         if (teacherId) ids.add(teacherId);
@@ -364,7 +512,7 @@ const TeacherExamScheduler: React.FC = () => {
         return Array.from(ids);
     }, [teacherId, teacher]);
 
-    // Subject IDs this teacher is assigned to (including parent/sub-subject mapped IDs)
+    // Subject IDs this teacher is assigned to
     const teacherSubjectIds: string[] = useMemo(() => {
         if (!teacher?.subjects) return [];
         const ids = new Set<string>();
@@ -377,7 +525,6 @@ const TeacherExamScheduler: React.FC = () => {
                 if (found.subjectId) ids.add(found.subjectId);
                 if (found._id) ids.add(String(found._id));
                 if (found.parentSubjectId) ids.add(found.parentSubjectId);
-                // Also add children if this is a parent subject
                 allSubjects.forEach(sub => {
                     if (sub.parentSubjectId === found.subjectId || sub.parentSubjectId === found._id) {
                         if (sub.subjectId) ids.add(sub.subjectId);
@@ -389,7 +536,7 @@ const TeacherExamScheduler: React.FC = () => {
         return Array.from(ids);
     }, [teacher, subjectsData]);
 
-    // Class IDs extracted from teacher's classes array (format: "classId#sectionId" or just "classId")
+    // Class IDs extracted from teacher's classes array
     const teacherClassIds: string[] = useMemo(() => {
         if (!teacher?.classes) return [];
         const ids = new Set<string>();
@@ -403,16 +550,14 @@ const TeacherExamScheduler: React.FC = () => {
 
     const allExams: any[] = examsData?.data || [];
 
-    // Helper to sort exams by startDate ascending (earliest exam comes first)
     const sortByStartDate = (a: any, b: any) => {
         const dateA = a.startDate ? new Date(a.startDate).getTime() : 0;
         const dateB = b.startDate ? new Date(b.startDate).getTime() : 0;
         return dateA - dateB;
     };
 
-    // Organise exams by status and sort chronologically
-    const upcomingExams = allExams.filter(e => ['scheduled', 'draft'].includes(e.status)).sort(sortByStartDate);
     const ongoingExams = allExams.filter(e => e.status === 'ongoing').sort(sortByStartDate);
+    const upcomingExams = allExams.filter(e => ['scheduled', 'draft'].includes(e.status)).sort(sortByStartDate);
     const pastExams = allExams.filter(e => e.status === 'completed').sort(sortByStartDate);
 
     const tabExams = [ongoingExams, upcomingExams, pastExams][selectedTab] ?? [];
@@ -438,28 +583,17 @@ const TeacherExamScheduler: React.FC = () => {
     const getSubjectName = useCallback((id: string) => subjectMap.get(id) || id, [subjectMap]);
     const getClassName = useCallback((id: string) => classMap.get(id) || id, [classMap]);
 
-    // ── summary stats ───────────────────────────────────────────────────────
-    const StatCard = ({ label, value, color, icon }: { label: string; value: number; color: string; icon: React.ReactNode }) => (
-        <Card variant="outlined" sx={{ borderRadius: 3, flex: 1, minWidth: 120 }}>
-            <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, py: '12px !important' }}>
-                <Avatar sx={{ bgcolor: `${color}.100`, color: `${color}.main`, width: 40, height: 40 }}>
-                    {icon}
-                </Avatar>
-                <Box>
-                    <Typography variant="h5" fontWeight={800} color={`${color}.main`}>{value}</Typography>
-                    <Typography variant="caption" color="text.secondary">{label}</Typography>
-                </Box>
-            </CardContent>
-        </Card>
-    );
-
     if (examsLoading) return (
-        <Box sx={{ p: 3 }}>
-            <Skeleton variant="text" width="40%" height={40} sx={{ mb: 2 }} />
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-                {[1, 2, 3].map(i => <Grid key={i} size={{ xs: 12, sm: 4 }}><Skeleton variant="rectangular" height={80} sx={{ borderRadius: 3 }} /></Grid>)}
+        <Box sx={{ p: { xs: 2, sm: 3 } }}>
+            <Skeleton variant="text" width="40%" height={36} sx={{ mb: 2 }} />
+            <Grid container spacing={1.5} sx={{ mb: 2.5 }}>
+                {[1, 2, 3].map(i => (
+                    <Grid key={i} size={{ xs: 4, sm: 4 }}>
+                        <Skeleton variant="rectangular" height={60} sx={{ borderRadius: 2 }} />
+                    </Grid>
+                ))}
             </Grid>
-            <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 3 }} />
+            <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 2 }} />
         </Box>
     );
 
@@ -470,110 +604,190 @@ const TeacherExamScheduler: React.FC = () => {
     );
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 1400, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
             {/* Header */}
-            <Box sx={{ mb: 3 }}>
-                <Typography variant="h5" fontWeight={800} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box sx={{ mb: 2 }}>
+                <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <EventIcon color="primary" />
                     My Exam Schedule
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                    View upcoming exam timetables for your classes & subjects, and check your invigilator assignments.
+                <Typography variant="caption" color="text.secondary">
+                    View exam timetables for your classes & subjects, and check invigilator assignments.
                 </Typography>
             </Box>
 
-            {/* Summary stats */}
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3 }}>
-                <StatCard label="Ongoing Exams" value={ongoingExams.length} color="success" icon={<SchoolIcon fontSize="small" />} />
-                <StatCard label="Upcoming Exams" value={upcomingExams.length} color="warning" icon={<CalendarIcon fontSize="small" />} />
-                <StatCard label="Completed Exams" value={pastExams.length} color="info" icon={<EventIcon fontSize="small" />} />
-            </Stack>
-
-            {/* Tabs */}
-            <Paper variant="outlined" sx={{ borderRadius: 3, mb: 3 }}>
-                <Tabs
-                    value={selectedTab}
-                    onChange={(_, v) => setSelectedTab(v)}
-                    variant="fullWidth"
-                    sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper', borderRadius: 3 }}
-                >
-                    <Tab
-                        label={
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <span>Ongoing</span>
-                                <Chip label={ongoingExams.length} size="small" color="success" />
-                            </Stack>
-                        }
-                    />
-                    <Tab
-                        label={
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <span>Upcoming</span>
-                                <Chip label={upcomingExams.length} size="small" color="warning" />
-                            </Stack>
-                        }
-                    />
-                    <Tab
-                        label={
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <span>Completed</span>
-                                <Chip label={pastExams.length} size="small" color="default" />
-                            </Stack>
-                        }
-                    />
-                </Tabs>
-            </Paper>
-
-            {tabExams.length === 0 ? (
-                <Alert severity="info" sx={{ borderRadius: 3, p: 3 }}>
-                    No {['ongoing', 'upcoming', 'completed'][selectedTab]} exams at the moment.
-                </Alert>
-            ) : (
-                tabExams.map((exam: any) => (
+            {/* Compact 3-Item Summary Stat Bar */}
+            <Grid container spacing={1.5} sx={{ mb: 2 }}>
+                <Grid size={{ xs: 4, sm: 4 }}>
                     <Paper
-                        key={exam.examId}
-                        variant="outlined"
+                        elevation={0}
                         sx={{
-                            borderRadius: 3,
-                            overflow: 'hidden',
-                            mb: 3,
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                            p: { xs: 1.25, sm: 1.75 },
+                            textAlign: 'center',
+                            bgcolor: '#f0fdf4',
+                            borderRadius: 2,
+                            border: '1px solid',
+                            borderColor: '#bbf7d0',
+                        }}
+                    >
+                        <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} color="#15803d">
+                            {ongoingExams.length}
+                        </Typography>
+                        <Typography variant="caption" color="#166534" fontWeight={600}>
+                            Ongoing
+                        </Typography>
+                    </Paper>
+                </Grid>
+                <Grid size={{ xs: 4, sm: 4 }}>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: { xs: 1.25, sm: 1.75 },
+                            textAlign: 'center',
+                            bgcolor: '#fffbeb',
+                            borderRadius: 2,
+                            border: '1px solid',
+                            borderColor: '#fde68a',
+                        }}
+                    >
+                        <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} color="#b45309">
+                            {upcomingExams.length}
+                        </Typography>
+                        <Typography variant="caption" color="#92400e" fontWeight={600}>
+                            Upcoming
+                        </Typography>
+                    </Paper>
+                </Grid>
+                <Grid size={{ xs: 4, sm: 4 }}>
+                    <Paper
+                        elevation={0}
+                        sx={{
+                            p: { xs: 1.25, sm: 1.75 },
+                            textAlign: 'center',
+                            bgcolor: 'grey.50',
+                            borderRadius: 2,
                             border: '1px solid',
                             borderColor: 'divider',
                         }}
                     >
-                        {/* Exam header */}
+                        <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} color="text.primary">
+                            {pastExams.length}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                            Completed
+                        </Typography>
+                    </Paper>
+                </Grid>
+            </Grid>
+
+            {/* Filter Toggle Buttons */}
+            <Box sx={{ mb: 2.5 }}>
+                <ToggleButtonGroup
+                    value={selectedTab}
+                    exclusive
+                    onChange={(_, val) => val !== null && setSelectedTab(val)}
+                    size="small"
+                    fullWidth
+                    sx={{
+                        display: 'flex',
+                        gap: 0.5,
+                        '& .MuiToggleButton-root': {
+                            flex: 1,
+                            py: 0.75,
+                            px: 1,
+                            fontSize: { xs: '0.75rem', sm: '0.85rem' },
+                            fontWeight: 600,
+                            borderRadius: '8px !important',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            bgcolor: 'background.paper',
+                            color: 'text.secondary',
+                            '&.Mui-selected': {
+                                bgcolor: 'primary.main',
+                                color: '#ffffff',
+                                borderColor: 'primary.main',
+                                '&:hover': { bgcolor: 'primary.dark' },
+                            },
+                        },
+                    }}
+                >
+                    <ToggleButton value={0}>Ongoing ({ongoingExams.length})</ToggleButton>
+                    <ToggleButton value={1}>Upcoming ({upcomingExams.length})</ToggleButton>
+                    <ToggleButton value={2}>Completed ({pastExams.length})</ToggleButton>
+                </ToggleButtonGroup>
+            </Box>
+
+            {/* Exam Cards List */}
+            {tabExams.length === 0 ? (
+                <Paper
+                    elevation={0}
+                    sx={{
+                        p: 4,
+                        textAlign: 'center',
+                        borderRadius: 2,
+                        border: '1px dashed',
+                        borderColor: 'divider',
+                        bgcolor: 'background.paper',
+                    }}
+                >
+                    <CalendarIcon sx={{ fontSize: 48, color: 'text.disabled', mb: 1.5 }} />
+                    <Typography variant="subtitle1" fontWeight={600} color="text.primary" gutterBottom>
+                        No {['ongoing', 'upcoming', 'completed'][selectedTab]} exams
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        There are currently no exams in this category.
+                    </Typography>
+                </Paper>
+            ) : (
+                tabExams.map((exam: any) => (
+                    <Paper
+                        key={exam.examId}
+                        elevation={0}
+                        sx={{
+                            borderRadius: 2,
+                            overflow: 'hidden',
+                            mb: 2.5,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            bgcolor: 'background.paper',
+                        }}
+                    >
+                        {/* Exam Header */}
                         <Box sx={{
-                            display: 'flex', alignItems: 'center', gap: 2,
-                            px: 3, py: 2, bgcolor: 'action.hover',
-                            borderBottom: 1, borderColor: 'divider',
+                            p: { xs: 1.75, sm: 2 },
+                            bgcolor: 'grey.50',
+                            borderBottom: '1px solid',
+                            borderColor: 'divider',
                         }}>
-                            <Avatar sx={{ bgcolor: 'primary.main', width: 36, height: 36 }}>
-                                <ClassIcon fontSize="small" />
-                            </Avatar>
-                            <Box sx={{ flex: 1 }}>
-                                <Typography variant="subtitle1" fontWeight={700}>{exam.name}</Typography>
-                                <Stack direction="row" spacing={1} flexWrap="wrap">
-                                    <Chip label={exam.term || 'N/A'} size="small" variant="outlined" />
-                                    <Chip label={exam.academicYear || ''} size="small" variant="outlined" />
-                                    <Chip
-                                        label={exam.status}
-                                        size="small"
-                                        color={statusColor(exam.status)}
-                                    />
-                                    {exam.startDate && (
-                                        <Chip
-                                            label={`${fmtDate(exam.startDate)} → ${fmtDate(exam.endDate)}`}
-                                            size="small"
-                                            icon={<CalendarIcon />}
-                                            variant="outlined"
-                                        />
-                                    )}
-                                </Stack>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1, gap: 1 }}>
+                                <Box>
+                                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+                                        {exam.name}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        {exam.termId?.name || exam.term || 'Term'} • Academic Year {exam.academicYear || currentAcademicYear}
+                                    </Typography>
+                                </Box>
+                                <Chip
+                                    label={exam.status}
+                                    size="small"
+                                    color={statusColor(exam.status)}
+                                    sx={{ textTransform: 'capitalize', fontWeight: 700, fontSize: '0.75rem', height: 24 }}
+                                />
                             </Box>
+
+                            {/* Date Badge */}
+                            {exam.startDate && (
+                                <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, bgcolor: '#ffffff', px: 1, py: 0.5, borderRadius: 1.5, border: '1px solid', borderColor: 'divider' }}>
+                                    <CalendarIcon sx={{ fontSize: 14, color: 'primary.main' }} />
+                                    <Typography variant="caption" fontWeight={600} color="text.primary">
+                                        {fmtDate(exam.startDate)} — {fmtDate(exam.endDate)}
+                                    </Typography>
+                                </Box>
+                            )}
                         </Box>
 
-                        {/* Schedule panel */}
+                        {/* Exam Schedule Panel */}
                         <ExamPanel
                             exam={exam}
                             schoolId={schoolId}

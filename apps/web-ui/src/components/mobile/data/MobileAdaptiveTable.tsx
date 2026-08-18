@@ -5,7 +5,7 @@ import type { AppTableProps } from '../../shared/AppTable';
 import MobileCardList from './MobileCardList';
 import MobileCardItem from './MobileCardItem';
 import type { MobileCardMeta } from './MobileCardItem';
-import { Box, Pagination } from '@mui/material';
+import { Box, Pagination, Typography } from '@mui/material';
 
 export interface MobileAdaptiveTableProps<T> extends AppTableProps<T> {
   mobileTitleKey?: keyof T | ((row: T) => React.ReactNode);
@@ -175,15 +175,45 @@ export const MobileAdaptiveTable = <T extends Record<string, any>>({
 
       {/* Pagination Controls */}
       {pagination && totalPages > 1 && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, mb: 2 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mt: 2.5,
+            mb: 1,
+            pb: 8,
+            gap: 0.75,
+          }}
+        >
           <Pagination
             count={totalPages}
             page={currentPage}
             onChange={handlePageChange}
             color="primary"
             shape="rounded"
-            size="medium"
+            size="small"
+            siblingCount={0}
+            boundaryCount={1}
+            sx={{
+              '& .MuiPagination-ul': {
+                flexWrap: 'nowrap',
+                justifyContent: 'center',
+              },
+              '& .MuiPaginationItem-root': {
+                minWidth: 30,
+                height: 30,
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                margin: '0 2px',
+                borderRadius: '8px',
+              },
+            }}
           />
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', fontWeight: 500 }}>
+            Page {currentPage} of {totalPages} ({totalItems} total)
+          </Typography>
         </Box>
       )}
     </Box>

@@ -155,101 +155,109 @@ const SchoolAdminDashboard = () => {
     const leaveStats = leaveData?.data;
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            <Typography
-                variant="h4"
-                gutterBottom
-                fontWeight={600}
-                color="#1e293b"
-                sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}
-            >
-                School Dashboard
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-                Welcome to your School Dashboard. Manage teachers, students, and parents.
-            </Typography>
+        <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
+            <Box sx={{ mb: { xs: 2, sm: 3 }, mt: 0.5 }}>
+                <Typography
+                    variant="h4"
+                    fontWeight={800}
+                    sx={{
+                        mb: 0.25,
+                        background: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
+                        letterSpacing: '-0.02em',
+                        lineHeight: 1.2
+                    }}
+                >
+                    School Dashboard
+                </Typography>
+                <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                    Welcome to your School Dashboard. Manage teachers, students, and parents.
+                </Typography>
+            </Box>
 
             {error && (
-                <Alert severity="error" sx={{ mb: 3 }}>
+                <Alert severity="error" sx={{ mb: 2, borderRadius: 2.5 }}>
                     Failed to load dashboard stats. Please try again.
                 </Alert>
             )}
 
-            {/* Stats Cards */}
-            <Grid container spacing={{ xs: 2, sm: 3 }}>
+            {/* Stats Cards - 2x2 on mobile, 4 in a row on desktop */}
+            <Grid container spacing={{ xs: 1.5, sm: 2 }}>
                 {isLoading ? (
                     [1, 2, 3, 4].map((i) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 3 }} key={i}>
-                            <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 4 }} />
+                        <Grid size={{ xs: 6, sm: 6, md: 3 }} key={i}>
+                            <Skeleton variant="rectangular" height={90} sx={{ borderRadius: 2.5 }} />
                         </Grid>
                     ))
                 ) : (
                     <>
-                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <DashboardCard
-                            title="Teachers"
-                            value={stats?.totalTeachers || 0}
-                            subtitle={`${stats?.activeTeachers || 0} active`}
-                            icon={<PeopleIcon sx={{ fontSize: 28 }} />}
-                            color="#3b82f6"
-                            bgColor="#eff6ff"
-                            to="/school-admin/teachers"
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <DashboardCard
-                            title="Students"
-                            value={stats?.totalStudents || 0}
-                            subtitle={`${stats?.activeStudents || 0} active`}
-                            icon={<SchoolIcon sx={{ fontSize: 28 }} />}
-                            color="#10b981"
-                            bgColor="#ecfdf5"
-                            to="/school-admin/students"
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <DashboardCard
-                            title="Parents"
-                            value={stats?.totalParents || 0}
-                            subtitle={`${stats?.activeParents || 0} active`}
-                            icon={<FamilyRestroomIcon sx={{ fontSize: 28 }} />}
-                            color="#8b5cf6"
-                            bgColor="#f5f3ff"
-                            to="/school-admin/parents"
-                        />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                        <DashboardCard
-                            title="Leave Requests"
-                            value={leaveStats?.totalPending || 0}
-                            subtitle={`${leaveStats?.todayPending || 0} today`}
-                            icon={<EventNoteIcon sx={{ fontSize: 28 }} />}
-                            color="#f59e0b"
-                            bgColor="#fffbeb"
-                            to="/school-admin/leaverequest"
-                        />
+                        <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+                            <DashboardCard
+                                title="Teachers"
+                                value={stats?.totalTeachers || 0}
+                                subtitle={`${stats?.activeTeachers || 0} active`}
+                                icon={<PeopleIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
+                                color="#3b82f6"
+                                bgColor="#eff6ff"
+                                to="/school-admin/teachers"
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+                            <DashboardCard
+                                title="Students"
+                                value={stats?.totalStudents || 0}
+                                subtitle={`${stats?.activeStudents || 0} active`}
+                                icon={<SchoolIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
+                                color="#10b981"
+                                bgColor="#ecfdf5"
+                                to="/school-admin/students"
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+                            <DashboardCard
+                                title="Parents"
+                                value={stats?.totalParents || 0}
+                                subtitle={`${stats?.activeParents || 0} active`}
+                                icon={<FamilyRestroomIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
+                                color="#8b5cf6"
+                                bgColor="#f5f3ff"
+                                to="/school-admin/parents"
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+                            <DashboardCard
+                                title="Leave Requests"
+                                value={leaveStats?.totalPending || 0}
+                                subtitle={`${leaveStats?.todayPending || 0} today`}
+                                icon={<EventNoteIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
+                                color="#f59e0b"
+                                bgColor="#fffbeb"
+                                to="/school-admin/leaverequest"
+                            />
                         </Grid>
                     </>
                 )}
             </Grid>
 
             {/* Quick Actions Section */}
-            <Box sx={{ mt: 5, mb: 2 }}>
+            <Box sx={{ mt: { xs: 3, sm: 4 }, mb: 2 }}>
                 <Typography
-                    variant="h5"
+                    variant="subtitle1"
                     fontWeight={700}
                     color="#1e293b"
-                    sx={{ mb: 0.5, fontSize: { xs: '1.1rem', sm: '1.3rem' } }}
+                    sx={{ mb: 0.25, fontSize: { xs: '0.95rem', sm: '1.15rem' } }}
                 >
                     Quick Navigation
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block', fontSize: '0.75rem' }}>
                     Jump to any section of your school management system
                 </Typography>
 
-                <Grid container spacing={{ xs: 1.5, sm: 2 }}>
+                <Grid container spacing={{ xs: 1, sm: 1.5, md: 2 }}>
                     {quickActions.map((action) => (
-                        <Grid size={{ xs: 6, sm: 4, md: 3, lg: 2 }} key={action.label}>
+                        <Grid size={{ xs: 4, sm: 4, md: 3, lg: 2 }} key={action.label}>
                             <Box
                                 onClick={() => navigate(action.path)}
                                 sx={{
@@ -257,30 +265,31 @@ const SchoolAdminDashboard = () => {
                                     flexDirection: 'column',
                                     alignItems: 'center',
                                     justifyContent: 'center',
-                                    gap: 1.2,
-                                    p: { xs: 2, sm: 2.5 },
-                                    borderRadius: 3,
+                                    gap: 0.75,
+                                    p: { xs: 1.25, sm: 1.75 },
+                                    borderRadius: 2.5,
                                     background: 'white',
                                     border: '1px solid #e2e8f0',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
                                     cursor: 'pointer',
                                     textAlign: 'center',
-                                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    minHeight: { xs: 110, sm: 130 },
+                                    transition: 'all 0.18s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    minHeight: { xs: 88, sm: 110 },
                                     position: 'relative',
                                     overflow: 'hidden',
                                     '&:hover': {
-                                        transform: 'translateY(-5px)',
-                                        boxShadow: '0 12px 32px rgba(0,0,0,0.12)',
-                                        borderColor: 'transparent',
+                                        transform: 'translateY(-3px)',
+                                        boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
+                                        borderColor: '#cbd5e1',
                                         '& .action-icon-box': {
-                                            transform: 'scale(1.12)',
+                                            transform: 'scale(1.08)',
                                         },
                                         '& .action-label': {
                                             color: action.iconColor,
                                         },
                                     },
                                     '&:active': {
-                                        transform: 'translateY(-2px)',
+                                        transform: 'translateY(-1px)',
                                     },
                                 }}
                             >
@@ -288,10 +297,10 @@ const SchoolAdminDashboard = () => {
                                 <Box
                                     sx={{
                                         position: 'absolute',
-                                        top: -30,
-                                        right: -30,
-                                        width: 80,
-                                        height: 80,
+                                        top: -20,
+                                        right: -20,
+                                        width: 60,
+                                        height: 60,
                                         borderRadius: '50%',
                                         background: action.gradient,
                                         opacity: 0.07,
@@ -301,32 +310,37 @@ const SchoolAdminDashboard = () => {
                                 <Box
                                     className="action-icon-box"
                                     sx={{
-                                        width: { xs: 48, sm: 56 },
-                                        height: { xs: 48, sm: 56 },
-                                        borderRadius: '14px',
+                                        width: { xs: 36, sm: 44 },
+                                        height: { xs: 36, sm: 44 },
+                                        borderRadius: '10px',
                                         background: action.gradient,
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         color: 'white',
-                                        boxShadow: `0 4px 14px ${action.iconColor}40`,
-                                        transition: 'transform 0.25s ease',
+                                        boxShadow: `0 3px 10px ${action.iconColor}35`,
+                                        transition: 'transform 0.2s ease',
                                         flexShrink: 0,
+                                        '& .MuiSvgIcon-root': {
+                                            fontSize: { xs: 18, sm: 22 }
+                                        }
                                     }}
                                 >
                                     {action.icon}
                                 </Box>
-                                <Box>
+                                <Box sx={{ width: '100%' }}>
                                     <Typography
                                         className="action-label"
-                                        variant="body2"
+                                        variant="caption"
                                         sx={{
                                             fontWeight: 700,
                                             color: '#1e293b',
-                                            fontSize: { xs: '0.78rem', sm: '0.85rem' },
+                                            fontSize: { xs: '0.72rem', sm: '0.78rem' },
                                             transition: 'color 0.2s ease',
-                                            lineHeight: 1.2,
+                                            lineHeight: 1.15,
+                                            display: 'block',
                                         }}
+                                        noWrap
                                     >
                                         {action.label}
                                     </Typography>
@@ -334,11 +348,12 @@ const SchoolAdminDashboard = () => {
                                         variant="caption"
                                         sx={{
                                             color: '#94a3b8',
-                                            fontSize: { xs: '0.65rem', sm: '0.7rem' },
-                                            display: { xs: 'none', sm: 'block' },
-                                            mt: 0.3,
-                                            lineHeight: 1.3,
+                                            fontSize: { xs: '0.62rem', sm: '0.68rem' },
+                                            display: { xs: 'none', md: 'block' },
+                                            mt: 0.2,
+                                            lineHeight: 1.2,
                                         }}
+                                        noWrap
                                     >
                                         {action.description}
                                     </Typography>

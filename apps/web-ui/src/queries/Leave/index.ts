@@ -37,7 +37,7 @@ export const useApplyLeave = (schoolId: string) => {
                 data
             ),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: leaveKeys.myLeaves(schoolId) });
+            queryClient.invalidateQueries({ queryKey: ["leave"] });
         },
     });
 };
@@ -115,8 +115,7 @@ export const useProcessLeave = (schoolId: string) => {
                 data
             ),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: leaveKeys.allLeaves(schoolId) });
-            queryClient.invalidateQueries({ queryKey: leaveKeys.myLeaves(schoolId) });
+            queryClient.invalidateQueries({ queryKey: ["leave"] });
         },
     });
 };
@@ -148,7 +147,7 @@ export const useCancelLeave = (schoolId: string) => {
                 `/api/school/${schoolId}/leave/${leaveId}`
             ),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: leaveKeys.myLeaves(schoolId) });
+            queryClient.invalidateQueries({ queryKey: ["leave"] });
         },
     });
 };

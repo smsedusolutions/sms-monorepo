@@ -11,6 +11,7 @@ import {
     Card,
     CardContent,
     Paper,
+    Button,
 } from '@mui/material';
 import { format } from 'date-fns';
 import {
@@ -33,9 +34,6 @@ import { useGetClasses } from '../../queries/Class';
 import { useGetStudents } from '../../queries/Student';
 import { useTimeSettingsStore } from '../../stores/timeSettingsStore';
 import { formatTimeDisplay } from '../../utils/timeUtils';
-import { AppCard } from '../../components/shared/AppCard';
-import { AppButton } from '../../components/shared/AppButton';
-import { AppSection } from '../../components/shared/AppSection';
 import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
 import type { Class, Student } from '../../types';
 
@@ -159,30 +157,32 @@ const TeacherDashboard: React.FC = () => {
     }, [myClassCards]);
 
     return (
-        <Box sx={{ p: 3, maxWidth: 1400, mx: 'auto' }}>
+        <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
             {/* Professional Greeting */}
-            <Box sx={{ mb: { xs: 4, md: 5 }, mt: 2 }}>
+            <Box sx={{ mb: { xs: 2, sm: 3 }, mt: 0.5 }}>
                 {isLoading ? (
                     <>
-                        <Skeleton variant="text" width="60%" height={80} sx={{ borderRadius: 2 }} />
-                        <Skeleton variant="text" width="40%" height={32} sx={{ mt: 1 }} />
+                        <Skeleton variant="text" width="60%" height={40} sx={{ borderRadius: 2 }} />
+                        <Skeleton variant="text" width="40%" height={24} sx={{ mt: 0.5 }} />
                     </>
                 ) : (
                     <Box>
                         <Typography
-                            variant="h3"
+                            variant="h4"
                             fontWeight={800}
                             sx={{
-                                mb: 1,
+                                mb: 0.25,
                                 background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
                                 WebkitBackgroundClip: 'text',
                                 WebkitTextFillColor: 'transparent',
-                                fontSize: { xs: '2.25rem', md: '3rem' }
+                                fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
+                                letterSpacing: '-0.02em',
+                                lineHeight: 1.2
                             }}
                         >
                             Good morning, {user?.firstName || 'Teacher'}!
                         </Typography>
-                        <Typography variant="h6" color="text.secondary" fontWeight={400} sx={{ opacity: 0.8 }}>
+                        <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                             You have {stats?.periodsToday || 0} classes scheduled for today.
                         </Typography>
                     </Box>
@@ -190,296 +190,304 @@ const TeacherDashboard: React.FC = () => {
             </Box>
 
             {error && (
-                <Alert severity="error" sx={{ mb: 4 }}>
+                <Alert severity="error" sx={{ mb: 2, borderRadius: 2.5 }}>
                     Failed to load dashboard stats. Please try again.
                 </Alert>
             )}
 
             {/* Quick Stats Grid */}
-            <Grid container spacing={3} sx={{ mb: 5 }} component="div">
+            <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mb: { xs: 2, sm: 3 } }}>
                 {isLoading ? (
                     [1, 2, 3].map((i) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i} component="div">
-                            <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 4 }} />
+                        <Grid size={{ xs: 4, sm: 4, md: 4 }} key={i}>
+                            <Skeleton variant="rectangular" height={80} sx={{ borderRadius: 2.5 }} />
                         </Grid>
                     ))
                 ) : (
                     [
-                        { label: 'Total Students', value: assignedTotalStudents > 0 ? assignedTotalStudents : (stats?.totalStudents || 0), icon: <StudentsIcon />, color: '#6366f1' },
-                        { label: 'Today\'s Attendance', value: stats?.attendancePercentage || 'Not Marked', icon: <AttendanceIcon />, color: '#10b981' },
-                        { label: 'Pending Leaves', value: stats?.pendingLeaveRequests || 0, icon: <EventIcon />, color: '#f59e0b' },
+                        { label: 'Total Students', value: assignedTotalStudents > 0 ? assignedTotalStudents : (stats?.totalStudents || 0), icon: <StudentsIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: '#6366f1' },
+                        { label: 'Today Attendance', value: stats?.attendancePercentage || 'Not Marked', icon: <AttendanceIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: '#10b981' },
+                        { label: 'Pending Leaves', value: stats?.pendingLeaveRequests || 0, icon: <EventIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: '#f59e0b' },
                     ].map((stat) => (
-                        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={stat.label} component="div">
-                            <AppCard sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 3,
-                                p: 3,
-                                borderRadius: 4,
-                                backdropFilter: 'blur(10px)',
-                                bgcolor: 'rgba(255, 255, 255, 0.7)',
-                                border: '1px solid rgba(255, 255, 255, 0.3)',
-                                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.07)'
-                            }}>
-                                <Avatar sx={{ bgcolor: `${stat.color}15`, color: stat.color, width: 56, height: 56, border: '1px solid', borderColor: `${stat.color}20` }}>
+                        <Grid size={{ xs: 4, sm: 4, md: 4 }} key={stat.label}>
+                            <Paper
+                                elevation={0}
+                                sx={{
+                                    display: 'flex',
+                                    flexDirection: { xs: 'column', sm: 'row' },
+                                    alignItems: { xs: 'flex-start', sm: 'center' },
+                                    gap: { xs: 1, sm: 2 },
+                                    p: { xs: 1.25, sm: 2 },
+                                    borderRadius: 2.5,
+                                    bgcolor: '#ffffff',
+                                    border: '1px solid #e2e8f0',
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                                    height: '100%'
+                                }}
+                            >
+                                <Avatar sx={{ bgcolor: `${stat.color}15`, color: stat.color, width: { xs: 32, sm: 42 }, height: { xs: 32, sm: 42 }, border: '1px solid', borderColor: `${stat.color}20`, borderRadius: 2 }}>
                                     {stat.icon}
                                 </Avatar>
-                                <Box>
-                                    <Typography variant="h4" fontWeight={800}>{stat.value}</Typography>
-                                    <Typography variant="body2" color="text.secondary" fontWeight={500}>{stat.label}</Typography>
+                                <Box sx={{ minWidth: 0 }}>
+                                    <Typography variant="h6" fontWeight={800} sx={{ fontSize: { xs: '1.05rem', sm: '1.35rem' }, lineHeight: 1.1 }} noWrap>{stat.value}</Typography>
+                                    <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' }, display: 'block' }} noWrap>{stat.label}</Typography>
                                 </Box>
-                            </AppCard>
+                            </Paper>
                         </Grid>
                     ))
                 )}
             </Grid>
 
-            {/* Quick Attendance CTA Banner */}
-            <Paper
-                elevation={0}
-                onClick={() => navigate('/teacher/attendance')}
-                sx={{
-                    p: 2.5,
-                    mb: 4,
-                    borderRadius: 3.5,
-                    bgcolor: '#f0fdf4',
-                    border: '1px solid #a7f3d0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                    '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 8px 24px rgba(16, 185, 129, 0.15)',
-                    }
-                }}
-            >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: '#10b981', color: '#fff' }}>
-                        <AttendanceIcon sx={{ fontSize: 28 }} />
-                    </Box>
-                    <Box>
-                        <Typography variant="subtitle1" fontWeight={700} color="#065f46">
-                            Record Today's Attendance
-                        </Typography>
-                        <Typography variant="caption" color="#047857">
-                            Quickly mark simple or period-wise student attendance for your assigned classes.
-                        </Typography>
-                    </Box>
-                </Box>
-                <AppButton
-                    variant="contained"
-                    onClick={(e) => { e.stopPropagation(); navigate('/teacher/attendance'); }}
-                    sx={{ bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, fontWeight: 700 }}
-                >
-                    Mark Attendance Now
-                </AppButton>
-            </Paper>
+            {/* Quick Attendance CTA Banner & Chat */}
+            <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mb: { xs: 2, sm: 3 } }}>
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Paper
+                        elevation={0}
+                        onClick={() => navigate('/teacher/attendance')}
+                        sx={{
+                            p: { xs: 1.5, sm: 2 },
+                            borderRadius: 2.5,
+                            bgcolor: '#f0fdf4',
+                            border: '1px solid #a7f3d0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 1.5,
+                            cursor: 'pointer',
+                            transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                            '&:hover': {
+                                transform: 'translateY(-1.5px)',
+                                boxShadow: '0 6px 18px rgba(16, 185, 129, 0.12)',
+                            }
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                            <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <AttendanceIcon sx={{ fontSize: 20 }} />
+                            </Box>
+                            <Box>
+                                <Typography variant="subtitle2" fontWeight={700} color="#065f46" sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem' } }}>
+                                    Record Attendance
+                                </Typography>
+                                <Typography variant="caption" color="#047857" sx={{ fontSize: '0.72rem', display: { xs: 'none', sm: 'block' } }}>
+                                    Mark simple or period-wise student attendance.
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            onClick={(e) => { e.stopPropagation(); navigate('/teacher/attendance'); }}
+                            sx={{ bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, fontWeight: 700, borderRadius: 2, textTransform: 'none', fontSize: '0.75rem', px: 1.5, py: 0.4, flexShrink: 0 }}
+                        >
+                            Mark Now
+                        </Button>
+                    </Paper>
+                </Grid>
 
-            {/* Chat with Parents CTA Banner */}
-            <Paper
-                elevation={0}
-                onClick={() => navigate('/teacher/chat')}
-                sx={{
-                    p: 2.5,
-                    mb: 4,
-                    borderRadius: 3.5,
-                    bgcolor: '#f5f3ff',
-                    border: '1px solid #c4b5fd',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                    '&:hover': {
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 8px 24px rgba(139, 92, 246, 0.18)',
-                    }
-                }}
-            >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Box sx={{ p: 1.5, borderRadius: 2.5, bgcolor: '#7c3aed', color: '#fff' }}>
-                        <ChatIcon sx={{ fontSize: 28 }} />
-                    </Box>
-                    <Box>
-                        <Typography variant="subtitle1" fontWeight={700} color="#4c1d95">
-                            Chat with Parents
-                        </Typography>
-                        <Typography variant="caption" color="#6d28d9">
-                            Send secure, end-to-end encrypted messages to parents about student progress.
-                        </Typography>
-                    </Box>
-                </Box>
-                <AppButton
-                    variant="contained"
-                    onClick={(e) => { e.stopPropagation(); navigate('/teacher/chat'); }}
-                    sx={{ bgcolor: '#7c3aed', '&:hover': { bgcolor: '#6d28d9' }, fontWeight: 700 }}
-                >
-                    Open Chat
-                </AppButton>
-            </Paper>
+                <Grid size={{ xs: 12, md: 6 }}>
+                    <Paper
+                        elevation={0}
+                        onClick={() => navigate('/teacher/chat')}
+                        sx={{
+                            p: { xs: 1.5, sm: 2 },
+                            borderRadius: 2.5,
+                            bgcolor: '#f5f3ff',
+                            border: '1px solid #c4b5fd',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 1.5,
+                            cursor: 'pointer',
+                            transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                            '&:hover': {
+                                transform: 'translateY(-1.5px)',
+                                boxShadow: '0 6px 18px rgba(139, 92, 246, 0.12)',
+                            }
+                        }}
+                    >
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                            <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#7c3aed', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <ChatIcon sx={{ fontSize: 20 }} />
+                            </Box>
+                            <Box>
+                                <Typography variant="subtitle2" fontWeight={700} color="#4c1d95" sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem' } }}>
+                                    Chat with Parents
+                                </Typography>
+                                <Typography variant="caption" color="#6d28d9" sx={{ fontSize: '0.72rem', display: { xs: 'none', sm: 'block' } }}>
+                                    Send secure messages regarding student progress.
+                                </Typography>
+                            </Box>
+                        </Box>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            onClick={(e) => { e.stopPropagation(); navigate('/teacher/chat'); }}
+                            sx={{ bgcolor: '#7c3aed', '&:hover': { bgcolor: '#6d28d9' }, fontWeight: 700, borderRadius: 2, textTransform: 'none', fontSize: '0.75rem', px: 1.5, py: 0.4, flexShrink: 0 }}
+                        >
+                            Open Chat
+                        </Button>
+                    </Paper>
+                </Grid>
+            </Grid>
 
             {/* My Assigned Classes Section */}
             {myClassCards.length > 0 && (
-                <Box sx={{ mb: 5 }}>
-                    <AppSection title="My Assigned Classes">
-                        <Grid container spacing={3}>
-                            {myClassCards.map((c, index) => {
-                                const color = cardColors[index % cardColors.length];
-                                return (
-                                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={c.classId}>
-                                        <Card
-                                            onClick={() => navigate('/teacher/attendance')}
-                                            sx={{
-                                                borderRadius: 4,
-                                                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-                                                border: `1px solid ${color.accent}25`,
-                                                bgcolor: 'background.paper',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.2s ease',
-                                                '&:hover': {
-                                                    transform: 'translateY(-3px)',
-                                                    boxShadow: `0 8px 25px ${color.accent}25`,
-                                                }
-                                            }}
-                                        >
-                                            <CardContent sx={{ p: 3 }}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                                                    <Avatar sx={{ bgcolor: color.iconBg, color: color.accent, width: 48, height: 48 }}>
-                                                        <ClassIcon />
-                                                    </Avatar>
-                                                    {c.isClassTeacher && (
-                                                        <Chip
-                                                            icon={<StarIcon sx={{ fontSize: '14px !important' }} />}
-                                                            label="Class Teacher"
-                                                            size="small"
-                                                            sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 700, fontSize: '0.7rem' }}
-                                                        />
-                                                    )}
-                                                </Box>
+                <Box sx={{ mb: { xs: 2.5, sm: 3 } }}>
+                    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>My Assigned Classes</Typography>
+                    <Grid container spacing={{ xs: 1.5, sm: 2 }}>
+                        {myClassCards.map((c, index) => {
+                            const color = cardColors[index % cardColors.length];
+                            return (
+                                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={c.classId}>
+                                    <Card
+                                        onClick={() => navigate('/teacher/attendance')}
+                                        sx={{
+                                            borderRadius: 2.5,
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                                            border: `1px solid ${color.accent}30`,
+                                            bgcolor: 'background.paper',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.18s ease',
+                                            '&:hover': {
+                                                transform: 'translateY(-2px)',
+                                                boxShadow: `0 6px 18px ${color.accent}20`,
+                                            }
+                                        }}
+                                    >
+                                        <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                                <Avatar sx={{ bgcolor: color.iconBg, color: color.accent, width: 36, height: 36, borderRadius: 2 }}>
+                                                    <ClassIcon sx={{ fontSize: 18 }} />
+                                                </Avatar>
+                                                {c.isClassTeacher && (
+                                                    <Chip
+                                                        icon={<StarIcon sx={{ fontSize: '12px !important' }} />}
+                                                        label="Class Teacher"
+                                                        size="small"
+                                                        sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 700, fontSize: '0.65rem', height: 20 }}
+                                                    />
+                                                )}
+                                            </Box>
 
-                                                <Typography variant="h6" fontWeight={800} color="#1e293b" gutterBottom>
-                                                    {c.className}
-                                                </Typography>
+                                            <Typography variant="subtitle1" fontWeight={800} color="#1e293b" sx={{ fontSize: '0.95rem', mb: 0.5 }}>
+                                                {c.className}
+                                            </Typography>
 
-                                                <Box sx={{ display: 'flex', gap: 2.5, mt: 1.5 }}>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-                                                        <SchoolIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                                                        <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                                                            {c.sectionLabel}
-                                                        </Typography>
-                                                    </Box>
-                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
-                                                        <GroupsIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
-                                                        <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                                                            {c.studentCount} Students
-                                                        </Typography>
-                                                    </Box>
+                                            <Box sx={{ display: 'flex', gap: 2, mt: 0.5, flexWrap: 'wrap' }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                    <SchoolIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
+                                                    <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: '0.72rem' }}>
+                                                        {c.sectionLabel}
+                                                    </Typography>
                                                 </Box>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-                                );
-                            })}
-                        </Grid>
-                    </AppSection>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                    <GroupsIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
+                                                    <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: '0.72rem' }}>
+                                                        {c.studentCount} Students
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                            );
+                        })}
+                    </Grid>
                 </Box>
             )}
 
-            <Grid container spacing={4}>
+            <Grid container spacing={{ xs: 2, sm: 3 }}>
                 {/* Main Content: Schedule & Tasks */}
                 <Grid size={{ xs: 12, lg: 8 }}>
-                    <AppSection
-                        title="Today's Schedule"
-                        action={
-                            <AppButton size="small" variant="text" onClick={() => navigate('/teacher/timetable')}>
+                    <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+                            <Typography variant="subtitle1" fontWeight={700} sx={{ fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>Today's Schedule</Typography>
+                            <Button size="small" variant="text" onClick={() => navigate('/teacher/timetable')} sx={{ fontWeight: 600, fontSize: '0.75rem', textTransform: 'none' }}>
                                 Full Timetable
-                            </AppButton>
-                        }
-                    >
+                            </Button>
+                        </Box>
                         {isLoading ? (
-                            <Skeleton variant="rectangular" height={200} sx={{ borderRadius: 4 }} />
+                            <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 2.5 }} />
                         ) : (
-                            <Grid container spacing={2}>
+                            <Grid container spacing={1.5}>
                                 {stats?.todaySchedule && stats.todaySchedule.length > 0 ? (
                                     stats.todaySchedule.map((period, i) => (
                                         <Grid size={{ xs: 12, sm: 6 }} key={i}>
-                                            <Box sx={{
-                                                p: 2.5,
-                                                borderRadius: 4,
-                                                border: '1px solid',
-                                                borderColor: 'rgba(255, 255, 255, 0.4)',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: 2,
-                                                bgcolor: 'rgba(255, 255, 255, 0.5)',
-                                                backdropFilter: 'blur(4px)',
-                                                boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
-                                                transition: 'all 0.2s ease',
-                                                '&:hover': {
-                                                    transform: 'translateY(-2px)',
-                                                    boxShadow: '0 8px 16px rgba(0,0,0,0.06)'
-                                                }
-                                            }}>
-                                                <Box sx={{
+                                            <Paper
+                                                elevation={0}
+                                                sx={{
                                                     p: 1.5,
+                                                    borderRadius: 2.5,
+                                                    border: '1px solid #e2e8f0',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 1.5,
+                                                    bgcolor: '#ffffff',
+                                                    boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
+                                                    transition: 'all 0.18s ease',
+                                                    '&:hover': {
+                                                        transform: 'translateY(-1.5px)',
+                                                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                                                    }
+                                                }}
+                                            >
+                                                <Box sx={{
+                                                    p: 1,
                                                     borderRadius: 2,
                                                     bgcolor: 'primary.light',
                                                     color: 'primary.dark',
                                                     display: 'flex',
                                                     flexDirection: 'column',
                                                     alignItems: 'center',
-                                                    minWidth: 100,
+                                                    minWidth: 70,
                                                     textAlign: 'center'
                                                 }}>
-                                                    <Typography variant="caption" fontWeight={800} sx={{ textTransform: 'uppercase', fontSize: '0.9rem', opacity: 0.8 }}>
-                                                        {'Period'} <b>#{period.periodNumber}</b>
+                                                    <Typography variant="caption" fontWeight={800} sx={{ textTransform: 'uppercase', fontSize: '0.72rem', opacity: 0.85 }}>
+                                                        P#{period.periodNumber}
                                                     </Typography>
-                                                    <Typography variant="caption" fontWeight={700} sx={{ mt: 0.5, fontSize: '0.85rem', whiteSpace: 'nowrap' }}>
+                                                    <Typography variant="caption" fontWeight={700} sx={{ mt: 0.25, fontSize: '0.7rem', whiteSpace: 'nowrap' }}>
                                                         {formatTimeDisplay(period.time, timeFormat)}
                                                     </Typography>
                                                 </Box>
-                                                <Box sx={{ flexGrow: 1 }}>
-                                                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">{period.subject}</Typography>
-                                                    <Typography variant="caption" color="text.secondary" fontWeight={500}>{period.class}</Typography>
+                                                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary" noWrap sx={{ fontSize: '0.85rem' }}>{period.subject}</Typography>
+                                                    <Typography variant="caption" color="text.secondary" fontWeight={500} noWrap sx={{ display: 'block', fontSize: '0.72rem' }}>{period.class}</Typography>
                                                 </Box>
-                                            </Box>
+                                            </Paper>
                                         </Grid>
                                     ))
                                 ) : (
-                                    <Box sx={{ py: 4, width: '100%', textAlign: 'center' }}>
-                                        <ScheduleIcon sx={{ fontSize: 48, color: 'text.disabled', opacity: 0.5, mb: 1 }} />
-                                        <Typography color="text.secondary">No classes scheduled for today</Typography>
+                                    <Box sx={{ py: 3, width: '100%', textAlign: 'center' }}>
+                                        <ScheduleIcon sx={{ fontSize: 36, color: 'text.disabled', opacity: 0.5, mb: 0.5 }} />
+                                        <Typography color="text.secondary" variant="body2" sx={{ fontSize: '0.8rem' }}>No classes scheduled for today</Typography>
                                     </Box>
                                 )}
                             </Grid>
                         )}
-                    </AppSection>
+                    </Box>
 
-                    <AppSection title="Pending Tasks">
-                        <Stack spacing={2}>
+                    <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+                        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>Pending Tasks</Typography>
+                        <Stack spacing={1}>
                             {isLoading ? (
-                                [1, 2, 3].map((i) => <Skeleton key={i} variant="rectangular" height={70} sx={{ borderRadius: 3 }} />)
+                                [1, 2, 3].map((i) => <Skeleton key={i} variant="rectangular" height={50} sx={{ borderRadius: 2 }} />)
                             ) : stats?.pendingTasks && stats.pendingTasks.length > 0 ? (
                                 stats.pendingTasks.map((task, i) => (
-                                    <Box
+                                    <Paper
                                         key={i}
+                                        elevation={0}
                                         onClick={() => {
                                             if (task.task.includes('Attendance')) {
                                                 navigate('/teacher/attendance');
                                             }
                                         }}
                                         sx={{
-                                            p: 2,
-                                            borderRadius: 3,
-                                            bgcolor: 'background.default',
+                                            p: 1.5,
+                                            borderRadius: 2.5,
+                                            bgcolor: '#ffffff',
                                             border: '1px solid',
-                                            borderColor: task.priority === 'high' ? 'error.light' : 'divider',
+                                            borderColor: task.priority === 'high' ? '#fecaca' : '#e2e8f0',
                                             display: 'flex',
                                             justifyContent: 'space-between',
                                             alignItems: 'center',
@@ -488,8 +496,8 @@ const TeacherDashboard: React.FC = () => {
                                         }}
                                     >
                                         <Box>
-                                            <Typography variant="body1" fontWeight={600}>{task.task}</Typography>
-                                            <Typography variant="caption" color="text.secondary">
+                                            <Typography variant="body2" fontWeight={600} sx={{ fontSize: '0.825rem' }}>{task.task}</Typography>
+                                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
                                                 Due: {format(new Date(task.deadline), 'MMM dd, yyyy')}
                                             </Typography>
                                         </Box>
@@ -498,78 +506,69 @@ const TeacherDashboard: React.FC = () => {
                                             label={task.priority.toUpperCase()}
                                             color={task.priority === 'high' ? 'error' : 'primary'}
                                             variant="filled"
+                                            sx={{ height: 20, fontSize: '0.65rem', fontWeight: 700 }}
                                         />
-                                    </Box>
+                                    </Paper>
                                 ))
                             ) : (
-                                <Box sx={{ py: 3, textAlign: 'center', opacity: 0.6 }}>
-                                    <Typography variant="body2">No pending tasks</Typography>
+                                <Box sx={{ py: 2, textAlign: 'center', opacity: 0.6 }}>
+                                    <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>No pending tasks</Typography>
                                 </Box>
                             )}
                         </Stack>
-                    </AppSection>
+                    </Box>
                 </Grid>
 
                 {/* Sidebar: Quick Actions */}
                 <Grid size={{ xs: 12, lg: 4 }}>
-                    <Typography variant="h5" fontWeight={700} sx={{ mb: 2 }}>Quick Actions</Typography>
-                    <Stack spacing={2}>
-                        <AppButton
-                            variant="contained"
-                            fullWidth
-                            size="large"
-                            startIcon={<AddIcon />}
-                            onClick={() => navigate('/teacher/homework/add')}
-                            sx={{ py: 2 }}
-                        >
-                            Add Homework
-                        </AppButton>
-                        <AppButton
-                            variant="outlined"
-                            fullWidth
-                            size="large"
-                            startIcon={<ScheduleIcon />}
-                            onClick={() => navigate('/teacher/exam/book')}
-                            sx={{ py: 2 }}
-                        >
-                            Book Exam
-                        </AppButton>
-                        <AppButton
-                            variant="outlined"
-                            fullWidth
-                            size="large"
-                            startIcon={<ChatIcon />}
-                            onClick={() => navigate('/teacher/chat')}
-                            sx={{
-                                py: 2,
-                                borderColor: '#7c3aed',
-                                color: '#7c3aed',
-                                '&:hover': { borderColor: '#6d28d9', bgcolor: '#f5f3ff' }
-                            }}
-                        >
-                            Chat with Parents
-                        </AppButton>
-                        <AppButton
-                            variant="text"
-                            fullWidth
-                            size="large"
-                            startIcon={<EventIcon />}
-                            onClick={() => navigate('/teacher/leave/apply')}
-                            sx={{ py: 2, color: 'text.secondary' }}
-                        >
-                            Apply Leave
-                        </AppButton>
-                    </Stack>
+                    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>Quick Actions</Typography>
+                    <Grid container spacing={1.5}>
+                        {[
+                            { label: 'Add Homework', icon: <AddIcon />, onClick: () => navigate('/teacher/homework/add'), color: '#3b82f6' },
+                            { label: 'Book Exam', icon: <ScheduleIcon />, onClick: () => navigate('/teacher/exam/book'), color: '#8b5cf6' },
+                            { label: 'Chat Parents', icon: <ChatIcon />, onClick: () => navigate('/teacher/chat'), color: '#7c3aed' },
+                            { label: 'Apply Leave', icon: <EventIcon />, onClick: () => navigate('/teacher/leave/apply'), color: '#f59e0b' },
+                        ].map((action) => (
+                            <Grid size={{ xs: 6, lg: 6 }} key={action.label}>
+                                <Paper
+                                    elevation={0}
+                                    onClick={action.onClick}
+                                    sx={{
+                                        p: { xs: 1.25, sm: 1.75 },
+                                        textAlign: 'center',
+                                        cursor: 'pointer',
+                                        borderRadius: 2.5,
+                                        bgcolor: '#ffffff',
+                                        border: '1px solid #e2e8f0',
+                                        boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                                        transition: 'all 0.18s ease-in-out',
+                                        '&:hover': { transform: 'translateY(-2px)', borderColor: '#cbd5e1', boxShadow: '0 4px 14px rgba(0,0,0,0.06)' }
+                                    }}
+                                >
+                                    <Avatar sx={{ bgcolor: `${action.color}15`, color: action.color, mb: 0.75, mx: 'auto', width: 36, height: 36, border: '1px solid', borderColor: `${action.color}30` }}>
+                                        {React.cloneElement(action.icon as any, { sx: { fontSize: 18 } })}
+                                    </Avatar>
+                                    <Typography variant="caption" fontWeight={700} color="text.primary" sx={{ display: 'block', fontSize: '0.75rem' }} noWrap>{action.label}</Typography>
+                                </Paper>
+                            </Grid>
+                        ))}
+                    </Grid>
 
-                    <AppCard sx={{ mt: 4, p: 3, bgcolor: 'secondary.main', color: 'secondary.contrastText' }}>
-                        <Typography variant="h6" sx={{ mb: 1 }}>Teacher Support</Typography>
-                        <Typography variant="body2" sx={{ mb: 3, opacity: 0.9 }}>
+                    <Paper sx={{ mt: 2, p: { xs: 1.75, sm: 2 }, bgcolor: '#1e293b', color: '#ffffff', borderRadius: 2.5 }}>
+                        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5, fontSize: '0.875rem' }}>Teacher Support</Typography>
+                        <Typography variant="caption" sx={{ mb: 1.5, opacity: 0.85, display: 'block', fontSize: '0.72rem' }}>
                             Need technical help with the platform?
                         </Typography>
-                        <AppButton variant="contained" color="primary" fullWidth onClick={() => setSupportDialogOpen(true)}>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            fullWidth
+                            onClick={() => setSupportDialogOpen(true)}
+                            sx={{ bgcolor: '#3b82f6', '&:hover': { bgcolor: '#2563eb' }, fontWeight: 700, borderRadius: 2, textTransform: 'none', py: 0.5, fontSize: '0.775rem' }}
+                        >
                             Open Support Ticket
-                        </AppButton>
-                    </AppCard>
+                        </Button>
+                    </Paper>
                 </Grid>
             </Grid>
 

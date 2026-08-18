@@ -14,6 +14,7 @@ import {
     Paper,
     Skeleton,
     TableContainer,
+    Button,
 } from '@mui/material';
 import {
     EmojiEvents as TrophyIcon,
@@ -21,15 +22,19 @@ import {
     TrendingUp as TrendingUpIcon,
     Star as StarIcon,
     School as SchoolIcon,
+    Download as DownloadIcon,
 } from '@mui/icons-material';
+import { exportReportCardPDF } from '../../utils/reportCardPdfExport';
 import TokenService from '../../queries/token/tokenService';
 import { useGetExams, useGetStudentReportCard } from '../../queries/Exam';
 import { useGetSubjects } from '../../queries/Subject';
+import { useAcademicYear } from '../../hooks/useAcademicYear';
 
 const StudentResults = () => {
     const user = TokenService.getUser();
     const schoolId = TokenService.getSchoolId() || '';
     const studentId = user?.studentId || '';
+    const { currentAcademicYear } = useAcademicYear();
 
     const { data: reportData, isLoading: loadingReport } = useGetStudentReportCard(schoolId, studentId);
     const { data: examsData, isLoading: loadingExams } = useGetExams(schoolId);
@@ -194,17 +199,56 @@ const StudentResults = () => {
                     </Grid>
 
                     {/* Exam Results Tables */}
-                    {publishedExams.map((exam: any) => (
-                        <Box key={exam.examId} sx={{ mb: 4 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                                <SchoolIcon color="primary" />
-                                <Box>
-                                    <Typography variant="h6" fontWeight={600}>{exam.name}</Typography>
-                                    <Typography variant="caption" color="text.secondary">
-                                        {exam.term || 'Term'} | {exam.type || 'Exam'}
-                                    </Typography>
+                    {publishedExams.map((exam: any) => {
+                        const handleDownloadPDF = () => {
+                            const results = (exam.results || []).map((r: any) => ({
+                                subjectName: getSubjectName(r.subjectId),
+                                totalMarks: r.marksObtained ?? 0,
+                                maxMarks: 100,
+                                grade: r.grade,
+                                gradePoints: r.points,
+                                remarks: r.remarks
+                            }));
+
+                            exportReportCardPDF({
+                                schoolName: 'Demo International School',
+                                studentName: report?.student?.name || `${user?.firstName || 'Student'} ${user?.lastName || ''}`,
+                                rollNumber: report?.student?.rollNumber,
+                                admissionNumber: report?.student?.admissionNumber,
+                                className: report?.student?.classId || 'Class',
+                                sectionName: report?.student?.sectionId,
+                                academicYear: report?.academicYear || currentAcademicYear,
+                                examName: exam.name,
+                                termName: exam.term,
+                                results,
+                                overallGrade: avgGradePoints ? (parseFloat(avgGradePoints) >= 9 ? 'A1' : parseFloat(avgGradePoints) >= 8 ? 'A2' : parseFloat(avgGradePoints) >= 7 ? 'B1' : 'B2') : undefined
+                            });
+                        };
+
+                        return (
+                            <Box key={exam.examId} sx={{ mb: 4 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1.5 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                        <SchoolIcon color="primary" />
+                                        <Box>
+                                            <Typography variant="h6" fontWeight={600}>{exam.name}</Typography>
+                                            <Typography variant="caption" color="text.secondary">
+                                                {exam.term || 'Term'} | {exam.type || 'Exam'}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        size="small"
+                                        startIcon={<DownloadIcon />}
+                                        onClick={handleDownloadPDF}
+                                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                                    >
+                                        Download PDF Report
+                                    </Button>
                                 </Box>
-                            </Box>
 
                             <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
                                 <Table size="small">
@@ -262,7 +306,8 @@ const StudentResults = () => {
                                 </Table>
                             </TableContainer>
                         </Box>
-                    ))}
+                    );
+                })}
 
                     {/* Grade Distribution */}
                     {Object.keys(gradeDistribution).length > 0 && (

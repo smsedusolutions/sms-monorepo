@@ -13,6 +13,7 @@ import {
     Divider,
     Button,
     Tooltip,
+    Stack,
 } from '@mui/material';
 import {
     TableChart as TableIcon,
@@ -27,9 +28,6 @@ import { useGetClassTimetable, useGetActiveConfig, useGetSubstitutesForDate } fr
 import TokenService from '../../../queries/token/tokenService';
 import type { TimetableEntry } from '../../../types/timetable.types';
 import { useIsMobile } from '../../../hooks/useIsMobile';
-import MobileSegmentedTabs from '../../../components/mobile/navigation/MobileSegmentedTabs';
-import MobileCardItem from '../../../components/mobile/data/MobileCardItem';
-import MobileCardList from '../../../components/mobile/data/MobileCardList';
 
 type ViewMode = 'table' | 'list';
 
@@ -216,109 +214,168 @@ const MyTimetable = ({ studentClassId, studentSectionId }: MyTimetableProps = {}
         );
     }
 
-    // Mobile Day Tab Options
-    const mobileDayOptions = (config?.workingDays || []).map((day) => ({
-        id: day,
-        label: day.substring(0, 3).toUpperCase(),
-        count: entries.filter((e) => e.dayOfWeek === day).length,
-    }));
-
     const currentMobileDaySchedule = entries
         .filter((e: TimetableEntry) => e.dayOfWeek === selectedMobileDay)
         .sort((a: TimetableEntry, b: TimetableEntry) => a.periodNumber - b.periodNumber);
 
     if (isMobile) {
         return (
-            <Box sx={{ width: '100%' }}>
-                {/* Mobile Title & Action */}
+            <Box sx={{ width: '100%', p: { xs: 1.5, sm: 2 }, pb: { xs: 9, sm: 4 } }}>
+                {/* Header */}
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-                    <Typography sx={{ fontWeight: 800, fontSize: '1.25rem', fontFamily: '"Outfit", sans-serif', color: '#0f172a' }}>
-                        Class Schedule
+                    <Typography variant="h6" fontWeight={700} color="text.primary">
+                        Class Timetable
                     </Typography>
                     <Button
                         variant="outlined"
-                        color="success"
-                        startIcon={<PdfIcon sx={{ fontSize: 18 }} />}
-                        onClick={handleExportPdf}
                         size="small"
-                        sx={{ borderRadius: '10px', textTransform: 'none', fontWeight: 600, fontSize: '0.78rem' }}
+                        color="success"
+                        startIcon={<PdfIcon fontSize="small" />}
+                        onClick={handleExportPdf}
+                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
                     >
-                        PDF
+                        Export PDF
                     </Button>
                 </Box>
 
-                {/* Day Segmented Tabs */}
-                {mobileDayOptions.length > 0 && (
-                    <MobileSegmentedTabs
-                        options={mobileDayOptions}
-                        activeId={selectedMobileDay}
-                        onChange={(id) => setSelectedMobileDay(id)}
-                    />
-                )}
+                {/* Simple Day Buttons Row */}
+                <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1, mb: 2, '&::-webkit-scrollbar': { display: 'none' } }}>
+                    {(config?.workingDays || []).map((day) => {
+                        const isSelected = selectedMobileDay === day;
+                        const isToday = day === todayDayName;
+                        const count = entries.filter((e) => e.dayOfWeek === day).length;
 
-                {/* Today Badge if viewing today */}
-                {selectedMobileDay === todayDayName && (
-                    <Box sx={{ mb: 1.5, px: 0.5 }}>
-                        <Chip
-                            icon={<TodayIcon sx={{ fontSize: 16 }} />}
-                            label="Today's Active Classes"
-                            size="small"
-                            color="success"
-                            variant="filled"
-                            sx={{ fontWeight: 700, borderRadius: '8px' }}
-                        />
-                    </Box>
-                )}
+                        return (
+                            <Button
+                                key={day}
+                                variant={isSelected ? 'contained' : 'outlined'}
+                                color={isSelected ? 'success' : 'inherit'}
+                                onClick={() => setSelectedMobileDay(day)}
+                                size="small"
+                                sx={{
+                                    minWidth: 64,
+                                    py: 0.8,
+                                    px: 1.5,
+                                    borderRadius: 2.5,
+                                    border: isSelected ? 'none' : '1px solid #e2e8f0',
+                                    bgcolor: isSelected ? 'success.main' : '#ffffff',
+                                    color: isSelected ? '#ffffff' : '#334155',
+                                    boxShadow: isSelected ? '0 2px 6px rgba(0,0,0,0.12)' : 'none',
+                                    textTransform: 'none',
+                                    flexShrink: 0,
+                                }}
+                            >
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography variant="body2" fontWeight={700} sx={{ textTransform: 'capitalize' }}>
+                                        {day.slice(0, 3)}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ fontSize: '0.68rem', opacity: isSelected ? 0.9 : 0.7, display: 'block', lineHeight: 1 }}>
+                                        {isToday ? 'Today' : `${count} classes`}
+                                    </Typography>
+                                </Box>
+                            </Button>
+                        );
+                    })}
+                </Box>
 
-                {/* Period Cards Timeline */}
-                <MobileCardList
-                    emptyTitle="No Classes Scheduled"
-                    emptyMessage={`There are no classes scheduled for ${selectedMobileDay.toUpperCase()}.`}
-                    itemCount={currentMobileDaySchedule.length}
-                >
+                {/* Day Summary Title */}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: 0.5 }}>
+                    <Typography variant="subtitle2" fontWeight={700} color="text.secondary" sx={{ textTransform: 'capitalize' }}>
+                        {selectedMobileDay} Schedule
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        {currentMobileDaySchedule.length} of {regularPeriods.length} periods active
+                    </Typography>
+                </Box>
+
+                {/* Simple Period Cards List */}
+                <Stack spacing={1.5}>
                     {regularPeriods.map((period) => {
                         const entry = entryMap[`${selectedMobileDay}-${period.periodNumber}`];
                         const substitute = substituteMap[`${selectedMobileDay}-${period.periodNumber}`];
                         const hasSubstitute = !!substitute && selectedMobileDay === todayDayName;
+                        const isFree = !entry;
 
-                        if (!entry) {
-                            return (
-                                <MobileCardItem
-                                    key={period.periodNumber}
-                                    title="Free Period"
-                                    subtitle={`${period.name} (${period.startTime} - ${period.endTime})`}
-                                    avatarText={`P${period.periodNumber}`}
-                                    avatarBg="#94a3b8"
-                                    badge={{ label: 'Free', color: 'default' }}
-                                />
-                            );
-                        }
-
-                        const subjectName = entry.subject?.name || entry.subjectId;
+                        const subjectName = entry?.subject?.name || entry?.subjectId || 'Free Period';
                         const teacherName = hasSubstitute
                             ? `Sub: ${substitute.substituteTeacher?.name || 'Substitute'}`
-                            : entry.teacher?.name || 'Instructor TBA';
+                            : entry?.teacher?.name || (isFree ? 'No class scheduled' : 'Teacher TBA');
+                        const roomInfo = entry?.roomId ? `Room: ${entry.roomId}` : '';
 
                         return (
-                            <MobileCardItem
-                                key={entry.entryId || period.periodNumber}
-                                title={subjectName}
-                                subtitle={teacherName}
-                                avatarText={`P${entry.periodNumber}`}
-                                avatarBg="#4f46e5"
-                                highlightColor={hasSubstitute ? '#f59e0b' : '#4f46e5'}
-                                badges={[
-                                    { label: `${period.startTime} - ${period.endTime}`, color: 'primary', variant: 'outlined' },
-                                    ...(hasSubstitute ? [{ label: 'Substitute', color: 'warning' as const }] : []),
-                                ]}
-                                metaItems={[
-                                    { label: 'Period', value: period.name },
-                                    { label: 'Room', value: entry.roomId || 'Main Class' },
-                                ]}
-                            />
+                            <Paper
+                                key={period.periodNumber}
+                                elevation={0}
+                                sx={{
+                                    p: 1.5,
+                                    borderRadius: 2.5,
+                                    border: '1px solid',
+                                    borderColor: hasSubstitute ? '#f59e0b' : '#e2e8f0',
+                                    bgcolor: isFree ? '#f8fafc' : '#ffffff',
+                                }}
+                            >
+                                {/* Top Row: Period Tag + Subject + Time */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                                        <Box
+                                            sx={{
+                                                px: 0.9,
+                                                py: 0.2,
+                                                borderRadius: 1.5,
+                                                bgcolor: hasSubstitute ? '#fffbe6' : isFree ? '#e2e8f0' : '#f0fdf4',
+                                                color: hasSubstitute ? '#d97706' : isFree ? '#64748b' : '#16a34a',
+                                                fontWeight: 700,
+                                                fontSize: '0.75rem',
+                                                flexShrink: 0,
+                                            }}
+                                        >
+                                            P{period.periodNumber}
+                                        </Box>
+                                        <Typography
+                                            variant="subtitle1"
+                                            fontWeight={700}
+                                            noWrap
+                                            sx={{
+                                                color: isFree ? 'text.secondary' : 'text.primary',
+                                                fontSize: '0.95rem',
+                                            }}
+                                        >
+                                            {subjectName}
+                                        </Typography>
+                                    </Box>
+
+                                    <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ flexShrink: 0 }}>
+                                        {period.startTime} - {period.endTime}
+                                    </Typography>
+                                </Box>
+
+                                {/* Bottom Row: Teacher, Room, Substitute Badge */}
+                                <Box sx={{ pl: 4.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 0.5 }}>
+                                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                                        {teacherName} {roomInfo ? `• ${roomInfo}` : ''}
+                                    </Typography>
+
+                                    {hasSubstitute && (
+                                        <Chip
+                                            label="Substitute Teacher"
+                                            size="small"
+                                            color="warning"
+                                            sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }}
+                                        />
+                                    )}
+
+                                    {isFree && (
+                                        <Chip
+                                            label="Free"
+                                            size="small"
+                                            sx={{ height: 20, fontSize: '0.68rem', bgcolor: '#f1f5f9', color: '#64748b' }}
+                                        />
+                                    )}
+                                </Box>
+                            </Paper>
                         );
                     })}
-                </MobileCardList>
+                </Stack>
             </Box>
         );
     }

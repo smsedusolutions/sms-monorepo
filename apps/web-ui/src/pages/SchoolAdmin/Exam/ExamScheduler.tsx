@@ -68,7 +68,9 @@ import { useGetSubjects } from '../../../queries/Subject';
 import { useGetTeachers } from '../../../queries/Teacher';
 import { useGetAllRooms } from '../../../queries/Timetable';
 import { useGetSchoolById } from '../../../queries/School';
+import { useAcademicYear } from '../../../hooks/useAcademicYear';
 import { AdmitCardPDF } from '../../../components/PDFLayouts';
+import { sortClassesNumerically, compareClassesNumerically } from '../../../utils/classSort';
 
 import type { CreateExamRequest, CreateScheduleRequest, Exam } from '../../../types/exam.types';
 
@@ -108,6 +110,7 @@ const ExamScheduler = () => {
 
 const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSelect: (exam: Exam) => void, isMobile: boolean }) => {
     const [open, setOpen] = useState(false);
+    const { academicYearOptions, currentAcademicYear } = useAcademicYear();
     const { data: exams, isLoading } = useGetExams(schoolId);
 
     const { data: terms } = useGetExamTerms(schoolId);
@@ -121,7 +124,7 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
         name: '',
         typeId: '',
         termId: '',
-        academicYear: '2025-2026',
+        academicYear: currentAcademicYear,
         classes: [],
         startDate: '',
         endDate: '',
@@ -201,7 +204,7 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
                     setOpen(false);
                     setEditingExam(null);
                     setFormData({
-                        name: '', typeId: '', termId: '', academicYear: '2025-2026',
+                        name: '', typeId: '', termId: '', academicYear: currentAcademicYear,
                         classes: [], startDate: '', endDate: '', gradingSystemId: '', status: 'draft'
                     });
                 }
@@ -211,7 +214,7 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
                 onSuccess: () => {
                     setOpen(false);
                     setFormData({
-                        name: '', typeId: '', termId: '', academicYear: '2025-2026',
+                        name: '', typeId: '', termId: '', academicYear: currentAcademicYear,
                         classes: [], startDate: '', endDate: '', gradingSystemId: '', status: 'draft'
                     });
                 }
@@ -223,7 +226,7 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
         setOpen(false);
         setEditingExam(null);
         setFormData({
-            name: '', typeId: '', termId: '', academicYear: '2025-2026',
+            name: '', typeId: '', termId: '', academicYear: currentAcademicYear,
             classes: [], startDate: '', endDate: '', gradingSystemId: '', status: 'draft'
         });
     };
@@ -386,7 +389,15 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
                         />
 
                         <Grid container spacing={2}>
-                            <Grid size={{ xs: 12, sm: 6 }}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
+                                <AppSelect
+                                    label="Academic Year"
+                                    value={formData.academicYear}
+                                    options={academicYearOptions}
+                                    onChange={(e) => setFormData({ ...formData, academicYear: e.target.value as string })}
+                                />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <AppSelect
                                     label="Administrative Term"
                                     value={formData.termId}
@@ -394,7 +405,7 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
                                     onChange={(e) => setFormData({ ...formData, termId: e.target.value as string })}
                                 />
                             </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
+                            <Grid size={{ xs: 12, sm: 4 }}>
                                 <AppSelect
                                     label="Examination Category"
                                     value={formData.typeId}
@@ -437,7 +448,7 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
                             multiple
                             label="Participating Classes"
                             value={formData.classes}
-                            options={classes?.data?.map((c: any) => ({ value: c.classId, label: c.name })) || []}
+                            options={sortClassesNumerically(classes?.data || []).map((c: any) => ({ value: c.classId, label: c.name }))}
                             onChange={(e) => {
                                 const val = typeof e.target.value === 'string' ? e.target.value.split(',') : (e.target.value as string[]);
                                 setFormData({ ...formData, classes: val });
@@ -779,6 +790,7 @@ const VirtualizedAdmitCardGrid = ({
 // ==========================================
 
 const ExamDetailView = ({ schoolId, exam, onBack, isMobile }: { schoolId: string, exam: Exam, onBack: () => void, isMobile: boolean }) => {
+    const { currentAcademicYear } = useAcademicYear();
     const [tabValue, setTabValue] = useUrlTab(0, ['schedule', 'admit-cards']);
     const [open, setOpen] = useState(false);
     const [editingSchedule, setEditingSchedule] = useState<any>(null);
@@ -850,12 +862,13 @@ const ExamDetailView = ({ schoolId, exam, onBack, isMobile }: { schoolId: string
     const { data: rooms } = useGetAllRooms(schoolId);
     const { data: allClasses, isLoading: classesLoading } = useGetClasses(schoolId);
 
-    // Robust filtering for exam classes - check both classId and mongo _id
+    // Robust filtering for exam classes - check both classId and mongo _id, sorted numerically
     const examClasses = React.useMemo(() => {
         if (!allClasses?.data || !exam.classes) return [];
-        return allClasses.data.filter((c: any) =>
+        const filtered = allClasses.data.filter((c: any) =>
             exam.classes.includes(c.classId) || exam.classes.includes(c._id)
         );
+        return sortClassesNumerically(filtered);
     }, [allClasses, exam.classes]);
 
     // School details
@@ -1030,7 +1043,7 @@ const ExamDetailView = ({ schoolId, exam, onBack, isMobile }: { schoolId: string
                     examName={exam.name}
                     examType={typeof exam.typeId === 'object' ? exam.typeId?.name : 'Examination'}
                     examTerm={typeof exam.termId === 'object' ? exam.termId?.name : 'Term'}
-                    academicYear={exam.academicYear || '2025-2026'}
+                    academicYear={exam.academicYear || currentAcademicYear}
                     startDate={exam.startDate}
                     endDate={exam.endDate}
                     examSchedule={(filteredStudentSchedule || []).map((sch: any) => ({
@@ -1111,7 +1124,10 @@ const ExamDetailView = ({ schoolId, exam, onBack, isMobile }: { schoolId: string
                     </Paper>
                 ) : isMobile ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                        {schedule?.data?.map((sch: any) => (
+                        {[...(schedule?.data || [])].sort((a: any, b: any) =>
+                            compareClassesNumerically(getClassName(a.classId), getClassName(b.classId)) ||
+                            new Date(a.date).getTime() - new Date(b.date).getTime()
+                        ).map((sch: any) => (
                             <Paper key={sch._id} variant="outlined" sx={{ p: 1.5, borderRadius: 2, borderColor: '#e2e8f0' }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
                                     <Box>
@@ -1154,7 +1170,10 @@ const ExamDetailView = ({ schoolId, exam, onBack, isMobile }: { schoolId: string
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {schedule?.data?.map((sch: any) => (
+                                {[...(schedule?.data || [])].sort((a: any, b: any) =>
+                                    compareClassesNumerically(getClassName(a.classId), getClassName(b.classId)) ||
+                                    new Date(a.date).getTime() - new Date(b.date).getTime()
+                                ).map((sch: any) => (
                                     <TableRow key={sch._id}>
                                         <TableCell>{new Date(sch.date).toLocaleDateString()}</TableCell>
                                         <TableCell>{sch.startTime} - {sch.endTime}</TableCell>
@@ -1452,7 +1471,7 @@ const ExamDetailView = ({ schoolId, exam, onBack, isMobile }: { schoolId: string
                                     {exam.name} - {typeof exam.typeId === 'object' ? exam.typeId?.name : 'Examination'}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary">
-                                    Academic Year: {exam.academicYear || '2025-2026'} | {typeof exam.termId === 'object' ? exam.termId?.name : 'Term'}
+                                    Academic Year: {exam.academicYear || currentAcademicYear} | {typeof exam.termId === 'object' ? exam.termId?.name : 'Term'}
                                 </Typography>
                             </Box>
 

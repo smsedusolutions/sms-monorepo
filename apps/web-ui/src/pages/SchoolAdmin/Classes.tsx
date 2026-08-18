@@ -36,6 +36,7 @@ import TokenService from '../../queries/token/tokenService';
 import { useNotificationStore } from '../../stores/notificationStore';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import MobileCardList from '../../components/mobile/data/MobileCardList';
+import { sortClassesNumerically } from '../../utils/classSort';
 
 const ClassesPage = () => {
     const isMobile = useIsMobile();
@@ -50,12 +51,9 @@ const ClassesPage = () => {
     const updateMutation = useUpdateClass(schoolId);
     const removeSectionMutation = useRemoveSection(schoolId);
 
-    // Natural ascending sort for classes (e.g. Class 1, Class 2, ... Class 10)
+    // Natural & numerical ascending sort for classes (e.g. Nursery, LKG, UKG, Class 1, Class 2, ... Class 10)
     const classes = useMemo(() => {
-        const raw = data?.data || [];
-        return [...raw].sort((a, b) =>
-            (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' })
-        );
+        return sortClassesNumerically(data?.data || []);
     }, [data?.data]);
 
     const getTeacherName = (section: any): string => {

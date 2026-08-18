@@ -6,6 +6,7 @@ import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
 import { useUserStore } from '../../../stores/userStore';
 import { useRoleStore } from '../../../stores/roleStore';
 import { useBreadcrumbs } from '../../../hooks/useBreadcrumbs';
+import { useGetUnreadCount } from '../../../queries/Notification';
 import TokenService from '../../../queries/token/tokenService';
 
 interface MobileAppHeaderProps {
@@ -28,6 +29,10 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
   const { items: breadcrumbs } = useBreadcrumbs();
 
   const userRole = TokenService.getRole() || user?.role || '';
+  const schoolId = TokenService.getSchoolId() || school?.schoolId || user?.schoolId || '';
+  const { data: unreadData } = useGetUnreadCount(schoolId);
+  const unreadCount = unreadData?.data?.unreadCount ?? 0;
+
   const basePath = getBasePath(userRole);
   const dashboardPath = `${basePath}/dashboard`;
   const isAtDashboard = location.pathname === dashboardPath || location.pathname === basePath || location.pathname === '/';
@@ -156,7 +161,7 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
                 }}
                 aria-label="Notifications"
               >
-                <Badge color="error" variant="dot">
+                <Badge color="error" variant="dot" invisible={unreadCount === 0}>
                   <NotificationsRoundedIcon sx={{ fontSize: 22 }} />
                 </Badge>
               </IconButton>

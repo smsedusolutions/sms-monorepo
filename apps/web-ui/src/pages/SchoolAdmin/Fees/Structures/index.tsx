@@ -6,8 +6,6 @@ import {
     Box,
     Typography,
     Button,
-    Card,
-    CardContent,
     Grid,
     TextField,
     MenuItem,
@@ -43,9 +41,11 @@ import {
     useAssignFeeStructure
 } from '../../../../queries/Fee';
 import { useGetClasses } from '../../../../queries/Class';
+import { useAcademicYear } from '../../../../hooks/useAcademicYear';
 import { AppTable } from '../../../../components/shared/AppTable';
 import type { FeeStructure, FeeCategory } from '../../../../types/fee.types';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useIsMobile } from '../../../../hooks/useIsMobile';
 
 // Dynamic class options will be mapped from useGetClasses
 
@@ -63,7 +63,9 @@ const LATE_FEE_FREQUENCY_OPTIONS = [
 ];
 
 const FeeStructures: React.FC = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
+    const { academicYears, currentAcademicYear } = useAcademicYear();
     const [searchTerm, setSearchTerm] = useState('');
     const [openDialog, setOpenDialog] = useState(false);
     const [editStructure, setEditStructure] = useState<FeeStructure | null>(null);
@@ -136,7 +138,7 @@ const FeeStructures: React.FC = () => {
     const { control, handleSubmit, reset, watch, setValue } = useForm({
         defaultValues: {
             name: '',
-            academicYear: '2026-2027',
+            academicYear: currentAcademicYear,
             applicableClasses: [] as string[],
             installmentEnabled: false,
             lateFeeEnabled: false,
@@ -168,7 +170,7 @@ const FeeStructures: React.FC = () => {
         setEditStructure(null);
         reset({
             name: '',
-            academicYear: '2026-2027',
+            academicYear: currentAcademicYear,
             applicableClasses: [],
             installmentEnabled: false,
             lateFeeEnabled: false,
@@ -335,49 +337,58 @@ const FeeStructures: React.FC = () => {
     ];
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, mb: 3, gap: 2 }}>
                 <Box>
-                    <Typography variant="h4" fontWeight={700} color="text.primary">
+                    <Typography variant="h4" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '1.4rem', sm: '2rem' } }}>
                         Fee Structures
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                         Design class templates containing fee breakdowns, split milestones, and overdue late penalties.
                     </Typography>
                 </Box>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate} sx={{ borderRadius: 2 }}>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate} fullWidth={isMobile} sx={{ borderRadius: 2 }}>
                     Create Structure
                 </Button>
             </Box>
 
-            <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                <CardContent sx={{ p: 0 }}>
-                    <Box sx={{ p: 2 }}>
-                        <TextField
-                            size="small"
-                            placeholder="Search structures..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            sx={{ width: { xs: '100%', sm: 300 } }}
-                        />
-                    </Box>
-                    <AppTable
-                        columns={columns}
-                        data={structures}
-                        isLoading={isLoading}
-                        emptyMessage="No fee structures registered."
-                    />
-                </CardContent>
-            </Card>
+            <Box sx={{ mb: 2 }}>
+                <TextField
+                    size="small"
+                    placeholder="Search structures..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    sx={{ width: { xs: '100%', sm: 300 } }}
+                />
+            </Box>
+
+            <AppTable
+                columns={columns}
+                data={structures}
+                isLoading={isLoading}
+                emptyMessage="No fee structures registered."
+            />
 
             {/* Create/Edit Form Dialog */}
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="md">
+            <Dialog
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
+                fullWidth
+                maxWidth="md"
+                fullScreen={isMobile}
+                PaperProps={{
+                    sx: {
+                        borderRadius: isMobile ? 0 : 3,
+                        maxHeight: isMobile ? '100dvh' : '90vh',
+                    }
+                }}
+            >
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <DialogTitle fontWeight={700}>
                         {editStructure ? 'Edit Fee Structure Draft' : 'Create Fee Structure'}
                     </DialogTitle>
                     <DialogContent dividers>
-                        <Grid container spacing={3} sx={{ mt: 0.5 }}>
+                        <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <Controller
                                     name="name"
@@ -394,8 +405,11 @@ const FeeStructures: React.FC = () => {
                                     control={control}
                                     render={({ field }: any) => (
                                         <TextField {...field} select label="Academic Year" fullWidth>
-                                            <MenuItem value="2026-2027">2026-2027</MenuItem>
-                                            <MenuItem value="2027-2028">2027-2028</MenuItem>
+                                            {academicYears.map((ay) => (
+                                                <MenuItem key={ay._id || ay.code} value={ay.code}>
+                                                    {ay.name} {ay.isCurrent ? '(Current)' : ''}
+                                                </MenuItem>
+                                            ))}
                                         </TextField>
                                     )}
                                 />
@@ -422,7 +436,7 @@ const FeeStructures: React.FC = () => {
                             {/* Fee Items Section */}
                             <Grid size={{ xs: 12 }}>
                                 <Divider sx={{ my: 1 }} />
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
                                     <Typography variant="subtitle1" fontWeight={700} color="#1e293b">Fee Items Breakdown</Typography>
                                     <Button variant="outlined" size="small" startIcon={<AddIcon />} onClick={() => appendFeeItem({ feeCategoryId: '', categoryName: '', amount: 1000, frequency: 'monthly', dueDayOfMonth: 10, isOptional: false, displayOrder: feeItemFields.length })}>
                                         Add Line Item
@@ -430,73 +444,86 @@ const FeeStructures: React.FC = () => {
                                 </Box>
                                 <Stack spacing={2}>
                                     {feeItemFields.map((fieldItem, index) => (
-                                        <Stack key={fieldItem.id} direction="row" spacing={2} alignItems="center">
-                                            <Controller
-                                                name={`feeItems.${index}.feeCategoryId`}
-                                                control={control}
-                                                rules={{ required: true }}
-                                                render={({ field }: any) => (
-                                                    <TextField
-                                                        {...field}
-                                                        select
-                                                        label="Category"
-                                                        sx={{ minWidth: 200 }}
-                                                        onChange={(e) => {
-                                                            field.onChange(e.target.value);
-                                                            const selectedCat = categories.find((c: FeeCategory) => c.feeCategoryId === e.target.value);
-                                                            if (selectedCat) {
-                                                                setValue(`feeItems.${index}.categoryName`, selectedCat.name);
-                                                                setValue(`feeItems.${index}.categoryType`, selectedCat.categoryType);
-                                                                setValue(`feeItems.${index}.isOptional`, !selectedCat.isMandatory);
-                                                            }
-                                                        }}
-                                                    >
-                                                        {categories.map((cat: FeeCategory) => (
-                                                            <MenuItem key={cat.feeCategoryId} value={cat.feeCategoryId}>{cat.name}</MenuItem>
-                                                        ))}
-                                                    </TextField>
-                                                )}
-                                            />
-                                            <Controller
-                                                name={`feeItems.${index}.amount`}
-                                                control={control}
-                                                rules={{ required: true, min: 1 }}
-                                                render={({ field }: any) => (
-                                                    <TextField {...field} type="number" label="Amount" sx={{ width: 120 }} />
-                                                )}
-                                            />
-                                            <Controller
-                                                name={`feeItems.${index}.frequency`}
-                                                control={control}
-                                                render={({ field }: any) => (
-                                                    <TextField {...field} select label="Frequency" sx={{ width: 150 }}>
-                                                        {FREQUENCY_OPTIONS.map(opt => (
-                                                            <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-                                                        ))}
-                                                    </TextField>
-                                                )}
-                                            />
-                                            <Controller
-                                                name={`feeItems.${index}.dueDayOfMonth`}
-                                                control={control}
-                                                render={({ field }: any) => (
-                                                    <TextField {...field} type="number" label="Due Day (1-28)" sx={{ width: 100 }} inputProps={{ min: 1, max: 28 }} />
-                                                )}
-                                            />
-                                            <Controller
-                                                name={`feeItems.${index}.isOptional`}
-                                                control={control}
-                                                render={({ field }: any) => (
-                                                    <FormControlLabel
-                                                        control={<Checkbox checked={field.value} onChange={field.onChange} />}
-                                                        label="Optional"
+                                        <Box key={fieldItem.id} sx={{ p: 2, border: '1px solid #e2e8f0', borderRadius: 2.5, bgcolor: '#f8fafc' }}>
+                                            <Grid container spacing={1.5} alignItems="center">
+                                                <Grid size={{ xs: 12, sm: 4 }}>
+                                                    <Controller
+                                                        name={`feeItems.${index}.feeCategoryId`}
+                                                        control={control}
+                                                        rules={{ required: true }}
+                                                        render={({ field }: any) => (
+                                                            <TextField
+                                                                {...field}
+                                                                select
+                                                                label="Category"
+                                                                fullWidth
+                                                                size="small"
+                                                                onChange={(e) => {
+                                                                    field.onChange(e.target.value);
+                                                                    const selectedCat = categories.find((c: FeeCategory) => c.feeCategoryId === e.target.value);
+                                                                    if (selectedCat) {
+                                                                        setValue(`feeItems.${index}.categoryName`, selectedCat.name);
+                                                                        setValue(`feeItems.${index}.categoryType`, selectedCat.categoryType);
+                                                                        setValue(`feeItems.${index}.isOptional`, !selectedCat.isMandatory);
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {categories.map((cat: FeeCategory) => (
+                                                                    <MenuItem key={cat.feeCategoryId} value={cat.feeCategoryId}>{cat.name}</MenuItem>
+                                                                ))}
+                                                            </TextField>
+                                                        )}
                                                     />
-                                                )}
-                                            />
-                                            <IconButton color="error" onClick={() => removeFeeItem(index)}>
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </Stack>
+                                                </Grid>
+                                                <Grid size={{ xs: 6, sm: 2 }}>
+                                                    <Controller
+                                                        name={`feeItems.${index}.amount`}
+                                                        control={control}
+                                                        rules={{ required: true, min: 1 }}
+                                                        render={({ field }: any) => (
+                                                            <TextField {...field} type="number" label="Amount (₹)" fullWidth size="small" />
+                                                        )}
+                                                    />
+                                                </Grid>
+                                                <Grid size={{ xs: 6, sm: 2.5 }}>
+                                                    <Controller
+                                                        name={`feeItems.${index}.frequency`}
+                                                        control={control}
+                                                        render={({ field }: any) => (
+                                                            <TextField {...field} select label="Frequency" fullWidth size="small">
+                                                                {FREQUENCY_OPTIONS.map(opt => (
+                                                                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                                                                ))}
+                                                            </TextField>
+                                                        )}
+                                                    />
+                                                </Grid>
+                                                <Grid size={{ xs: 6, sm: 2 }}>
+                                                    <Controller
+                                                        name={`feeItems.${index}.dueDayOfMonth`}
+                                                        control={control}
+                                                        render={({ field }: any) => (
+                                                            <TextField {...field} type="number" label="Due Day (1-28)" fullWidth size="small" inputProps={{ min: 1, max: 28 }} />
+                                                        )}
+                                                    />
+                                                </Grid>
+                                                <Grid size={{ xs: 6, sm: 1.5 }} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                    <Controller
+                                                        name={`feeItems.${index}.isOptional`}
+                                                        control={control}
+                                                        render={({ field }: any) => (
+                                                            <FormControlLabel
+                                                                control={<Checkbox checked={field.value} onChange={field.onChange} size="small" />}
+                                                                label={<Typography variant="caption">Optional</Typography>}
+                                                            />
+                                                        )}
+                                                    />
+                                                    <IconButton color="error" size="small" onClick={() => removeFeeItem(index)}>
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Grid>
+                                            </Grid>
+                                        </Box>
                                     ))}
                                 </Stack>
                             </Grid>
@@ -618,12 +645,24 @@ const FeeStructures: React.FC = () => {
             </Dialog>
 
             {/* View Template Details Dialog */}
-            <Dialog open={!!viewStructure} onClose={() => setViewStructure(null)} fullWidth maxWidth="sm">
+            <Dialog
+                open={!!viewStructure}
+                onClose={() => setViewStructure(null)}
+                fullWidth
+                maxWidth="sm"
+                fullScreen={isMobile}
+                PaperProps={{
+                    sx: {
+                        borderRadius: isMobile ? 0 : 3,
+                        maxHeight: isMobile ? '100dvh' : '90vh',
+                    }
+                }}
+            >
                 <DialogTitle fontWeight={700}>Fee Structure Template Details</DialogTitle>
                 <DialogContent dividers>
                     {viewStructure && (
                         <Stack spacing={2.5}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
                                 <Typography variant="h6" fontWeight={700} color="primary">{viewStructure.name}</Typography>
                                 <Chip label={viewStructure.status.toUpperCase()} color={viewStructure.status === 'published' ? 'success' : 'default'} />
                             </Box>
@@ -649,7 +688,7 @@ const FeeStructures: React.FC = () => {
                         </Stack>
                     )}
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ px: 3, py: 2 }}>
                     <Button onClick={() => setViewStructure(null)}>Close</Button>
                 </DialogActions>
             </Dialog>

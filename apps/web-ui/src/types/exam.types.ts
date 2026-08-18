@@ -106,6 +106,11 @@ export interface ExamSchedule {
     maxMarksPractical: number;
     passingMarks: number;
     syllabus?: string;
+    publishStatus?: 'draft' | 'teacher_published' | 'final_published';
+    teacherPublishedAt?: string;
+    teacherPublishedBy?: string;
+    finalPublishedAt?: string;
+    finalPublishedBy?: string;
 }
 
 export interface CreateScheduleRequest {
@@ -144,6 +149,11 @@ export interface ExamResult {
     remarks?: string;
     evaluatedBy: string;
     evaluatedAt: string;
+    publishStatus?: 'draft' | 'teacher_published' | 'final_published';
+    teacherPublishedAt?: string;
+    teacherPublishedBy?: string;
+    finalPublishedAt?: string;
+    finalPublishedBy?: string;
     isPublished: boolean;
 
     // Virtuals/Populated
@@ -161,6 +171,63 @@ export interface SubmitMarksRequest {
         remarks?: string;
         attendanceStatus?: string;
     }[];
+}
+
+export interface TeacherPublishRequest {
+    examId: string;
+    scheduleId: string;
+}
+
+export interface FinalPublishRequest {
+    examId: string;
+    scheduleId?: string;
+    classId?: string;
+}
+
+export interface RollbackPublishRequest {
+    examId: string;
+    scheduleId: string;
+    reason?: string;
+}
+
+export interface ExamPublishStatusSummary {
+    totalSubjects: number;
+    draftCount: number;
+    teacherPublishedCount: number;
+    finalPublishedCount: number;
+    isAllTeacherPublished: boolean;
+    isAllFinalPublished: boolean;
+}
+
+export interface ExamPublishSubjectItem {
+    _id: string;
+    classId: string;
+    className: string;
+    subjectId: string;
+    subjectName: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    publishStatus: 'draft' | 'teacher_published' | 'final_published';
+    teacherPublishedAt?: string;
+    teacherPublishedBy?: string;
+    finalPublishedAt?: string;
+    finalPublishedBy?: string;
+    evaluatedStudents: number;
+    totalStudents: number;
+}
+
+export interface ExamPublishStatusData {
+    exam: {
+        examId: string;
+        name: string;
+        status: string;
+        startDate: string;
+        endDate: string;
+        resultPublishDate?: string;
+    };
+    summary: ExamPublishStatusSummary;
+    subjects: ExamPublishSubjectItem[];
 }
 
 export interface StudentExamRegistration {

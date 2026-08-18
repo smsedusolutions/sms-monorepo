@@ -6,8 +6,6 @@ import {
     Box,
     Typography,
     Button,
-    Card,
-    CardContent,
     TextField,
     Chip,
     Stack,
@@ -35,8 +33,9 @@ import {
     useDeleteFeeCategory
 } from '../../../../queries/Fee';
 import { AppTable } from '../../../../components/shared/AppTable';
-import type { FeeCategory } from '../../../../types/fee.types';
 import { useForm, Controller } from 'react-hook-form';
+import { useIsMobile } from '../../../../hooks/useIsMobile';
+import type { FeeCategory } from '../../../../types/fee.types';
 
 const CATEGORY_TYPES = [
     { value: 'tuition', label: 'Tuition Fee' },
@@ -50,6 +49,7 @@ const CATEGORY_TYPES = [
 ];
 
 const FeeCategories: React.FC = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
     const [searchTerm, setSearchTerm] = useState('');
     const [openDialog, setOpenDialog] = useState(false);
@@ -217,43 +217,52 @@ const FeeCategories: React.FC = () => {
     ];
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, mb: 3, gap: 2 }}>
                 <Box>
-                    <Typography variant="h4" fontWeight={700} color="text.primary">
+                    <Typography variant="h4" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '1.4rem', sm: '2rem' } }}>
                         Fee Categories
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                         Configure school fee ledger items like Tuition, Examination, Transport, and Uniform Dues.
                     </Typography>
                 </Box>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate} sx={{ borderRadius: 2 }}>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreate} fullWidth={isMobile} sx={{ borderRadius: 2 }}>
                     Create Category
                 </Button>
             </Box>
 
-            <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                <CardContent sx={{ p: 0 }}>
-                    <Box sx={{ p: 2 }}>
-                        <TextField
-                            size="small"
-                            placeholder="Search categories..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            sx={{ width: { xs: '100%', sm: 300 } }}
-                        />
-                    </Box>
-                    <AppTable
-                        columns={columns}
-                        data={categories}
-                        isLoading={isLoading}
-                        emptyMessage="No fee categories found."
-                    />
-                </CardContent>
-            </Card>
+            <Box sx={{ mb: 2 }}>
+                <TextField
+                    size="small"
+                    placeholder="Search categories..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    sx={{ width: { xs: '100%', sm: 300 } }}
+                />
+            </Box>
+
+            <AppTable
+                columns={columns}
+                data={categories}
+                isLoading={isLoading}
+                emptyMessage="No fee categories found."
+            />
 
             {/* Create/Edit Category Dialog */}
-            <Dialog open={openDialog} onClose={() => setOpenDialog(false)} fullWidth maxWidth="xs">
+            <Dialog
+                open={openDialog}
+                onClose={() => setOpenDialog(false)}
+                fullWidth
+                maxWidth="xs"
+                fullScreen={isMobile}
+                PaperProps={{
+                    sx: {
+                        borderRadius: isMobile ? 0 : 3,
+                        maxHeight: isMobile ? '100dvh' : '90vh',
+                    }
+                }}
+            >
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <DialogTitle fontWeight={700}>{editCategory ? 'Edit Category' : 'Create Category'}</DialogTitle>
                     <DialogContent dividers>
@@ -285,7 +294,7 @@ const FeeCategories: React.FC = () => {
                                 )}
                             />
 
-                            <Stack direction="row" spacing={4}>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 1, sm: 2 }}>
                                 <Controller
                                     name="isRecurring"
                                     control={control}
@@ -325,7 +334,7 @@ const FeeCategories: React.FC = () => {
                             />
                         </Stack>
                     </DialogContent>
-                    <DialogActions>
+                    <DialogActions sx={{ px: 3, py: 2 }}>
                         <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
                         <Button type="submit" variant="contained" color="primary">Save Category</Button>
                     </DialogActions>

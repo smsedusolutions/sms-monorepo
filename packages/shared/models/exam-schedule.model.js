@@ -59,6 +59,23 @@ const ExamScheduleSchema = new Schema({
     },
     syllabus: {
         type: String
+    },
+    publishStatus: {
+        type: String,
+        enum: ['draft', 'teacher_published', 'final_published'],
+        default: 'draft'
+    },
+    teacherPublishedAt: {
+        type: Date
+    },
+    teacherPublishedBy: {
+        type: String
+    },
+    finalPublishedAt: {
+        type: Date
+    },
+    finalPublishedBy: {
+        type: String
     }
 }, { timestamps: true });
 
