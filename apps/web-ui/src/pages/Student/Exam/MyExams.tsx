@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import {
     Box,
-    Card,
     Typography,
     Button,
     Grid,
@@ -21,7 +20,10 @@ import {
     DialogActions,
     Divider,
     Avatar,
-    Skeleton
+    Skeleton,
+    useTheme,
+    useMediaQuery,
+    Stack,
 } from '@mui/material';
 import {
     Event as EventIcon,
@@ -30,7 +32,7 @@ import {
     Assignment as AssignmentIcon,
     School as SchoolIcon,
     CalendarMonth as CalendarIcon,
-    AccessTime as TimeIcon
+    Badge as RollIcon,
 } from '@mui/icons-material';
 import { pdf } from '@react-pdf/renderer';
 import { useAuth } from '../../../context/AuthContext';
@@ -46,6 +48,8 @@ import { useUserStore } from '../../../stores/userStore';
 import { AdmitCardPDF } from '../../../components/PDFLayouts';
 
 const MyExams = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const { user } = useAuth();
     const schoolId = user?.schoolId || '';
     const studentId = user?.userId || '';
@@ -56,39 +60,56 @@ const MyExams = () => {
     const upcomingExams = examsData?.data?.filter((e: any) => ['scheduled', 'ongoing', 'draft'].includes(e.status)) || [];
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            <Typography variant="h5" fontWeight={600} sx={{ mb: 3 }}>My Exams & Results</Typography>
+        <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
+            {/* Header */}
+            <Box sx={{ mb: 3 }}>
+                <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} color="text.primary">
+                    My Exams & Results
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                    View upcoming exam schedules, download admit cards, and review published report cards
+                </Typography>
+            </Box>
 
             {/* Error Alert */}
             {examsError && (
-                <Alert severity="error" sx={{ mb: 2 }}>
+                <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
                     Failed to load exams. Please try again later.
                 </Alert>
             )}
 
-            {/* Admit Cards Section */}
+            {/* Admit Cards / Upcoming Exams Section */}
             <Box sx={{ mb: 4 }}>
-                <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <AssignmentIcon color="primary" />
-                    Upcoming/Ongoing Exams (Admit Cards)
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <AssignmentIcon color="primary" sx={{ fontSize: 22 }} />
+                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+                        Upcoming & Ongoing Exams
+                    </Typography>
+                    <Chip
+                        label={upcomingExams.length}
+                        size="small"
+                        color="primary"
+                        sx={{ height: 20, fontSize: '0.7rem', fontWeight: 700 }}
+                    />
+                </Box>
 
                 {examsLoading ? (
-                    <Grid container spacing={3}>
+                    <Grid container spacing={2}>
                         {[1, 2, 3].map((i) => (
                             <Grid key={i} size={{ xs: 12, sm: 6, md: 4 }}>
-                                <Skeleton variant="rounded" height={200} />
+                                <Skeleton variant="rectangular" height={180} sx={{ borderRadius: 2 }} />
                             </Grid>
                         ))}
                     </Grid>
                 ) : upcomingExams.length === 0 ? (
-                    <Paper sx={{ p: 3, textAlign: 'center' }}>
-                        <Typography color="text.secondary">No upcoming exams.</Typography>
+                    <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: 2, border: '1px dashed', borderColor: 'divider' }}>
+                        <CalendarIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
+                        <Typography variant="body2" color="text.secondary">No upcoming examinations scheduled at the moment.</Typography>
                     </Paper>
                 ) : (
-                    <Grid container spacing={3}>
+                    <Grid container spacing={2}>
                         {upcomingExams.map((exam: any) => (
-                            <AdmitCardBlock key={exam.examId} schoolId={schoolId} exam={exam} studentId={studentId} />
+                            <AdmitCardBlock key={exam.examId} schoolId={schoolId} exam={exam} studentId={studentId} isMobile={isMobile} />
                         ))}
                     </Grid>
                 )}
@@ -98,73 +119,109 @@ const MyExams = () => {
 
             {/* Results Section */}
             <Box>
-                <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <EventIcon color="primary" />
-                    Results / Report Cards
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <EventIcon color="primary" sx={{ fontSize: 22 }} />
+                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">
+                        Results & Report Cards
+                    </Typography>
+                </Box>
 
                 {reportLoading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                        <CircularProgress />
+                        <CircularProgress size={32} />
                     </Box>
                 ) : (!reportCardData?.data?.exams || reportCardData.data.exams.length === 0) ? (
-                    <Paper sx={{ p: 3, textAlign: 'center' }}>
-                        <Typography color="text.secondary">No results published yet.</Typography>
+                    <Paper elevation={0} sx={{ p: 4, textAlign: 'center', borderRadius: 2, border: '1px dashed', borderColor: 'divider' }}>
+                        <EventIcon sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
+                        <Typography variant="body2" color="text.secondary">No examination results published yet.</Typography>
                     </Paper>
                 ) : (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    <Stack spacing={2}>
                         {reportCardData.data.exams.map((examResult: any) => (
-                            <Card key={examResult.examId} sx={{ p: 3 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                            <Paper key={examResult.examId} elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
                                     <Box>
-                                        <Typography variant="h6">{examResult.name}</Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            {examResult.term} | {examResult.type}
+                                        <Typography variant="subtitle1" fontWeight={700} color="text.primary">{examResult.name}</Typography>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {examResult.term} • {examResult.type}
                                         </Typography>
                                     </Box>
-                                    <Chip label="Published" color="success" size="small" />
+                                    <Chip label="Published" color="success" size="small" sx={{ fontWeight: 700, borderRadius: 1.5 }} />
                                 </Box>
 
-                                <TableContainer component={Paper} elevation={0} variant="outlined">
-                                    <Table size="small">
-                                        <TableHead>
-                                            <TableRow sx={{ bgcolor: 'grey.100' }}>
-                                                <TableCell>Subject</TableCell>
-                                                <TableCell align="right">Max Marks</TableCell>
-                                                <TableCell align="right">Marks Obtained</TableCell>
-                                                <TableCell align="center">Grade</TableCell>
-                                                <TableCell>Remarks</TableCell>
-                                            </TableRow>
-                                        </TableHead>
-                                        <TableBody>
-                                            {examResult.results.map((res: any) => (
-                                                <TableRow key={res.subjectId}>
-                                                    <TableCell>{res.subjectId}</TableCell>
-                                                    <TableCell align="right">{res.maxMarks || '-'}</TableCell>
-                                                    <TableCell align="right">{res.marksObtained}</TableCell>
-                                                    <TableCell align="center">
-                                                        <Chip
-                                                            label={res.grade}
-                                                            color={res.grade === 'F' ? 'error' : 'primary'}
-                                                            size="small"
-                                                        />
-                                                    </TableCell>
-                                                    <TableCell>{res.remarks}</TableCell>
+                                {isMobile ? (
+                                    <Stack spacing={1}>
+                                        {examResult.results.map((res: any) => (
+                                            <Paper key={res.subjectId} elevation={0} sx={{ p: 1.5, borderRadius: 2, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider' }}>
+                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary">{res.subjectId}</Typography>
+                                                    <Chip
+                                                        label={`Grade ${res.grade}`}
+                                                        color={res.grade === 'F' ? 'error' : 'primary'}
+                                                        size="small"
+                                                        sx={{ fontWeight: 700, height: 22, fontSize: '0.7rem' }}
+                                                    />
+                                                </Box>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    Marks: <strong>{res.marksObtained}</strong> / {res.maxMarks || '-'}
+                                                    {res.remarks && ` • Remarks: ${res.remarks}`}
+                                                </Typography>
+                                            </Paper>
+                                        ))}
+                                    </Stack>
+                                ) : (
+                                    <TableContainer component={Paper} elevation={0} variant="outlined" sx={{ borderRadius: 2 }}>
+                                        <Table size="small">
+                                            <TableHead sx={{ bgcolor: 'grey.50' }}>
+                                                <TableRow>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Subject</TableCell>
+                                                    <TableCell align="right" sx={{ fontWeight: 700 }}>Max Marks</TableCell>
+                                                    <TableCell align="right" sx={{ fontWeight: 700 }}>Marks Obtained</TableCell>
+                                                    <TableCell align="center" sx={{ fontWeight: 700 }}>Grade</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>Remarks</TableCell>
                                                 </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </Card>
+                                            </TableHead>
+                                            <TableBody>
+                                                {examResult.results.map((res: any) => (
+                                                    <TableRow key={res.subjectId} hover>
+                                                        <TableCell sx={{ fontWeight: 600 }}>{res.subjectId}</TableCell>
+                                                        <TableCell align="right">{res.maxMarks || '-'}</TableCell>
+                                                        <TableCell align="right" sx={{ fontWeight: 700 }}>{res.marksObtained}</TableCell>
+                                                        <TableCell align="center">
+                                                            <Chip
+                                                                label={res.grade}
+                                                                color={res.grade === 'F' ? 'error' : 'primary'}
+                                                                size="small"
+                                                                sx={{ fontWeight: 700, borderRadius: 1.5 }}
+                                                            />
+                                                        </TableCell>
+                                                        <TableCell sx={{ color: 'text.secondary' }}>{res.remarks || '-'}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    </TableContainer>
+                                )}
+                            </Paper>
                         ))}
-                    </Box>
+                    </Stack>
                 )}
             </Box>
         </Box>
     );
 };
 
-const AdmitCardBlock = ({ schoolId, exam, studentId }: { schoolId: string, exam: any, studentId: string }) => {
+const AdmitCardBlock = ({
+    schoolId,
+    exam,
+    studentId,
+    isMobile,
+}: {
+    schoolId: string;
+    exam: any;
+    studentId: string;
+    isMobile: boolean;
+}) => {
     const [viewDialogOpen, setViewDialogOpen] = useState(false);
     const [downloading, setDownloading] = useState(false);
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' | 'info' }>({
@@ -178,18 +235,14 @@ const AdmitCardBlock = ({ schoolId, exam, studentId }: { schoolId: string, exam:
     const { data: scheduleData } = useGetExamSchedule(schoolId, exam.examId);
     const { data: subjectsData } = useGetSubjects(schoolId);
 
-    // Get decoded token for additional info
     const decodedToken = TokenService.decodeToken();
 
-    // Helper to get subject name
     const getSubjectName = (subjectId: string): string => {
         const subjectInfo = subjectsData?.data?.find((s: any) => s._id === subjectId || s.subjectId === subjectId);
         return subjectInfo?.name || subjectId;
     };
 
     const admitCardData = admitCard?.data;
-
-    // Filter and deduplicate exam schedule for this student's class
     const studentClassId = student?.classId || student?.class || admitCardData?.classId || (decodedToken as any)?.classId || (decodedToken as any)?.class;
 
     const examSchedule = useMemo(() => {
@@ -199,7 +252,6 @@ const AdmitCardBlock = ({ schoolId, exam, studentId }: { schoolId: string, exam:
             return sch.classId === studentClassId;
         });
 
-        // Deduplicate by subjectId + date + startTime
         const uniqueMap = new Map();
         classFiltered.forEach((sch: any) => {
             const dateStr = sch.date ? new Date(sch.date).toISOString().split('T')[0] : '';
@@ -208,10 +260,9 @@ const AdmitCardBlock = ({ schoolId, exam, studentId }: { schoolId: string, exam:
                 uniqueMap.set(key, sch);
             }
         });
-        return Array.from(uniqueMap.values());
+        return Array.from(uniqueMap.values()).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [scheduleData?.data, studentClassId]);
 
-    // Student details from profile API
     const studentName = student?.firstName
         ? `${student.firstName} ${student.lastName || ''}`.trim()
         : 'Student Name';
@@ -226,12 +277,10 @@ const AdmitCardBlock = ({ schoolId, exam, studentId }: { schoolId: string, exam:
     const studentPhoto = student?.profileImage || '';
     const studentSignature = student?.signature || '';
 
-    // School details
     const schoolName = student?.schoolName || decodedToken?.schoolName || 'School Name';
     const schoolAddress = student?.schoolAddress || 'School Address';
     const schoolLogo = student?.schoolLogo || '';
 
-    // Display class/section
     const classDisplay = className && sectionName
         ? `${className} / ${sectionName}`
         : className || 'N/A';
@@ -257,7 +306,7 @@ const AdmitCardBlock = ({ schoolId, exam, studentId }: { schoolId: string, exam:
                     examName={exam.name}
                     examType={exam.typeId?.name || 'Examination'}
                     examTerm={exam.termId?.name || 'Term'}
-                    academicYear={exam.academicYear || '2025-2026'}
+                    academicYear={exam.academicYear || '2026-2027'}
                     startDate={exam.startDate}
                     endDate={exam.endDate}
                     examSchedule={examSchedule.map((sch: any) => ({
@@ -287,104 +336,81 @@ const AdmitCardBlock = ({ schoolId, exam, studentId }: { schoolId: string, exam:
         }
     };
 
-    const handleView = () => {
-        setViewDialogOpen(true);
-    };
-
-
     return (
         <>
             <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                <Card
+                <Paper
+                    elevation={0}
                     sx={{
-                        borderRadius: 3,
+                        borderRadius: 2,
                         overflow: 'hidden',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                            boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
-                            transform: 'translateY(-4px)'
-                        }
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        bgcolor: 'background.paper',
                     }}
                 >
-                    {/* Card Header with gradient */}
-                    <Box
-                        sx={{
-                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            color: 'white',
-                            p: 2,
-                            position: 'relative',
-                        }}
-                    >
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <Box>
-                                <Typography variant="h6" fontWeight={600} sx={{ mb: 0.5 }}>
-                                    {exam.name}
-                                </Typography>
-                                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                    {exam.typeId?.name || 'Exam'} | {exam.termId?.name || 'Term'}
-                                </Typography>
-                            </Box>
+                    {/* Header */}
+                    <Box sx={{ p: 2, bgcolor: 'primary.50', borderBottom: '1px solid', borderColor: '#bfdbfe' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5, gap: 1 }}>
+                            <Typography variant="subtitle1" fontWeight={700} color="primary.dark">
+                                {exam.name}
+                            </Typography>
                             <Chip
                                 label={exam.status}
                                 size="small"
-                                sx={{
-                                    bgcolor: 'rgba(255,255,255,0.2)',
-                                    color: 'white',
-                                    fontWeight: 600,
-                                    textTransform: 'capitalize'
-                                }}
+                                color={exam.status === 'scheduled' ? 'warning' : exam.status === 'ongoing' ? 'success' : 'default'}
+                                sx={{ textTransform: 'capitalize', fontWeight: 700, fontSize: '0.7rem', height: 22 }}
                             />
                         </Box>
+                        <Typography variant="caption" color="primary.main" fontWeight={500}>
+                            {exam.typeId?.name || 'Exam'} • {exam.termId?.name || 'Term'}
+                        </Typography>
                     </Box>
 
-                    {/* Card Body */}
+                    {/* Body */}
                     <Box sx={{ p: 2 }}>
-                        {/* Date info */}
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
-                            <CalendarIcon fontSize="small" color="action" />
-                            <Typography variant="body2" color="text.secondary">
-                                {new Date(exam.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                                {' - '}
-                                {new Date(exam.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {/* Dates */}
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                            <CalendarIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                            <Typography variant="caption" fontWeight={600} color="text.primary">
+                                {new Date(exam.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                {' — '}
+                                {new Date(exam.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </Typography>
                         </Box>
 
                         {/* Roll Number */}
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                            <TimeIcon fontSize="small" color="action" />
-                            <Typography variant="body2" color="text.secondary">
+                            <RollIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                            <Typography variant="caption" color="text.secondary">
                                 Roll No: <strong>{rollNumber}</strong>
                             </Typography>
                         </Box>
 
-                        {/* Action Buttons */}
+                        {/* Actions */}
                         {isLoading ? (
-                            <Skeleton variant="rounded" height={36} />
+                            <Skeleton variant="rectangular" height={36} sx={{ borderRadius: 2 }} />
                         ) : admitCardData?.isEligible !== false ? (
                             admitCardData?.admitCardGenerated ? (
                                 <Box sx={{ display: 'flex', gap: 1 }}>
                                     <Button
                                         size="small"
                                         variant="outlined"
-                                        startIcon={<ViewIcon />}
-                                        onClick={handleView}
-                                        sx={{ flex: 1, borderRadius: 2 }}
+                                        startIcon={<ViewIcon sx={{ fontSize: 16 }} />}
+                                        onClick={() => setViewDialogOpen(true)}
+                                        sx={{ flex: 1, borderRadius: 2, textTransform: 'none', fontWeight: 600, py: 0.6 }}
                                     >
                                         View
                                     </Button>
                                     <Button
                                         size="small"
                                         variant="contained"
-                                        startIcon={downloading ? <CircularProgress size={16} color="inherit" /> : <DownloadIcon />}
+                                        startIcon={downloading ? <CircularProgress size={14} color="inherit" /> : <DownloadIcon sx={{ fontSize: 16 }} />}
                                         onClick={handleDownloadPDF}
                                         disabled={downloading}
-                                        sx={{
-                                            flex: 1,
-                                            borderRadius: 2,
-                                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                        }}
+                                        sx={{ flex: 1, borderRadius: 2, textTransform: 'none', fontWeight: 600, py: 0.6 }}
                                     >
-                                        {downloading ? 'Generating...' : 'Download'}
+                                        {downloading ? 'Downloading...' : 'Download'}
                                     </Button>
                                 </Box>
                             ) : (
@@ -392,7 +418,7 @@ const AdmitCardBlock = ({ schoolId, exam, studentId }: { schoolId: string, exam:
                                     label="Admit Card Pending"
                                     color="warning"
                                     size="small"
-                                    sx={{ width: '100%', py: 2 }}
+                                    sx={{ width: '100%', py: 1.5, fontWeight: 600, borderRadius: 2 }}
                                 />
                             )
                         ) : (
@@ -400,308 +426,157 @@ const AdmitCardBlock = ({ schoolId, exam, studentId }: { schoolId: string, exam:
                                 label="Not Eligible"
                                 color="error"
                                 size="small"
-                                sx={{ width: '100%', py: 2 }}
+                                sx={{ width: '100%', py: 1.5, fontWeight: 600, borderRadius: 2 }}
                             />
                         )}
                     </Box>
-                </Card>
+                </Paper>
             </Grid>
 
-            {/* Professional Admit Card View Dialog */}
+            {/* Admit Card View Dialog */}
             <Dialog
                 open={viewDialogOpen}
                 onClose={() => setViewDialogOpen(false)}
                 maxWidth="md"
                 fullWidth
-                PaperProps={{
-                    sx: { borderRadius: 2, mt: 10 }
-                }}
+                PaperProps={{ sx: { borderRadius: 2 } }}
             >
-                <DialogContent sx={{ p: 0 }}>
-                    {/* Admit Card Container */}
-                    <Box sx={{ border: '3px solid #1976d2', borderRadius: 1, overflow: 'hidden' }}>
-                        {/* Header with School Logo and Name */}
-                        <Box
-                            sx={{
-                                background: 'linear-gradient(135deg, #1976d2 0%, #1565c0 100%)',
-                                color: 'white',
-                                p: 2,
-                                textAlign: 'center',
-                            }}
-                        >
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, mb: 1 }}>
+                <DialogContent sx={{ p: { xs: 1.5, sm: 3 } }}>
+                    <Box sx={{ border: '2px solid', borderColor: 'primary.main', borderRadius: 2, overflow: 'hidden' }}>
+                        {/* Header */}
+                        <Box sx={{ bgcolor: 'primary.main', color: '#ffffff', p: 2, textAlign: 'center' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, mb: 1 }}>
                                 {schoolLogo ? (
-                                    <Avatar src={schoolLogo} sx={{ width: 60, height: 60, bgcolor: 'white' }} />
+                                    <Avatar src={schoolLogo} sx={{ width: 48, height: 48, bgcolor: 'white' }} />
                                 ) : (
-                                    <Avatar sx={{ width: 60, height: 60, bgcolor: 'rgba(255,255,255,0.2)' }}>
-                                        <SchoolIcon sx={{ fontSize: 35 }} />
+                                    <Avatar sx={{ width: 48, height: 48, bgcolor: 'rgba(255,255,255,0.2)' }}>
+                                        <SchoolIcon sx={{ fontSize: 28 }} />
                                     </Avatar>
                                 )}
                                 <Box>
-                                    <Typography variant="h5" fontWeight={700}>
-                                        {schoolName}
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                        {schoolAddress}
-                                    </Typography>
+                                    <Typography variant="h6" fontWeight={700}>{schoolName}</Typography>
+                                    <Typography variant="caption" sx={{ opacity: 0.9 }}>{schoolAddress}</Typography>
                                 </Box>
                             </Box>
-                            <Chip
-                                label="ADMIT CARD"
-                                sx={{
-                                    mt: 1,
-                                    bgcolor: '#ff9800',
-                                    color: 'white',
-                                    fontWeight: 700,
-                                    fontSize: '1rem',
-                                    py: 2
-                                }}
-                            />
+                            <Chip label="ADMIT CARD" sx={{ bgcolor: '#ff9800', color: '#ffffff', fontWeight: 800, fontSize: '0.8rem', height: 26 }} />
                         </Box>
 
-                        {/* Exam Title */}
-                        <Box sx={{ bgcolor: '#e3f2fd', p: 1.5, textAlign: 'center', borderBottom: '2px solid #1976d2' }}>
-                            <Typography variant="h6" fontWeight={600} color="primary.dark">
-                                {exam.name} - {exam.typeId?.name || 'Examination'}
+                        {/* Title */}
+                        <Box sx={{ bgcolor: 'grey.100', p: 1.5, textAlign: 'center', borderBottom: '1px solid', borderColor: 'divider' }}>
+                            <Typography variant="subtitle2" fontWeight={700} color="primary.main">
+                                {exam.name} — {exam.typeId?.name || 'Examination'}
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Academic Year: {exam.academicYear || '2025-2026'} | {exam.termId?.name || 'Term'}
+                            <Typography variant="caption" color="text.secondary">
+                                Academic Year {exam.academicYear || '2026-2027'} • {exam.termId?.name || 'Term'}
                             </Typography>
                         </Box>
 
-                        {/* Main Content */}
-                        <Box sx={{ p: 3 }}>
-                            <Grid container spacing={3}>
-                                {/* Student Details */}
-                                <Grid size={{ xs: 12, md: 8 }}>
-                                    <TableContainer component={Paper} variant="outlined" sx={{ mb: 2 }}>
+                        {/* Details */}
+                        <Box sx={{ p: { xs: 1.5, sm: 2.5 } }}>
+                            <Grid container spacing={2}>
+                                <Grid size={{ xs: 12, sm: 8 }}>
+                                    <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1.5 }}>
                                         <Table size="small">
                                             <TableBody>
                                                 <TableRow>
-                                                    <TableCell sx={{ bgcolor: '#f5f5f5', fontWeight: 600, width: '40%' }}>
-                                                        Student Name
-                                                    </TableCell>
-                                                    <TableCell>{studentName}</TableCell>
+                                                    <TableCell sx={{ bgcolor: 'grey.50', fontWeight: 600, width: '40%' }}>Student Name</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>{studentName}</TableCell>
                                                 </TableRow>
                                                 <TableRow>
-                                                    <TableCell sx={{ bgcolor: '#f5f5f5', fontWeight: 600 }}>
-                                                        {fatherNameLabel}
-                                                    </TableCell>
+                                                    <TableCell sx={{ bgcolor: 'grey.50', fontWeight: 600 }}>{fatherNameLabel}</TableCell>
                                                     <TableCell>{fatherName}</TableCell>
                                                 </TableRow>
                                                 <TableRow>
-                                                    <TableCell sx={{ bgcolor: '#f5f5f5', fontWeight: 600 }}>
-                                                        Roll Number
-                                                    </TableCell>
-                                                    <TableCell>{rollNumber}</TableCell>
+                                                    <TableCell sx={{ bgcolor: 'grey.50', fontWeight: 600 }}>Roll Number</TableCell>
+                                                    <TableCell sx={{ fontWeight: 700 }}>{rollNumber}</TableCell>
                                                 </TableRow>
                                                 <TableRow>
-                                                    <TableCell sx={{ bgcolor: '#f5f5f5', fontWeight: 600 }}>
-                                                        Student ID
-                                                    </TableCell>
+                                                    <TableCell sx={{ bgcolor: 'grey.50', fontWeight: 600 }}>Student ID</TableCell>
                                                     <TableCell>{studentId}</TableCell>
                                                 </TableRow>
                                                 <TableRow>
-                                                    <TableCell sx={{ bgcolor: '#f5f5f5', fontWeight: 600 }}>
-                                                        Class / Section
-                                                    </TableCell>
+                                                    <TableCell sx={{ bgcolor: 'grey.50', fontWeight: 600 }}>Class / Section</TableCell>
                                                     <TableCell>{classDisplay}</TableCell>
                                                 </TableRow>
-                                                <TableRow>
-                                                    <TableCell sx={{ bgcolor: '#f5f5f5', fontWeight: 600 }}>
-                                                        Date of Birth
-                                                    </TableCell>
-                                                    <TableCell>{dob}</TableCell>
-                                                </TableRow>
                                             </TableBody>
                                         </Table>
                                     </TableContainer>
-
-                                    {/* Exam Period */}
-                                    <Paper variant="outlined" sx={{ p: 2, bgcolor: '#fff3e0' }}>
-                                        <Typography variant="subtitle2" fontWeight={600} color="warning.dark">
-                                            Examination Period
-                                        </Typography>
-                                        <Typography variant="body1" fontWeight={500}>
-                                            {new Date(exam.startDate).toLocaleDateString('en-IN', {
-                                                weekday: 'long',
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
-                                            })}
-                                            {' '} to {' '}
-                                            {new Date(exam.endDate).toLocaleDateString('en-IN', {
-                                                weekday: 'long',
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
-                                            })}
-                                        </Typography>
-                                    </Paper>
                                 </Grid>
 
-                                {/* Photo & Signature Section */}
-                                <Grid size={{ xs: 12, md: 4 }}>
+                                <Grid size={{ xs: 12, sm: 4 }}>
                                     <Box sx={{ textAlign: 'center' }}>
-                                        {/* Student Photo */}
-                                        <Paper
-                                            variant="outlined"
-                                            sx={{
-                                                width: 130,
-                                                height: 160,
-                                                mx: 'auto',
-                                                mb: 1,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                overflow: 'hidden'
-                                            }}
-                                        >
+                                        <Paper variant="outlined" sx={{ width: 100, height: 120, mx: 'auto', mb: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 2 }}>
                                             {studentPhoto ? (
-                                                <Box
-                                                    component="img"
-                                                    src={studentPhoto}
-                                                    alt="Student Photo"
-                                                    sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                                />
+                                                <Box component="img" src={studentPhoto} alt="Student Photo" sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                             ) : (
-                                                <Avatar sx={{ width: 100, height: 100, bgcolor: 'grey.300' }}>
-                                                    {studentName.charAt(0)}
-                                                </Avatar>
+                                                <Avatar sx={{ width: 64, height: 64, bgcolor: 'grey.300' }}>{studentName.charAt(0)}</Avatar>
                                             )}
                                         </Paper>
-                                        <Typography variant="caption" color="text.secondary">
-                                            Photograph of Candidate
-                                        </Typography>
-
-                                        {/* Student Signature */}
-                                        <Paper
-                                            variant="outlined"
-                                            sx={{
-                                                width: 130,
-                                                height: 50,
-                                                mx: 'auto',
-                                                mt: 2,
-                                                mb: 1,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                overflow: 'hidden'
-                                            }}
-                                        >
-                                            {studentSignature ? (
-                                                <Box
-                                                    component="img"
-                                                    src={studentSignature}
-                                                    alt="Student Signature"
-                                                    sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                                                />
-                                            ) : (
-                                                <Typography variant="caption" color="text.disabled">
-                                                    Signature
-                                                </Typography>
-                                            )}
-                                        </Paper>
-                                        <Typography variant="caption" color="text.secondary">
-                                            Signature of Candidate
-                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary">Candidate Photo</Typography>
                                     </Box>
                                 </Grid>
                             </Grid>
 
-                            {/* Exam Schedule Table */}
+                            {/* Schedule Table */}
                             {examSchedule.length > 0 && (
-                                <Box sx={{ mt: 3 }}>
-                                    <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1, color: 'primary.main' }}>
-                                        Exam Schedule
+                                <Box sx={{ mt: 2.5 }}>
+                                    <Typography variant="subtitle2" fontWeight={700} color="primary.main" sx={{ mb: 1 }}>
+                                        Examination Schedule
                                     </Typography>
-                                    <TableContainer component={Paper} variant="outlined">
-                                        <Table size="small">
-                                            <TableHead>
-                                                <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                                                    <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-                                                    <TableCell sx={{ fontWeight: 600 }}>Time</TableCell>
-                                                    <TableCell sx={{ fontWeight: 600 }}>Subject</TableCell>
-                                                    <TableCell sx={{ fontWeight: 600, textAlign: 'center' }}>Invigilator Sign</TableCell>
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {examSchedule.map((sch: any, index: number) => (
-                                                    <TableRow key={sch._id || index}>
-                                                        <TableCell>
-                                                            {new Date(sch.date).toLocaleDateString('en-IN', {
-                                                                day: 'numeric',
-                                                                month: 'short',
-                                                                year: 'numeric'
-                                                            })}
-                                                        </TableCell>
-                                                        <TableCell>{sch.startTime} - {sch.endTime}</TableCell>
-                                                        <TableCell>{getSubjectName(sch.subjectId)}</TableCell>
-                                                        <TableCell sx={{ textAlign: 'center', minWidth: 100 }}>
-                                                            <Box sx={{ borderBottom: '1px solid #ccc', width: 80, mx: 'auto', height: 20 }} />
-                                                        </TableCell>
+                                    {isMobile ? (
+                                        <Stack spacing={1}>
+                                            {examSchedule.map((sch: any) => (
+                                                <Paper key={sch._id} elevation={0} sx={{ p: 1.25, borderRadius: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'grey.50' }}>
+                                                    <Typography variant="subtitle2" fontWeight={700} color="primary.main">
+                                                        {getSubjectName(sch.subjectId)}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {new Date(sch.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', weekday: 'short' })} • {sch.startTime} – {sch.endTime}
+                                                    </Typography>
+                                                </Paper>
+                                            ))}
+                                        </Stack>
+                                    ) : (
+                                        <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 1.5 }}>
+                                            <Table size="small">
+                                                <TableHead sx={{ bgcolor: 'grey.50' }}>
+                                                    <TableRow>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Date</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Time</TableCell>
+                                                        <TableCell sx={{ fontWeight: 700 }}>Subject</TableCell>
                                                     </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {examSchedule.map((sch: any) => (
+                                                        <TableRow key={sch._id} hover>
+                                                            <TableCell sx={{ fontWeight: 600 }}>
+                                                                {new Date(sch.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                            </TableCell>
+                                                            <TableCell>{sch.startTime} – {sch.endTime}</TableCell>
+                                                            <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>
+                                                                {getSubjectName(sch.subjectId)}
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                    )}
                                 </Box>
                             )}
-
-                            <Divider sx={{ my: 3 }} />
-
-                            {/* Signatures Section */}
-                            <Grid container spacing={2}>
-                                <Grid size={{ xs: 4 }}>
-                                    <Box sx={{ textAlign: 'center' }}>
-                                        <Box sx={{ borderBottom: '1px solid #333', height: 40, mb: 1 }} />
-                                        <Typography variant="caption" fontWeight={500}>
-                                            Class Teacher's Signature
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                                <Grid size={{ xs: 4 }}>
-                                    <Box sx={{ textAlign: 'center' }}>
-                                        <Box sx={{ borderBottom: '1px solid #333', height: 40, mb: 1 }} />
-                                        <Typography variant="caption" fontWeight={500}>
-                                            Candidate's Signature
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                                <Grid size={{ xs: 4 }}>
-                                    <Box sx={{ textAlign: 'center' }}>
-                                        <Box sx={{ borderBottom: '1px solid #333', height: 40, mb: 1 }} />
-                                        <Typography variant="caption" fontWeight={500}>
-                                            Principal's Signature
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                            </Grid>
-
-                            {/* Instructions */}
-                            <Paper sx={{ mt: 3, p: 2, bgcolor: '#fafafa' }} variant="outlined">
-                                <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-                                    Important Instructions:
-                                </Typography>
-                                <Typography variant="caption" component="ul" sx={{ pl: 2, m: 0 }}>
-                                    <li>Bring this admit card to the examination hall along with a valid ID proof.</li>
-                                    <li>Reach the examination center at least 30 minutes before the scheduled time.</li>
-                                    <li>Electronic devices including mobile phones are strictly prohibited.</li>
-                                    <li>Any attempt to use unfair means will result in disqualification.</li>
-                                </Typography>
-                            </Paper>
                         </Box>
                     </Box>
                 </DialogContent>
-                <DialogActions sx={{ p: 2, borderTop: '1px solid #e0e0e0' }}>
-                    <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
+                <DialogActions sx={{ px: 3, py: 2 }}>
+                    <Button onClick={() => setViewDialogOpen(false)} sx={{ textTransform: 'none' }}>Close</Button>
                     <Button
                         variant="contained"
                         startIcon={downloading ? <CircularProgress size={16} color="inherit" /> : <DownloadIcon />}
                         onClick={handleDownloadPDF}
                         disabled={downloading}
+                        sx={{ textTransform: 'none', fontWeight: 600, borderRadius: 2 }}
                     >
-                        {downloading ? 'Generating...' : 'Download PDF'}
+                        {downloading ? 'Downloading...' : 'Download PDF'}
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -711,12 +586,9 @@ const AdmitCardBlock = ({ schoolId, exam, studentId }: { schoolId: string, exam:
                 open={snackbar.open}
                 autoHideDuration={4000}
                 onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             >
-                <Alert
-                    onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-                    severity={snackbar.severity}
-                >
+                <Alert onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} severity={snackbar.severity}>
                     {snackbar.message}
                 </Alert>
             </Snackbar>

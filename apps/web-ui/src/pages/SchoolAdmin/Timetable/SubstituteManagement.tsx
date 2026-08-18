@@ -45,6 +45,8 @@ import { AppDatePicker } from '../../../components/shared/AppDatePicker';
 import { format } from 'date-fns';
 import { useUrlTab } from '../../../hooks/useUrlTab';
 import { useIsMobile } from '../../../hooks/useIsMobile';
+import { useNotificationStore } from '../../../stores/notificationStore';
+import { AppNoticeDialog, type AppNoticeDialogProps } from '../../../components/shared/AppNoticeDialog';
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -63,10 +65,19 @@ function TabPanel(props: TabPanelProps) {
 
 const SubstituteManagement = () => {
     const isMobile = useIsMobile();
+    const { showNotification } = useNotificationStore();
     const schoolId = TokenService.getSchoolId() || '';
     const [tabValue, setTabValue] = useUrlTab(0, ['assignments', 'history']);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
+    const [noticeState, setNoticeState] = useState<AppNoticeDialogProps>({
+        open: false,
+        onClose: () => setNoticeState(prev => ({ ...prev, open: false })),
+        title: '',
+        message: '',
+        type: 'error',
+    });
 
     // Track visited tabs to fetch data lazily on tab visit
     const [visitedTabs, setVisitedTabs] = useState<Set<number>>(() => new Set([tabValue]));
@@ -128,6 +139,7 @@ const SubstituteManagement = () => {
                 dayOfWeek: formData.dayOfWeek,
                 periodNumber: formData.periodNumber,
             } as any);
+            showNotification('Substitute assigned successfully', 'success');
             setCreateDialogOpen(false);
             setFormData({
                 originalTeacherId: '',
@@ -138,16 +150,38 @@ const SubstituteManagement = () => {
                 periodNumber: 0,
                 reason: '',
             });
-        } catch (err) {
+        } catch (err: any) {
             console.error('Failed to create substitute:', err);
+            const errorMessage = err?.message || err?.error || 'Failed to assign substitute teacher';
+            showNotification(errorMessage, 'error');
+            setNoticeState({
+                open: true,
+                type: 'error',
+                title: 'Cannot Assign Substitute',
+                message: errorMessage,
+                badgeText: 'Teacher Unavailable',
+                primaryActionLabel: 'Understood',
+                onClose: () => setNoticeState(prev => ({ ...prev, open: false })),
+            });
         }
     };
 
     const handleCancelSubstitute = async (substituteId: string) => {
         try {
             await cancelSubstitute.mutateAsync(substituteId);
-        } catch (err) {
+            showNotification('Substitute assignment cancelled', 'success');
+        } catch (err: any) {
             console.error('Failed to cancel substitute:', err);
+            const errorMessage = err?.message || err?.error || 'Failed to cancel substitute assignment';
+            showNotification(errorMessage, 'error');
+            setNoticeState({
+                open: true,
+                type: 'error',
+                title: 'Cancellation Failed',
+                message: errorMessage,
+                primaryActionLabel: 'Understood',
+                onClose: () => setNoticeState(prev => ({ ...prev, open: false })),
+            });
         }
     };
 
@@ -458,16 +492,32 @@ const SubstituteManagement = () => {
                 maxWidth="sm"
                 fullWidth
                 fullScreen={isMobile}
+                PaperProps={{
+                    sx: {
+                        borderRadius: isMobile ? 0 : 3,
+                        maxHeight: isMobile ? '100dvh' : '90vh',
+                    }
+                }}
             >
-                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6" fontWeight={600}>Assign Substitute Teacher</Typography>
-                    {isMobile && (
-                        <IconButton onClick={() => setCreateDialogOpen(false)} size="small">
-                            <CloseIcon />
-                        </IconButton>
-                    )}
+                <DialogTitle
+                    sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        borderBottom: '1px solid',
+                        borderColor: 'divider',
+                        py: { xs: 1.5, sm: 2 },
+                        px: { xs: 2, sm: 3 },
+                    }}
+                >
+                    <Typography variant="h6" fontWeight={700} sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+                        Assign Substitute Teacher
+                    </Typography>
+                    <IconButton onClick={() => setCreateDialogOpen(false)} size="small" edge="end">
+                        <CloseIcon />
+                    </IconButton>
                 </DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ p: { xs: 2, sm: 3 }, overflowY: 'auto' }}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
                         <AppSelect
                             label="Original Teacher (Absent)"
@@ -534,7 +584,7 @@ const SubstituteManagement = () => {
                         />
                     </Box>
                 </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
+                <DialogActions sx={{ p: { xs: 2, sm: 2.5 }, borderTop: '1px solid', borderColor: 'divider', justifyContent: 'flex-end', gap: 1 }}>
                     <AppButton onClick={() => setCreateDialogOpen(false)} color="inherit">Cancel</AppButton>
                     <AppButton
                         onClick={handleCreateSubstitute}
@@ -553,6 +603,9 @@ const SubstituteManagement = () => {
                     </AppButton>
                 </DialogActions>
             </Dialog>
+
+            {/* Error / Warning Notice Dialog */}
+            <AppNoticeDialog {...noticeState} />
         </Box>
     );
 };

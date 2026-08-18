@@ -21,7 +21,10 @@ import {
 } from '../../../../queries/Fee';
 import { AppTable } from '../../../../components/shared/AppTable';
 
+import { useIsMobile } from '../../../../hooks/useIsMobile';
+
 const FeeDashboard: React.FC = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
     const { data: statsData, isLoading: isLoadingStats, refetch: refetchStats } = useGetFeeDashboardStats(schoolId);
     const { data: paymentsData, isLoading: isLoadingPayments, refetch: refetchPayments } = useGetPayments(schoolId, { limit: 5 });
@@ -83,41 +86,41 @@ const FeeDashboard: React.FC = () => {
     ];
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, mb: 3, gap: 2 }}>
                 <Box>
-                    <Typography variant="h4" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+                    <Typography variant="h4" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '1.4rem', sm: '2rem' } }}>
                         Fees Dashboard
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                         Real-time oversight of collections, dues, and transaction histories.
                     </Typography>
                 </Box>
-                <Stack direction="row" spacing={1.5} flexWrap="wrap" gap={1}>
-                    <Button variant="outlined" color="primary" onClick={handleRefresh} startIcon={<RefreshIcon />} sx={{ borderRadius: 2 }}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ width: { xs: '100%', sm: 'auto' } }}>
+                    <Button variant="outlined" color="primary" onClick={handleRefresh} startIcon={<RefreshIcon />} fullWidth={isMobile} sx={{ borderRadius: 2 }}>
                         Refresh
                     </Button>
-                    <Button variant="contained" color="primary" component={Link} to="/school-admin/fees/payments" startIcon={<ReceiptIcon />} sx={{ borderRadius: 2 }}>
+                    <Button variant="contained" color="primary" component={Link} to="/school-admin/fees/payments" startIcon={<ReceiptIcon />} fullWidth={isMobile} sx={{ borderRadius: 2 }}>
                         Collect Payment
                     </Button>
-                    <Button variant="outlined" color="primary" component={Link} to="/school-admin/fees/assignments" startIcon={<AssignmentIcon />} sx={{ borderRadius: 2 }}>
+                    <Button variant="outlined" color="primary" component={Link} to="/school-admin/fees/assignments" startIcon={<AssignmentIcon />} fullWidth={isMobile} sx={{ borderRadius: 2 }}>
                         Assign Fees
                     </Button>
                 </Stack>
             </Box>
 
             {/* Statistics Cards Grid */}
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Card sx={{ borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9' }}>
-                        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box sx={{ p: 1.5, bgcolor: '#eff6ff', borderRadius: 3, color: '#3b82f6', display: 'flex' }}>
-                                <AccountBalanceWalletIcon sx={{ fontSize: 32 }} />
+            <Grid container spacing={{ xs: 1.5, sm: 3 }} sx={{ mb: 4 }}>
+                <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+                    <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9', height: '100%' }}>
+                        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+                            <Box sx={{ p: { xs: 1, sm: 1.5 }, bgcolor: '#eff6ff', borderRadius: 2.5, color: '#3b82f6', display: 'flex' }}>
+                                <AccountBalanceWalletIcon sx={{ fontSize: { xs: 24, sm: 32 } }} />
                             </Box>
-                            <Box>
-                                <Typography variant="caption" color="text.secondary" fontWeight={500}>Total Collected</Typography>
-                                {isLoadingStats ? <Skeleton width={100} height={32} /> : (
-                                    <Typography variant="h5" fontWeight={700} color="#1e293b">
+                            <Box sx={{ minWidth: 0, overflow: 'hidden' }}>
+                                <Typography variant="caption" color="text.secondary" fontWeight={500} noWrap display="block">Total Collected</Typography>
+                                {isLoadingStats ? <Skeleton width={60} height={28} /> : (
+                                    <Typography variant="h6" fontWeight={700} color="#1e293b" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} noWrap>
                                         {formatCurrency(stats?.totalCollected || 0)}
                                     </Typography>
                                 )}
@@ -126,16 +129,16 @@ const FeeDashboard: React.FC = () => {
                     </Card>
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Card sx={{ borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9' }}>
-                        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box sx={{ p: 1.5, bgcolor: '#f0fdf4', borderRadius: 3, color: '#22c55e', display: 'flex' }}>
-                                <TodayIcon sx={{ fontSize: 32 }} />
+                <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+                    <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9', height: '100%' }}>
+                        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+                            <Box sx={{ p: { xs: 1, sm: 1.5 }, bgcolor: '#f0fdf4', borderRadius: 2.5, color: '#22c55e', display: 'flex' }}>
+                                <TodayIcon sx={{ fontSize: { xs: 24, sm: 32 } }} />
                             </Box>
-                            <Box>
-                                <Typography variant="caption" color="text.secondary" fontWeight={500}>Today's Collection</Typography>
-                                {isLoadingStats ? <Skeleton width={100} height={32} /> : (
-                                    <Typography variant="h5" fontWeight={700} color="#1e293b">
+                            <Box sx={{ minWidth: 0, overflow: 'hidden' }}>
+                                <Typography variant="caption" color="text.secondary" fontWeight={500} noWrap display="block">Today's Collection</Typography>
+                                {isLoadingStats ? <Skeleton width={60} height={28} /> : (
+                                    <Typography variant="h6" fontWeight={700} color="#1e293b" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} noWrap>
                                         {formatCurrency(stats?.todayCollection || 0)}
                                     </Typography>
                                 )}
@@ -144,16 +147,16 @@ const FeeDashboard: React.FC = () => {
                     </Card>
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Card sx={{ borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9' }}>
-                        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box sx={{ p: 1.5, bgcolor: '#fef2f2', borderRadius: 3, color: '#ef4444', display: 'flex' }}>
-                                <HourglassEmptyIcon sx={{ fontSize: 32 }} />
+                <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+                    <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9', height: '100%' }}>
+                        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+                            <Box sx={{ p: { xs: 1, sm: 1.5 }, bgcolor: '#fef2f2', borderRadius: 2.5, color: '#ef4444', display: 'flex' }}>
+                                <HourglassEmptyIcon sx={{ fontSize: { xs: 24, sm: 32 } }} />
                             </Box>
-                            <Box>
-                                <Typography variant="caption" color="text.secondary" fontWeight={500}>Pending Amount</Typography>
-                                {isLoadingStats ? <Skeleton width={100} height={32} /> : (
-                                    <Typography variant="h5" fontWeight={700} color="#1e293b">
+                            <Box sx={{ minWidth: 0, overflow: 'hidden' }}>
+                                <Typography variant="caption" color="text.secondary" fontWeight={500} noWrap display="block">Pending Amount</Typography>
+                                {isLoadingStats ? <Skeleton width={60} height={28} /> : (
+                                    <Typography variant="h6" fontWeight={700} color="#1e293b" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} noWrap>
                                         {formatCurrency(stats?.totalOutstanding || 0)}
                                     </Typography>
                                 )}
@@ -162,16 +165,16 @@ const FeeDashboard: React.FC = () => {
                     </Card>
                 </Grid>
 
-                <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <Card sx={{ borderRadius: 4, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9' }}>
-                        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <Box sx={{ p: 1.5, bgcolor: '#faf5ff', borderRadius: 3, color: '#a855f7', display: 'flex' }}>
-                                <PeopleIcon sx={{ fontSize: 32 }} />
+                <Grid size={{ xs: 6, sm: 6, md: 3 }}>
+                    <Card sx={{ borderRadius: 3, boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: '1px solid #f1f5f9', height: '100%' }}>
+                        <CardContent sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 }, p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+                            <Box sx={{ p: { xs: 1, sm: 1.5 }, bgcolor: '#faf5ff', borderRadius: 2.5, color: '#a855f7', display: 'flex' }}>
+                                <PeopleIcon sx={{ fontSize: { xs: 24, sm: 32 } }} />
                             </Box>
-                            <Box>
-                                <Typography variant="caption" color="text.secondary" fontWeight={500}>Students with Dues</Typography>
-                                {isLoadingStats ? <Skeleton width={100} height={32} /> : (
-                                    <Typography variant="h5" fontWeight={700} color="#1e293b">
+                            <Box sx={{ minWidth: 0, overflow: 'hidden' }}>
+                                <Typography variant="caption" color="text.secondary" fontWeight={500} noWrap display="block">Students with Dues</Typography>
+                                {isLoadingStats ? <Skeleton width={60} height={28} /> : (
+                                    <Typography variant="h6" fontWeight={700} color="#1e293b" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                                         {stats?.totalStudentsWithDues || 0}
                                     </Typography>
                                 )}

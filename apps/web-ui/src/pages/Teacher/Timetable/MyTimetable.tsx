@@ -13,6 +13,7 @@ import {
     Divider,
     Button,
     Tooltip,
+    Stack,
 } from '@mui/material';
 import {
     TableChart as TableIcon,
@@ -27,10 +28,12 @@ import autoTable from 'jspdf-autotable';
 import { useGetTeacherTimetable, useGetTeacherFreePeriods, useGetSubstitutesForDate } from '../../../queries/Timetable';
 import TokenService from '../../../queries/token/tokenService';
 import type { TimetableEntry } from '../../../types/timetable.types';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 
 type ViewMode = 'table' | 'list' | 'free';
 
 const MyTimetable = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
     const teacherId = TokenService.getUserId() || '';
     const [viewMode, setViewMode] = useState<ViewMode>('table');
@@ -86,6 +89,7 @@ const MyTimetable = () => {
     // Get today's day
     const today = new Date();
     const todayDayName = today.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const [selectedMobileDay, setSelectedMobileDay] = useState<string>(todayDayName);
 
     // Today's schedule (including substitute assignments as extra periods)
     const todaySchedule = useMemo(() => {
@@ -201,6 +205,195 @@ const MyTimetable = () => {
         return (
             <Box sx={{ p: 3 }}>
                 <Alert severity="info">No timetable configuration found for this school.</Alert>
+            </Box>
+        );
+    }
+
+    const currentMobileDaySchedule = entries
+        .filter((e: TimetableEntry) => e.dayOfWeek === selectedMobileDay)
+        .sort((a: TimetableEntry, b: TimetableEntry) => a.periodNumber - b.periodNumber);
+
+    // Mobile View
+    if (isMobile) {
+        return (
+            <Box sx={{ width: '100%', p: { xs: 1.5, sm: 2 }, pb: { xs: 9, sm: 4 } }}>
+                {/* Header */}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+                    <Typography variant="h6" fontWeight={700} color="text.primary">
+                        My Timetable
+                    </Typography>
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<PdfIcon fontSize="small" />}
+                        onClick={handleExportPdf}
+                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
+                    >
+                        Export PDF
+                    </Button>
+                </Box>
+
+                {/* Simple Day Buttons Row */}
+                <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', pb: 1, mb: 2, '&::-webkit-scrollbar': { display: 'none' } }}>
+                    {(config?.workingDays || []).map((day) => {
+                        const isSelected = selectedMobileDay === day;
+                        const isToday = day === todayDayName;
+                        const count = entries.filter((e) => e.dayOfWeek === day).length;
+
+                        return (
+                            <Button
+                                key={day}
+                                variant={isSelected ? 'contained' : 'outlined'}
+                                color={isSelected ? 'primary' : 'inherit'}
+                                onClick={() => setSelectedMobileDay(day)}
+                                size="small"
+                                sx={{
+                                    minWidth: 64,
+                                    py: 0.8,
+                                    px: 1.5,
+                                    borderRadius: 2.5,
+                                    border: isSelected ? 'none' : '1px solid #e2e8f0',
+                                    bgcolor: isSelected ? 'primary.main' : '#ffffff',
+                                    color: isSelected ? '#ffffff' : '#334155',
+                                    boxShadow: isSelected ? '0 2px 6px rgba(0,0,0,0.12)' : 'none',
+                                    textTransform: 'none',
+                                    flexShrink: 0,
+                                }}
+                            >
+                                <Box sx={{ textAlign: 'center' }}>
+                                    <Typography variant="body2" fontWeight={700} sx={{ textTransform: 'capitalize' }}>
+                                        {day.slice(0, 3)}
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ fontSize: '0.68rem', opacity: isSelected ? 0.9 : 0.7, display: 'block', lineHeight: 1 }}>
+                                        {isToday ? 'Today' : `${count} classes`}
+                                    </Typography>
+                                </Box>
+                            </Button>
+                        );
+                    })}
+                </Box>
+
+                {/* Day Summary Title */}
+                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5, px: 0.5 }}>
+                    <Typography variant="subtitle2" fontWeight={700} color="text.secondary" sx={{ textTransform: 'capitalize' }}>
+                        {selectedMobileDay} Schedule
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                        {currentMobileDaySchedule.length} of {regularPeriods.length} periods active
+                    </Typography>
+                </Box>
+
+                {/* Simple Period Cards List */}
+                <Stack spacing={1.5}>
+                    {regularPeriods.map((period) => {
+                        const entry = entryMap[`${selectedMobileDay}-${period.periodNumber}`];
+                        const isCovered = coveredPeriodsMap[`${selectedMobileDay}-${period.periodNumber}`] && selectedMobileDay === todayDayName;
+                        const substituteAssignment = substituteAssignmentsMap[`${selectedMobileDay}-${period.periodNumber}`];
+                        const isSubstituting = !!substituteAssignment && selectedMobileDay === todayDayName;
+                        const isFree = !entry && !isSubstituting;
+
+                        const subjectName = isSubstituting
+                            ? substituteAssignment.entry?.subject?.name || 'Substitute Class'
+                            : entry?.subject?.name || entry?.subjectId || 'Free Period';
+
+                        const className = isSubstituting
+                            ? `${substituteAssignment.entry?.class?.name || substituteAssignment.entry?.classId || ''} ${substituteAssignment.entry?.class?.section || substituteAssignment.entry?.sectionId || ''}`
+                            : entry
+                                ? `${entry.class?.name || entry.classId || ''} ${entry.class?.section || ''}`
+                                : 'No class scheduled';
+
+                        const roomInfo = entry?.roomId ? `Room: ${entry.roomId}` : '';
+
+                        return (
+                            <Paper
+                                key={period.periodNumber}
+                                elevation={0}
+                                sx={{
+                                    p: 1.5,
+                                    borderRadius: 2.5,
+                                    border: '1px solid',
+                                    borderColor: isSubstituting
+                                        ? '#f59e0b'
+                                        : isCovered
+                                            ? '#cbd5e1'
+                                            : isFree
+                                                ? '#e2e8f0'
+                                                : '#e2e8f0',
+                                    bgcolor: isFree ? '#f8fafc' : '#ffffff',
+                                    opacity: isCovered ? 0.65 : 1,
+                                }}
+                            >
+                                {/* Top Row: Period Tag + Subject + Time */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, minWidth: 0 }}>
+                                        <Box
+                                            sx={{
+                                                px: 0.9,
+                                                py: 0.2,
+                                                borderRadius: 1.5,
+                                                bgcolor: isSubstituting ? '#fffbe6' : isFree ? '#e2e8f0' : '#eff6ff',
+                                                color: isSubstituting ? '#d97706' : isFree ? '#64748b' : '#2563eb',
+                                                fontWeight: 700,
+                                                fontSize: '0.75rem',
+                                                flexShrink: 0,
+                                            }}
+                                        >
+                                            P{period.periodNumber}
+                                        </Box>
+                                        <Typography
+                                            variant="subtitle1"
+                                            fontWeight={700}
+                                            noWrap
+                                            sx={{
+                                                color: isFree ? 'text.secondary' : 'text.primary',
+                                                textDecoration: isCovered ? 'line-through' : 'none',
+                                                fontSize: '0.95rem',
+                                            }}
+                                        >
+                                            {subjectName}
+                                        </Typography>
+                                    </Box>
+
+                                    <Typography variant="caption" fontWeight={600} color="text.secondary" sx={{ flexShrink: 0 }}>
+                                        {period.startTime} - {period.endTime}
+                                    </Typography>
+                                </Box>
+
+                                {/* Bottom Row: Class, Section, Room, Badges */}
+                                <Box sx={{ pl: 4.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 0.5 }}>
+                                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
+                                        {className} {roomInfo ? `• ${roomInfo}` : ''}
+                                    </Typography>
+
+                                    {isSubstituting && (
+                                        <Chip
+                                            label={`Covering for ${substituteAssignment.originalTeacher?.name || 'Peer'}`}
+                                            size="small"
+                                            color="warning"
+                                            sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }}
+                                        />
+                                    )}
+
+                                    {isCovered && (
+                                        <Chip
+                                            label={`Covered by ${coveredPeriodsMap[`${selectedMobileDay}-${period.periodNumber}`]?.substituteTeacher?.name || 'Sub'}`}
+                                            size="small"
+                                            sx={{ height: 20, fontSize: '0.68rem', bgcolor: '#e2e8f0' }}
+                                        />
+                                    )}
+
+                                    {isFree && (
+                                        <Chip
+                                            label="Free"
+                                            size="small"
+                                            sx={{ height: 20, fontSize: '0.68rem', bgcolor: '#f1f5f9', color: '#64748b' }}
+                                        />
+                                    )}
+                                </Box>
+                            </Paper>
+                        );
+                    })}
+                </Stack>
             </Box>
         );
     }

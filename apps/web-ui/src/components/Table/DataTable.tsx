@@ -220,15 +220,45 @@ function DataTable<T>({
 
         {/* Mobile Pagination */}
         {pagination && totalPages > 1 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2.5, mb: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mt: 2.5,
+              mb: 1,
+              pb: onAddClick ? 9 : 8,
+              gap: 0.75,
+            }}
+          >
             <Pagination
               count={totalPages}
               page={currentPage}
               onChange={handlePageChange}
               color="primary"
               shape="rounded"
-              size="medium"
+              size="small"
+              siblingCount={0}
+              boundaryCount={1}
+              sx={{
+                '& .MuiPagination-ul': {
+                  flexWrap: 'nowrap',
+                  justifyContent: 'center',
+                },
+                '& .MuiPaginationItem-root': {
+                  minWidth: 30,
+                  height: 30,
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  margin: '0 2px',
+                  borderRadius: '8px',
+                },
+              }}
             />
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', fontWeight: 500 }}>
+              Page {currentPage} of {totalPages} ({totalItems} total)
+            </Typography>
           </Box>
         )}
 

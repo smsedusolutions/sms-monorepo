@@ -43,6 +43,7 @@ import {
 } from '../../../../queries/Fee';
 import { useGetClasses } from '../../../../queries/Class';
 import { AppTable } from '../../../../components/shared/AppTable';
+import { useIsMobile } from '../../../../hooks/useIsMobile';
 import type { StudentFeeAccount } from '../../../../types/fee.types';
 
 // Dynamic class options will be mapped from useGetClasses
@@ -55,6 +56,7 @@ const ADJUSTMENT_TYPES = [
 ];
 
 const FeeAssignments: React.FC = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
 
     // Filters
@@ -270,28 +272,36 @@ const FeeAssignments: React.FC = () => {
     const discounts = discountsData?.data || [];
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
+            {/* Header & Actions */}
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, mb: { xs: 2.5, sm: 3.5 }, gap: 2 }}>
                 <Box>
-                    <Typography variant="h4" fontWeight={700} color="text.primary">
+                    <Typography variant="h5" sx={{ fontWeight: 800, fontSize: { xs: '1.3rem', sm: '1.6rem', md: '1.85rem' }, color: '#0f172a' }}>
                         Student Fee Assignments
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontSize: { xs: '0.82rem', sm: '0.875rem' } }}>
                         Map structure templates to students, configure waivers, and adjust ledger line balances.
                     </Typography>
                 </Box>
-                <Stack direction="row" spacing={2}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 1, sm: 1.5 }} sx={{ width: { xs: '100%', md: 'auto' } }}>
                     <Button
                         variant="outlined"
                         color="secondary"
                         component={Link}
                         to="/school-admin/fees/discounts"
                         startIcon={<LocalOfferIcon />}
-                        sx={{ borderRadius: 2 }}
+                        fullWidth={isMobile}
+                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, py: { xs: 1, sm: 0.75 } }}
                     >
                         Discount Templates
                     </Button>
-                    <Button variant="outlined" startIcon={<AssignmentTurnedInIcon />} onClick={() => setOpenAssignModal(true)} sx={{ borderRadius: 2 }}>
+                    <Button
+                        variant="outlined"
+                        startIcon={<AssignmentTurnedInIcon />}
+                        onClick={() => setOpenAssignModal(true)}
+                        fullWidth={isMobile}
+                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, py: { xs: 1, sm: 0.75 } }}
+                    >
                         Assign Class Structure
                     </Button>
                     <Button
@@ -299,7 +309,8 @@ const FeeAssignments: React.FC = () => {
                         startIcon={<AddCircleIcon />}
                         onClick={() => setOpenDiscountModal(true)}
                         disabled={selectedStudentIds.length === 0}
-                        sx={{ borderRadius: 2 }}
+                        fullWidth={isMobile}
+                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, py: { xs: 1, sm: 0.75 } }}
                     >
                         Apply Discount ({selectedStudentIds.length})
                     </Button>
@@ -307,10 +318,10 @@ const FeeAssignments: React.FC = () => {
             </Box>
 
             {/* Filter Section */}
-            <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none', mb: 4 }}>
-                <CardContent sx={{ p: 2 }}>
-                    <Grid container spacing={2} alignItems="center">
-                        <Grid size={{ xs: 12, sm: 3 }}>
+            <Card sx={{ borderRadius: 3, border: '1px solid #e2e8f0', boxShadow: 'none', mb: { xs: 2, sm: 3 } }}>
+                <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+                    <Grid container spacing={1.5} alignItems="center">
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <FormControl fullWidth size="small">
                                 <InputLabel>Academic Year</InputLabel>
                                 <Select value={academicYear} label="Academic Year" onChange={(e) => {
@@ -322,7 +333,7 @@ const FeeAssignments: React.FC = () => {
                                 </Select>
                             </FormControl>
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 3 }}>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <FormControl fullWidth size="small">
                                 <InputLabel>Class</InputLabel>
                                 <Select value={classId} label="Class" onChange={(e) => {
@@ -336,7 +347,7 @@ const FeeAssignments: React.FC = () => {
                                 </Select>
                             </FormControl>
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 3 }}>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <FormControl fullWidth size="small">
                                 <InputLabel>Ledger Status</InputLabel>
                                 <Select value={status} label="Ledger Status" onChange={(e) => {
@@ -352,7 +363,7 @@ const FeeAssignments: React.FC = () => {
                                 </Select>
                             </FormControl>
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 3 }}>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <TextField
                                 fullWidth
                                 size="small"
@@ -368,37 +379,52 @@ const FeeAssignments: React.FC = () => {
                 </CardContent>
             </Card>
 
-            <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                <CardContent sx={{ p: 0 }}>
-                    <AppTable
-                        columns={listColumns}
-                        data={assignments}
-                        isLoading={isLoading}
-                        emptyMessage="No assigned student structures found."
-                        paginationServer={true}
-                        paginationTotalRows={assignmentsData?.pagination?.totalRecords || assignmentsData?.pagination?.total || 0}
-                        onChangePage={(newPage) => setPage(newPage)}
-                        onChangeRowsPerPage={(newLimit) => {
-                            setLimit(newLimit);
-                            setPage(1);
-                        }}
-                        paginationPerPage={limit}
-                    />
-                </CardContent>
-            </Card>
+            {/* Table / Mobile Cards */}
+            <Box sx={{ width: '100%' }}>
+                <AppTable
+                    columns={listColumns}
+                    data={assignments}
+                    isLoading={isLoading}
+                    emptyMessage="No assigned student structures found."
+                    paginationServer={true}
+                    paginationTotalRows={assignmentsData?.pagination?.totalRecords || assignmentsData?.pagination?.total || 0}
+                    onChangePage={(newPage) => setPage(newPage)}
+                    onChangeRowsPerPage={(newLimit) => {
+                        setLimit(newLimit);
+                        setPage(1);
+                    }}
+                    paginationPerPage={limit}
+                />
+            </Box>
 
             {/* Drawer for Student Ledger Breakdowns */}
-            <Drawer anchor="right" open={!!activeDrawerAccount} onClose={() => setActiveDrawerAccount(null)}>
-                <Box sx={{ width: { xs: '100vw', sm: 480 }, p: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                        <Typography variant="h6" fontWeight={700}>Student Fee Summary</Typography>
-                        <IconButton onClick={() => setActiveDrawerAccount(null)}><CloseIcon /></IconButton>
+            <Drawer
+                anchor={isMobile ? 'bottom' : 'right'}
+                open={!!activeDrawerAccount}
+                onClose={() => setActiveDrawerAccount(null)}
+                PaperProps={{
+                    sx: {
+                        width: { xs: '100%', sm: 480 },
+                        maxHeight: { xs: '90dvh', sm: '100vh' },
+                        borderTopLeftRadius: { xs: 16, sm: 0 },
+                        borderTopRightRadius: { xs: 16, sm: 0 },
+                    }
+                }}
+            >
+                <Box sx={{ p: { xs: 2, sm: 3 }, overflowY: 'auto' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5 }}>
+                        <Typography variant="h6" fontWeight={700} sx={{ fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+                            Student Fee Summary
+                        </Typography>
+                        <IconButton onClick={() => setActiveDrawerAccount(null)} size="small">
+                            <CloseIcon />
+                        </IconButton>
                     </Box>
 
                     {activeDrawerAccount && (
-                        <Stack spacing={3}>
+                        <Stack spacing={2.5}>
                             <Card sx={{ bgcolor: '#eff6ff', border: '1px solid #dbeafe', boxShadow: 'none', borderRadius: 3 }}>
-                                <CardContent>
+                                <CardContent sx={{ p: 2 }}>
                                     <Typography variant="subtitle1" fontWeight={700} color="#1e3a8a">{activeDrawerAccount.studentName}</Typography>
                                     <Typography variant="body2" color="text.secondary">Class: {activeDrawerAccount.className}</Typography>
                                     <Typography variant="body2" color="text.secondary">Structure: {activeDrawerAccount.feeStructureName}</Typography>
@@ -431,6 +457,8 @@ const FeeAssignments: React.FC = () => {
                             <Button
                                 variant="contained"
                                 startIcon={<AddCircleIcon />}
+                                fullWidth
+                                sx={{ py: 1, borderRadius: 2, textTransform: 'none', fontWeight: 600 }}
                                 onClick={() => {
                                     setAdjustStudentId(activeDrawerAccount.studentId);
                                     setAdjustCategoryId(activeDrawerAccount.feeBreakdown[0]?.feeCategoryId || '');
@@ -445,8 +473,27 @@ const FeeAssignments: React.FC = () => {
             </Drawer>
 
             {/* Assign Structure Modal */}
-            <Dialog open={openAssignModal} onClose={() => setOpenAssignModal(false)} fullWidth maxWidth="xs">
-                <DialogTitle fontWeight={700}>Bulk Assign Fee Structure</DialogTitle>
+            <Dialog
+                open={openAssignModal}
+                onClose={() => setOpenAssignModal(false)}
+                fullWidth
+                maxWidth="xs"
+                fullScreen={isMobile}
+                PaperProps={{
+                    sx: {
+                        borderRadius: isMobile ? 0 : 3,
+                        maxHeight: isMobile ? '100dvh' : '90vh',
+                    }
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Bulk Assign Fee Structure
+                    {isMobile && (
+                        <IconButton size="small" onClick={() => setOpenAssignModal(false)}>
+                            <CloseIcon />
+                        </IconButton>
+                    )}
+                </DialogTitle>
                 <DialogContent dividers>
                     <Stack spacing={2.5} sx={{ mt: 1 }}>
                         <TextField
@@ -474,22 +521,41 @@ const FeeAssignments: React.FC = () => {
                         </TextField>
                     </Stack>
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ p: { xs: 2, sm: 2 } }}>
                     <Button onClick={() => setOpenAssignModal(false)}>Cancel</Button>
                     <Button variant="contained" onClick={handleAssignSubmit} disabled={assignMutation.isPending}>Assign</Button>
                 </DialogActions>
             </Dialog>
 
             {/* Apply Discount Modal */}
-            <Dialog open={openDiscountModal} onClose={() => setOpenDiscountModal(false)} fullWidth maxWidth="xs">
-                <DialogTitle fontWeight={700}>Apply Discount Template</DialogTitle>
+            <Dialog
+                open={openDiscountModal}
+                onClose={() => setOpenDiscountModal(false)}
+                fullWidth
+                maxWidth="xs"
+                fullScreen={isMobile}
+                PaperProps={{
+                    sx: {
+                        borderRadius: isMobile ? 0 : 3,
+                        maxHeight: isMobile ? '100dvh' : '90vh',
+                    }
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Apply Discount Template
+                    {isMobile && (
+                        <IconButton size="small" onClick={() => setOpenDiscountModal(false)}>
+                            <CloseIcon />
+                        </IconButton>
+                    )}
+                </DialogTitle>
                 <DialogContent dividers>
                     <Stack spacing={2.5} sx={{ mt: 1 }}>
                         <Typography variant="body2" color="text.secondary">
                             Applying discount to <strong>{selectedStudentIds.length}</strong> selected students.
                         </Typography>
                         {discounts.length === 0 ? (
-                            <Box sx={{ py: 2, textCombineUpright: 'center' }}>
+                            <Box sx={{ py: 2, textAlign: 'center' }}>
                                 <Alert severity="warning" sx={{ mb: 2 }}>
                                     No discount templates found. Please create a discount template first.
                                 </Alert>
@@ -517,7 +583,7 @@ const FeeAssignments: React.FC = () => {
                                     const dVal = d.discountValue !== undefined ? d.discountValue : d.value;
                                     return (
                                         <MenuItem key={dId} value={dId}>
-                                            {d.name} ({d.discountType === 'percentage' ? `${dVal}%` : formatCurrency(dVal)} waiver)
+                                             {d.name} ({d.discountType === 'percentage' ? `${dVal}%` : formatCurrency(dVal)} waiver)
                                         </MenuItem>
                                     );
                                 })}
@@ -525,7 +591,7 @@ const FeeAssignments: React.FC = () => {
                         )}
                     </Stack>
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ p: { xs: 2, sm: 2 } }}>
                     <Button onClick={() => setOpenDiscountModal(false)}>Cancel</Button>
                     <Button
                         variant="contained"
@@ -538,8 +604,27 @@ const FeeAssignments: React.FC = () => {
             </Dialog>
 
             {/* Apply Adjustment Modal */}
-            <Dialog open={openAdjustmentModal} onClose={() => setOpenAdjustmentModal(false)} fullWidth maxWidth="xs">
-                <DialogTitle fontWeight={700}>Record Manual Adjustment</DialogTitle>
+            <Dialog
+                open={openAdjustmentModal}
+                onClose={() => setOpenAdjustmentModal(false)}
+                fullWidth
+                maxWidth="xs"
+                fullScreen={isMobile}
+                PaperProps={{
+                    sx: {
+                        borderRadius: isMobile ? 0 : 3,
+                        maxHeight: isMobile ? '100dvh' : '90vh',
+                    }
+                }}
+            >
+                <DialogTitle sx={{ fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    Record Manual Adjustment
+                    {isMobile && (
+                        <IconButton size="small" onClick={() => setOpenAdjustmentModal(false)}>
+                            <CloseIcon />
+                        </IconButton>
+                    )}
+                </DialogTitle>
                 <DialogContent dividers>
                     {activeDrawerAccount && (
                         <Stack spacing={2.5} sx={{ mt: 1 }}>
@@ -586,7 +671,7 @@ const FeeAssignments: React.FC = () => {
                         </Stack>
                     )}
                 </DialogContent>
-                <DialogActions>
+                <DialogActions sx={{ p: { xs: 2, sm: 2 } }}>
                     <Button onClick={() => setOpenAdjustmentModal(false)}>Cancel</Button>
                     <Button variant="contained" onClick={handleApplyAdjustmentSubmit} disabled={adjustMutation.isPending}>Apply Adjustment</Button>
                 </DialogActions>

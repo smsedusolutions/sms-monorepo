@@ -27,6 +27,7 @@ import {
   Chip,
   Tooltip,
   Collapse,
+  Paper,
 } from "@mui/material";
 import {
   AutoAwesome as MagicIcon,
@@ -42,6 +43,7 @@ import {
 } from "@mui/icons-material";
 import { useNotificationStore } from "../../stores/notificationStore";
 import { useValidateAITimetable, useGenerateAITimetable, useGetAIDraft, useSuggestAIRules } from "../../queries/Timetable";
+import { useIsMobile } from "../../hooks/useIsMobile";
 import type { Subject } from "../../types";
 import { AppButton } from "../shared/AppButton";
 import { AppReorderableList } from "../shared/AppReorderableList";
@@ -127,6 +129,7 @@ const AITimetableGenerateDialog = ({
   currentClassId = "",
   currentSectionId = "",
 }: AITimetableGenerateDialogProps) => {
+  const isMobile = useIsMobile();
   const [activeStep, setActiveStep] = useState(0);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   const [priorityPanelOpen, setPriorityPanelOpen] = useState(true);
@@ -366,17 +369,52 @@ const AITimetableGenerateDialog = ({
   }, [schedulableSubjects]);
 
   return (
-    <Dialog open={open} onClose={() => { if (!generateMutation.isPending) { onClose(); setForceNew(false); } }} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <MagicIcon color="primary" /> AI Timetable Generation
+    <Dialog
+      open={open}
+      onClose={() => {
+        if (!generateMutation.isPending) {
+          onClose();
+          setForceNew(false);
+        }
+      }}
+      maxWidth="md"
+      fullWidth
+      fullScreen={isMobile}
+      PaperProps={{
+        sx: {
+          borderRadius: isMobile ? 0 : 3,
+          maxHeight: isMobile ? '100dvh' : '90vh',
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+          py: { xs: 1.5, sm: 2 },
+          px: { xs: 2, sm: 3 },
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          <MagicIcon color="primary" sx={{ fontSize: { xs: 22, sm: 26 } }} />
+          <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1.05rem', sm: '1.25rem' } }}>
+            AI Timetable Generation
+          </Typography>
         </Box>
         <IconButton
           aria-label="close"
-          onClick={() => { if (!generateMutation.isPending) { onClose(); setForceNew(false); } }}
-          sx={{
-            color: (theme: any) => theme.palette.grey[500],
+          onClick={() => {
+            if (!generateMutation.isPending) {
+              onClose();
+              setForceNew(false);
+            }
           }}
+          size="small"
+          edge="end"
+          sx={{ color: 'text.secondary' }}
         >
           <CloseIcon />
         </IconButton>
@@ -385,54 +423,142 @@ const AITimetableGenerateDialog = ({
       {/* ---- Draft Exists Warning Screen ---- */}
       {showDraftWarning ? (
         <>
-          <DialogContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', py: 4, gap: 3 }}>
-              <MagicIcon color="secondary" sx={{ fontSize: 64 }} />
-              <Typography variant="h6">You have an existing draft (v{existingDraft?.version})</Typography>
-              <Typography color="text.secondary" sx={{ maxWidth: 420 }}>
-                A school-wide timetable draft already exists. Would you like to resume reviewing it, or generate a brand new one for the entire school?
-              </Typography>
-              <Alert severity="warning" sx={{ width: '100%', textAlign: 'left' }}>
+          <DialogContent sx={{ p: { xs: 2, sm: 3 }, overflowY: 'auto' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center',
+                py: { xs: 3, sm: 5 },
+                px: { xs: 1, sm: 3 },
+                gap: { xs: 2.5, sm: 3 },
+                maxWidth: 540,
+                mx: 'auto',
+              }}
+            >
+              <Box
+                sx={{
+                  width: { xs: 64, sm: 80 },
+                  height: { xs: 64, sm: 80 },
+                  borderRadius: '50%',
+                  bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.1),
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <MagicIcon color="secondary" sx={{ fontSize: { xs: 36, sm: 48 } }} />
+              </Box>
+
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700, fontSize: { xs: '1.15rem', sm: '1.35rem' }, mb: 1 }}>
+                  You have an existing draft (v{existingDraft?.version})
+                </Typography>
+                <Typography color="text.secondary" sx={{ fontSize: { xs: '0.875rem', sm: '0.95rem' }, lineHeight: 1.6 }}>
+                  A school-wide timetable draft already exists. Would you like to resume reviewing it, or generate a brand new one for the entire school?
+                </Typography>
+              </Box>
+
+              <Alert
+                severity="warning"
+                sx={{
+                  width: '100%',
+                  textAlign: 'left',
+                  borderRadius: 2,
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                }}
+              >
                 Generating a new draft will archive the current one (Version {existingDraft?.version} → archived). The new draft will be generated for ALL active classes in the school.
               </Alert>
             </Box>
           </DialogContent>
-          <DialogActions sx={{ p: 3, gap: 1 }}>
-            <Button onClick={() => { onClose(); setForceNew(false); }}>Cancel</Button>
-            <Box sx={{ flex: '1 1 auto' }} />
-            <Button variant="outlined" color="secondary" onClick={handleResumeDraft}>
+          <DialogActions
+            sx={{
+              p: { xs: 2, sm: 3 },
+              borderTop: '1px solid',
+              borderColor: 'divider',
+              flexDirection: { xs: 'column-reverse', sm: 'row' },
+              gap: { xs: 1.25, sm: 1.5 },
+            }}
+          >
+            <Button
+              fullWidth={isMobile}
+              onClick={() => {
+                onClose();
+                setForceNew(false);
+              }}
+              sx={{ py: { xs: 1, sm: 0.75 } }}
+            >
+              Cancel
+            </Button>
+            {!isMobile && <Box sx={{ flex: '1 1 auto' }} />}
+            <Button
+              fullWidth={isMobile}
+              variant="outlined"
+              color="secondary"
+              onClick={handleResumeDraft}
+              sx={{ py: { xs: 1, sm: 0.75 }, fontWeight: 600 }}
+            >
               Resume Existing Draft (v{existingDraft?.version})
             </Button>
-            <AppButton variant="contained" startIcon={<MagicIcon />} onClick={() => setForceNew(true)}>
+            <AppButton
+              fullWidth={isMobile}
+              variant="contained"
+              startIcon={<MagicIcon />}
+              onClick={() => setForceNew(true)}
+              sx={{ py: { xs: 1, sm: 0.75 } }}
+            >
               Generate New Draft
             </AppButton>
           </DialogActions>
         </>
       ) : (
         <>
-          <Box sx={{ width: '100%', pt: 2, px: 3 }}>
-            <Stepper activeStep={activeStep}>
+          <Box
+            sx={{
+              width: '100%',
+              pt: { xs: 1.5, sm: 2.5 },
+              pb: { xs: 0.5, sm: 1 },
+              px: { xs: 1.5, sm: 3 },
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              bgcolor: 'background.default',
+            }}
+          >
+            <Stepper activeStep={activeStep} alternativeLabel={isMobile}>
               {steps.map((label) => (
                 <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
+                  <StepLabel
+                    sx={{
+                      '& .MuiStepLabel-label': {
+                        fontSize: { xs: '0.72rem', sm: '0.875rem' },
+                        fontWeight: 600,
+                        mt: { xs: 0.5, sm: 0 },
+                      },
+                    }}
+                  >
+                    {label}
+                  </StepLabel>
                 </Step>
               ))}
             </Stepper>
           </Box>
 
-          <DialogContent sx={{ minHeight: '400px' }}>
+          <DialogContent sx={{ p: { xs: 2, sm: 3 }, overflowY: 'auto', minHeight: { xs: 'auto', sm: '400px' } }}>
             {activeStep === 0 && (
-              <Box sx={{ mt: 1 }}>
+              <Box sx={{ mt: 0.5 }}>
                 {/* ===== INSTRUCTIONS TRIGGER BUTTON ===== */}
                 <Box
                   sx={{
                     display: 'flex',
-                    alignItems: 'center',
-                    justify: 'space-between',
-                    gap: 2,
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'stretch', sm: 'center' },
+                    justifyContent: 'space-between',
+                    gap: { xs: 1.5, sm: 2 },
                     mb: 2.5,
-                    p: 2,
-                    px: 2.5,
+                    p: { xs: 1.75, sm: 2 },
+                    px: { xs: 2, sm: 2.5 },
                     bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
                     border: '1px solid',
                     borderColor: (theme) => alpha(theme.palette.primary.main, 0.18),
@@ -440,8 +566,8 @@ const AITimetableGenerateDialog = ({
                   }}
                 >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1, minWidth: 0 }}>
-                    <HelpIcon color="primary" sx={{ fontSize: 22, flexShrink: 0 }} />
-                    <Typography variant="body2" color="text.primary" fontWeight={600}>
+                    <HelpIcon color="primary" sx={{ fontSize: { xs: 20, sm: 22 }, flexShrink: 0 }} />
+                    <Typography variant="body2" color="text.primary" fontWeight={600} sx={{ fontSize: { xs: '0.82rem', sm: '0.875rem' } }}>
                       Configure weekly period quotas and daily limits for each subject.
                     </Typography>
                   </Box>
@@ -451,6 +577,7 @@ const AITimetableGenerateDialog = ({
                     size="small"
                     startIcon={<HelpIcon />}
                     onClick={() => setInstructionsOpen(true)}
+                    fullWidth={isMobile}
                     sx={{
                       borderRadius: 2,
                       textTransform: 'none',
@@ -480,35 +607,48 @@ const AITimetableGenerateDialog = ({
                 >
                   {/* Panel header */}
                   <Box
-                    onClick={() => setPriorityPanelOpen(p => !p)}
+                    onClick={() => setPriorityPanelOpen((p) => !p)}
                     sx={{
                       display: 'flex',
-                      alignItems: 'center',
+                      flexDirection: { xs: 'column', sm: 'row' },
+                      alignItems: { xs: 'stretch', sm: 'center' },
                       justifyContent: 'space-between',
-                      gap: 2,
-                      px: 2.5,
-                      py: 1.5,
+                      gap: { xs: 1.5, sm: 2 },
+                      p: { xs: 1.75, sm: 2 },
+                      px: { xs: 2, sm: 2.5 },
                       bgcolor: (theme) => alpha(theme.palette.warning.main, 0.06),
                       cursor: 'pointer',
                       userSelect: 'none',
                     }}
                   >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      <SuggestIcon sx={{ color: 'warning.main', fontSize: 22 }} />
-                      <Box>
-                        <Typography variant="subtitle2" fontWeight={700} color="warning.dark">
-                          🏆 Subject Priority Order
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Rank subjects by importance — top = Core, bottom = Minor
-                        </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: { xs: '100%', sm: 'auto' }, minWidth: 0 }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+                        <SuggestIcon sx={{ color: 'warning.main', fontSize: 22, flexShrink: 0 }} />
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="subtitle2" fontWeight={700} color="warning.dark" sx={{ fontSize: { xs: '0.875rem', sm: '0.95rem' } }}>
+                            🏆 Subject Priority Order
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: { xs: '0.75rem', sm: '0.8rem' } }}>
+                            Rank subjects by importance — top = Core, bottom = Minor
+                          </Typography>
+                        </Box>
                       </Box>
+                      {isMobile && (
+                        <IconButton size="small" sx={{ flexShrink: 0 }}>
+                          <ExpandMoreIcon sx={{ transform: priorityPanelOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />
+                        </IconButton>
+                      )}
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: { xs: '100%', sm: 'auto' } }}>
                       <AppButton
                         variant="contained"
                         size="small"
-                        onClick={(e: React.MouseEvent) => { e.stopPropagation(); handleAutoSuggest(); }}
+                        fullWidth={isMobile}
+                        onClick={(e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          handleAutoSuggest();
+                        }}
                         loading={suggestMutation.isPending}
                         startIcon={<MagicIcon />}
                         sx={{
@@ -518,18 +658,21 @@ const AITimetableGenerateDialog = ({
                           fontWeight: 700,
                           borderRadius: 2,
                           boxShadow: 'none',
+                          py: { xs: 0.75, sm: 0.5 },
                           '&:hover': { bgcolor: 'warning.dark', boxShadow: '0 2px 8px rgba(0,0,0,0.18)' },
                         }}
                       >
                         Auto-Suggest Values
                       </AppButton>
-                      <IconButton size="small">
-                        <ExpandMoreIcon sx={{ transform: priorityPanelOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />
-                      </IconButton>
+                      {!isMobile && (
+                        <IconButton size="small">
+                          <ExpandMoreIcon sx={{ transform: priorityPanelOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.2s' }} />
+                        </IconButton>
+                      )}
                     </Box>
                   </Box>
 
-                  {/* Draggable priority list using reusable AppReorderableList */}
+                  {/* Draggable priority list */}
                   <Collapse in={priorityPanelOpen}>
                     <Box sx={{ px: 1, py: 0.5 }}>
                       <AppReorderableList
@@ -538,7 +681,10 @@ const AITimetableGenerateDialog = ({
                         maxHeight={250}
                         renderItem={(item, index, isDragging) => {
                           const tierColors: Record<string, 'error' | 'warning' | 'info' | 'default'> = {
-                            Core: 'error', Major: 'warning', Standard: 'info', Minor: 'default'
+                            Core: 'error',
+                            Major: 'warning',
+                            Standard: 'info',
+                            Minor: 'default',
                           };
                           return (
                             <Box
@@ -547,7 +693,7 @@ const AITimetableGenerateDialog = ({
                                 alignItems: 'center',
                                 gap: 1,
                                 py: 0.75,
-                                px: 1,
+                                px: { xs: 0.75, sm: 1 },
                                 borderRadius: 1.5,
                                 bgcolor: isDragging
                                   ? (theme) => alpha(theme.palette.warning.main, 0.15)
@@ -575,7 +721,18 @@ const AITimetableGenerateDialog = ({
                               >
                                 {index + 1}
                               </Typography>
-                              <Typography variant="body2" sx={{ flex: 1, fontWeight: 600 }}>
+                              <Typography
+                                variant="body2"
+                                sx={{
+                                  flex: 1,
+                                  fontWeight: 600,
+                                  fontSize: { xs: '0.8rem', sm: '0.875rem' },
+                                  minWidth: 0,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
                                 {item.displayName}
                               </Typography>
                               {item.tier && (
@@ -584,16 +741,19 @@ const AITimetableGenerateDialog = ({
                                   size="small"
                                   color={tierColors[item.tier] || 'default'}
                                   variant="outlined"
-                                  sx={{ fontSize: '0.65rem', height: 20, px: 0.5 }}
+                                  sx={{ fontSize: '0.65rem', height: 20, px: 0.5, flexShrink: 0 }}
                                 />
                               )}
-                              <Box sx={{ display: 'flex', gap: 0.25 }}>
+                              <Box sx={{ display: 'flex', gap: 0.25, flexShrink: 0 }}>
                                 <Tooltip title="Move up (higher priority)">
                                   <span>
                                     <IconButton
                                       size="small"
                                       disabled={index === 0}
-                                      onClick={(e) => { e.stopPropagation(); handleMoveUp(index); }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMoveUp(index);
+                                      }}
                                       sx={{ p: 0.25 }}
                                     >
                                       <ArrowUpIcon sx={{ fontSize: 16 }} />
@@ -605,7 +765,10 @@ const AITimetableGenerateDialog = ({
                                     <IconButton
                                       size="small"
                                       disabled={index === priorityOrder.length - 1}
-                                      onClick={(e) => { e.stopPropagation(); handleMoveDown(index); }}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMoveDown(index);
+                                      }}
                                       sx={{ p: 0.25 }}
                                     >
                                       <ArrowDownIcon sx={{ fontSize: 16 }} />
@@ -631,7 +794,21 @@ const AITimetableGenerateDialog = ({
                 </Box>
 
                 {/* ===== HALF-DAY SATURDAY ===== */}
-                <Box sx={{ mb: 3, p: 2, bgcolor: 'primary.lighter', borderRadius: 1, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Box
+                  sx={{
+                    mb: 3,
+                    p: { xs: 1.75, sm: 2 },
+                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.05),
+                    border: '1px solid',
+                    borderColor: (theme) => alpha(theme.palette.primary.main, 0.15),
+                    borderRadius: 2,
+                    display: 'flex',
+                    flexDirection: { xs: 'column', sm: 'row' },
+                    alignItems: { xs: 'stretch', sm: 'center' },
+                    justifyContent: 'space-between',
+                    gap: { xs: 1.5, sm: 2 },
+                  }}
+                >
                   <FormControlLabel
                     control={
                       <Switch
@@ -639,7 +816,16 @@ const AITimetableGenerateDialog = ({
                         onChange={(e) => setHalfDaySaturday(e.target.checked)}
                       />
                     }
-                    label={<Typography variant="body2" fontWeight="bold">Half-Day Saturday</Typography>}
+                    label={
+                      <Box>
+                        <Typography variant="body2" fontWeight={700}>
+                          Half-Day Saturday
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Cap maximum periods on Saturdays
+                        </Typography>
+                      </Box>
+                    }
                   />
                   {halfDaySaturday && (
                     <TextField
@@ -651,154 +837,226 @@ const AITimetableGenerateDialog = ({
                         const val = e.target.value.replace(/\D/g, "");
                         setSaturdayPeriods(val === "" ? 0 : parseInt(val, 10));
                       }}
-                      sx={{ width: '130px', bgcolor: 'white' }}
+                      inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                      sx={{
+                        width: { xs: '100%', sm: '150px' },
+                        bgcolor: 'background.paper',
+                        borderRadius: 1,
+                      }}
                     />
                   )}
                 </Box>
 
                 {/* ===== SUBJECT LIST ===== */}
-                <List>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                   {groupedSubjects.map((group, groupIdx) => (
                     <Box key={group.groupName || `standalone-${groupIdx}`}>
                       {/* Section header for sub-subject groups */}
                       {group.groupName && (
-                        <Box sx={{ px: 2, pt: groupIdx > 0 ? 2 : 0, pb: 0.5 }}>
+                        <Box sx={{ px: 1, pt: groupIdx > 0 ? 2 : 0.5, pb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                           <Typography
                             variant="overline"
-                            color="text.secondary"
-                            sx={{ fontWeight: 700, letterSpacing: 1 }}
+                            color="primary.main"
+                            sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}
                           >
-                            {group.groupName}
+                            📂 {group.groupName}
                           </Typography>
+                          <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
                         </Box>
                       )}
 
-                      {group.items.map(item => (
-                        <ListItem
-                          key={item.subject.subjectId}
-                          sx={{
-                            bgcolor: 'background.paper',
-                            mb: 1,
-                            borderRadius: 1,
-                            border: '1px solid #eee',
-                            px: 2,
-                            ml: item.parentName ? 2 : 0,
-                            borderLeft: item.parentName ? '3px solid' : '1px solid #eee',
-                            borderLeftColor: item.parentName ? 'primary.light' : '#eee',
-                          }}
-                        >
-                          <ListItemText
-                            primary={item.displayName}
-                            secondary={item.subject.code}
-                            sx={{ flex: 1 }}
-                          />
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <TextField
-                              label="P/Week"
-                              type="text"
-                              size="small"
-                              value={rules[item.subject.subjectId]?.periodsPerWeek ?? 0}
-                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                const val = e.target.value.replace(/\D/g, "");
-                                handleRuleChange(item.subject.subjectId, 'periodsPerWeek', val === "" ? 0 : parseInt(val, 10));
-                              }}
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+                        {group.items.map((item) => {
+                          const isSuggested = suggestedSubjectIds.has(item.subject.subjectId);
+                          const tier = tierLabels[item.subject.subjectId];
+
+                          return (
+                            <Paper
+                              key={item.subject.subjectId}
+                              elevation={0}
                               sx={{
-                                width: '100px',
-                                '& .MuiOutlinedInput-root': suggestedSubjectIds.has(item.subject.subjectId)
-                                  ? { borderColor: 'success.main' }
-                                  : {},
+                                p: { xs: 1.75, sm: 2 },
+                                borderRadius: 2,
+                                border: '1px solid',
+                                borderColor: isSuggested ? 'success.light' : 'divider',
+                                bgcolor: isSuggested ? alpha('#4caf50', 0.03) : 'background.paper',
+                                ml: item.parentName ? { xs: 1, sm: 2 } : 0,
+                                borderLeft: item.parentName ? '3px solid' : undefined,
+                                borderLeftColor: item.parentName ? 'primary.main' : undefined,
+                                transition: 'all 0.2s ease',
+                                '&:hover': {
+                                  borderColor: isSuggested ? 'success.main' : 'primary.light',
+                                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                                },
                               }}
-                            />
-                            <TextField
-                              label="Max / Day"
-                              type="text"
-                              size="small"
-                              title="Max periods of this subject in a single day"
-                              value={rules[item.subject.subjectId]?.maxPeriodsPerDay ?? 1}
-                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                const val = e.target.value.replace(/\D/g, "");
-                                handleRuleChange(item.subject.subjectId, 'maxPeriodsPerDay', val === "" ? 0 : parseInt(val, 10));
-                              }}
-                              sx={{ width: '100px' }}
-                            />
-                            <FormControlLabel
-                              control={
-                                <Switch
-                                  checked={rules[item.subject.subjectId]?.morningPriority || false}
-                                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleRuleChange(item.subject.subjectId, 'morningPriority', e.target.checked)}
-                                />
-                              }
-                              label={<Typography variant="caption">Morning</Typography>}
-                              labelPlacement="bottom"
-                            />
-                            {suggestedSubjectIds.has(item.subject.subjectId) && (
-                              <Tooltip title={`Auto-suggested (${tierLabels[item.subject.subjectId] || ''} tier) — edit to override`}>
-                                <Chip
-                                  icon={<MagicIcon sx={{ fontSize: '14px !important' }} />}
-                                  label="✨"
-                                  size="small"
-                                  color="success"
-                                  variant="outlined"
-                                  sx={{ fontSize: '0.65rem', height: 22, cursor: 'help' }}
-                                />
-                              </Tooltip>
-                            )}
-                          </Box>
-                        </ListItem>
-                      ))}
+                            >
+                              {/* Responsive Layout: Flex Column on mobile (xs), Flex Row on desktop (md+) */}
+                              <Box
+                                sx={{
+                                  display: 'flex',
+                                  flexDirection: { xs: 'column', md: 'row' },
+                                  alignItems: { xs: 'stretch', md: 'center' },
+                                  justifyContent: 'space-between',
+                                  gap: { xs: 1.5, md: 2 },
+                                }}
+                              >
+                                {/* Subject Info Header (Title, Code badge, Auto-suggest chip) */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, minWidth: 0, flex: 1 }}>
+                                  <Box sx={{ minWidth: 0 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                                      <Typography variant="body1" sx={{ fontWeight: 700, fontSize: { xs: '0.9rem', sm: '0.95rem' }, color: 'text.primary' }}>
+                                        {item.displayName}
+                                      </Typography>
+                                      {item.subject.code && (
+                                        <Chip
+                                          label={item.subject.code}
+                                          size="small"
+                                          variant="outlined"
+                                          sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600, color: 'text.secondary' }}
+                                        />
+                                      )}
+                                    </Box>
+                                  </Box>
+
+                                  {isSuggested && (
+                                    <Tooltip title={`Auto-suggested${tier ? ` (${tier} priority)` : ''} — modify to customize`}>
+                                      <Chip
+                                        icon={<MagicIcon sx={{ fontSize: '14px !important' }} />}
+                                        label={tier ? `✨ ${tier}` : "✨ Auto"}
+                                        size="small"
+                                        color="success"
+                                        variant="filled"
+                                        sx={{ fontSize: '0.68rem', height: 22, fontWeight: 700, flexShrink: 0 }}
+                                      />
+                                    </Tooltip>
+                                  )}
+                                </Box>
+
+                                {/* Controls Grid / Row */}
+                                <Box
+                                  sx={{
+                                    display: 'grid',
+                                    gridTemplateColumns: { xs: '1fr 1fr auto', sm: '110px 110px auto' },
+                                    alignItems: 'center',
+                                    gap: { xs: 1.25, sm: 1.5 },
+                                  }}
+                                >
+                                  <TextField
+                                    label="P/Week"
+                                    type="text"
+                                    size="small"
+                                    value={rules[item.subject.subjectId]?.periodsPerWeek ?? 0}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                      const val = e.target.value.replace(/\D/g, "");
+                                      handleRuleChange(item.subject.subjectId, 'periodsPerWeek', val === "" ? 0 : parseInt(val, 10));
+                                    }}
+                                    inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                                    sx={{
+                                      '& .MuiOutlinedInput-root': isSuggested
+                                        ? { borderColor: 'success.main' }
+                                        : {},
+                                    }}
+                                  />
+                                  <TextField
+                                    label="Max / Day"
+                                    type="text"
+                                    size="small"
+                                    title="Max periods of this subject in a single day"
+                                    value={rules[item.subject.subjectId]?.maxPeriodsPerDay ?? 1}
+                                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                      const val = e.target.value.replace(/\D/g, "");
+                                      handleRuleChange(item.subject.subjectId, 'maxPeriodsPerDay', val === "" ? 0 : parseInt(val, 10));
+                                    }}
+                                    inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                                  />
+                                  <FormControlLabel
+                                    control={
+                                      <Switch
+                                        size="small"
+                                        checked={rules[item.subject.subjectId]?.morningPriority || false}
+                                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                          handleRuleChange(item.subject.subjectId, 'morningPriority', e.target.checked)
+                                        }
+                                      />
+                                    }
+                                    label={
+                                      <Typography variant="caption" sx={{ fontSize: '0.72rem', fontWeight: 600, color: 'text.secondary', display: 'block', textAlign: 'center' }}>
+                                        Morning
+                                      </Typography>
+                                    }
+                                    labelPlacement="bottom"
+                                    sx={{ m: 0, '& .MuiFormControlLabel-label': { mt: -0.25 } }}
+                                  />
+                                </Box>
+                              </Box>
+                            </Paper>
+                          );
+                        })}
+                      </Box>
                     </Box>
                   ))}
-                </List>
+                </Box>
               </Box>
             )}
 
             {activeStep === 1 && (
-              <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <Box sx={{ mt: { xs: 2, sm: 4 }, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', px: { xs: 1, sm: 3 } }}>
                 {validateMutation.isPending ? (
                   <>
                     <CircularProgress sx={{ mb: 2 }} />
-                    <Typography>Analyzing school resources & teachers...</Typography>
+                    <Typography variant="body1" fontWeight={600}>Analyzing school resources & teachers...</Typography>
                   </>
                 ) : validationErrors.length > 0 ? (
                   <Box sx={{ width: '100%' }}>
-                    <ErrorIcon color="error" sx={{ fontSize: 60, mb: 2 }} />
-                    <Typography variant="h6" color="error" gutterBottom>Validation Failed</Typography>
-                    <Alert severity="error" sx={{ textAlign: 'left', mb: 2 }}>
+                    <ErrorIcon color="error" sx={{ fontSize: { xs: 48, sm: 60 }, mb: 1.5 }} />
+                    <Typography variant="h6" color="error" gutterBottom sx={{ fontWeight: 700, fontSize: { xs: '1.1rem', sm: '1.25rem' } }}>
+                      Validation Failed
+                    </Typography>
+                    <Alert severity="error" sx={{ textAlign: 'left', mb: 2, borderRadius: 2 }}>
                       The AI cannot mathematically fulfill your requirements based on current teacher assignments.
                     </Alert>
-                    <List sx={{ width: '100%', bgcolor: 'error.lighter', borderRadius: 1 }}>
+                    <List sx={{ width: '100%', bgcolor: 'error.lighter', borderRadius: 2, p: 1 }}>
                       {validationErrors.map((err, i) => (
-                        <ListItem key={i}>
-                          <ListItemText primary={err} />
+                        <ListItem key={i} sx={{ py: 0.5 }}>
+                          <ListItemText
+                            primary={err}
+                            primaryTypographyProps={{ fontSize: { xs: '0.8rem', sm: '0.875rem' }, color: 'error.dark' }}
+                          />
                         </ListItem>
                       ))}
                     </List>
                   </Box>
                 ) : (
-                  <Box>
-                    <CheckIcon color="success" sx={{ fontSize: 60, mb: 2 }} />
-                    <Typography variant="h6" color="success.main" gutterBottom>Perfect!</Typography>
-                    <Typography>You have enough teachers to fulfill all subject quotas. The AI is ready to generate the timetable.</Typography>
+                  <Box sx={{ py: { xs: 2, sm: 4 } }}>
+                    <CheckIcon color="success" sx={{ fontSize: { xs: 48, sm: 60 }, mb: 1.5 }} />
+                    <Typography variant="h6" color="success.main" gutterBottom sx={{ fontWeight: 700 }}>
+                      Perfect!
+                    </Typography>
+                    <Typography color="text.secondary" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' }, maxWidth: 460 }}>
+                      You have enough teachers to fulfill all subject quotas. The AI is ready to generate the timetable.
+                    </Typography>
                   </Box>
                 )}
               </Box>
             )}
 
             {activeStep === 2 && (
-              <Box sx={{ mt: 4, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+              <Box sx={{ mt: { xs: 2, sm: 4 }, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', px: { xs: 1, sm: 3 }, py: { xs: 2, sm: 4 } }}>
                 {!generateMutation.isPending ? (
                   <>
-                    <MagicIcon color="primary" sx={{ fontSize: 60, mb: 2 }} />
-                    <Typography variant="h6" gutterBottom>Ready to Generate</Typography>
-                    <Typography color="text.secondary">
+                    <MagicIcon color="primary" sx={{ fontSize: { xs: 48, sm: 60 }, mb: 2 }} />
+                    <Typography variant="h6" gutterBottom sx={{ fontWeight: 700, fontSize: { xs: '1.15rem', sm: '1.25rem' } }}>
+                      Ready to Generate
+                    </Typography>
+                    <Typography color="text.secondary" sx={{ maxWidth: 480, fontSize: { xs: '0.875rem', sm: '0.95rem' }, lineHeight: 1.6 }}>
                       The AI will now build the complete timetable for all classes, ensuring no teacher clashes and respecting your morning priorities and daily limits.
                     </Typography>
                   </>
                 ) : (
                   <>
-                    <CircularProgress size={60} sx={{ mb: 3 }} />
-                    <Typography variant="h6">Generating Schedule...</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    <CircularProgress size={isMobile ? 48 : 60} sx={{ mb: 3 }} />
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>Generating Schedule...</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, maxWidth: 420 }}>
                       This may take a moment. The AI is solving constraints for all classes and sections.
                     </Typography>
                   </>
@@ -807,20 +1065,29 @@ const AITimetableGenerateDialog = ({
             )}
           </DialogContent>
 
-          <DialogActions sx={{ p: 3 }}>
+          <DialogActions
+            sx={{
+              p: { xs: 2, sm: 3 },
+              borderTop: '1px solid',
+              borderColor: 'divider',
+              display: 'flex',
+              justifyContent: 'space-between',
+            }}
+          >
             <Button
               disabled={activeStep === 0 || generateMutation.isPending}
               onClick={handleBack}
+              sx={{ px: { xs: 2, sm: 3 } }}
             >
               Back
             </Button>
-            <Box sx={{ flex: '1 1 auto' }} />
             {activeStep === steps.length - 1 ? (
               <AppButton
                 variant="contained"
                 onClick={handleGenerate}
                 loading={generateMutation.isPending}
                 startIcon={<MagicIcon />}
+                sx={{ px: { xs: 2.5, sm: 3 } }}
               >
                 Generate Now
               </AppButton>
@@ -830,6 +1097,7 @@ const AITimetableGenerateDialog = ({
                 onClick={handleNext}
                 loading={validateMutation.isPending}
                 disabled={activeStep === 1 && validationErrors.length > 0}
+                sx={{ px: { xs: 2.5, sm: 3 } }}
               >
                 {activeStep === 0 ? "Validate constraints" : "Next"}
               </AppButton>
@@ -837,26 +1105,44 @@ const AITimetableGenerateDialog = ({
           </DialogActions>
         </>
       )}
+
       {/* ===== INSTRUCTIONS DIALOG MODAL ===== */}
       <Dialog
         open={instructionsOpen}
         onClose={() => setInstructionsOpen(false)}
         maxWidth="sm"
         fullWidth
+        fullScreen={isMobile}
+        PaperProps={{
+          sx: {
+            borderRadius: isMobile ? 0 : 3,
+            maxHeight: isMobile ? '100dvh' : '90vh',
+          },
+        }}
       >
-        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
+        <DialogTitle
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            py: { xs: 1.5, sm: 2 },
+            px: { xs: 2, sm: 3 },
+          }}
+        >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <HelpIcon color="info" />
-            <Typography variant="h6" fontWeight={600} color="primary.main">
-              How to Fill This Form (Guide & Instructions)
+            <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ fontSize: { xs: '1rem', sm: '1.2rem' } }}>
+              How to Fill This Form
             </Typography>
           </Box>
-          <IconButton onClick={() => setInstructionsOpen(false)} size="small">
+          <IconButton onClick={() => setInstructionsOpen(false)} size="small" edge="end">
             <CloseIcon />
           </IconButton>
         </DialogTitle>
 
-        <DialogContent dividers sx={{ py: 2.5 }}>
+        <DialogContent sx={{ p: { xs: 2, sm: 3 }, overflowY: 'auto' }}>
           <Typography variant="body2" sx={{ mb: 2.5, lineHeight: 1.7, color: 'text.primary' }}>
             Set up how many times each subject should appear in every class's weekly timetable. The AI will automatically build a timetable for <strong>all classes and sections</strong> without any clashes.
           </Typography>
@@ -923,8 +1209,8 @@ const AITimetableGenerateDialog = ({
           </Box>
         </DialogContent>
 
-        <DialogActions sx={{ px: 3, py: 1.5 }}>
-          <AppButton variant="contained" onClick={() => setInstructionsOpen(false)}>
+        <DialogActions sx={{ p: { xs: 2, sm: 2.5 }, borderTop: '1px solid', borderColor: 'divider' }}>
+          <AppButton fullWidth={isMobile} variant="contained" onClick={() => setInstructionsOpen(false)}>
             Got It
           </AppButton>
         </DialogActions>

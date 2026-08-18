@@ -309,13 +309,34 @@ const NotificationsPage: React.FC = () => {
             </Card>
 
             {pagination && pagination.pages > 1 && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', mt: 3, mb: 1, pb: { xs: 8, sm: 2 }, gap: 0.75 }}>
                     <Pagination
                         count={pagination.pages}
                         page={page}
                         onChange={(_, value) => setPage(value)}
                         color="primary"
+                        shape="rounded"
+                        size="small"
+                        siblingCount={0}
+                        boundaryCount={1}
+                        sx={{
+                            '& .MuiPagination-ul': {
+                                flexWrap: 'nowrap',
+                                justifyContent: 'center',
+                            },
+                            '& .MuiPaginationItem-root': {
+                                minWidth: 30,
+                                height: 30,
+                                fontSize: '0.78rem',
+                                fontWeight: 600,
+                                margin: '0 2px',
+                                borderRadius: '8px',
+                            },
+                        }}
                     />
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', fontWeight: 500 }}>
+                        Page {page} of {pagination.pages} ({pagination.total || 0} total)
+                    </Typography>
                 </Box>
             )}
         </Box>

@@ -6,8 +6,6 @@ import {
     Box,
     Typography,
     Button,
-    Card,
-    CardContent,
     Chip,
     Stack,
     IconButton,
@@ -38,6 +36,7 @@ import {
 } from '../../../../queries/Fee';
 import { AppTable } from '../../../../components/shared/AppTable';
 import type { FeeDiscount } from '../../../../types/fee.types';
+import { useIsMobile } from '../../../../hooks/useIsMobile';
 
 const EMPTY_FORM = {
     name: '',
@@ -49,6 +48,7 @@ const EMPTY_FORM = {
 };
 
 const FeeDiscounts: React.FC = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
 
     const { data: discountsData, isLoading } = useGetDiscounts(schoolId);
@@ -217,42 +217,50 @@ const FeeDiscounts: React.FC = () => {
     const isSaving = createMutation.isPending || updateMutation.isPending;
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
             {/* Header */}
-            <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 4 }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2} sx={{ mb: 3 }}>
                 <Box>
-                    <Typography variant="h5" fontWeight={700}>Fee Discounts & Scholarships</Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="h5" fontWeight={700} sx={{ fontSize: { xs: '1.3rem', sm: '1.5rem' } }}>Fee Discounts & Scholarships</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                         Create discount templates to apply percentage or flat-rate waivers to student fee accounts.
                     </Typography>
                 </Box>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} sx={{ borderRadius: 3 }}>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate} fullWidth={isMobile} sx={{ borderRadius: 2 }}>
                     Create Discount
                 </Button>
             </Stack>
 
             {/* Summary chips */}
             {discounts.length > 0 && (
-                <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
-                    <Chip label={`${discounts.length} Template${discounts.length !== 1 ? 's' : ''}`} color="primary" />
-                    <Chip label={`${discounts.filter(d => d.discountType === 'percentage').length} Percentage`} variant="outlined" icon={<PercentIcon />} />
-                    <Chip label={`${discounts.filter(d => d.discountType === 'flat').length} Flat Amount`} variant="outlined" icon={<CurrencyRupeeIcon />} />
+                <Stack direction="row" spacing={1} flexWrap="wrap" gap={1} sx={{ mb: 3 }}>
+                    <Chip label={`${discounts.length} Template${discounts.length !== 1 ? 's' : ''}`} color="primary" size="small" />
+                    <Chip label={`${discounts.filter(d => d.discountType === 'percentage').length} Percentage`} variant="outlined" icon={<PercentIcon />} size="small" />
+                    <Chip label={`${discounts.filter(d => d.discountType === 'flat').length} Flat Amount`} variant="outlined" icon={<CurrencyRupeeIcon />} size="small" />
                 </Stack>
             )}
 
-            <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                <CardContent>
-                    <AppTable
-                        columns={columns}
-                        data={discounts}
-                        isLoading={isLoading}
-                        emptyMessage="No discount templates yet. Click 'Create Discount' to add your first template."
-                    />
-                </CardContent>
-            </Card>
+            <AppTable
+                columns={columns}
+                data={discounts}
+                isLoading={isLoading}
+                emptyMessage="No discount templates yet. Click 'Create Discount' to add your first template."
+            />
 
             {/* Create / Edit Dialog */}
-            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+            <Dialog
+                open={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+                fullScreen={isMobile}
+                PaperProps={{
+                    sx: {
+                        borderRadius: isMobile ? 0 : 3,
+                        maxHeight: isMobile ? '100dvh' : '90vh',
+                    }
+                }}
+            >
                 <DialogTitle fontWeight={700}>
                     {editTarget ? 'Edit Discount Template' : 'Create Discount Template'}
                 </DialogTitle>

@@ -37,8 +37,10 @@ import {
 } from '../../../../queries/Fee';
 import { AppTable } from '../../../../components/shared/AppTable';
 import type { StudentFeeAccount } from '../../../../types/fee.types';
+import { useIsMobile } from '../../../../hooks/useIsMobile';
 
 const FeeAccounts: React.FC = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
     const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
@@ -185,53 +187,53 @@ const FeeAccounts: React.FC = () => {
 
     if (selectedAccount) {
         return (
-            <Box sx={{ p: { xs: 2, sm: 3 } }}>
+            <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
                 {/* Header detail view */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-                    <IconButton onClick={() => setSelectedAccount(null)} color="primary">
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, mb: 3 }}>
+                    <IconButton onClick={() => setSelectedAccount(null)} color="primary" sx={{ mt: 0.5 }}>
                         <ArrowBackIcon />
                     </IconButton>
-                    <Box>
-                        <Stack direction="row" spacing={2} alignItems="center">
-                            <Typography variant="h5" fontWeight={700}>{selectedAccount.studentName}</Typography>
+                    <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 0.5, sm: 1.5 }} alignItems={{ xs: 'flex-start', sm: 'center' }}>
+                            <Typography variant="h5" fontWeight={700} sx={{ fontSize: { xs: '1.2rem', sm: '1.5rem' } }}>{selectedAccount.studentName}</Typography>
                             <Chip label={selectedAccount.accountStatus.toUpperCase()} color={selectedAccount.accountStatus === 'paid' ? 'success' : selectedAccount.accountStatus === 'frozen' ? 'default' : 'warning'} size="small" />
                         </Stack>
-                        <Typography variant="body2" color="text.secondary">
-                            Academic Year: {selectedAccount.academicYear} | Class: {selectedAccount.className} {selectedAccount.sectionName ? `(${selectedAccount.sectionName})` : ''} | Roll Number: {selectedAccount.rollNumber || 'N/A'}
+                        <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.78rem', sm: '0.875rem' }, mt: 0.5 }}>
+                            AY: {selectedAccount.academicYear} | Class: {selectedAccount.className} {selectedAccount.sectionName ? `(${selectedAccount.sectionName})` : ''} | Roll: {selectedAccount.rollNumber || 'N/A'}
                         </Typography>
                     </Box>
                 </Box>
 
                 {/* Ledger summary cards grid */}
-                <Grid container spacing={3} sx={{ mb: 4 }}>
-                    <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
-                        <Paper elevation={0} sx={{ p: 2, border: '1px solid #e2e8f0', borderRadius: 3, textAlign: 'center' }}>
-                            <Typography variant="caption" color="text.secondary" fontWeight={500}>Net Assigned Dues</Typography>
-                            <Typography variant="h6" fontWeight={700} sx={{ mt: 0.5 }}>{formatCurrency(selectedAccount.totalOriginalFees)}</Typography>
+                <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mb: 3 }}>
+                    <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+                        <Paper elevation={0} sx={{ p: 1.5, border: '1px solid #e2e8f0', borderRadius: 2.5, textAlign: 'center' }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={500} noWrap display="block">Assigned Dues</Typography>
+                            <Typography variant="subtitle1" fontWeight={700} sx={{ mt: 0.5 }}>{formatCurrency(selectedAccount.totalOriginalFees)}</Typography>
+                        </Paper>
+                    </Grid>
+                    <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+                        <Paper elevation={0} sx={{ p: 1.5, border: '1px solid #e2e8f0', borderRadius: 2.5, textAlign: 'center', bgcolor: '#eff6ff' }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={500} noWrap display="block">Discounts/Waivers</Typography>
+                            <Typography variant="subtitle1" fontWeight={700} color="primary.main" sx={{ mt: 0.5 }}>{formatCurrency(selectedAccount.totalDiscount + selectedAccount.totalWaived)}</Typography>
+                        </Paper>
+                    </Grid>
+                    <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+                        <Paper elevation={0} sx={{ p: 1.5, border: '1px solid #e2e8f0', borderRadius: 2.5, textAlign: 'center', bgcolor: '#f0fdf4' }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={500} noWrap display="block">Paid Amount</Typography>
+                            <Typography variant="subtitle1" fontWeight={700} color="success.main" sx={{ mt: 0.5 }}>{formatCurrency(selectedAccount.totalPaid)}</Typography>
+                        </Paper>
+                    </Grid>
+                    <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
+                        <Paper elevation={0} sx={{ p: 1.5, border: '1px solid #e2e8f0', borderRadius: 2.5, textAlign: 'center', bgcolor: '#fef2f2' }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={500} noWrap display="block">Outstanding</Typography>
+                            <Typography variant="subtitle1" fontWeight={700} color="error.main" sx={{ mt: 0.5 }}>{formatCurrency(selectedAccount.totalBalance)}</Typography>
                         </Paper>
                     </Grid>
                     <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
-                        <Paper elevation={0} sx={{ p: 2, border: '1px solid #e2e8f0', borderRadius: 3, textAlign: 'center', bgcolor: '#eff6ff' }}>
-                            <Typography variant="caption" color="text.secondary" fontWeight={500}>Discounts/Waivers</Typography>
-                            <Typography variant="h6" fontWeight={700} color="primary.main" sx={{ mt: 0.5 }}>{formatCurrency(selectedAccount.totalDiscount + selectedAccount.totalWaived)}</Typography>
-                        </Paper>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
-                        <Paper elevation={0} sx={{ p: 2, border: '1px solid #e2e8f0', borderRadius: 3, textAlign: 'center', bgcolor: '#f0fdf4' }}>
-                            <Typography variant="caption" color="text.secondary" fontWeight={500}>Paid Amount</Typography>
-                            <Typography variant="h6" fontWeight={700} color="success.main" sx={{ mt: 0.5 }}>{formatCurrency(selectedAccount.totalPaid)}</Typography>
-                        </Paper>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
-                        <Paper elevation={0} sx={{ p: 2, border: '1px solid #e2e8f0', borderRadius: 3, textAlign: 'center', bgcolor: '#fef2f2' }}>
-                            <Typography variant="caption" color="text.secondary" fontWeight={500}>Outstanding Balance</Typography>
-                            <Typography variant="h6" fontWeight={700} color="error.main" sx={{ mt: 0.5 }}>{formatCurrency(selectedAccount.totalBalance)}</Typography>
-                        </Paper>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 4, md: 2.4 }}>
-                        <Paper elevation={0} sx={{ p: 2, border: '1px solid #e2e8f0', borderRadius: 3, textAlign: 'center' }}>
-                            <Typography variant="caption" color="text.secondary" fontWeight={500}>Ledger Actions</Typography>
-                            <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 1 }}>
+                        <Paper elevation={0} sx={{ p: 1.5, border: '1px solid #e2e8f0', borderRadius: 2.5, textAlign: 'center' }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={500} noWrap display="block">Ledger Actions</Typography>
+                            <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 0.5 }}>
                                 {selectedAccount.accountStatus === 'frozen' ? (
                                     <IconButton size="small" color="success" onClick={handleUnfreeze}>
                                         <WbSunnyIcon fontSize="small" />
@@ -310,14 +312,25 @@ const FeeAccounts: React.FC = () => {
                 </Grid>
 
                 {/* Dialog to preview receipt */}
-                <Dialog open={!!openReceiptDialog} onClose={() => setOpenReceiptDialog(null)}>
+                <Dialog
+                    open={!!openReceiptDialog}
+                    onClose={() => setOpenReceiptDialog(null)}
+                    fullWidth
+                    maxWidth="xs"
+                    fullScreen={isMobile}
+                    PaperProps={{
+                        sx: {
+                            borderRadius: isMobile ? 0 : 3,
+                        }
+                    }}
+                >
                     <DialogTitle fontWeight={700}>View Receipt</DialogTitle>
                     <DialogContent>
                         <Typography variant="body2">
                             Receipt preview is available. You can print or download the PDF copy directly from the Receipts module.
                         </Typography>
                     </DialogContent>
-                    <DialogActions>
+                    <DialogActions sx={{ px: 3, pb: 2 }}>
                         <Button onClick={() => setOpenReceiptDialog(null)}>Close</Button>
                         <Button variant="contained" onClick={() => window.open(`${import.meta.env.VITE_PAYMENT_API_URL || 'http://localhost:5005'}/api/school/${schoolId}/fees/receipts/${openReceiptDialog}/pdf`, '_blank')}>
                             Download PDF
@@ -343,46 +356,43 @@ const FeeAccounts: React.FC = () => {
     }
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight={700} color="text.primary">
+        <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h4" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '1.4rem', sm: '2rem' } }}>
                     Student Ledgers
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                     Access students comprehensive running academic year financial ledger sheets, balances, and action logs.
                 </Typography>
             </Box>
 
-            <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                <CardContent sx={{ p: 0 }}>
-                    <Box sx={{ p: 2 }}>
-                        <TextField
-                            size="small"
-                            placeholder="Search student ledger..."
-                            value={searchTerm}
-                            onChange={(e) => {
-                                setSearchTerm(e.target.value);
-                                setPage(1);
-                            }}
-                            sx={{ width: { xs: '100%', sm: 300 } }}
-                        />
-                    </Box>
-                    <AppTable
-                        columns={listColumns}
-                        data={assignments}
-                        isLoading={isLoading}
-                        emptyMessage="No assigned student running ledgers found."
-                        paginationServer={true}
-                        paginationTotalRows={assignmentsData?.pagination?.totalRecords || assignmentsData?.pagination?.total || 0}
-                        onChangePage={(newPage) => setPage(newPage)}
-                        onChangeRowsPerPage={(newLimit) => {
-                            setLimit(newLimit);
-                            setPage(1);
-                        }}
-                        paginationPerPage={limit}
-                    />
-                </CardContent>
-            </Card>
+            <Box sx={{ mb: 2 }}>
+                <TextField
+                    size="small"
+                    placeholder="Search student ledger..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setPage(1);
+                    }}
+                    sx={{ width: { xs: '100%', sm: 300 } }}
+                />
+            </Box>
+
+            <AppTable
+                columns={listColumns}
+                data={assignments}
+                isLoading={isLoading}
+                emptyMessage="No assigned student running ledgers found."
+                paginationServer={true}
+                paginationTotalRows={assignmentsData?.pagination?.totalRecords || assignmentsData?.pagination?.total || 0}
+                onChangePage={(newPage) => setPage(newPage)}
+                onChangeRowsPerPage={(newLimit) => {
+                    setLimit(newLimit);
+                    setPage(1);
+                }}
+                paginationPerPage={limit}
+            />
         </Box>
     );
 };

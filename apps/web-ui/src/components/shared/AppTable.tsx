@@ -131,24 +131,58 @@ export const AppTable = <T extends Record<string, any>>({
           itemCount={displayedData.length}
         >
           {displayedData.map((row, index) => {
-            const firstCol = columns[0];
-            const secondCol = columns.length > 1 ? columns[1] : undefined;
+            const selectCol = columns.find(
+              (c) => c.name && (c.name.toLowerCase() === 'select' || c.name.toLowerCase() === 'checkbox')
+            );
+            const actionCol = columns.find(
+              (c) =>
+                c.name &&
+                ['action', 'actions', 'view', 'edit', 'operations'].includes(c.name.toLowerCase())
+            );
+            const statusCol = columns.find(
+              (c) =>
+                c.name &&
+                ['status', 'account status', 'ledger status', 'state'].includes(c.name.toLowerCase())
+            );
 
-            const cardTitle = firstCol?.cell
-              ? firstCol.cell(row)
-              : firstCol?.selector
-              ? String(firstCol.selector(row) || '')
+            const contentCols = columns.filter(
+              (c) => c !== selectCol && c !== actionCol && c !== statusCol
+            );
+
+            const titleCol = contentCols[0] || columns[0];
+            const subtitleCol =
+              contentCols.length > 1 && !contentCols[0]?.cell ? contentCols[1] : undefined;
+
+            const cardTitle = titleCol?.cell
+              ? titleCol.cell(row)
+              : titleCol?.selector
+              ? String(titleCol.selector(row) || '')
               : 'Item';
 
-            const cardSubtitle = secondCol?.cell
-              ? secondCol.cell(row)
-              : secondCol?.selector
-              ? String(secondCol.selector(row) || '')
+            const cardSubtitle = subtitleCol?.cell
+              ? subtitleCol.cell(row)
+              : subtitleCol?.selector
+              ? String(subtitleCol.selector(row) || '')
               : undefined;
 
+            const cardBadge = statusCol?.cell
+              ? statusCol.cell(row)
+              : statusCol?.selector
+              ? String(statusCol.selector(row) || '')
+              : undefined;
+
+            const cardAvatar = selectCol?.cell ? (
+              <Box
+                sx={{ display: 'flex', alignItems: 'center', mr: -0.5 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {selectCol.cell(row)}
+              </Box>
+            ) : undefined;
+
             const metaItems: MobileCardMeta[] = [];
-            columns.slice(2).forEach((col) => {
-              if (col.name && col.name.toLowerCase() !== 'action' && col.name.toLowerCase() !== 'actions') {
+            contentCols.forEach((col) => {
+              if (col !== titleCol && col !== subtitleCol) {
                 const val = col.cell ? col.cell(row) : col.selector ? col.selector(row) : null;
                 if (val !== null && val !== undefined && val !== '') {
                   metaItems.push({
@@ -159,16 +193,19 @@ export const AppTable = <T extends Record<string, any>>({
               }
             });
 
-            const actionCol = columns.find(
-              (c) => c.name && (c.name.toLowerCase() === 'action' || c.name.toLowerCase() === 'actions')
-            );
-            const rightAction = actionCol?.cell ? actionCol.cell(row) : undefined;
+            const rightAction = actionCol?.cell
+              ? actionCol.cell(row)
+              : actionCol?.selector
+              ? String(actionCol.selector(row) || '')
+              : undefined;
 
             return (
               <MobileCardItem
-                key={row.id || row._id || index}
+                key={row.id || row._id || row.studentId || row.studentFeeAccountId || index}
+                avatar={cardAvatar}
                 title={cardTitle}
                 subtitle={cardSubtitle}
+                badge={cardBadge}
                 metaItems={metaItems}
                 rightAction={rightAction}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
@@ -179,15 +216,45 @@ export const AppTable = <T extends Record<string, any>>({
 
         {/* Mobile Pagination */}
         {pagination && totalPages > 1 && (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2.5, mb: 2 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mt: 2.5,
+              mb: 1,
+              pb: 8,
+              gap: 0.75,
+            }}
+          >
             <Pagination
               count={totalPages}
               page={currentPage}
               onChange={handlePageChange}
               color="primary"
               shape="rounded"
-              size="medium"
+              size="small"
+              siblingCount={0}
+              boundaryCount={1}
+              sx={{
+                '& .MuiPagination-ul': {
+                  flexWrap: 'nowrap',
+                  justifyContent: 'center',
+                },
+                '& .MuiPaginationItem-root': {
+                  minWidth: 30,
+                  height: 30,
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  margin: '0 2px',
+                  borderRadius: '8px',
+                },
+              }}
             />
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', fontWeight: 500 }}>
+              Page {currentPage} of {totalPages} ({totalItems} total)
+            </Typography>
           </Box>
         )}
       </Box>

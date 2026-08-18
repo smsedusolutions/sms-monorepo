@@ -13,7 +13,6 @@ const getLeaveModel = async (schoolId) => {
     const schoolDbName = await getSchoolDbName(schoolId);
     const schoolDb = getSchoolDbConnection(schoolDbName);
 
-    // Check if model already exists to avoid recompilation issues
     try {
         return schoolDb.model("LeaveRequest");
     } catch (e) {
@@ -29,7 +28,7 @@ const generateLeaveId = () => {
 };
 
 /**
- * Apply for leave (Student/Teacher)
+ * Apply for leave (Student/Teacher/Parent)
  * POST /api/school/:schoolId/leave/apply
  */
 const applyLeave = async (req, res) => {
@@ -43,12 +42,13 @@ const applyLeave = async (req, res) => {
             classId,
             sectionId,
             studentIds,
+            studentId,
         } = req.body;
 
-        // Get applicant info from token
-        const applicantId = req.user?.studentId || req.user?.teacherId || req.user?.userId;
-        const applicantType = req.user?.role === "teacher" ? "teacher" : "student";
-        const applicantName = req.user?.name || req.user?.firstName || "Unknown";
+        const userRole = req.user?.role || "student";
+        const applicantId = req.user?.studentId || req.user?.teacherId || req.user?.parentId || req.user?.userId || req.user?._id;
+        const applicantType = ["teacher", "principal", "driver", "staff"].includes(userRole) ? "teacher" : "student";
+        const applicantName = req.user?.name || (req.user?.firstName ? `${req.user.firstName} ${req.user.lastName || ''}`.trim() : req.user?.email || "Unknown");
 
         if (!leaveType || !startDate || !endDate || !reason) {
             return res.status(400).json({
@@ -67,20 +67,44 @@ const applyLeave = async (req, res) => {
             });
         }
 
+        const schoolDbName = await getSchoolDbName(schoolId);
+        const schoolDb = getSchoolDbConnection(schoolDbName);
         const LeaveModel = await getLeaveModel(schoolId);
 
-        // Parent applying for multiple children
-        if (req.user?.role === "parent" && Array.isArray(studentIds) && studentIds.length > 0) {
+        // Parent applying for children
+        const targetStudentIds = (Array.isArray(studentIds) && studentIds.length > 0)
+            ? studentIds
+            : (studentId ? [studentId] : []);
+
+        if (userRole === "parent" && targetStudentIds.length > 0) {
+            let Student;
+            try {
+                Student = schoolDb.model("Student");
+            } catch (e) {
+                Student = schoolDb.model("Student", studentSchema);
+            }
+
+            const students = await Student.find({ studentId: { $in: targetStudentIds } }).lean();
+            const studentMap = {};
+            students.forEach((s) => {
+                studentMap[s.studentId] = s;
+            });
+
             const createdLeaves = [];
-            for (const studentId of studentIds) {
+            for (const sId of targetStudentIds) {
+                const sObj = studentMap[sId];
+                const sName = sObj ? `${sObj.firstName} ${sObj.lastName}` : sId;
+                const sClass = sObj?.class || classId;
+                const sSection = sObj?.section || sectionId;
+
                 const newLeave = new LeaveModel({
                     leaveId: generateLeaveId(),
                     schoolId,
-                    applicantId: studentId,
+                    applicantId: sId,
                     applicantType: "student",
-                    applicantName: applicantName + " (applied by parent)",
-                    classId,
-                    sectionId,
+                    applicantName: `${sName} (applied by parent: ${applicantName})`,
+                    classId: sClass,
+                    sectionId: sSection,
                     leaveType,
                     startDate: start,
                     endDate: end,
@@ -89,24 +113,40 @@ const applyLeave = async (req, res) => {
                 });
                 await newLeave.save();
                 createdLeaves.push(newLeave);
+
+                // Activity logging
+                logActivity({
+                    schoolDb,
+                    schoolId,
+                    actor: req.user,
+                    action: "CREATE",
+                    entity: "Leave",
+                    entityId: newLeave.leaveId,
+                    entityLabel: `Leave for ${sName}`,
+                    description: `Parent ${applicantName} applied for ${leaveType} leave for ${sName} from ${start.toDateString()} to ${end.toDateString()}`,
+                    metadata: { leaveId: newLeave.leaveId, leaveType, startDate: start, endDate: end, studentId: sId }
+                });
             }
 
             return res.status(201).json({
                 success: true,
                 message: `Leave application submitted successfully for ${createdLeaves.length} student(s)`,
-                data: createdLeaves,
+                data: createdLeaves.length === 1 ? createdLeaves[0] : createdLeaves,
             });
         }
 
-        // Single leave (student/teacher self-apply)
+        // Single leave (Student or Teacher self-apply)
+        const resolvedClassId = classId || req.user?.class || req.user?.classId;
+        const resolvedSectionId = sectionId || req.user?.section || req.user?.sectionId;
+
         const newLeave = new LeaveModel({
             leaveId: generateLeaveId(),
             schoolId,
             applicantId,
             applicantType,
             applicantName,
-            classId,
-            sectionId,
+            classId: resolvedClassId,
+            sectionId: resolvedSectionId,
             leaveType,
             startDate: start,
             endDate: end,
@@ -114,24 +154,26 @@ const applyLeave = async (req, res) => {
             status: "pending",
         });
 
-    // Integrated Logging
-    logActivity({
-      schoolDb: getSchoolDbConnection(await getSchoolDbName(schoolId)),
-      schoolId,
-      actor: req.user,
-      action: "CREATE",
-      entity: "Leave",
-      entityId: newLeave.leaveId,
-      entityLabel: `Leave for ${applicantName}`,
-      description: `${applicantName} applied for ${leaveType} leave from ${start.toDateString()} to ${end.toDateString()}`,
-      metadata: { leaveId: newLeave.leaveId, leaveType, startDate: start, endDate: end }
-    });
+        await newLeave.save();
 
-    return res.status(201).json({
-      success: true,
-      message: "Leave application submitted successfully",
-      data: newLeave,
-    });
+        // Activity logging
+        logActivity({
+            schoolDb,
+            schoolId,
+            actor: req.user,
+            action: "CREATE",
+            entity: "Leave",
+            entityId: newLeave.leaveId,
+            entityLabel: `Leave for ${applicantName}`,
+            description: `${applicantName} applied for ${leaveType} leave from ${start.toDateString()} to ${end.toDateString()}`,
+            metadata: { leaveId: newLeave.leaveId, leaveType, startDate: start, endDate: end }
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: "Leave application submitted successfully",
+            data: newLeave,
+        });
     } catch (error) {
         console.error("Error applying leave:", error);
         res.status(500).json({
@@ -143,7 +185,7 @@ const applyLeave = async (req, res) => {
 };
 
 /**
- * Get my leave requests (Student/Teacher)
+ * Get my leave requests (Student/Teacher/Parent)
  * GET /api/school/:schoolId/leave/my
  */
 const getMyLeaves = async (req, res) => {
@@ -151,28 +193,88 @@ const getMyLeaves = async (req, res) => {
         const { schoolId } = req.params;
         const { status, startDate, endDate } = req.query;
 
-        const applicantId = req.user?.studentId || req.user?.teacherId || req.user?.userId;
+        const userRole = req.user?.role || "student";
+        const candidateIds = [
+            req.user?.studentId,
+            req.user?.teacherId,
+            req.user?.parentId,
+            req.user?.userId,
+            req.user?._id,
+            req.user?.id,
+        ].filter(Boolean);
+
+        const schoolDbName = await getSchoolDbName(schoolId);
+        const schoolDb = getSchoolDbConnection(schoolDbName);
+
+        // If parent is accessing "my" leaves, also include all their children's studentIds
+        if (userRole === "parent") {
+            let Parent;
+            try {
+                Parent = schoolDb.model("Parent");
+            } catch (e) {
+                Parent = schoolDb.model("Parent", parentSchema);
+            }
+
+            let Student;
+            try {
+                Student = schoolDb.model("Student");
+            } catch (e) {
+                Student = schoolDb.model("Student", studentSchema);
+            }
+
+            const parentDoc = await Parent.findOne({
+                $or: [
+                    { parentId: { $in: candidateIds } },
+                    { email: req.user?.email },
+                    { userId: { $in: candidateIds } },
+                ]
+            }).lean();
+
+            const childIds = parentDoc?.studentIds || [];
+            const studentDocs = await Student.find({
+                $or: [
+                    { studentId: { $in: childIds } },
+                    { parentId: { $in: candidateIds } },
+                    ...(req.user?.email ? [{ parentEmail: req.user.email }] : [])
+                ]
+            }).lean();
+
+            studentDocs.forEach((s) => {
+                if (s.studentId && !candidateIds.includes(s.studentId)) {
+                    candidateIds.push(s.studentId);
+                }
+            });
+        }
 
         const LeaveModel = await getLeaveModel(schoolId);
 
-        const query = { applicantId };
-        if (status) query.status = status;
-        if (startDate && endDate) {
-            query.startDate = { $gte: new Date(startDate) };
-            query.endDate = { $lte: new Date(endDate) };
-        }
+        const baseQuery = {
+            applicantId: candidateIds.length === 1 ? candidateIds[0] : { $in: candidateIds },
+        };
 
-        const leaves = await LeaveModel.find(query)
+        // Fetch all leaves for this user to calculate total summary accurately
+        const allUserLeaves = await LeaveModel.find(baseQuery)
             .sort({ createdAt: -1 })
             .lean();
 
-        // Summary
+        // Calculate summary across ALL requests for this user
         const summary = {
-            total: leaves.length,
-            pending: leaves.filter((l) => l.status === "pending").length,
-            approved: leaves.filter((l) => l.status === "approved").length,
-            rejected: leaves.filter((l) => l.status === "rejected").length,
+            total: allUserLeaves.length,
+            pending: allUserLeaves.filter((l) => l.status === "pending").length,
+            approved: allUserLeaves.filter((l) => l.status === "approved").length,
+            rejected: allUserLeaves.filter((l) => l.status === "rejected").length,
         };
+
+        // Apply filters for the list
+        let leaves = allUserLeaves;
+        if (status) {
+            leaves = leaves.filter((l) => l.status === status);
+        }
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            leaves = leaves.filter((l) => new Date(l.startDate) >= start && new Date(l.endDate) <= end);
+        }
 
         res.status(200).json({
             success: true,
@@ -189,7 +291,7 @@ const getMyLeaves = async (req, res) => {
 };
 
 /**
- * Get all leave requests (Admin)
+ * Get all leave requests (Admin/Principal)
  * GET /api/school/:schoolId/leave/all
  */
 const getAllLeaves = async (req, res) => {
@@ -199,6 +301,21 @@ const getAllLeaves = async (req, res) => {
 
         const LeaveModel = await getLeaveModel(schoolId);
 
+        // Fetch all school leaves to calculate overall summary accurately
+        const allLeaves = await LeaveModel.find({})
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const summary = {
+            total: allLeaves.length,
+            pending: allLeaves.filter((l) => l.status === "pending").length,
+            approved: allLeaves.filter((l) => l.status === "approved").length,
+            rejected: allLeaves.filter((l) => l.status === "rejected").length,
+            students: allLeaves.filter((l) => l.applicantType === "student").length,
+            teachers: allLeaves.filter((l) => l.applicantType === "teacher").length,
+        };
+
+        // Apply query filters for the list
         const query = {};
         if (status) query.status = status;
         if (applicantType) query.applicantType = applicantType;
@@ -212,16 +329,6 @@ const getAllLeaves = async (req, res) => {
         const leaves = await LeaveModel.find(query)
             .sort({ createdAt: -1 })
             .lean();
-
-        // Summary
-        const summary = {
-            total: leaves.length,
-            pending: leaves.filter((l) => l.status === "pending").length,
-            approved: leaves.filter((l) => l.status === "approved").length,
-            rejected: leaves.filter((l) => l.status === "rejected").length,
-            students: leaves.filter((l) => l.applicantType === "student").length,
-            teachers: leaves.filter((l) => l.applicantType === "teacher").length,
-        };
 
         res.status(200).json({
             success: true,
@@ -238,7 +345,7 @@ const getAllLeaves = async (req, res) => {
 };
 
 /**
- * Process leave request (Admin approve/reject)
+ * Process leave request (Admin/Principal/Teacher approve/reject)
  * PUT /api/school/:schoolId/leave/:leaveId/process
  */
 const processLeave = async (req, res) => {
@@ -254,7 +361,6 @@ const processLeave = async (req, res) => {
         }
 
         const LeaveModel = await getLeaveModel(schoolId);
-
         const leave = await LeaveModel.findOne({ leaveId });
 
         if (!leave) {
@@ -272,22 +378,19 @@ const processLeave = async (req, res) => {
         }
 
         leave.status = action === "approve" ? "approved" : "rejected";
-        leave.processedBy = req.user?.userId || req.user?.adminId;
-        leave.processedByName = req.user?.name || req.user?.firstName || "Admin";
+        leave.processedBy = req.user?.userId || req.user?.adminId || req.user?.teacherId;
+        leave.processedByName = req.user?.name || (req.user?.firstName ? `${req.user.firstName} ${req.user.lastName || ''}`.trim() : "Admin");
         leave.processedAt = new Date();
         leave.approvalRemarks = remarks;
 
         await leave.save();
 
-        const response = res.status(200).json({
-            success: true,
-            message: `Leave request ${leave.status}`,
-            data: leave,
-        });
+        const schoolDbName = await getSchoolDbName(schoolId);
+        const schoolDb = getSchoolDbConnection(schoolDbName);
 
-        // Integrated Logging
+        // Integrated Activity Logging
         logActivity({
-            schoolDb: getSchoolDbConnection(await getSchoolDbName(schoolId)),
+            schoolDb,
             schoolId,
             actor: req.user,
             action: "UPDATE",
@@ -298,7 +401,11 @@ const processLeave = async (req, res) => {
             metadata: { leaveId, action, remarks }
         });
 
-        return response;
+        return res.status(200).json({
+            success: true,
+            message: `Leave request ${leave.status}`,
+            data: leave,
+        });
     } catch (error) {
         console.error("Error processing leave:", error);
         res.status(500).json({
@@ -316,7 +423,6 @@ const processLeave = async (req, res) => {
 const getLeaveById = async (req, res) => {
     try {
         const { schoolId, leaveId } = req.params;
-
         const LeaveModel = await getLeaveModel(schoolId);
         const leave = await LeaveModel.findOne({ leaveId }).lean();
 
@@ -348,7 +454,14 @@ const getLeaveById = async (req, res) => {
 const cancelLeave = async (req, res) => {
     try {
         const { schoolId, leaveId } = req.params;
-        const applicantId = req.user?.studentId || req.user?.teacherId || req.user?.userId;
+        const candidateIds = [
+            req.user?.studentId,
+            req.user?.teacherId,
+            req.user?.parentId,
+            req.user?.userId,
+            req.user?._id,
+            req.user?.id,
+        ].filter(Boolean);
 
         const LeaveModel = await getLeaveModel(schoolId);
         const leave = await LeaveModel.findOne({ leaveId });
@@ -360,8 +473,10 @@ const cancelLeave = async (req, res) => {
             });
         }
 
-        // Only the applicant can cancel their own pending request
-        if (leave.applicantId !== applicantId) {
+        // Allow cancellation if applicant matches or parent
+        const isApplicant = candidateIds.includes(leave.applicantId) || ["sch_admin", "principal"].includes(req.user?.role);
+
+        if (!isApplicant) {
             return res.status(403).json({
                 success: false,
                 message: "You can only cancel your own leave requests",
@@ -392,7 +507,7 @@ const cancelLeave = async (req, res) => {
 };
 
 /**
- * Get leave statistics for dashboard (Admin)
+ * Get leave statistics for dashboard (Admin/Principal)
  * GET /api/school/:schoolId/leave/stats
  */
 const getLeaveStats = async (req, res) => {
@@ -400,38 +515,18 @@ const getLeaveStats = async (req, res) => {
         const { schoolId } = req.params;
         const LeaveModel = await getLeaveModel(schoolId);
 
-        // Get today's date range
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
 
-        // Today's pending requests
-        const todayPending = await LeaveModel.countDocuments({
-            status: "pending",
-            createdAt: { $gte: today, $lt: tomorrow },
-        });
-
-        // Total pending requests
-        const totalPending = await LeaveModel.countDocuments({
-            status: "pending",
-        });
-
-        // Today's all requests
-        const todayTotal = await LeaveModel.countDocuments({
-            createdAt: { $gte: today, $lt: tomorrow },
-        });
-
-        // Requests by type
-        const teacherPending = await LeaveModel.countDocuments({
-            status: "pending",
-            applicantType: "teacher",
-        });
-
-        const studentPending = await LeaveModel.countDocuments({
-            status: "pending",
-            applicantType: "student",
-        });
+        const [todayPending, totalPending, todayTotal, teacherPending, studentPending] = await Promise.all([
+            LeaveModel.countDocuments({ status: "pending", createdAt: { $gte: today, $lt: tomorrow } }),
+            LeaveModel.countDocuments({ status: "pending" }),
+            LeaveModel.countDocuments({ createdAt: { $gte: today, $lt: tomorrow } }),
+            LeaveModel.countDocuments({ status: "pending", applicantType: "teacher" }),
+            LeaveModel.countDocuments({ status: "pending", applicantType: "student" }),
+        ]);
 
         res.status(200).json({
             success: true,
@@ -461,11 +556,9 @@ const getStudentLeavesForTeacher = async (req, res) => {
     try {
         const { schoolId } = req.params;
         const { status, classId } = req.query;
-        const teacherId = req.user?.teacherId || req.user?.userId;
 
         const LeaveModel = await getLeaveModel(schoolId);
 
-        // Build query - only student leaves
         const query = { applicantType: "student" };
         if (status) query.status = status;
         if (classId) query.classId = classId;
@@ -474,7 +567,6 @@ const getStudentLeavesForTeacher = async (req, res) => {
             .sort({ createdAt: -1 })
             .lean();
 
-        // Summary
         const summary = {
             total: leaves.length,
             pending: leaves.filter((l) => l.status === "pending").length,
@@ -495,8 +587,9 @@ const getStudentLeavesForTeacher = async (req, res) => {
         });
     }
 };
+
 /**
- * Get teachers on leave for a specific date
+ * Get teachers on leave for a specific date (for timetable integration)
  * GET /api/school/:schoolId/leave/teachers-on-leave
  */
 const getTeachersOnLeaveForDate = async (req, res) => {
@@ -513,11 +606,9 @@ const getTeachersOnLeaveForDate = async (req, res) => {
 
         const LeaveModel = await getLeaveModel(schoolId);
 
-        // Parse the date and create range for the whole day
         const targetDate = new Date(date);
         targetDate.setHours(0, 0, 0, 0);
 
-        // Find approved teacher leaves where targetDate falls within startDate-endDate
         const leaves = await LeaveModel.find({
             applicantType: "teacher",
             status: "approved",
@@ -525,7 +616,6 @@ const getTeachersOnLeaveForDate = async (req, res) => {
             endDate: { $gte: targetDate },
         }).lean();
 
-        // Extract teacher IDs
         const teacherIds = leaves.map((leave) => leave.applicantId);
 
         res.status(200).json({
@@ -559,13 +649,16 @@ const getParentChildrenLeaves = async (req, res) => {
     try {
         const { schoolId } = req.params;
         const { status } = req.query;
-        const { userId, parentId } = req.user;
-        const actualParentId = parentId || userId;
+        const candidateIds = [
+            req.user?.parentId,
+            req.user?.userId,
+            req.user?._id,
+            req.user?.id,
+        ].filter(Boolean);
 
         const schoolDbName = await getSchoolDbName(schoolId);
         const schoolDb = getSchoolDbConnection(schoolDbName);
 
-        // Get Parent model
         let Parent;
         try {
             Parent = schoolDb.model("Parent");
@@ -573,7 +666,6 @@ const getParentChildrenLeaves = async (req, res) => {
             Parent = schoolDb.model("Parent", parentSchema);
         }
 
-        // Get Student model
         let Student;
         try {
             Student = schoolDb.model("Student");
@@ -581,26 +673,35 @@ const getParentChildrenLeaves = async (req, res) => {
             Student = schoolDb.model("Student", studentSchema);
         }
 
-        // Find parent and their children
-        const parent = await Parent.findOne({ parentId: actualParentId });
-        if (!parent) {
-            return res.status(404).json({
-                success: false,
-                message: "Parent not found",
-            });
-        }
-
-        // Get children studentIds
-        const children = await Student.find({
+        const parent = await Parent.findOne({
             $or: [
-                { studentId: { $in: parent.studentIds || [] } },
-                { parentId: actualParentId },
-            ],
+                { parentId: { $in: candidateIds } },
+                { email: req.user?.email },
+                { userId: { $in: candidateIds } },
+            ]
         }).lean();
 
-        const childStudentIds = children.map((c) => c.studentId);
+        const childStudentIds = parent?.studentIds ? [...parent.studentIds] : [];
 
-        if (childStudentIds.length === 0) {
+        // Also search students directly linked to this parent
+        const studentDocs = await Student.find({
+            $or: [
+                { studentId: { $in: childStudentIds } },
+                { parentId: { $in: candidateIds } },
+                ...(req.user?.email ? [{ parentEmail: req.user.email }] : [])
+            ]
+        }).lean();
+
+        studentDocs.forEach((s) => {
+            if (s.studentId && !childStudentIds.includes(s.studentId)) {
+                childStudentIds.push(s.studentId);
+            }
+        });
+
+        // Also include parent candidateIds in case leave was stored with parent's ID
+        const allApplicantIds = Array.from(new Set([...childStudentIds, ...candidateIds]));
+
+        if (allApplicantIds.length === 0) {
             return res.status(200).json({
                 success: true,
                 data: { leaves: [], summary: { total: 0, pending: 0, approved: 0, rejected: 0 } },
@@ -609,37 +710,35 @@ const getParentChildrenLeaves = async (req, res) => {
 
         const LeaveModel = await getLeaveModel(schoolId);
 
-        // Find all leaves for these children
-        const query = { applicantId: { $in: childStudentIds } };
-        if (status) query.status = status;
-
-        const leaves = await LeaveModel.find(query)
+        const allParentLeaves = await LeaveModel.find({ applicantId: { $in: allApplicantIds } })
             .sort({ createdAt: -1 })
             .lean();
 
-        // Build a studentId -> name map for display
         const childMap = {};
-        children.forEach((c) => {
+        studentDocs.forEach((c) => {
             childMap[c.studentId] = `${c.firstName} ${c.lastName}`;
         });
 
-        // Enrich leaves with child name
-        const enrichedLeaves = leaves.map((leave) => ({
+        const enrichedLeaves = allParentLeaves.map((leave) => ({
             ...leave,
             childName: childMap[leave.applicantId] || leave.applicantName,
         }));
 
-        // Summary
         const summary = {
-            total: leaves.length,
-            pending: leaves.filter((l) => l.status === "pending").length,
-            approved: leaves.filter((l) => l.status === "approved").length,
-            rejected: leaves.filter((l) => l.status === "rejected").length,
+            total: enrichedLeaves.length,
+            pending: enrichedLeaves.filter((l) => l.status === "pending").length,
+            approved: enrichedLeaves.filter((l) => l.status === "approved").length,
+            rejected: enrichedLeaves.filter((l) => l.status === "rejected").length,
         };
+
+        let finalLeaves = enrichedLeaves;
+        if (status) {
+            finalLeaves = finalLeaves.filter((l) => l.status === status);
+        }
 
         res.status(200).json({
             success: true,
-            data: { leaves: enrichedLeaves, summary },
+            data: { leaves: finalLeaves, summary },
         });
     } catch (error) {
         console.error("Error getting parent children leaves:", error);
@@ -663,4 +762,3 @@ module.exports = {
     getTeachersOnLeaveForDate,
     getParentChildrenLeaves,
 };
-

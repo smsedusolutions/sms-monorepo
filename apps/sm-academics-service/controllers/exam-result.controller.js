@@ -59,6 +59,51 @@ const submitMarks = async (req, res) => {
         const schedule = await ExamSchedule.findOne({ schoolId, _id: scheduleId, examId });
         if (!schedule) return res.status(404).json({ success: false, message: "Exam schedule not found" });
 
+        // 1b. Enforce Exam Completion Timing (Unlocked only 1 hour after exam completion)
+        if (schedule.date) {
+            let endHours = 23;
+            let endMinutes = 59;
+            if (schedule.endTime && typeof schedule.endTime === 'string') {
+                const parts = schedule.endTime.trim().split(':');
+                if (parts.length >= 2) {
+                    const h = parseInt(parts[0], 10);
+                    const m = parseInt(parts[1], 10);
+                    if (!isNaN(h) && !isNaN(m)) {
+                        endHours = h + 1; // 1 hour after exam end
+                        endMinutes = m;
+                    }
+                }
+            }
+
+            let scheduleDate;
+            if (typeof schedule.date === 'string' && schedule.date.includes('T')) {
+                const [dateStr] = schedule.date.split('T');
+                const [y, m, d] = dateStr.split('-').map(Number);
+                scheduleDate = new Date(y, m - 1, d, endHours, endMinutes, 0, 0);
+            } else {
+                const dt = new Date(schedule.date);
+                scheduleDate = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), endHours, endMinutes, 0, 0);
+            }
+
+            const now = new Date();
+            if (now < scheduleDate) {
+                const formattedDate = scheduleDate.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                });
+                const formattedTime = scheduleDate.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                return res.status(403).json({
+                    success: false,
+                    message: `Marks entry is locked until 1 hour after the exam ends (${formattedDate} at ${formattedTime}).`
+                });
+            }
+        }
+
         // 2. Fetch Grading System
         const gradingSystem = await GradingSystem.findById(exam.gradingSystemId);
 

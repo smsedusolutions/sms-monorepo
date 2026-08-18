@@ -28,7 +28,10 @@ import {
 import { useUrlTab } from '../../../../hooks/useUrlTab';
 import { AppTable } from '../../../../components/shared/AppTable';
 
+import { useIsMobile } from '../../../../hooks/useIsMobile';
+
 const FeeReports: React.FC = () => {
+    const isMobile = useIsMobile();
     const schoolId = TokenService.getSchoolId() || '';
     const [activeTab, setActiveTab] = useUrlTab(0, ['pending', 'today', 'monthly', 'classwise', 'discounts', 'defaulters']);
 
@@ -65,23 +68,23 @@ const FeeReports: React.FC = () => {
     const defaultersList = defaultersData?.data || [];
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4, flexWrap: 'wrap', gap: 2 }}>
+        <Box sx={{ p: { xs: 1.5, sm: 3 } }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, mb: 3, gap: 2 }}>
                 <Box>
-                    <Typography variant="h4" fontWeight={700} color="text.primary">
+                    <Typography variant="h4" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '1.4rem', sm: '2rem' } }}>
                         Financial Reports
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                         Analyze collections, pending dues, late fee calculations, and applied waivers.
                     </Typography>
                 </Box>
-                <Button variant="contained" color="success" startIcon={<DownloadIcon />} onClick={handleExportExcel} sx={{ borderRadius: 2 }}>
-                    Export Collection Ledger (Excel)
+                <Button variant="contained" color="success" startIcon={<DownloadIcon />} onClick={handleExportExcel} fullWidth={isMobile} sx={{ borderRadius: 2 }}>
+                    Export Ledger (Excel)
                 </Button>
             </Box>
 
             {/* Filter Card */}
-            <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none', mb: 4 }}>
+            <Card sx={{ borderRadius: 3, border: '1px solid #f1f5f9', boxShadow: 'none', mb: 3 }}>
                 <CardContent sx={{ p: 2 }}>
                     <Grid container spacing={2} alignItems="center">
                         <Grid size={{ xs: 12, sm: 4 }}>
@@ -97,7 +100,7 @@ const FeeReports: React.FC = () => {
                                 <MenuItem value="2027-2028">2027-2028</MenuItem>
                             </TextField>
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 4 }}>
+                        <Grid size={{ xs: 6, sm: 4 }}>
                             <TextField
                                 type="date"
                                 size="small"
@@ -108,7 +111,7 @@ const FeeReports: React.FC = () => {
                                 onChange={(e) => setStartDate(e.target.value)}
                             />
                         </Grid>
-                        <Grid size={{ xs: 12, sm: 4 }}>
+                        <Grid size={{ xs: 6, sm: 4 }}>
                             <TextField
                                 type="date"
                                 size="small"
@@ -125,60 +128,52 @@ const FeeReports: React.FC = () => {
 
             {/* Tabs panel */}
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                <Tabs value={activeTab} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
-                    <Tab label="Pending Dues Report" />
+                <Tabs value={activeTab} onChange={handleTabChange} variant="scrollable" scrollButtons="auto" allowScrollButtonsMobile>
+                    <Tab label="Pending Dues" />
                     <Tab label="Today's Collection" />
                     <Tab label="Monthly Trends" />
-                    <Tab label="Class-wise Collection" />
-                    <Tab label="Discount Allocations" />
-                    <Tab label="Dues Defaulters" />
+                    <Tab label="Class-wise" />
+                    <Tab label="Discounts" />
+                    <Tab label="Defaulters" />
                 </Tabs>
             </Box>
 
             {/* Tab content area */}
             {activeTab === 0 && (
-                <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                    <CardContent sx={{ p: 0 }}>
-                        <AppTable
-                            columns={[
-                                { name: 'Class Name', selector: (row: any) => row.className },
-                                { name: 'Total Expected Dues', selector: (row: any) => formatCurrency(row.totalExpected) },
-                                { name: 'Total Collected', selector: (row: any) => formatCurrency(row.totalCollected), cell: (row: any) => <Typography variant="body2" color="success.main" fontWeight={600}>{formatCurrency(row.totalCollected)}</Typography> },
-                                { name: 'Pending Balance', selector: (row: any) => formatCurrency(row.totalPending), cell: (row: any) => <Typography variant="body2" color="error.main" fontWeight={700}>{formatCurrency(row.totalPending)}</Typography> },
-                                { name: 'Students with Dues', selector: (row: any) => row.defaultersCount }
-                            ]}
-                            data={pendingReport}
-                            isLoading={isLoadingPending}
-                        />
-                    </CardContent>
-                </Card>
+                <AppTable
+                    columns={[
+                        { name: 'Class Name', selector: (row: any) => row.className },
+                        { name: 'Total Expected Dues', selector: (row: any) => formatCurrency(row.totalExpected) },
+                        { name: 'Total Collected', selector: (row: any) => formatCurrency(row.totalCollected), cell: (row: any) => <Typography variant="body2" color="success.main" fontWeight={600}>{formatCurrency(row.totalCollected)}</Typography> },
+                        { name: 'Pending Balance', selector: (row: any) => formatCurrency(row.totalPending), cell: (row: any) => <Typography variant="body2" color="error.main" fontWeight={700}>{formatCurrency(row.totalPending)}</Typography> },
+                        { name: 'Students with Dues', selector: (row: any) => row.defaultersCount }
+                    ]}
+                    data={pendingReport}
+                    isLoading={isLoadingPending}
+                />
             )}
 
             {activeTab === 1 && (
-                <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                    <CardContent sx={{ p: 0 }}>
-                        <AppTable
-                            columns={[
-                                { name: 'Payment Mode', selector: (row: any) => row._id?.toUpperCase() },
-                                { name: 'Transactions Count', selector: (row: any) => row.count },
-                                { name: 'Total Collected Today', selector: (row: any) => formatCurrency(row.total), cell: (row: any) => <Typography variant="body2" fontWeight={700} color="success.main">{formatCurrency(row.total)}</Typography> }
-                            ]}
-                            data={todayReport}
-                            isLoading={isLoadingToday}
-                        />
-                    </CardContent>
-                </Card>
+                <AppTable
+                    columns={[
+                        { name: 'Payment Mode', selector: (row: any) => row._id?.toUpperCase() },
+                        { name: 'Transactions Count', selector: (row: any) => row.count },
+                        { name: 'Total Collected Today', selector: (row: any) => formatCurrency(row.total), cell: (row: any) => <Typography variant="body2" fontWeight={700} color="success.main">{formatCurrency(row.total)}</Typography> }
+                    ]}
+                    data={todayReport}
+                    isLoading={isLoadingToday}
+                />
             )}
 
             {activeTab === 2 && (
                 <Box>
                     {/* Monthly CSS visual trends */}
-                    <Grid container spacing={3} sx={{ mb: 4 }}>
+                    <Grid container spacing={3} sx={{ mb: 3 }}>
                         <Grid size={{ xs: 12 }}>
-                            <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                                <CardContent>
-                                    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 3 }}>Monthly Collection Trends</Typography>
-                                    <Stack spacing={2.5}>
+                            <Card sx={{ borderRadius: 3, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
+                                <CardContent sx={{ p: 2.5 }}>
+                                    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>Monthly Collection Trends</Typography>
+                                    <Stack spacing={2}>
                                         {monthlyReport.length === 0 ? (
                                             <Typography variant="body2" color="text.secondary">No monthly payment data recorded.</Typography>
                                         ) : (
@@ -203,72 +198,56 @@ const FeeReports: React.FC = () => {
                         </Grid>
                     </Grid>
 
-                    <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                        <CardContent sx={{ p: 0 }}>
-                            <AppTable
-                                columns={[
-                                    { name: 'Month / Year', cell: (row: any) => {
-                                        const monthNames = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-                                        return `${monthNames[row._id.month]} ${row._id.year}`;
-                                    }},
-                                    { name: 'Transaction Count', selector: (row: any) => row.transactionCount },
-                                    { name: 'Total Amount Received', selector: (row: any) => formatCurrency(row.totalAmount), cell: (row: any) => <Typography variant="body2" fontWeight={700} color="success.main">{formatCurrency(row.totalAmount)}</Typography> }
-                                ]}
-                                data={monthlyReport}
-                                isLoading={isLoadingMonthly}
-                            />
-                        </CardContent>
-                    </Card>
+                    <AppTable
+                        columns={[
+                            { name: 'Month / Year', cell: (row: any) => {
+                                const monthNames = ["", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+                                return `${monthNames[row._id.month]} ${row._id.year}`;
+                            }},
+                            { name: 'Transaction Count', selector: (row: any) => row.transactionCount },
+                            { name: 'Total Amount Received', selector: (row: any) => formatCurrency(row.totalAmount), cell: (row: any) => <Typography variant="body2" fontWeight={700} color="success.main">{formatCurrency(row.totalAmount)}</Typography> }
+                        ]}
+                        data={monthlyReport}
+                        isLoading={isLoadingMonthly}
+                    />
                 </Box>
             )}
 
             {activeTab === 3 && (
-                <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                    <CardContent sx={{ p: 0 }}>
-                        <AppTable
-                            columns={[
-                                { name: 'Class Name', selector: (row: any) => row.className },
-                                { name: 'Total Expected Dues', selector: (row: any) => formatCurrency(row.totalExpected) },
-                                { name: 'Total Collected', selector: (row: any) => formatCurrency(row.totalCollected), cell: (row: any) => <Typography variant="body2" fontWeight={700} color="success.main">{formatCurrency(row.totalCollected)}</Typography> }
-                            ]}
-                            data={classwiseReport}
-                            isLoading={isLoadingClasswise}
-                        />
-                    </CardContent>
-                </Card>
+                <AppTable
+                    columns={[
+                        { name: 'Class Name', selector: (row: any) => row.className },
+                        { name: 'Total Expected Dues', selector: (row: any) => formatCurrency(row.totalExpected) },
+                        { name: 'Total Collected', selector: (row: any) => formatCurrency(row.totalCollected), cell: (row: any) => <Typography variant="body2" fontWeight={700} color="success.main">{formatCurrency(row.totalCollected)}</Typography> }
+                    ]}
+                    data={classwiseReport}
+                    isLoading={isLoadingClasswise}
+                />
             )}
 
             {activeTab === 4 && (
-                <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                    <CardContent sx={{ p: 0 }}>
-                        <AppTable
-                            columns={[
-                                { name: 'Discount Template', selector: (row: any) => row.discountName },
-                                { name: 'Total Waived Amount', selector: (row: any) => formatCurrency(row.totalWaived), cell: (row: any) => <Typography variant="body2" color="primary.main" fontWeight={700}>{formatCurrency(row.totalWaived)}</Typography> },
-                                { name: 'Students Count Applied', selector: (row: any) => row.appliedCount }
-                            ]}
-                            data={discountReport}
-                            isLoading={isLoadingDiscount}
-                        />
-                    </CardContent>
-                </Card>
+                <AppTable
+                    columns={[
+                        { name: 'Discount Template', selector: (row: any) => row.discountName },
+                        { name: 'Total Waived Amount', selector: (row: any) => formatCurrency(row.totalWaived), cell: (row: any) => <Typography variant="body2" color="primary.main" fontWeight={700}>{formatCurrency(row.totalWaived)}</Typography> },
+                        { name: 'Students Count Applied', selector: (row: any) => row.appliedCount }
+                    ]}
+                    data={discountReport}
+                    isLoading={isLoadingDiscount}
+                />
             )}
 
             {activeTab === 5 && (
-                <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                    <CardContent sx={{ p: 0 }}>
-                        <AppTable
-                            columns={[
-                                { name: 'Student Name', selector: (row: any) => row.studentName, cell: (row: any) => <Typography variant="body2" fontWeight={600}>{row.studentName}</Typography> },
-                                { name: 'Class', selector: (row: any) => row.className },
-                                { name: 'Outstanding Dues', selector: (row: any) => formatCurrency(row.totalBalance), cell: (row: any) => <Typography variant="body2" fontWeight={700} color="error.main">{formatCurrency(row.totalBalance)}</Typography> },
-                                { name: 'Last Txn Date', selector: (row: any) => row.lastTransactionDate ? new Date(row.lastTransactionDate).toLocaleDateString() : 'None' }
-                            ]}
-                            data={defaultersList}
-                            isLoading={isLoadingDefaulters}
-                        />
-                    </CardContent>
-                </Card>
+                <AppTable
+                    columns={[
+                        { name: 'Student Name', selector: (row: any) => row.studentName, cell: (row: any) => <Typography variant="body2" fontWeight={600}>{row.studentName}</Typography> },
+                        { name: 'Class', selector: (row: any) => row.className },
+                        { name: 'Outstanding Dues', selector: (row: any) => formatCurrency(row.totalBalance), cell: (row: any) => <Typography variant="body2" fontWeight={700} color="error.main">{formatCurrency(row.totalBalance)}</Typography> },
+                        { name: 'Last Txn Date', selector: (row: any) => row.lastTransactionDate ? new Date(row.lastTransactionDate).toLocaleDateString() : 'None' }
+                    ]}
+                    data={defaultersList}
+                    isLoading={isLoadingDefaulters}
+                />
             )}
         </Box>
     );
