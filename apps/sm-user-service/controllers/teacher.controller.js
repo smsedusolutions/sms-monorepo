@@ -18,21 +18,14 @@ const getTeacherModel = (schoolDbName) => {
   return schoolDb.model("Teacher", teacherSchema);
 };
 
+const { generateNextId } = require("@sms/shared/utils");
+
 /**
  * Helper function to generate teacherId
  * Format: TCH + 5 digit number (TCH00001, TCH00002, ...)
  */
 const generateTeacherId = async (Teacher) => {
-  const lastTeacher = await Teacher.findOne().sort({ teacherId: -1 });
-
-  if (!lastTeacher || !lastTeacher.teacherId) {
-    return "TCH00001";
-  }
-
-  const lastIdNumber = parseInt(lastTeacher.teacherId.replace("TCH", ""), 10);
-  const newIdNumber = lastIdNumber + 1;
-
-  return `TCH${String(newIdNumber).padStart(5, "0")}`;
+  return generateNextId(Teacher, "teacherId", "TCH", 5);
 };
 
 /**

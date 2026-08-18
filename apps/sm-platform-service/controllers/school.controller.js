@@ -5,22 +5,12 @@ const {
   formatPaginationResponse,
 } = require("../utils/pagination");
 
+const { generateNextId } = require("@sms/shared/utils");
+
 // Helper function to generate schoolId
 // Format: SCHL + 5 digit number (SCHL00001, SCHL00002, ... SCHL99999, SCHL100000)
 const generateSchoolId = async () => {
-  // Sort by schoolId descending to get the highest ID
-  const lastSchool = await School.findOne().sort({ schoolId: -1 });
-
-  if (!lastSchool || !lastSchool.schoolId) {
-    return "SCHL00001";
-  }
-
-  // Extract the numeric part from the last schoolId
-  const lastIdNumber = parseInt(lastSchool.schoolId.replace("SCHL", ""), 10);
-  const newIdNumber = lastIdNumber + 1;
-
-  // Minimum 5 digits, grows naturally beyond 99999
-  return `SCHL${String(newIdNumber).padStart(5, "0")}`;
+  return generateNextId(School, "schoolId", "SCHL", 5);
 };
 
 const createSchool = async (req, res) => {

@@ -41,21 +41,14 @@ const getClassModel = (schoolDbName) => {
   return schoolDb.model("Class", classSchema);
 };
 
+const { generateNextId } = require("@sms/shared/utils");
+
 /**
  * Helper function to generate studentId
  * Format: STU + 5 digit number (STU00001, STU00002, ...)
  */
 const generateStudentId = async (Student) => {
-  const lastStudent = await Student.findOne().sort({ studentId: -1 });
-
-  if (!lastStudent || !lastStudent.studentId) {
-    return "STU00001";
-  }
-
-  const lastIdNumber = parseInt(lastStudent.studentId.replace("STU", ""), 10);
-  const newIdNumber = lastIdNumber + 1;
-
-  return `STU${String(newIdNumber).padStart(5, "0")}`;
+  return generateNextId(Student, "studentId", "STU", 5);
 };
 
 /**

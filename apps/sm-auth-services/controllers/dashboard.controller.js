@@ -22,16 +22,7 @@ const getMenus = async (req, res) => {
       });
     }
 
-    const user = await usersModel.findOne({ role });
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    const accessTokens = [user.role].filter(Boolean);
+    const accessTokens = [role];
 
     const menus = await menuModel.find(
       {
@@ -42,7 +33,7 @@ const getMenus = async (req, res) => {
         deactivatedSchools: { $nin: [schoolId] },
       },
       { menuAccessRoles: 0 },
-    );
+    ).lean();
 
     // Sort in memory because we need to find the specific order code in the array relevant to the role
     let prefix = "M";

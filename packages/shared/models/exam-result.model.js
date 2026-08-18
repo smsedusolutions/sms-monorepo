@@ -107,4 +107,10 @@ const ExamResultSchema = new Schema({
 // Ensure unique result entry per student per exam per subject
 ExamResultSchema.index({ schoolId: 1, examId: 1, studentId: 1, subjectId: 1 }, { unique: true });
 
+// Compound indexes for high-frequency queries
+ExamResultSchema.index({ schoolId: 1, examId: 1, scheduleId: 1 });
+ExamResultSchema.index({ schoolId: 1, studentId: 1, isPublished: 1, publishStatus: 1 });
+ExamResultSchema.index({ schoolId: 1, examId: 1, publishStatus: 1 });
+ExamResultSchema.index({ schoolId: 1, examId: 1, studentId: 1 });
+
 module.exports = ExamResultSchema;

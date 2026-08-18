@@ -16,11 +16,10 @@ const getPrincipalModel = (schoolDbName) => {
   return schoolDb.model("Principal", principalSchema);
 };
 
+const { generateNextId } = require("@sms/shared/utils");
+
 const generatePrincipalId = async (Principal) => {
-  const lastPrincipal = await Principal.findOne().sort({ principalId: -1 });
-  if (!lastPrincipal || !lastPrincipal.principalId) return "PRC00001";
-  const lastIdNumber = parseInt(lastPrincipal.principalId.replace("PRC", ""), 10);
-  return `PRC${String(lastIdNumber + 1).padStart(5, "0")}`;
+  return generateNextId(Principal, "principalId", "PRC", 5);
 };
 
 const getSchoolDbName = async (schoolId) => {

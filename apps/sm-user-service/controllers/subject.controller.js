@@ -13,21 +13,14 @@ const getSubjectModel = (schoolDbName) => {
   return schoolDb.model("Subject", subjectSchema);
 };
 
+const { generateNextId } = require("@sms/shared/utils");
+
 /**
  * Helper function to generate subjectId
  * Format: SUB + 5 digit number (SUB00001, SUB00002, ...)
  */
 const generateSubjectId = async (SubjectModel) => {
-  const lastSubject = await SubjectModel.findOne().sort({ subjectId: -1 });
-
-  if (!lastSubject || !lastSubject.subjectId) {
-    return "SUB00001";
-  }
-
-  const lastIdNumber = parseInt(lastSubject.subjectId.replace("SUB", ""), 10);
-  const newIdNumber = lastIdNumber + 1;
-
-  return `SUB${String(newIdNumber).padStart(5, "0")}`;
+  return generateNextId(SubjectModel, "subjectId", "SUB", 5);
 };
 
 /**

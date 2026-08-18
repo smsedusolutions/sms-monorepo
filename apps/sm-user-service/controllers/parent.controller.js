@@ -28,21 +28,14 @@ const getStudentModel = (schoolDbName) => {
   return schoolDb.model("Student", studentSchema);
 };
 
+const { generateNextId } = require("@sms/shared/utils");
+
 /**
  * Helper function to generate parentId
  * Format: PRT + 5 digit number (PRT00001, PRT00002, ...)
  */
 const generateParentId = async (Parent) => {
-  const lastParent = await Parent.findOne().sort({ parentId: -1 });
-
-  if (!lastParent || !lastParent.parentId) {
-    return "PRT00001";
-  }
-
-  const lastIdNumber = parseInt(lastParent.parentId.replace("PRT", ""), 10);
-  const newIdNumber = lastIdNumber + 1;
-
-  return `PRT${String(newIdNumber).padStart(5, "0")}`;
+  return generateNextId(Parent, "parentId", "PRT", 5);
 };
 
 /**

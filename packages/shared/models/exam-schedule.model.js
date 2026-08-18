@@ -85,5 +85,8 @@ ExamScheduleSchema.index({ schoolId: 1, roomId: 1, date: 1 });
 ExamScheduleSchema.index({ schoolId: 1, invigilators: 1, date: 1 });
 // Ensure one exam per subject per class per exam event
 ExamScheduleSchema.index({ schoolId: 1, examId: 1, classId: 1, subjectId: 1 }, { unique: true });
+// Query optimization indexes
+ExamScheduleSchema.index({ schoolId: 1, examId: 1, publishStatus: 1 });
+ExamScheduleSchema.index({ schoolId: 1, examId: 1, date: 1 });
 
 module.exports = ExamScheduleSchema;

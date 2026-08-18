@@ -10,4 +10,5 @@ module.exports = {
   ...pagination,
   ...require("./activityLogger"),
   ...require("./originMatcher"),
+  ...require("./idGenerator"),
 };

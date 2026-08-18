@@ -16,14 +16,11 @@ const getAnnouncementModels = (schoolDbName) => {
     };
 };
 
+const { generateNextId } = require("@sms/shared/utils");
+
 // Generate unique announcement ID
 const generateAnnouncementId = async (AnnouncementModel) => {
-    const lastAnnouncement = await AnnouncementModel.findOne().sort({ createdAt: -1 });
-    if (lastAnnouncement && lastAnnouncement.announcementId) {
-        const lastNum = parseInt(lastAnnouncement.announcementId.replace('ANN', ''));
-        return `ANN${String(lastNum + 1).padStart(5, '0')}`;
-    }
-    return 'ANN00001';
+    return generateNextId(AnnouncementModel, 'announcementId', 'ANN', 5);
 };
 
 // ==========================================

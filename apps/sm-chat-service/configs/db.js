@@ -21,9 +21,9 @@ const connectDB = async () => {
     const options = {
       serverSelectionTimeoutMS: 30000,
       socketTimeoutMS: 90000,
-      maxPoolSize: 10,
-      minPoolSize: 1,
-      maxIdleTimeMS: 10000,
+      maxPoolSize: 25,
+      minPoolSize: 5,
+      maxIdleTimeMS: 30000,
       retryWrites: true,
       retryReads: true,
       autoCreate: true,

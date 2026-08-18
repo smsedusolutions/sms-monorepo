@@ -352,7 +352,7 @@ const getClassTimetable = async (req, res) => {
         const { TimetableEntry, TimetableConfig, Teacher, Subject } = models;
 
         // Get active config for period structure
-        const config = await TimetableConfig.findOne({ schoolId, isActive: true });
+        const config = await TimetableConfig.findOne({ schoolId, isActive: true }).lean();
         const periodMap = getDisplayPeriodMap(config);
 
         // Get all entries for this class/section
@@ -361,10 +361,12 @@ const getClassTimetable = async (req, res) => {
             classId,
             sectionId,
             isActive: true,
-        });
+        }).lean();
 
-        const teachers = await Teacher.find({ schoolId });
-        const subjects = await Subject.find({ schoolId });
+        const [teachers, subjects] = await Promise.all([
+            Teacher.find({ schoolId }).lean(),
+            Subject.find({ schoolId }).lean()
+        ]);
 
         const teacherMap = new Map();
         teachers.forEach(t => {
@@ -445,14 +447,14 @@ const getClassTimetable = async (req, res) => {
             }
 
             return {
-                ...entry.toObject(),
+                ...entry,
                 displayPeriodNumber: periodMap.get(entry.periodNumber) || entry.periodNumber,
                 teacher: tInfo,
                 subject: sInfo,
             };
         });
 
-        let processedConfig = config ? config.toObject() : null;
+        let processedConfig = config ? { ...config } : null;
         if (processedConfig && processedConfig.periods) {
             processedConfig.periods = processedConfig.periods.map(p => ({
                 ...p,
@@ -486,7 +488,7 @@ const getTeacherTimetable = async (req, res) => {
         const { TimetableEntry, TimetableConfig, Class, Subject } = models;
 
         // Get active config for period structure
-        const config = await TimetableConfig.findOne({ schoolId, isActive: true });
+        const config = await TimetableConfig.findOne({ schoolId, isActive: true }).lean();
         const periodMap = getDisplayPeriodMap(config);
 
         // Get all entries for this teacher
@@ -494,24 +496,43 @@ const getTeacherTimetable = async (req, res) => {
             schoolId,
             teacherId,
             isActive: true,
+        }).lean();
+
+        // Batch fetch classes and subjects using $in
+        const classIds = [...new Set(entries.map(e => e.classId).filter(Boolean))];
+        const subjectIds = [...new Set(entries.map(e => e.subjectId).filter(Boolean))];
+
+        const [classes, subjects] = await Promise.all([
+            Class.find({ schoolId, $or: [{ classId: { $in: classIds } }, { _id: { $in: classIds.filter(id => mongoose.isValidObjectId(id)) } }] }).lean(),
+            Subject.find({ schoolId, $or: [{ subjectId: { $in: subjectIds } }, { _id: { $in: subjectIds.filter(id => mongoose.isValidObjectId(id)) } }] }).lean()
+        ]);
+
+        const classMap = new Map();
+        classes.forEach(c => {
+            if (c.classId) classMap.set(c.classId, c);
+            if (c._id) classMap.set(c._id.toString(), c);
         });
 
-        // Populate class and subject details
-        const populatedEntries = await Promise.all(
-            entries.map(async (entry) => {
-                const classDoc = await Class.findOne({ classId: entry.classId });
-                const section = classDoc?.sections?.find((s) => s.sectionId === entry.sectionId);
-                const subject = await Subject.findOne({ subjectId: entry.subjectId });
-                return {
-                    ...entry.toObject(),
-                    displayPeriodNumber: periodMap.get(entry.periodNumber) || entry.periodNumber,
-                    class: classDoc ? { classId: classDoc.classId, name: classDoc.name, section: section?.name || entry.sectionId } : null,
-                    subject: subject ? { subjectId: subject.subjectId, name: subject.name, code: subject.code } : null,
-                };
-            })
-        );
+        const subjectMap = new Map();
+        subjects.forEach(s => {
+            if (s.subjectId) subjectMap.set(s.subjectId, s);
+            if (s._id) subjectMap.set(s._id.toString(), s);
+        });
 
-        let processedConfig = config ? config.toObject() : null;
+        // Populate class and subject details synchronously in memory
+        const populatedEntries = entries.map((entry) => {
+            const classDoc = classMap.get(entry.classId);
+            const section = classDoc?.sections?.find((s) => (s.sectionId === entry.sectionId || s._id?.toString() === entry.sectionId || s.name === entry.sectionId));
+            const subject = subjectMap.get(entry.subjectId);
+            return {
+                ...entry,
+                displayPeriodNumber: periodMap.get(entry.periodNumber) || entry.periodNumber,
+                class: classDoc ? { classId: classDoc.classId || classDoc._id?.toString(), name: classDoc.name, section: section?.name || entry.sectionId } : null,
+                subject: subject ? { subjectId: subject.subjectId || subject._id?.toString(), name: subject.name, code: subject.code } : null,
+            };
+        });
+
+        let processedConfig = config ? { ...config } : null;
         if (processedConfig && processedConfig.periods) {
             processedConfig.periods = processedConfig.periods.map(p => ({
                 ...p,
@@ -548,22 +569,49 @@ const getEntriesByDay = async (req, res) => {
             schoolId,
             dayOfWeek,
             isActive: true,
+        }).lean();
+
+        // Batch fetch teachers, classes, and subjects using $in
+        const teacherIds = [...new Set(entries.map(e => e.teacherId).filter(Boolean))];
+        const classIds = [...new Set(entries.map(e => e.classId).filter(Boolean))];
+        const subjectIds = [...new Set(entries.map(e => e.subjectId).filter(Boolean))];
+
+        const [teachers, classes, subjects] = await Promise.all([
+            Teacher.find({ schoolId, $or: [{ teacherId: { $in: teacherIds } }, { _id: { $in: teacherIds.filter(id => mongoose.isValidObjectId(id)) } }] }).lean(),
+            Class.find({ schoolId, $or: [{ classId: { $in: classIds } }, { _id: { $in: classIds.filter(id => mongoose.isValidObjectId(id)) } }] }).lean(),
+            Subject.find({ schoolId, $or: [{ subjectId: { $in: subjectIds } }, { _id: { $in: subjectIds.filter(id => mongoose.isValidObjectId(id)) } }] }).lean()
+        ]);
+
+        const teacherMap = new Map();
+        teachers.forEach(t => {
+            if (t.teacherId) teacherMap.set(t.teacherId, t);
+            if (t._id) teacherMap.set(t._id.toString(), t);
         });
 
-        // Populate details
-        const populatedEntries = await Promise.all(
-            entries.map(async (entry) => {
-                const teacher = await Teacher.findOne({ teacherId: entry.teacherId });
-                const classDoc = await Class.findOne({ classId: entry.classId });
-                const subject = await Subject.findOne({ subjectId: entry.subjectId });
-                return {
-                    ...entry.toObject(),
-                    teacher: teacher ? { teacherId: teacher.teacherId, name: `${teacher.firstName} ${teacher.lastName}` } : null,
-                    class: classDoc ? { classId: classDoc.classId, name: classDoc.name } : null,
-                    subject: subject ? { subjectId: subject.subjectId, name: subject.name } : null,
-                };
-            })
-        );
+        const classMap = new Map();
+        classes.forEach(c => {
+            if (c.classId) classMap.set(c.classId, c);
+            if (c._id) classMap.set(c._id.toString(), c);
+        });
+
+        const subjectMap = new Map();
+        subjects.forEach(s => {
+            if (s.subjectId) subjectMap.set(s.subjectId, s);
+            if (s._id) subjectMap.set(s._id.toString(), s);
+        });
+
+        // Populate details synchronously in memory
+        const populatedEntries = entries.map((entry) => {
+            const teacher = teacherMap.get(entry.teacherId);
+            const classDoc = classMap.get(entry.classId);
+            const subject = subjectMap.get(entry.subjectId);
+            return {
+                ...entry,
+                teacher: teacher ? { teacherId: teacher.teacherId || teacher._id?.toString(), name: `${teacher.firstName || ''} ${teacher.lastName || ''}`.trim() } : null,
+                class: classDoc ? { classId: classDoc.classId || classDoc._id?.toString(), name: classDoc.name } : null,
+                subject: subject ? { subjectId: subject.subjectId || subject._id?.toString(), name: subject.name } : null,
+            };
+        });
 
         res.status(200).json({
             success: true,
@@ -719,7 +767,7 @@ const getTeacherFreePeriods = async (req, res) => {
         const { TimetableEntry, TimetableConfig } = models;
 
         // Get active config
-        const config = await TimetableConfig.findOne({ schoolId, isActive: true });
+        const config = await TimetableConfig.findOne({ schoolId, isActive: true }).lean();
         if (!config) {
             return res.status(404).json({
                 success: false,
@@ -736,7 +784,7 @@ const getTeacherFreePeriods = async (req, res) => {
             teacherId,
             dayOfWeek: { $in: workingDays },
             isActive: true,
-        });
+        }).lean();
 
         // Calculate free periods for each day
         const freePeriods = {};
@@ -788,22 +836,22 @@ const getFreeTeachersForPeriod = async (req, res) => {
         const models = getModels(schoolDbName);
         const { TimetableEntry, Teacher } = models;
 
-        // Get all teachers
-        const allTeachers = await Teacher.find({ schoolId, status: "active" });
+        // Get all teachers and assigned entries in parallel
+        const [allTeachers, assignedEntries] = await Promise.all([
+            Teacher.find({ schoolId, status: "active" }).lean(),
+            TimetableEntry.find({
+                schoolId,
+                dayOfWeek,
+                periodNumber: parseInt(periodNumber, 10),
+                isActive: true,
+            }).lean()
+        ]);
 
-        // Get all assigned teachers for this day/period
-        const assignedEntries = await TimetableEntry.find({
-            schoolId,
-            dayOfWeek,
-            periodNumber: parseInt(periodNumber, 10),
-            isActive: true,
-        });
-
-        const assignedTeacherIds = assignedEntries.map((e) => e.teacherId);
+        const assignedTeacherIds = new Set(assignedEntries.map((e) => e.teacherId));
 
         // Filter free teachers
         const freeTeachers = allTeachers
-            .filter((t) => !assignedTeacherIds.includes(t.teacherId))
+            .filter((t) => !assignedTeacherIds.has(t.teacherId))
             .map((t) => ({
                 teacherId: t.teacherId,
                 name: `${t.firstName} ${t.lastName}`,

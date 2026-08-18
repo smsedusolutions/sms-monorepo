@@ -38,12 +38,13 @@ const generateNotificationId = () => 'NOTIF-' + crypto.randomBytes(4).toString('
 // Helper: Send result published notifications to students and parents
 const sendResultPublishedNotifications = async (models, schoolId, exam, schedule, studentIds) => {
     try {
+        if (!studentIds || studentIds.length === 0) return;
         const { Notification, Student, Subject } = models;
-        const subjectDoc = await Subject.findOne({ $or: [{ _id: schedule.subjectId }, { subjectId: schedule.subjectId }] });
+        const subjectDoc = await Subject.findOne({ $or: [{ _id: schedule.subjectId }, { subjectId: schedule.subjectId }] }).lean();
         const subjectName = subjectDoc ? subjectDoc.name : 'Subject';
 
         // Fetch students
-        const students = await Student.find({ schoolId, studentId: { $in: studentIds } }, 'studentId parentId firstName lastName');
+        const students = await Student.find({ schoolId, studentId: { $in: studentIds } }, 'studentId parentId firstName lastName').lean();
         const notifDocs = [];
 
         for (const student of students) {
@@ -178,17 +179,28 @@ const submitMarks = async (req, res) => {
         }
 
         // 2. Fetch Grading System
-        const gradingSystem = await GradingSystem.findById(exam.gradingSystemId);
+        const gradingSystem = await GradingSystem.findById(exam.gradingSystemId).lean();
 
         // 3. Process Marks
         const operations = [];
         const errors = [];
 
+        // Batch fetch all registrations in one query
+        const studentIds = marks.map(entry => entry.studentId).filter(Boolean);
+        const registrations = await StudentExamRegistration.find({
+            schoolId,
+            examId,
+            studentId: { $in: studentIds }
+        }).lean();
+
+        const regMap = new Map();
+        registrations.forEach(r => {
+            regMap.set(r.studentId, r);
+        });
+
         for (const entry of marks) {
             // Validate Registration/Admit Card (Strict Mode)
-            const registration = await StudentExamRegistration.findOne({
-                schoolId, examId, studentId: entry.studentId
-            });
+            const registration = regMap.get(entry.studentId);
 
             if (!registration || !registration.admitCardGenerated) {
                 errors.push(`Student ${entry.studentId} does not have a generated admit card.`);
@@ -334,7 +346,7 @@ const getSubjectResults = async (req, res) => {
         const schoolDbName = await getSchoolDbName(schoolId);
         const { ExamResult, Student, ExamSchedule, Parent } = getModels(schoolDbName);
 
-        const schedule = await ExamSchedule.findOne({ schoolId, _id: scheduleId, examId });
+        const schedule = await ExamSchedule.findOne({ schoolId, _id: scheduleId, examId }).lean();
         if (!schedule) {
             return res.status(404).json({ success: false, message: "Exam schedule not found" });
         }
@@ -363,16 +375,16 @@ const getSubjectResults = async (req, res) => {
                     schedule: { publishStatus: schedule.publishStatus || 'draft' }
                 });
             }
-            const parentDoc = await Parent.findOne({ $or: [{ parentId: currentUserId }, { userId: currentUserId }] });
+            const parentDoc = await Parent.findOne({ $or: [{ parentId: currentUserId }, { userId: currentUserId }] }).lean();
             const childIds = parentDoc?.students || [];
             filter.studentId = { $in: childIds };
             filter.isPublished = true;
         }
 
-        const results = await ExamResult.find(filter);
+        const results = await ExamResult.find(filter).lean();
 
         const studentIds = results.map(r => r.studentId);
-        const students = await Student.find({ studentId: { $in: studentIds } }, 'studentId firstName lastName rollNumber');
+        const students = await Student.find({ schoolId, studentId: { $in: studentIds } }, 'studentId firstName lastName rollNumber').lean();
 
         const studentMap = students.reduce((acc, s) => {
             acc[s.studentId] = s;
@@ -380,7 +392,7 @@ const getSubjectResults = async (req, res) => {
         }, {});
 
         const data = results.map(r => {
-            const obj = r.toObject();
+            const obj = { ...r };
 
             // Dynamic Decryption if encrypted
             if (obj.isEncrypted && obj.encryptedMarks && obj.encryptionIv && obj.encryptionAuthTag) {
@@ -526,12 +538,16 @@ const publishResults = async (req, res) => {
             }
 
             // Send notifications for all published schedules
-            const schedules = await ExamSchedule.find(scheduleFilter);
-            for (const sch of schedules) {
-                const results = await ExamResult.find({ schoolId, examId, scheduleId: sch._id }, 'studentId');
-                const studentIds = results.map(r => r.studentId);
-                await sendResultPublishedNotifications(models, schoolId, exam, sch, studentIds);
-            }
+            const schedules = await ExamSchedule.find(scheduleFilter).lean();
+            await Promise.all(
+                schedules.map(async (sch) => {
+                    const results = await ExamResult.find({ schoolId, examId, scheduleId: sch._id }, 'studentId').lean();
+                    const studentIds = results.map(r => r.studentId);
+                    if (studentIds.length > 0) {
+                        await sendResultPublishedNotifications(models, schoolId, exam, sch, studentIds);
+                    }
+                })
+            );
 
             return res.status(200).json({
                 success: true,
@@ -610,12 +626,38 @@ const getExamPublishStatus = async (req, res) => {
         const schoolDbName = await getSchoolDbName(schoolId);
         const { Exam, ExamSchedule, ExamResult, Class, Subject, Student } = getModels(schoolDbName);
 
-        const exam = await Exam.findOne({ schoolId, examId, isActive: true });
+        const [exam, schedules, classes, subjects, resultCounts, studentsByClass] = await Promise.all([
+            Exam.findOne({ schoolId, examId, isActive: true }).lean(),
+            ExamSchedule.find({ schoolId, examId }).lean(),
+            Class.find({ schoolId }).lean(),
+            Subject.find({ schoolId }).lean(),
+            ExamResult.aggregate([
+                { $match: { schoolId, examId } },
+                { $group: { _id: "$scheduleId", count: { $sum: 1 } } }
+            ]),
+            Student.aggregate([
+                { $match: { schoolId, status: { $ne: "graduated" } } },
+                {
+                    $group: {
+                        _id: { class: "$class", classId: "$classId" },
+                        count: { $sum: 1 }
+                    }
+                }
+            ])
+        ]);
+
         if (!exam) return res.status(404).json({ success: false, message: "Exam not found" });
 
-        const schedules = await ExamSchedule.find({ schoolId, examId });
-        const classes = await Class.find({ schoolId });
-        const subjects = await Subject.find({ schoolId });
+        const resultMap = new Map(resultCounts.map(r => [String(r._id), r.count]));
+
+        // Build student count lookup map
+        const studentCountMap = new Map();
+        studentsByClass.forEach(item => {
+            const cls = item._id?.class;
+            const clsId = item._id?.classId;
+            if (cls) studentCountMap.set(cls, (studentCountMap.get(cls) || 0) + item.count);
+            if (clsId && clsId !== cls) studentCountMap.set(clsId, (studentCountMap.get(clsId) || 0) + item.count);
+        });
 
         const classMap = classes.reduce((acc, c) => {
             if (c.classId) acc[c.classId] = c.name;
@@ -655,14 +697,11 @@ const getExamPublishStatus = async (req, res) => {
             else if (status === 'teacher_published') teacherPublishedCount++;
             else draftCount++;
 
-            const resultCount = await ExamResult.countDocuments({ schoolId, examId, scheduleId: sch._id });
+            const resultCount = resultMap.get(String(sch._id)) || 0;
 
             // Count registered/enrolled students in this class
             const rawClass = sch.classId.includes('#') ? sch.classId.split('#')[0] : (sch.classId.includes('_') ? sch.classId.split('_')[0] : sch.classId);
-            const totalStudents = await Student.countDocuments({
-                schoolId,
-                $or: [{ class: rawClass }, { classId: rawClass }, { class: sch.classId }]
-            });
+            const totalStudents = studentCountMap.get(sch.classId) || studentCountMap.get(rawClass) || 0;
 
             scheduleList.push({
                 _id: sch._id,
@@ -727,7 +766,7 @@ const getStudentReportCard = async (req, res) => {
         const { ExamResult, Exam, Student } = getModels(schoolDbName);
 
         // 1. Fetch Student Details
-        const student = await Student.findOne({ studentId });
+        const student = await Student.findOne({ studentId }).lean();
         if (!student) return res.status(404).json({ success: false, message: "Student not found" });
 
         // 2. Find Exams for the criteria
@@ -735,7 +774,7 @@ const getStudentReportCard = async (req, res) => {
         if (academicYear) examQuery.academicYear = academicYear;
         if (termId) examQuery.termId = termId;
 
-        const exams = await Exam.find(examQuery).sort({ startDate: 1 }).populate('termId typeId');
+        const exams = await Exam.find(examQuery).sort({ startDate: 1 }).populate('termId typeId').lean();
         const examIds = exams.map(e => e.examId);
 
         // 3. Fetch Results - Strict Final Published Only
@@ -745,7 +784,7 @@ const getStudentReportCard = async (req, res) => {
             examId: { $in: examIds },
             isPublished: true,
             publishStatus: 'final_published'
-        });
+        }).lean();
 
         // 4. Structure Data with Dynamic Decryption
         const report = {
@@ -806,16 +845,16 @@ const remindTeacherForMarksEntry = async (req, res) => {
         const schoolDbName = await getSchoolDbName(schoolId);
         const { Exam, ExamSchedule, Subject, Class, Teacher, Notification } = getModels(schoolDbName);
 
-        const exam = await Exam.findOne({ schoolId, examId });
+        const exam = await Exam.findOne({ schoolId, examId }).lean();
         if (!exam) return res.status(404).json({ success: false, message: "Exam not found" });
 
-        const schedule = await ExamSchedule.findOne({ schoolId, _id: scheduleId, examId });
+        const schedule = await ExamSchedule.findOne({ schoolId, _id: scheduleId, examId }).lean();
         if (!schedule) return res.status(404).json({ success: false, message: "Schedule not found" });
 
-        const subject = await Subject.findOne({ $or: [{ _id: schedule.subjectId }, { subjectId: schedule.subjectId }] });
+        const subject = await Subject.findOne({ $or: [{ _id: schedule.subjectId }, { subjectId: schedule.subjectId }] }).lean();
         const subjectName = subject ? subject.name : 'Subject';
 
-        const classDoc = await Class.findOne({ $or: [{ _id: schedule.classId }, { classId: schedule.classId }] });
+        const classDoc = await Class.findOne({ $or: [{ _id: schedule.classId }, { classId: schedule.classId }] }).lean();
         const className = classDoc ? classDoc.name : 'Class';
 
         // Find teachers assigned to this subject or invigilators
@@ -837,7 +876,7 @@ const remindTeacherForMarksEntry = async (req, res) => {
 
         if (targetTeacherIds.length === 0) {
             // Fallback: Notify all active teachers of this school
-            const allTeachers = await Teacher.find({ schoolId, status: 'active' }, 'teacherId');
+            const allTeachers = await Teacher.find({ schoolId, status: 'active' }, 'teacherId').lean();
             targetTeacherIds = allTeachers.map(t => t.teacherId);
         }
 

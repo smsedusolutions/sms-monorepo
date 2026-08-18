@@ -25,14 +25,11 @@ const getModels = (schoolDbName) => {
     };
 };
 
+const { generateNextId } = require("@sms/shared/utils");
+
 // Generate unique homework ID
 const generateHomeworkId = async (HomeworkModel) => {
-    const lastHomework = await HomeworkModel.findOne().sort({ createdAt: -1 });
-    if (lastHomework && lastHomework.homeworkId) {
-        const lastNum = parseInt(lastHomework.homeworkId.replace('HW', ''));
-        return `HW${String(lastNum + 1).padStart(5, '0')}`;
-    }
-    return 'HW00001';
+    return generateNextId(HomeworkModel, 'homeworkId', 'HW', 5);
 };
 
 // ==========================================
