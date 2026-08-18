@@ -6,6 +6,21 @@ const { getSchoolDbConnection } = require("../configs/db");
 // Schema imports for school database queries
 const { TeacherSchema: teacherSchema, StudentSchema: studentSchema, ParentSchema: parentSchema, ClassSchema: classSchema, SubjectSchema: subjectSchema } = require("@sms/shared");
 
+// Cache for school documents to avoid repeated database lookups on every login
+const schoolCache = new Map();
+
+const getSchoolById = async (schoolId) => {
+    if (!schoolId) return null;
+    if (schoolCache.has(schoolId)) {
+        return schoolCache.get(schoolId);
+    }
+    const school = await School.findOne({ schoolId }).lean();
+    if (school) {
+        schoolCache.set(schoolId, school);
+    }
+    return school;
+};
+
 /**
  * Unified Login - Single login for all user types
  * User only provides email + password
@@ -29,7 +44,7 @@ const login = async (req, res) => {
         const emailEntry = await EmailRegistry.findOne({
             email: normalizedEmail,
             status: "active"
-        });
+        }).lean();
 
         if (!emailEntry) {
             return res.status(401).json({
@@ -46,7 +61,7 @@ const login = async (req, res) => {
         // Step 2: Authenticate based on role
         if (role === "super_admin") {
             // Super Admin - stored in Admin collection
-            user = await Admin.findOne({ email: normalizedEmail });
+            user = await Admin.findOne({ email: normalizedEmail }).lean();
 
             // Allow if status is active or undefined (legacy support)
             if (!user || (user.status && user.status !== "active")) {
@@ -76,8 +91,8 @@ const login = async (req, res) => {
 
             // Parallel fetch: user + school lookup (schoolId known from EmailRegistry)
             const [schAdminUser, school] = await Promise.all([
-                User.findOne({ email: normalizedEmail }),
-                School.findOne({ schoolId }),
+                User.findOne({ email: normalizedEmail }).lean(),
+                getSchoolById(schoolId),
             ]);
             user = schAdminUser;
 
@@ -113,10 +128,8 @@ const login = async (req, res) => {
             };
 
         } else {
-            // Teacher, Student, Parent, Driver - stored in school-specific database
-            // We need the school to get schoolDbName, but we can resolve the model
-            // schema early and fetch school + user in parallel once we have schoolDb.
-            const school = await School.findOne({ schoolId });
+            // Teacher, Student, Parent, Driver, Principal - stored in school-specific database
+            const school = await getSchoolById(schoolId);
 
             if (!school || school.status !== "active") {
                 return res.status(403).json({
@@ -159,7 +172,11 @@ const login = async (req, res) => {
                     });
             }
 
-            user = await Model.findOne({ email: normalizedEmail });
+            // Utilize compound index { email: 1, schoolId: 1 }
+            user = await Model.findOne({ email: normalizedEmail, schoolId }).lean();
+            if (!user) {
+                user = await Model.findOne({ email: normalizedEmail }).lean();
+            }
 
             if (!user || user.status !== "active") {
                 return res.status(401).json({
@@ -187,17 +204,16 @@ const login = async (req, res) => {
                 lastName: user.lastName,
             };
 
-            // Add role-specific fields — enrichment queries run in parallel where possible
+            // Add role-specific fields
             if (role === "teacher") {
                 tokenPayload.teacherId = user.teacherId;
                 tokenPayload.classes = user.classes || [];
                 tokenPayload.subjects = user.subjects || [];
                 tokenPayload.department = user.department;
 
-                // Fetch subject names (non-blocking — failure is acceptable)
                 try {
                     const Subject = schoolDb.model("Subject", subjectSchema);
-                    const subjectDocs = await Subject.find({ subjectId: { $in: user.subjects || [] } }).lean();
+                    const subjectDocs = await Subject.find({ schoolId, subjectId: { $in: user.subjects || [] } }, 'name').lean();
                     tokenPayload.subjectNames = subjectDocs.map(s => s.name);
                 } catch (e) {
                     tokenPayload.subjectNames = [];
@@ -208,13 +224,12 @@ const login = async (req, res) => {
                 tokenPayload.section = user.section;
                 tokenPayload.rollNumber = user.rollNumber;
 
-                // Fetch class and section names
                 try {
                     const Class = schoolDb.model("Class", classSchema);
-                    const classDoc = await Class.findOne({ classId: user.class }).lean();
+                    const classDoc = await Class.findOne({ schoolId, classId: user.class }, 'name sections').lean();
                     if (classDoc) {
                         tokenPayload.className = classDoc.name;
-                        const sectionDoc = classDoc.sections?.find(s => s.sectionId === user.section || s._id?.toString() === user.section);
+                        const sectionDoc = classDoc.sections?.find(s => s.sectionId === user.section || s._id?.toString() === user.section || s.name === user.section);
                         tokenPayload.sectionName = sectionDoc?.name || user.section;
                     }
                 } catch (e) {
@@ -295,18 +310,11 @@ const verifyToken = async (req, res) => {
     }
 };
 
+const { generateNextId } = require("@sms/shared/utils");
+
 // Helper function to generate adminId
 const generateAdminId = async () => {
-    const lastAdmin = await Admin.findOne().sort({ adminId: -1 });
-
-    if (!lastAdmin || !lastAdmin.adminId) {
-        return "ADM00001";
-    }
-
-    const lastIdNumber = parseInt(lastAdmin.adminId.replace("ADM", ""), 10);
-    const newIdNumber = lastIdNumber + 1;
-
-    return `ADM${String(newIdNumber).padStart(5, "0")}`;
+    return generateNextId(Admin, "adminId", "ADM", 5);
 };
 
 // Create Super Admin (initial setup or by existing super_admin)

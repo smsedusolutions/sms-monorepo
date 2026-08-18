@@ -8,18 +8,11 @@ const {
   formatPaginationResponse,
 } = require("../utils/pagination");
 
+const { generateNextId } = require("@sms/shared/utils");
+
 // Helper function to generate userId
 const generateUserId = async () => {
-  const lastUser = await User.findOne().sort({ userId: -1 });
-
-  if (!lastUser || !lastUser.userId) {
-    return "USR00001";
-  }
-
-  const lastIdNumber = parseInt(lastUser.userId.replace("USR", ""), 10);
-  const newIdNumber = lastIdNumber + 1;
-
-  return `USR${String(newIdNumber).padStart(5, "0")}`;
+  return generateNextId(User, "userId", "USR", 5);
 };
 
 // Create User (School Admin)

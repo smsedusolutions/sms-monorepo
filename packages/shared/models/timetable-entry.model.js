@@ -87,5 +87,8 @@ timetableEntrySchema.index(
     { schoolId: 1, classId: 1, sectionId: 1, dayOfWeek: 1, periodNumber: 1, isActive: 1 },
     { unique: true, partialFilterExpression: { isActive: true } }
 );
+// Query optimization indexes
+timetableEntrySchema.index({ schoolId: 1, teacherId: 1, isActive: 1 });
+timetableEntrySchema.index({ schoolId: 1, dayOfWeek: 1, isActive: 1 });
 
 module.exports = timetableEntrySchema;

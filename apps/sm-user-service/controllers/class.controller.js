@@ -16,21 +16,14 @@ const getTeacherModel = (schoolDbName) => {
     return schoolDb.models.Teacher || schoolDb.model("Teacher", teacherSchema);
 };
 
+const { generateNextId } = require("@sms/shared/utils");
+
 /**
  * Helper function to generate classId
  * Format: CLS + 5 digit number (CLS00001, CLS00002, ...)
  */
 const generateClassId = async (ClassModel) => {
-    const lastClass = await ClassModel.findOne().sort({ classId: -1 });
-
-    if (!lastClass || !lastClass.classId) {
-        return "CLS00001";
-    }
-
-    const lastIdNumber = parseInt(lastClass.classId.replace("CLS", ""), 10);
-    const newIdNumber = lastIdNumber + 1;
-
-    return `CLS${String(newIdNumber).padStart(5, "0")}`;
+    return generateNextId(ClassModel, "classId", "CLS", 5);
 };
 
 /**
@@ -43,10 +36,14 @@ const generateSectionId = (existingSections) => {
     }
 
     const sectionIds = existingSections
-        .map((s) => parseInt(s.sectionId.replace("SEC", ""), 10))
-        .filter((n) => !isNaN(n));
+        .map((s) => {
+            if (!s || !s.sectionId) return NaN;
+            const match = String(s.sectionId).match(/^SEC(\d+)$/);
+            return match ? parseInt(match[1], 10) : NaN;
+        })
+        .filter((n) => !isNaN(n) && n > 0);
 
-    const maxId = Math.max(...sectionIds, 0);
+    const maxId = sectionIds.length > 0 ? Math.max(...sectionIds) : 0;
     return `SEC${String(maxId + 1).padStart(5, "0")}`;
 };
 

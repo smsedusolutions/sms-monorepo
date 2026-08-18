@@ -94,5 +94,10 @@ studentSchema.index(
     { unique: true, sparse: true }
 );
 
+// High-frequency query indexes
+studentSchema.index({ schoolId: 1, studentId: 1 });
+studentSchema.index({ schoolId: 1, class: 1, section: 1, status: 1 });
+studentSchema.index({ schoolId: 1, parentId: 1 });
+
 // Export schema definition for use with school-specific databases
 module.exports = studentSchema;

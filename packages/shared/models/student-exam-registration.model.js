@@ -47,5 +47,7 @@ const StudentExamRegistrationSchema = new Schema({
 
 // Ensure unique registration per student per exam
 StudentExamRegistrationSchema.index({ schoolId: 1, examId: 1, studentId: 1 }, { unique: true });
+// Query optimization indexes
+StudentExamRegistrationSchema.index({ schoolId: 1, examId: 1, classId: 1, sectionId: 1 });
 
 module.exports = StudentExamRegistrationSchema;

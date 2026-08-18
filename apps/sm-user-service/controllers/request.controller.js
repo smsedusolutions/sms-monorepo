@@ -9,16 +9,13 @@ const getRequestModel = (schoolDbName) => {
     return schoolDb.model("Request", requestSchema);
 };
 
+const { generateNextId } = require("@sms/shared/utils");
+
 /**
  * Generate request ID
  */
 const generateRequestId = async (Request) => {
-    const lastRequest = await Request.findOne().sort({ requestId: -1 });
-    if (!lastRequest || !lastRequest.requestId) {
-        return "REQ00001";
-    }
-    const lastIdNumber = parseInt(lastRequest.requestId.replace("REQ", ""), 10);
-    return `REQ${String(lastIdNumber + 1).padStart(5, "0")}`;
+    return generateNextId(Request, "requestId", "REQ", 5);
 };
 
 /**

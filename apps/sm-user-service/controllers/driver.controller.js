@@ -16,11 +16,10 @@ const getDriverModel = (schoolDbName) => {
   return schoolDb.model("Driver", driverSchema);
 };
 
+const { generateNextId } = require("@sms/shared/utils");
+
 const generateDriverId = async (Driver) => {
-  const lastDriver = await Driver.findOne().sort({ driverId: -1 });
-  if (!lastDriver || !lastDriver.driverId) return "DRV00001";
-  const lastIdNumber = parseInt(lastDriver.driverId.replace("DRV", ""), 10);
-  return `DRV${String(lastIdNumber + 1).padStart(5, "0")}`;
+  return generateNextId(Driver, "driverId", "DRV", 5);
 };
 
 const getSchoolDbName = async (schoolId) => {
