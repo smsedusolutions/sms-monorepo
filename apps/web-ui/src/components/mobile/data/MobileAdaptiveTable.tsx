@@ -5,7 +5,7 @@ import type { AppTableProps } from '../../shared/AppTable';
 import MobileCardList from './MobileCardList';
 import MobileCardItem from './MobileCardItem';
 import type { MobileCardMeta } from './MobileCardItem';
-import { Box, Pagination } from '@mui/material';
+import { Box, Pagination, Typography } from '@mui/material';
 
 export interface MobileAdaptiveTableProps<T> extends AppTableProps<T> {
   mobileTitleKey?: keyof T | ((row: T) => React.ReactNode);

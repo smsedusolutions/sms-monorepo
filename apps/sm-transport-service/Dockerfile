@@ -1,5 +1,5 @@
 # Stage 1: Builder
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 
 # Copy shared package first
@@ -21,7 +21,7 @@ RUN mkdir -p node_modules/@sms && cp -r packages/shared node_modules/@sms/shared
 COPY apps/sm-transport-service/ ./
 
 # Stage 2: Production
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 
 # Copy from builder

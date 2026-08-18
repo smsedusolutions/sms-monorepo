@@ -72,13 +72,6 @@ const StudentAttendance: React.FC = () => {
     const percentage = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(1) : '0';
     const pctNumber = parseFloat(percentage);
 
-    // Last 7 days attendance
-    const last7Days = useMemo(() => {
-        return [...rawAttendance]
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-            .slice(-7);
-    }, [rawAttendance]);
-
     // Streaks calculation
     const { currentStreak, longestStreak } = useMemo(() => {
         const sorted = [...rawAttendance].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());

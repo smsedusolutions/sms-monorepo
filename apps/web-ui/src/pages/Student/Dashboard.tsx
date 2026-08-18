@@ -19,7 +19,6 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Chart } from 'react-google-charts';
-import { AppCard } from '../../components/shared/AppCard';
 import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
 import TokenService from '../../queries/token/tokenService';
 import { useGetSimpleStudentAttendance } from '../../queries/Attendance';
