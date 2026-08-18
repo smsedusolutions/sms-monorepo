@@ -32,7 +32,8 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   const location = useLocation();
   const schoolId = TokenService.getSchoolId();
 
-  if (!userRole || !allowedRoles.includes(userRole)) {
+  const isRoleAllowed = userRole && allowedRoles.some((r) => r.toLowerCase() === userRole.toLowerCase());
+  if (!isRoleAllowed) {
     return <Navigate to="/unauthorized" replace />;
   }
 
@@ -91,7 +92,8 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
         const url = menu.menuUrl.startsWith("/")
           ? menu.menuUrl
           : `/${menu.menuUrl}`;
-        paths.push(`${basePath}${url}`);
+        const fullPath = url.startsWith(basePath) ? url : `${basePath}${url}`;
+        paths.push(fullPath);
       }
     });
     return paths;

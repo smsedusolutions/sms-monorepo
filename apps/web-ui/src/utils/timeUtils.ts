@@ -64,3 +64,64 @@ export function formatTimeDisplay(timeRangeOrSingle: string, timeFormat: TimeFor
 
   return formatSingleTime(timeRangeOrSingle, timeFormat);
 }
+
+/**
+ * Formats a 24-hour time string (e.g. "08:00", "16:00", "08:30") into compact 12-hour AM/PM format (e.g. "8 AM", "4 PM", "8:30 AM").
+ */
+export function format12HourCompact(timeStr: string): string {
+  if (!timeStr) return '';
+  const clean = timeStr.trim();
+  const match = clean.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return timeStr;
+
+  let hours = parseInt(match[1], 10);
+  const minutes = parseInt(match[2], 10);
+  if (isNaN(hours)) return timeStr;
+
+  const period = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  if (hours === 0) hours = 12;
+
+  const minStr = minutes > 0 ? `:${minutes < 10 ? '0' + minutes : minutes}` : '';
+  return `${hours}${minStr} ${period}`;
+}
+
+/**
+ * Formats start and end working hours into 12-hour format string (e.g. "8 AM - 4 PM").
+ */
+export function formatWorkingHoursRange(start?: string, end?: string): string {
+  if (!start || !end) return 'N/A';
+  return `${format12HourCompact(start)} - ${format12HourCompact(end)}`;
+}
+
+/**
+ * Checks if current time is within school working hours.
+ */
+export function checkIsWithinWorkingHours(startStr = '08:00', endStr = '16:00'): { isWithin: boolean; formattedRange: string } {
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  const [startH, startM] = (startStr || '08:00').split(':').map(Number);
+  const [endH, endM] = (endStr || '16:00').split(':').map(Number);
+
+  const startMinutes = (isNaN(startH) ? 8 : startH) * 60 + (isNaN(startM) ? 0 : startM);
+  const endMinutes = (isNaN(endH) ? 16 : endH) * 60 + (isNaN(endM) ? 0 : endM);
+
+  const isWithin = currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+  const formattedRange = formatWorkingHoursRange(startStr, endStr);
+
+  return { isWithin, formattedRange };
+}
+
+/**
+ * Checks if a teacher object or status indicates that the teacher is checked in today.
+ */
+export function checkIsTeacherCheckedIn(attendanceStatus: any): boolean {
+  if (!attendanceStatus) return false;
+  if (typeof attendanceStatus === 'object' && 'checkedIn' in attendanceStatus) {
+    return !!attendanceStatus.checkedIn;
+  }
+  const isPresent = 'status' in attendanceStatus && ['present', 'late', 'half_day'].includes(attendanceStatus.status);
+  const hasCheckInTime = 'checkInTime' in attendanceStatus && !!attendanceStatus.checkInTime;
+  return isPresent || hasCheckInTime;
+}

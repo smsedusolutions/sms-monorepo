@@ -44,6 +44,22 @@ const defaultRoles = [
     colorTheme: 'info',
     description: 'Access to child progress and school communications.',
   },
+  {
+    roleCode: 'principal',
+    roleName: 'Principal',
+    prefix: 'PR',
+    basePath: '/principal',
+    colorTheme: 'secondary',
+    description: 'School principal leadership dashboard and management.',
+  },
+  {
+    roleCode: 'driver',
+    roleName: 'Driver',
+    prefix: 'D',
+    basePath: '/driver',
+    colorTheme: 'default',
+    description: 'Transport driver route and trip management.',
+  },
 ];
 
 async function seedRoles() {

@@ -43,19 +43,40 @@ export const useRoleStore = create<RoleState>()(
       },
 
       getRoleByCode: (code: string) => {
+        if (!code) return undefined;
         return get().roles.find((r) => r.roleCode === code.toLowerCase());
       },
 
       getPrefix: (code: string) => {
         if (!code) return "M";
         const role = get().getRoleByCode(code);
-        return role?.prefix || "M";
+        if (role?.prefix) return role.prefix;
+        const defaultPrefixes: Record<string, string> = {
+          super_admin: "SA",
+          sch_admin: "A",
+          teacher: "T",
+          student: "S",
+          parent: "P",
+          driver: "D",
+          principal: "PR",
+        };
+        return defaultPrefixes[code.toLowerCase()] || "M";
       },
 
       getBasePath: (code: string) => {
         if (!code) return "";
         const role = get().getRoleByCode(code);
-        return role?.basePath || "";
+        if (role?.basePath) return role.basePath;
+        const defaultBasePaths: Record<string, string> = {
+          super_admin: "/super-admin",
+          sch_admin: "/school-admin",
+          teacher: "/teacher",
+          student: "/student",
+          parent: "/parent",
+          driver: "/driver",
+          principal: "/principal",
+        };
+        return defaultBasePaths[code.toLowerCase()] || `/${code.toLowerCase()}`;
       },
 
       getColorTheme: (code: string) => {

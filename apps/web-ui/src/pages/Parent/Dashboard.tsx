@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     Box, Typography, Grid, Avatar, Chip, Skeleton, Alert, Stack, Paper, Button, Divider
 } from '@mui/material';
@@ -30,9 +30,11 @@ import type { ChildStats, Announcement, Homework, Student } from '../../types';
 import { AppCard } from '../../components/shared/AppCard';
 import { AppButton } from '../../components/shared/AppButton';
 import { AppSection } from '../../components/shared/AppSection';
+import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
 
 const ParentDashboard = () => {
     const navigate = useNavigate();
+    const [supportDialogOpen, setSupportDialogOpen] = useState(false);
     const user = TokenService.getUser();
     const schoolId = TokenService.getSchoolId() || '';
     const { selectedChild, setSelectedChild, children: contextChildren } = useChildSelector();
@@ -601,12 +603,28 @@ const ParentDashboard = () => {
                         <Typography variant="body2" sx={{ mb: 2.5, opacity: 0.9 }}>
                             Our school administration department is available for any questions or support.
                         </Typography>
-                        <AppButton variant="contained" sx={{ bgcolor: '#ffffff', color: '#1e40af', fontWeight: 700, '&:hover': { bgcolor: '#f8fafc' } }} fullWidth startIcon={<PersonIcon />}>
+                        <AppButton
+                            variant="contained"
+                            sx={{ bgcolor: '#ffffff', color: '#1e40af', fontWeight: 700, '&:hover': { bgcolor: '#f8fafc' } }}
+                            fullWidth
+                            startIcon={<PersonIcon />}
+                            onClick={() => setSupportDialogOpen(true)}
+                        >
                             Contact Helpline
                         </AppButton>
                     </AppCard>
                 </Grid>
             </Grid>
+
+            <RequestChangeDialog
+                open={supportDialogOpen}
+                onClose={() => setSupportDialogOpen(false)}
+                schoolId={schoolId}
+                userId={user?.userId || selectedChild?.parentId || ''}
+                userName={`${user?.firstName || 'Parent'} ${user?.lastName || ''}`.trim()}
+                userType="parent"
+                fieldType="general"
+            />
         </Box>
     );
 };

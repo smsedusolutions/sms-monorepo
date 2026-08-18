@@ -1,7 +1,40 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { PhoneInput } from '../PhoneInput';
+import { PhoneInput, cleanPhoneNumber, formatPhoneNumber } from '../PhoneInput';
+
+describe('cleanPhoneNumber helper', () => {
+  it('strips +91 prefix when length exceeds 10', () => {
+    expect(cleanPhoneNumber('+919876543210')).toBe('9876543210');
+    expect(cleanPhoneNumber('919876543210')).toBe('9876543210');
+    expect(cleanPhoneNumber('+91 9876543210')).toBe('9876543210');
+  });
+
+  it('preserves 10 digit number starting with 91', () => {
+    expect(cleanPhoneNumber('9123456789')).toBe('9123456789');
+  });
+
+  it('handles partial deletions gracefully', () => {
+    expect(cleanPhoneNumber('987654321')).toBe('987654321');
+    expect(cleanPhoneNumber('98765432')).toBe('98765432');
+  });
+
+  it('returns empty for +91 alone', () => {
+    expect(cleanPhoneNumber('+91')).toBe('');
+  });
+});
+
+describe('formatPhoneNumber helper', () => {
+  it('formats clean numbers with +91 prefix', () => {
+    expect(formatPhoneNumber('9876543210')).toBe('+91 9876543210');
+    expect(formatPhoneNumber('+919876543210')).toBe('+91 9876543210');
+  });
+
+  it('returns empty string for invalid or empty input', () => {
+    expect(formatPhoneNumber('')).toBe('');
+    expect(formatPhoneNumber(null)).toBe('');
+  });
+});
 
 describe('PhoneInput', () => {
   it('renders the +91 country code prefix', () => {

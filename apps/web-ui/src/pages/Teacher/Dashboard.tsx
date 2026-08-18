@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     Box,
     Typography,
@@ -36,10 +36,12 @@ import { formatTimeDisplay } from '../../utils/timeUtils';
 import { AppCard } from '../../components/shared/AppCard';
 import { AppButton } from '../../components/shared/AppButton';
 import { AppSection } from '../../components/shared/AppSection';
+import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
 import type { Class, Student } from '../../types';
 
 const TeacherDashboard: React.FC = () => {
     const navigate = useNavigate();
+    const [supportDialogOpen, setSupportDialogOpen] = useState(false);
     const user = TokenService.getUser();
     const schoolId = TokenService.getSchoolId() || '';
     const teacherId = user?.teacherId || user?.userId || '';
@@ -564,12 +566,22 @@ const TeacherDashboard: React.FC = () => {
                         <Typography variant="body2" sx={{ mb: 3, opacity: 0.9 }}>
                             Need technical help with the platform?
                         </Typography>
-                        <AppButton variant="contained" color="primary" fullWidth>
+                        <AppButton variant="contained" color="primary" fullWidth onClick={() => setSupportDialogOpen(true)}>
                             Open Support Ticket
                         </AppButton>
                     </AppCard>
                 </Grid>
             </Grid>
+
+            <RequestChangeDialog
+                open={supportDialogOpen}
+                onClose={() => setSupportDialogOpen(false)}
+                schoolId={schoolId}
+                userId={teacherId}
+                userName={`${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'Teacher'}
+                userType="teacher"
+                fieldType="general"
+            />
         </Box>
     );
 };

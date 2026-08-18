@@ -44,14 +44,15 @@ const TeacherAttendance = () => {
 
     // Render student attendance component based on school's mode
     const renderStudentAttendance = () => {
+        const handleGoToCheckIn = () => setActiveTab(1);
         switch (mode) {
             case 'period_wise':
-                return <PeriodAttendance />;
+                return <PeriodAttendance onGoToCheckIn={handleGoToCheckIn} />;
             case 'check_in_out':
-                return <CheckInAttendance />;
+                return <CheckInAttendance onGoToCheckIn={handleGoToCheckIn} />;
             case 'simple':
             default:
-                return <SimpleAttendance />;
+                return <SimpleAttendance onGoToCheckIn={handleGoToCheckIn} />;
         }
     };
 

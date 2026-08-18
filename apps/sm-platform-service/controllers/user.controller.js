@@ -223,6 +223,11 @@ const updateUserById = async (req, res) => {
       );
     }
 
+    // Map phone field to contactNumber if phone is provided
+    if (updateData.phone && !updateData.contactNumber) {
+      updateData.contactNumber = updateData.phone;
+    }
+
     const updatedUser = await User.findOneAndUpdate(
       { userId },
       updateData,

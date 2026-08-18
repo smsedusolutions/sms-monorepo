@@ -69,11 +69,14 @@ export const AddSubjectDialog: React.FC<SubjectDialogProps> = ({
 
     useEffect(() => {
         if (editData) {
+            const initialClasses = editData.classes && editData.classes.length > 0 
+                ? editData.classes 
+                : (editData.classId ? [editData.classId] : []);
             setFormData({
                 name: editData.name || "",
                 code: editData.code || "",
                 description: editData.description || "",
-                classes: editData.classes || [],
+                classes: initialClasses,
                 teacherIds: editData.assignedTeacherIds || (editData.assignedTeacherId ? [editData.assignedTeacherId] : []),
                 isSubSubject: editData.isSubSubject || false,
                 parentSubjectId: editData.parentSubjectId || "",
@@ -169,7 +172,7 @@ export const AddSubjectDialog: React.FC<SubjectDialogProps> = ({
     // Build option arrays for AppMultiSelect
     const classOptions = classes
         .filter((c: Class) => c.status === 'active')
-        .map((c: Class) => ({ id: c.classId, label: c.name }));
+        .map((c: Class) => ({ id: c.classId || (c as any)._id, label: c.name }));
 
     const teacherOptions = teachers
         .filter((t: Teacher) => t.status === 'active')

@@ -21,6 +21,7 @@ import {
     AccessTime as TimeIcon
 } from '@mui/icons-material';
 import { useUserStore } from '../../stores/userStore';
+import { formatWorkingHoursRange } from '../../utils/timeUtils';
 
 const SchoolPage = () => {
     // Get user and school data from Zustand store
@@ -189,7 +190,7 @@ const SchoolPage = () => {
                                         <Box>
                                             <Typography variant="caption" color="text.secondary">Working Hours</Typography>
                                             <Typography variant="body1" fontWeight={500}>
-                                                {school.attendanceSettings.workingHours?.start || 'N/A'} - {school.attendanceSettings.workingHours?.end || 'N/A'}
+                                                {formatWorkingHoursRange(school.attendanceSettings.workingHours?.start, school.attendanceSettings.workingHours?.end)}
                                             </Typography>
                                         </Box>
                                     </Box>
