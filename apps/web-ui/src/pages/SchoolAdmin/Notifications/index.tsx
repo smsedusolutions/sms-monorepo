@@ -84,15 +84,15 @@ const SchoolAdminNotifications: React.FC = () => {
   });
 
   // Queries
-  const { 
-    data: logsData, 
-    isLoading: logsLoading, 
-    refetch: refetchLogs 
+  const {
+    data: logsData,
+    isLoading: logsLoading,
+    refetch: refetchLogs
   } = useGetActivityLogs(schoolId, filters);
-  
-  const { 
-    data: statsData, 
-    isLoading: statsLoading 
+
+  const {
+    data: statsData,
+    isLoading: statsLoading
   } = useGetLogStats(schoolId);
 
   const clearLogsMutation = useClearLogs(schoolId);
@@ -146,8 +146,8 @@ const SchoolAdminNotifications: React.FC = () => {
     }));
 
     await exportToExcel(
-      exportData, 
-      columns, 
+      exportData,
+      columns,
       `Activity Logs Report - ${new Date().toLocaleDateString()}`,
       `Activity_Logs_${new Date().toISOString().split("T")[0]}`
     );
@@ -197,18 +197,18 @@ const SchoolAdminNotifications: React.FC = () => {
   return (
     <Box sx={{ p: { xs: 2, md: 4 }, width: "100%" }}>
       {/* Header Section */}
-      <Box sx={{ 
-        mb: 3, 
-        display: "flex", 
-        flexDirection: { xs: "column", sm: "row" }, 
-        justifyContent: "space-between", 
+      <Box sx={{
+        mb: 3,
+        display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
+        justifyContent: "space-between",
         alignItems: { xs: "stretch", sm: "flex-start" },
-        gap: 2 
+        gap: 2
       }}>
         <Box>
-          <Typography variant="h4" sx={{ 
-            fontWeight: 700, 
-            mb: 0.5, 
+          <Typography variant="h4" sx={{
+            fontWeight: 700,
+            mb: 0.5,
             color: theme.palette.text.primary,
             fontSize: { xs: "1.35rem", sm: "1.85rem", md: "2.125rem" }
           }}>
@@ -223,16 +223,16 @@ const SchoolAdminNotifications: React.FC = () => {
             variant="contained"
             startIcon={<RefreshIcon />}
             onClick={() => refetchLogs()}
-            sx={{ 
-                borderRadius: 2.5, 
-                px: 2.5,
-                py: 1,
-                fontWeight: 700,
-                backgroundColor: theme.palette.primary.main,
-                boxShadow: `0 4px 14px 0 ${alpha(theme.palette.primary.main, 0.39)}`,
-                "&:hover": {
-                    backgroundColor: theme.palette.primary.dark,
-                }
+            sx={{
+              borderRadius: 2.5,
+              px: 2.5,
+              py: 1,
+              fontWeight: 700,
+              backgroundColor: theme.palette.primary.main,
+              boxShadow: `0 4px 14px 0 ${alpha(theme.palette.primary.main, 0.39)}`,
+              "&:hover": {
+                backgroundColor: theme.palette.primary.dark,
+              }
             }}
           >
             Refresh Data
@@ -253,13 +253,13 @@ const SchoolAdminNotifications: React.FC = () => {
           />
         </Box>
       ) : (
-        <Card sx={{ 
-            mb: 4, 
-            borderRadius: 3, 
-            boxShadow: theme.shadows[2],
-            background: alpha(theme.palette.background.paper, 0.8),
-            backdropFilter: "blur(8px)",
-            border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
+        <Card sx={{
+          mb: 4,
+          borderRadius: 2,
+          boxShadow: theme.shadows[2],
+          background: alpha(theme.palette.background.paper, 0.8),
+          backdropFilter: "blur(8px)",
+          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`
         }}>
           <Tabs
             value={activeTab}
@@ -282,15 +282,15 @@ const SchoolAdminNotifications: React.FC = () => {
               },
             }}
           >
-            <Tab 
-              icon={<NotificationsIcon sx={{ mr: 1 }} />} 
-              iconPosition="start" 
-              label="System Notifications" 
+            <Tab
+              icon={<NotificationsIcon sx={{ mr: 1 }} />}
+              iconPosition="start"
+              label="System Notifications"
             />
-            <Tab 
-              icon={<HistoryIcon sx={{ mr: 1 }} />} 
-              iconPosition="start" 
-              label="Activity Logs" 
+            <Tab
+              icon={<HistoryIcon sx={{ mr: 1 }} />}
+              iconPosition="start"
+              label="Activity Logs"
             />
           </Tabs>
         </Card>
@@ -304,10 +304,10 @@ const SchoolAdminNotifications: React.FC = () => {
           <Grid container spacing={3}>
             {/* Stats Cards */}
             <Grid size={{ xs: 12, md: 3 }}>
-              <Card sx={{ borderRadius: 3, height: "100%", position: "relative", overflow: "hidden", border: `1px solid ${alpha(theme.palette.divider, 0.08)}` }}>
-                <Box sx={{ 
-                    position: "absolute", top: -20, right: -20, opacity: 0.1, 
-                    transform: "rotate(-15deg)", pointerEvents: "none" 
+              <Card sx={{ borderRadius: 2, height: "100%", position: "relative", overflow: "hidden", border: `1px solid ${alpha(theme.palette.divider, 0.08)}` }}>
+                <Box sx={{
+                  position: "absolute", top: -20, right: -20, opacity: 0.1,
+                  transform: "rotate(-15deg)", pointerEvents: "none"
                 }}>
                   <TodayIcon sx={{ fontSize: 120 }} />
                 </Box>
@@ -327,16 +327,16 @@ const SchoolAdminNotifications: React.FC = () => {
             </Grid>
 
             <Grid size={{ xs: 12, md: 5 }}>
-              <Card sx={{ borderRadius: 3, height: "100%", border: `1px solid ${alpha(theme.palette.divider, 0.08)}` }}>
+              <Card sx={{ borderRadius: 2, height: "100%", border: `1px solid ${alpha(theme.palette.divider, 0.08)}` }}>
                 <CardContent sx={{ p: 3 }}>
                   <Typography variant="overline" sx={{ fontWeight: 700, color: "text.secondary", letterSpacing: 1 }}>
                     Most Active Performer
                   </Typography>
                   <Box sx={{ mt: 2, display: "flex", alignItems: "center", gap: 2 }}>
-                    <Box sx={{ 
-                        width: 56, height: 56, borderRadius: "16px", 
-                        backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                        display: "flex", alignItems: "center", justifyContent: "center"
+                    <Box sx={{
+                      width: 56, height: 56, borderRadius: "16px",
+                      backgroundColor: alpha(theme.palette.primary.main, 0.1),
+                      display: "flex", alignItems: "center", justifyContent: "center"
                     }}>
                       <PersonIcon color="primary" sx={{ fontSize: 32 }} />
                     </Box>
@@ -354,7 +354,7 @@ const SchoolAdminNotifications: React.FC = () => {
             </Grid>
 
             <Grid size={{ xs: 12, md: 4 }}>
-              <Card sx={{ borderRadius: 3, height: "100%", bgcolor: alpha(theme.palette.warning.main, 0.05), border: `1px dashed ${alpha(theme.palette.warning.main, 0.3)}` }}>
+              <Card sx={{ borderRadius: 2, height: "100%", bgcolor: alpha(theme.palette.warning.main, 0.05), border: `1px dashed ${alpha(theme.palette.warning.main, 0.3)}` }}>
                 <CardContent sx={{ p: 3 }}>
                   <Typography variant="overline" sx={{ fontWeight: 700, color: "warning.dark", letterSpacing: 1 }}>
                     Retention Policy
@@ -380,7 +380,7 @@ const SchoolAdminNotifications: React.FC = () => {
 
             {/* Filters & Actions Bar */}
             <Grid size={{ xs: 12 }}>
-              <Card sx={{ borderRadius: 3, px: 3, py: 2, border: `1px solid ${alpha(theme.palette.divider, 0.08)}`, width: "100%" }}>
+              <Card sx={{ borderRadius: 2, px: 3, py: 2, border: `1px solid ${alpha(theme.palette.divider, 0.08)}`, width: "100%" }}>
                 <Grid container spacing={2} alignItems="center">
                   <Grid size={{ xs: 12, md: 4 }}>
                     <TextField
@@ -504,8 +504,8 @@ const SchoolAdminNotifications: React.FC = () => {
                         ]}
                         rightAction={
                           <Box sx={{ display: "flex", gap: 0.5 }}>
-                            <IconButton 
-                              size="small" 
+                            <IconButton
+                              size="small"
                               sx={{ color: "primary.main" }}
                               onClick={() => {
                                 setSelectedLog(log);
@@ -514,7 +514,7 @@ const SchoolAdminNotifications: React.FC = () => {
                             >
                               <ViewIcon fontSize="small" />
                             </IconButton>
-                            <IconButton 
+                            <IconButton
                               size="small"
                               onClick={(e) => handleMenuOpen(e, log)}
                             >
@@ -527,7 +527,7 @@ const SchoolAdminNotifications: React.FC = () => {
                   })}
                 </MobileCardList>
               ) : (
-                <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: theme.shadows[1] }}>
+                <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: theme.shadows[1] }}>
                   <Table sx={{ minWidth: 650 }}>
                     <TableHead sx={{ bgcolor: alpha(theme.palette.common.black, 0.02) }}>
                       <TableRow>
@@ -565,10 +565,10 @@ const SchoolAdminNotifications: React.FC = () => {
                             </TableCell>
                             <TableCell>
                               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                <Box sx={{ 
-                                    width: 32, height: 32, borderRadius: "10px", 
-                                    bgcolor: alpha(theme.palette.primary.main, 0.08),
-                                    display: "flex", alignItems: "center", justifyContent: "center" 
+                                <Box sx={{
+                                  width: 32, height: 32, borderRadius: "10px",
+                                  bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                  display: "flex", alignItems: "center", justifyContent: "center"
                                 }}>
                                   <PersonIcon sx={{ fontSize: 18, color: theme.palette.primary.main }} />
                                 </Box>
@@ -586,12 +586,12 @@ const SchoolAdminNotifications: React.FC = () => {
                                 size="small"
                                 color={getActionColor(log.action) as any}
                                 variant="outlined"
-                                sx={{ 
-                                    fontWeight: 800, 
-                                    fontSize: "0.65rem", 
-                                    height: 24, 
-                                    borderRadius: "6px",
-                                    bgcolor: alpha(theme.palette[getActionColor(log.action) as "success" | "info" | "error" | "secondary"]?.main || theme.palette.grey[500], 0.1)
+                                sx={{
+                                  fontWeight: 800,
+                                  fontSize: "0.65rem",
+                                  height: 24,
+                                  borderRadius: "6px",
+                                  bgcolor: alpha(theme.palette[getActionColor(log.action) as "success" | "info" | "error" | "secondary"]?.main || theme.palette.grey[500], 0.1)
                                 }}
                               />
                             </TableCell>
@@ -611,8 +611,8 @@ const SchoolAdminNotifications: React.FC = () => {
                             <TableCell align="right">
                               <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 0.5 }}>
                                 <Tooltip title="View Details">
-                                  <IconButton 
-                                    size="small" 
+                                  <IconButton
+                                    size="small"
                                     sx={{ color: "primary.main" }}
                                     onClick={() => {
                                       setSelectedLog(log);
@@ -622,7 +622,7 @@ const SchoolAdminNotifications: React.FC = () => {
                                     <ViewIcon fontSize="small" />
                                   </IconButton>
                                 </Tooltip>
-                                <IconButton 
+                                <IconButton
                                   size="small"
                                   onClick={(e) => handleMenuOpen(e, log)}
                                 >
@@ -671,18 +671,18 @@ const SchoolAdminNotifications: React.FC = () => {
       />
 
       {/* Activity Log Details Dialog */}
-      <Dialog 
-        open={isDetailsOpen} 
+      <Dialog
+        open={isDetailsOpen}
         onClose={() => setIsDetailsOpen(false)}
         maxWidth="md"
         fullWidth
         PaperProps={{
-          sx: { borderRadius: 3, boxShadow: theme.shadows[10] }
+          sx: { borderRadius: 2, boxShadow: theme.shadows[10] }
         }}
       >
         <DialogTitle sx={{ fontWeight: 800, pb: 1, display: "flex", alignItems: "center", gap: 1.5 }}>
-          <Box sx={{ 
-            p: 1, borderRadius: 2, 
+          <Box sx={{
+            p: 1, borderRadius: 2,
             bgcolor: alpha(theme.palette.primary.main, 0.1),
             display: "flex"
           }}>
@@ -705,10 +705,10 @@ const SchoolAdminNotifications: React.FC = () => {
               <Grid size={{ xs: 12, md: 6 }}>
                 <Typography variant="overline" color="text.secondary" fontWeight={700}>Action Type</Typography>
                 <Box sx={{ mt: 0.5 }}>
-                  <Chip 
-                    label={selectedLog.action} 
-                    size="small" 
-                    color={getActionColor(selectedLog.action) as any} 
+                  <Chip
+                    label={selectedLog.action}
+                    size="small"
+                    color={getActionColor(selectedLog.action) as any}
                     sx={{ fontWeight: 800, borderRadius: 1.5 }}
                   />
                 </Box>
@@ -723,14 +723,14 @@ const SchoolAdminNotifications: React.FC = () => {
                   {selectedLog.description}
                 </Typography>
               </Grid>
-              
+
               {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
                 <Grid size={{ xs: 12 }}>
                   <Typography variant="overline" color="text.secondary" fontWeight={700}>Technical Metadata</Typography>
-                  <Box sx={{ 
-                    mt: 1, p: 2, 
-                    bgcolor: "#1e293b", 
-                    color: "#f8fafc", 
+                  <Box sx={{
+                    mt: 1, p: 2,
+                    bgcolor: "#1e293b",
+                    color: "#f8fafc",
                     borderRadius: 2,
                     fontFamily: "monospace",
                     fontSize: "0.85rem",
@@ -748,8 +748,8 @@ const SchoolAdminNotifications: React.FC = () => {
         </DialogContent>
         <Divider />
         <DialogActions sx={{ p: 2.5 }}>
-          <Button 
-            onClick={() => setIsDetailsOpen(false)} 
+          <Button
+            onClick={() => setIsDetailsOpen(false)}
             variant="contained"
             sx={{ borderRadius: 2, px: 4 }}
           >

@@ -27,7 +27,7 @@ const AttendanceAdmin = () => {
                     />
                 </Box>
             ) : (
-                <Paper sx={{ mb: 3, borderRadius: 3, overflow: 'hidden' }}>
+                <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
                     <Tabs value={tab} onChange={(_, v) => setTab(v)}>
                         <Tab label="Reports & Analytics" sx={{ fontWeight: 600, px: 3 }} />
                         <Tab label="Teacher Attendance" sx={{ fontWeight: 600, px: 3 }} />

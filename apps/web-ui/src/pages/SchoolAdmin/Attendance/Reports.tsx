@@ -118,7 +118,7 @@ const AttendanceReports = () => {
                     />
                 </Box>
             ) : (
-                <Paper sx={{ mb: 3, borderRadius: 3, overflow: 'hidden' }}>
+                <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
                     <Tabs
                         value={tab}
                         onChange={(_, v) => setTab(v)}
@@ -136,12 +136,12 @@ const AttendanceReports = () => {
             )}
 
             {/* Filter Section */}
-            <Paper sx={{ p: { xs: 2, sm: 2.5 }, mb: 3, borderRadius: 3, border: '1px solid', borderColor: 'divider' }} elevation={0}>
-                <Box sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: { xs: '1fr', sm: tab === 2 ? 'repeat(auto-fit, minmax(140px, 1fr))' : 'repeat(auto-fit, minmax(180px, 1fr))' }, 
-                    gap: 2, 
-                    alignItems: 'center' 
+            <Paper sx={{ p: { xs: 2, sm: 2.5 }, mb: 3, borderRadius: 2, border: '1px solid', borderColor: 'divider' }} elevation={0}>
+                <Box sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr', sm: tab === 2 ? 'repeat(auto-fit, minmax(140px, 1fr))' : 'repeat(auto-fit, minmax(180px, 1fr))' },
+                    gap: 2,
+                    alignItems: 'center'
                 }}>
                     {tab === 2 ? (
                         <>
@@ -237,7 +237,7 @@ const AttendanceReports = () => {
                     ) : dailyReport ? (
                         <Grid container spacing={2.5}>
                             <Grid size={{ xs: 12, md: 6 }}>
-                                <Card variant="outlined" sx={{ borderRadius: 3 }}>
+                                <Card variant="outlined" sx={{ borderRadius: 2 }}>
                                     <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                                         <Typography variant="h6" sx={{ fontWeight: 700, mb: 2.5, color: 'primary.main', fontSize: '1.05rem' }}>
                                             Student Attendance
@@ -267,7 +267,7 @@ const AttendanceReports = () => {
                             </Grid>
 
                             <Grid size={{ xs: 12, md: 6 }}>
-                                <Card variant="outlined" sx={{ borderRadius: 3 }}>
+                                <Card variant="outlined" sx={{ borderRadius: 2 }}>
                                     <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
                                         <Typography variant="h6" sx={{ fontWeight: 700, mb: 2.5, color: 'secondary.main', fontSize: '1.05rem' }}>
                                             Teacher Attendance
@@ -331,7 +331,7 @@ const AttendanceReports = () => {
                             ))}
                         </MobileCardList>
                     ) : (
-                        <TableContainer component={Paper} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }} elevation={0}>
+                        <TableContainer component={Paper} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider' }} elevation={0}>
                             <Table>
                                 <TableHead sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
                                     <TableRow>
@@ -382,14 +382,14 @@ const AttendanceReports = () => {
                 <>
                     {monthlyReport?.students && (
                         <Box sx={{ display: 'flex', gap: 1.5, mb: 2.5, flexWrap: 'wrap' }}>
-                            <Chip 
-                                label={`Working Days: ${monthlyReport.students.workingDays || 0}`} 
-                                variant="outlined" 
+                            <Chip
+                                label={`Working Days: ${monthlyReport.students.workingDays || 0}`}
+                                variant="outlined"
                                 sx={{ fontWeight: 600, borderRadius: '8px' }}
                             />
-                            <Chip 
-                                label={`Records: ${monthlyReport.students.totalRecords || 0}`} 
-                                variant="outlined" 
+                            <Chip
+                                label={`Records: ${monthlyReport.students.totalRecords || 0}`}
+                                variant="outlined"
                                 sx={{ fontWeight: 600, borderRadius: '8px' }}
                             />
                         </Box>
@@ -421,7 +421,7 @@ const AttendanceReports = () => {
                             ))}
                         </MobileCardList>
                     ) : (
-                        <TableContainer component={Paper} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }} elevation={0}>
+                        <TableContainer component={Paper} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider' }} elevation={0}>
                             <Table>
                                 <TableHead sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
                                     <TableRow>

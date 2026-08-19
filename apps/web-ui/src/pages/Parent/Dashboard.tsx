@@ -153,7 +153,7 @@ const ParentDashboard = () => {
                             {loadingDashboard ? (
                                 [1, 2].map((i) => (
                                     <Grid size={childGridSize} key={i}>
-                                        <Skeleton variant="rectangular" height={88} sx={{ borderRadius: 3 }} />
+                                        <Skeleton variant="rectangular" height={88} sx={{ borderRadius: 2 }} />
                                     </Grid>
                                 ))
                             ) : (
@@ -166,7 +166,7 @@ const ParentDashboard = () => {
                                                 onClick={() => handleChildSelect(child)}
                                                 sx={{
                                                     p: { xs: 1.5, sm: 1.75 },
-                                                    borderRadius: 3,
+                                                    borderRadius: 2,
                                                     bgcolor: isSelected ? '#f8faff' : '#ffffff',
                                                     border: '1.5px solid',
                                                     borderColor: isSelected ? '#4f46e5' : '#e2e8f0',
@@ -275,7 +275,7 @@ const ParentDashboard = () => {
                             onClick={() => navigate('/parent/attendance')}
                             sx={{
                                 p: { xs: 2, sm: 2.5 },
-                                borderRadius: 3,
+                                borderRadius: 2,
                                 border: '1px solid #e2e8f0',
                                 bgcolor: '#ffffff',
                                 boxShadow: '0 4px 16px rgba(0, 0, 0, 0.03)',
@@ -498,7 +498,7 @@ const ParentDashboard = () => {
                     {/* Recent Leave Applications Card */}
                     {childLeaves.length > 0 && (
                         <Box sx={{ mt: { xs: 2, sm: 2.5 } }}>
-                            <Paper elevation={0} sx={{ p: { xs: 1.75, sm: 2 }, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#ffffff' }}>
+                            <Paper elevation={0} sx={{ p: { xs: 1.75, sm: 2 }, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#ffffff' }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
                                     <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Recent Leave Applications</Typography>
                                     <Button size="small" onClick={() => navigate('/parent/leave/apply')} sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.75rem', p: 0.5 }}>
@@ -582,7 +582,7 @@ const ParentDashboard = () => {
                         sx={{
                             mt: 2,
                             p: { xs: 1.75, sm: 2 },
-                            borderRadius: 3,
+                            borderRadius: 2,
                             border: '1px solid #e0e7ff',
                             bgcolor: '#f5f3ff',
                             cursor: 'pointer',
@@ -617,7 +617,7 @@ const ParentDashboard = () => {
                         sx={{
                             mt: 2,
                             p: { xs: 1.75, sm: 2 },
-                            borderRadius: 3,
+                            borderRadius: 2,
                             border: '1px solid #c7d2fe',
                             bgcolor: '#eef2ff',
                             cursor: 'pointer',
@@ -647,7 +647,7 @@ const ParentDashboard = () => {
                     </Paper>
 
                     {/* Need Assistance Card */}
-                    <Paper sx={{ mt: 2, p: { xs: 1.75, sm: 2 }, bgcolor: '#1e40af', color: '#ffffff', borderRadius: 3 }}>
+                    <Paper sx={{ mt: 2, p: { xs: 1.75, sm: 2 }, bgcolor: '#1e40af', color: '#ffffff', borderRadius: 2 }}>
                         <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5, fontSize: '0.875rem' }}>Need assistance?</Typography>
                         <Typography variant="caption" sx={{ mb: 1.5, opacity: 0.9, display: 'block', fontSize: '0.75rem' }}>
                             Our school administration is available for any questions or support.

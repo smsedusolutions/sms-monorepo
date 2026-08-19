@@ -58,7 +58,7 @@ const SchoolPage = () => {
                 sx={{
                     p: 4,
                     mb: 4,
-                    borderRadius: 3,
+                    borderRadius: 2,
                     background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
                     color: 'white',
                     position: 'relative',

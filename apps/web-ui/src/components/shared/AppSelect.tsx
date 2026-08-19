@@ -15,11 +15,12 @@ interface AppSelectOption {
   label: string;
 }
 
-interface AppSelectProps extends Omit<SelectProps, 'label'> {
+export interface AppSelectProps extends Omit<SelectProps, 'label'> {
   label?: string;
   options: AppSelectOption[];
   helperText?: string;
   labelHint?: string;
+  containerSx?: any;
 }
 
 export const AppSelect: React.FC<AppSelectProps> = ({ 
@@ -29,10 +30,12 @@ export const AppSelect: React.FC<AppSelectProps> = ({
   error, 
   fullWidth = true,
   labelHint,
+  containerSx,
+  size = 'small',
   ...props 
 }) => {
   return (
-    <Box sx={{ mb: 2, width: fullWidth ? '100%' : 'auto' }}>
+    <Box sx={{ mb: 2, width: fullWidth ? '100%' : 'auto', ...containerSx }}>
       {label && (
         <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 0.5 }}>
           <Typography variant="subtitle2" component="label" sx={{ fontWeight: 600, color: 'text.primary' }}>
@@ -45,7 +48,7 @@ export const AppSelect: React.FC<AppSelectProps> = ({
           )}
         </Box>
       )}
-      <FormControl fullWidth={fullWidth} error={error} size="small">
+      <FormControl fullWidth={fullWidth} error={error} size={size}>
         <Select
           displayEmpty
           {...props}

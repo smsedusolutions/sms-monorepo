@@ -92,7 +92,7 @@ const FeeReports: React.FC = () => {
             </Box>
 
             {/* Filter Card */}
-            <Card sx={{ borderRadius: 3, border: '1px solid #f1f5f9', boxShadow: 'none', mb: 3 }}>
+            <Card sx={{ borderRadius: 2, border: '1px solid #f1f5f9', boxShadow: 'none', mb: 3 }}>
                 <CardContent sx={{ p: 2 }}>
                     <Grid container spacing={2} alignItems="center">
                         <Grid size={{ xs: 12, sm: 4 }}>
@@ -181,7 +181,7 @@ const FeeReports: React.FC = () => {
                     {/* Monthly CSS visual trends */}
                     <Grid container spacing={3} sx={{ mb: 3 }}>
                         <Grid size={{ xs: 12 }}>
-                            <Card sx={{ borderRadius: 3, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
+                            <Card sx={{ borderRadius: 2, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
                                 <CardContent sx={{ p: 2.5 }}>
                                     <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>Monthly Collection Trends</Typography>
                                     <Stack spacing={2}>

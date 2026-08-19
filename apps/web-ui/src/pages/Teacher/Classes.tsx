@@ -1,11 +1,11 @@
-import { 
-    Box, 
-    Typography,  
-    Card, 
-    Chip, 
-    Alert, 
-    Avatar, 
-    Skeleton, 
+import {
+    Box,
+    Typography,
+    Card,
+    Chip,
+    Alert,
+    Avatar,
+    Skeleton,
     Table,
     TableBody,
     TableCell,
@@ -71,7 +71,7 @@ const TeacherClasses = () => {
 
     allClasses.filter(c => uniqueClassIds.includes(c.classId)).forEach(cls => {
         const relevantSectionIds = new Set<string>();
-        
+
         // Profiles sections
         teacherSectionsList.forEach((sId: any) => {
             if (cls.sections.find(s => s.sectionId === sId)) relevantSectionIds.add(sId);
@@ -98,8 +98,8 @@ const TeacherClasses = () => {
         cls.sections.filter(s => relevantSectionIds.has(s.sectionId)).forEach(section => {
             const key = `${cls.classId}-${section.sectionId}`;
             const subjects = allSubjects
-                .filter(s => (s.assignedTeacherId === teacherId || (s as any).assignedTeacherIds?.includes(teacherId)) && s.classes?.includes(cls.classId) && 
-                             (!(s as any).sectionId || (s as any).sectionId === section.sectionId))
+                .filter(s => (s.assignedTeacherId === teacherId || (s as any).assignedTeacherIds?.includes(teacherId)) && s.classes?.includes(cls.classId) &&
+                    (!(s as any).sectionId || (s as any).sectionId === section.sectionId))
                 .map(s => s.name);
 
             assignmentMap.set(key, {
@@ -121,11 +121,11 @@ const TeacherClasses = () => {
     return (
         <Box sx={{ p: { xs: 2, sm: 4 }, minHeight: '100vh', bgcolor: '#f8fafc' }}>
             {/* Header Area */}
-            <Box 
-                sx={{ 
-                    mb: 5, 
-                    p: 4, 
-                    borderRadius: 6, 
+            <Box
+                sx={{
+                    mb: 5,
+                    p: 4,
+                    borderRadius: 6,
                     background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)',
                     boxShadow: '0 10px 30px rgba(99, 102, 241, 0.2)',
                     color: 'white'
@@ -163,9 +163,9 @@ const TeacherClasses = () => {
                                         </Typography>
                                     </Box>
                                 </Box>
-                                <Chip 
-                                    label={teacher?.classTeacherLabel || classTeacherSectionId} 
-                                    sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 800, border: '1px solid #f59e0b', py: 2.5, px: 2, borderRadius: 3 }} 
+                                <Chip
+                                    label={teacher?.classTeacherLabel || classTeacherSectionId}
+                                    sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 800, border: '1px solid #f59e0b', py: 2.5, px: 2, borderRadius: 2 }}
                                 />
                             </Box>
                         )}
@@ -183,9 +183,9 @@ const TeacherClasses = () => {
                                 <TableBody>
                                     {teacherAssignments.length > 0 ? (
                                         teacherAssignments.map((assign, index) => (
-                                            <TableRow 
-                                                key={index} 
-                                                sx={{ 
+                                            <TableRow
+                                                key={index}
+                                                sx={{
                                                     '&:last-child td, &:last-child th': { border: 0 },
                                                     '&:hover': { bgcolor: '#fcfdff' },
                                                     transition: 'background-color 0.2s'
@@ -193,10 +193,10 @@ const TeacherClasses = () => {
                                             >
                                                 <TableCell sx={{ py: 3 }}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                        <Avatar 
+                                                        <Avatar
                                                             variant="rounded"
-                                                            sx={{ 
-                                                                bgcolor: '#eef2ff', 
+                                                            sx={{
+                                                                bgcolor: '#eef2ff',
                                                                 color: '#6366f1',
                                                                 width: 40,
                                                                 height: 40,
@@ -223,18 +223,18 @@ const TeacherClasses = () => {
                                                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                                         {assign.subjects.length > 0 ? (
                                                             assign.subjects.map((sub, i) => (
-                                                                <Chip 
-                                                                    key={i} 
-                                                                    label={sub} 
-                                                                    size="small" 
-                                                                    sx={{ 
-                                                                        bgcolor: '#ede9fe', 
-                                                                        color: '#7c3aed', 
-                                                                        fontWeight: 800, 
+                                                                <Chip
+                                                                    key={i}
+                                                                    label={sub}
+                                                                    size="small"
+                                                                    sx={{
+                                                                        bgcolor: '#ede9fe',
+                                                                        color: '#7c3aed',
+                                                                        fontWeight: 800,
                                                                         borderRadius: 1.5,
                                                                         fontSize: '0.7rem',
                                                                         border: '1px solid #ddd6fe'
-                                                                    }} 
+                                                                    }}
                                                                 />
                                                             ))
                                                         ) : (
@@ -244,31 +244,31 @@ const TeacherClasses = () => {
                                                 </TableCell>
                                                 <TableCell align="center">
                                                     {assign.isClassTeacher ? (
-                                                        <Chip 
+                                                        <Chip
                                                             icon={<StarIcon sx={{ fontSize: '14px !important', color: '#92400e !important' }} />}
-                                                            label="Class In-Charge" 
-                                                            size="small" 
-                                                            sx={{ 
-                                                                bgcolor: '#fef3c7', 
-                                                                color: '#92400e', 
+                                                            label="Class In-Charge"
+                                                            size="small"
+                                                            sx={{
+                                                                bgcolor: '#fef3c7',
+                                                                color: '#92400e',
                                                                 fontWeight: 800,
                                                                 border: '1px solid #f59e0b',
                                                                 borderRadius: 1.5,
                                                                 px: 1,
                                                                 height: 28
-                                                            }} 
+                                                            }}
                                                         />
                                                     ) : (
-                                                        <Chip 
-                                                            label="Subject Teacher" 
+                                                        <Chip
+                                                            label="Subject Teacher"
                                                             variant="outlined"
-                                                            size="small" 
-                                                            sx={{ 
-                                                                color: '#64748b', 
+                                                            size="small"
+                                                            sx={{
+                                                                color: '#64748b',
                                                                 fontWeight: 700,
                                                                 borderRadius: 1.5,
                                                                 fontSize: '0.65rem'
-                                                            }} 
+                                                            }}
                                                         />
                                                     )}
                                                 </TableCell>

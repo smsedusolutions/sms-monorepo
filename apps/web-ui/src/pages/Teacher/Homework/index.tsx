@@ -119,7 +119,7 @@ const TeacherHomework: React.FC = () => {
                 mb: 4,
                 bgcolor: 'rgba(255, 255, 255, 0.6)',
                 backdropFilter: 'blur(10px)',
-                borderRadius: 3,
+                borderRadius: 2,
                 p: 0.5,
                 width: 'fit-content',
                 border: '1px solid',

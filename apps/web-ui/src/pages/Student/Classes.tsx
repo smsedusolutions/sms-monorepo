@@ -74,7 +74,7 @@ const StudentClasses = () => {
                         {/* Class Info Card */}
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <Card sx={{
-                                borderRadius: 3,
+                                borderRadius: 2,
                                 height: '100%',
                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                                 color: 'white',
@@ -92,7 +92,7 @@ const StudentClasses = () => {
                         {/* Roll Number Card */}
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <Card sx={{
-                                borderRadius: 3,
+                                borderRadius: 2,
                                 height: '100%',
                                 background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
                                 color: 'white',
@@ -108,7 +108,7 @@ const StudentClasses = () => {
                         {/* My Section Card */}
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <Card sx={{
-                                borderRadius: 3,
+                                borderRadius: 2,
                                 height: '100%',
                                 background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
                                 color: 'white',
@@ -124,7 +124,7 @@ const StudentClasses = () => {
                         {/* Subjects Count Card */}
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <Card sx={{
-                                borderRadius: 3,
+                                borderRadius: 2,
                                 height: '100%',
                                 background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
                             }}>

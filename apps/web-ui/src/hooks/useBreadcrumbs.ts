@@ -35,6 +35,8 @@ const ROUTE_LABELS: Record<string, string> = {
   '/school-admin/location': 'School Location',
   '/school-admin/profile': 'My Profile',
   '/school-admin/promotion': 'Student Promotion',
+  '/school-admin/ptm': 'PTM',
+  '/school-admin/calendar': 'Calendar',
 
   // Timetable
   '/school-admin/timetable': 'Timetable',
@@ -83,6 +85,8 @@ const ROUTE_LABELS: Record<string, string> = {
   '/teacher/exam/scheduler': 'Exam Schedule',
   '/teacher/homework': 'Homework',
   '/teacher/homework/create': 'Create Homework',
+  '/teacher/ptm': 'PTM',
+  '/teacher/calendar': 'Calendar',
   '/teacher/announcements': 'Announcements',
   '/teacher/notifications': 'Notifications',
   '/teacher/profile': 'My Profile',
@@ -98,6 +102,7 @@ const ROUTE_LABELS: Record<string, string> = {
   '/student/leave/apply': 'Apply Leave',
   '/student/leave/my': 'My Leaves',
   '/student/timetable': 'My Timetable',
+  '/student/calendar': 'Calendar',
   '/student/exam': 'Exam',
   '/student/exam/my-exams': 'My Exams',
   '/student/homework': 'Homework',
@@ -114,6 +119,8 @@ const ROUTE_LABELS: Record<string, string> = {
   '/parent/attendance': 'Attendance',
   '/parent/teachers': 'Teachers',
   '/parent/timetable': 'Timetable',
+  '/parent/calendar': 'Calendar',
+  '/parent/ptm': 'PTM',
   '/parent/leave': 'Leave',
   '/parent/leave/apply': 'Apply Leave',
   '/parent/leave/history': 'Leave History',
@@ -223,9 +230,13 @@ export const useBreadcrumbs = () => {
 
     if (!label) {
       const raw = rawSegments[i];
-      label = raw
-        .replace(/[-_]/g, ' ')
-        .replace(/\b\w/g, (char) => char.toUpperCase());
+      if (raw.toLowerCase() === 'ptm') {
+        label = 'PTM';
+      } else {
+        label = raw
+          .replace(/[-_]/g, ' ')
+          .replace(/\b\w/g, (char) => char.toUpperCase());
+      }
     }
 
     // If it's the current page (isLast) or a non-linkable menu folder (e.g. /teacher/exam), don't provide a clickable path

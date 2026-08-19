@@ -101,9 +101,95 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
 
   const activePaths = buildPathsFromRawMenus(menus || [], userRole || "");
 
+  // Standard built-in feature routes for each role
+  const standardBuiltInPaths: Record<string, string[]> = {
+    sch_admin: [
+      '/school-admin/dashboard',
+      '/school-admin/teachers',
+      '/school-admin/students',
+      '/school-admin/classes',
+      '/school-admin/subjects',
+      '/school-admin/attendance',
+      '/school-admin/calendar',
+      '/school-admin/ptm',
+      '/school-admin/students/discipline',
+      '/school-admin/exam/gradebook',
+      '/school-admin/fees',
+      '/school-admin/announcements',
+      '/school-admin/email-templates',
+      '/school-admin/timetable',
+      '/school-admin/exam',
+      '/school-admin/transport',
+      '/school-admin/promotion',
+      '/school-admin/principal',
+      '/school-admin/profile',
+    ],
+    teacher: [
+      '/teacher/dashboard',
+      '/teacher/classes',
+      '/teacher/students',
+      '/teacher/parents',
+      '/teacher/attendance',
+      '/teacher/my-requests',
+      '/teacher/leave',
+      '/teacher/timetable',
+      '/teacher/exam',
+      '/teacher/homework',
+      '/teacher/ptm',
+      '/teacher/announcements',
+      '/teacher/notifications',
+      '/teacher/chat',
+      '/teacher/profile',
+    ],
+    student: [
+      '/student/dashboard',
+      '/student/classes',
+      '/student/attendance',
+      '/student/results',
+      '/student/profile',
+      '/student/my-requests',
+      '/student/leave',
+      '/student/homework',
+      '/student/announcements',
+      '/student/timetable',
+      '/student/exam',
+      '/student/fees',
+    ],
+    parent: [
+      '/parent/dashboard',
+      '/parent/children',
+      '/parent/announcements',
+      '/parent/homework',
+      '/parent/attendance',
+      '/parent/teachers',
+      '/parent/timetable',
+      '/parent/leave',
+      '/parent/exam',
+      '/parent/transport',
+      '/parent/ptm',
+      '/parent/fees',
+      '/parent/profile',
+    ],
+    principal: [
+      '/principal/dashboard',
+      '/principal/teachers',
+      '/principal/students',
+      '/principal/attendance',
+      '/principal/timetable',
+      '/principal/exam',
+      '/principal/leave',
+      '/principal/announcements',
+      '/principal/profile',
+    ],
+  };
+
   const currentPath = location.pathname;
 
-  const isAllowed = activePaths.some((path) => {
+  const isBuiltInAllowed = (standardBuiltInPaths[userRole || ''] || []).some(
+    (prefix) => currentPath === prefix || currentPath.startsWith(prefix + '/')
+  );
+
+  const isAllowed = isBuiltInAllowed || activePaths.some((path) => {
     // Convert dynamic segments like :studentId to a regex wildcard
     if (path.includes(":")) {
       const pattern = path.replace(/:[^/]+/g, "[^/]+");

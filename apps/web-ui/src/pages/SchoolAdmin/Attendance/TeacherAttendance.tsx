@@ -172,7 +172,7 @@ const TeacherAttendancePage = () => {
       </Typography>
 
       {/* Date Picker and Quick Actions */}
-      <Paper sx={{ p: { xs: 2, sm: 2.5 }, mb: 2.5, borderRadius: 3, border: '1px solid', borderColor: 'divider' }} elevation={0}>
+      <Paper sx={{ p: { xs: 2, sm: 2.5 }, mb: 2.5, borderRadius: 2, border: '1px solid', borderColor: 'divider' }} elevation={0}>
         <Box
           sx={{
             display: "flex",
@@ -257,9 +257,9 @@ const TeacherAttendancePage = () => {
                 badge={
                   status
                     ? {
-                        label: status.toUpperCase(),
-                        color: status === 'present' ? 'success' : status === 'absent' ? 'error' : status === 'late' ? 'warning' : 'info',
-                      }
+                      label: status.toUpperCase(),
+                      color: status === 'present' ? 'success' : status === 'absent' ? 'error' : status === 'late' ? 'warning' : 'info',
+                    }
                     : { label: 'UNMARKED', color: 'default' }
                 }
                 metaItems={[
@@ -295,7 +295,7 @@ const TeacherAttendancePage = () => {
           })}
         </MobileCardList>
       ) : (
-        <TableContainer component={Paper} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }} elevation={0}>
+        <TableContainer component={Paper} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider' }} elevation={0}>
           <Table>
             <TableHead sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
               <TableRow>

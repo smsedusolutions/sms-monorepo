@@ -351,7 +351,7 @@ const ParentApplyLeave: React.FC = () => {
                                                 sx={{
                                                     py: 1.5,
                                                     px: 4,
-                                                    borderRadius: 3,
+                                                    borderRadius: 2,
                                                     textTransform: 'none',
                                                     fontWeight: 600,
                                                     boxShadow: '0 4px 14px 0 rgba(0, 118, 255, 0.39)',

@@ -104,7 +104,7 @@ const ParentHomework: React.FC = () => {
     if (!selectedChild) {
         return (
             <Box sx={{ p: 3, maxWidth: 1300, mx: 'auto' }}>
-                <Alert severity="info" sx={{ borderRadius: 3 }}>Please select a child to view their homework assignments.</Alert>
+                <Alert severity="info" sx={{ borderRadius: 2 }}>Please select a child to view their homework assignments.</Alert>
             </Box>
         );
     }
@@ -112,7 +112,7 @@ const ParentHomework: React.FC = () => {
     if (error) {
         return (
             <Box sx={{ p: 3, maxWidth: 1300, mx: 'auto' }}>
-                <Alert severity="error" sx={{ borderRadius: 3 }}>Failed to load homework assignments. Please try again later.</Alert>
+                <Alert severity="error" sx={{ borderRadius: 2 }}>Failed to load homework assignments. Please try again later.</Alert>
             </Box>
         );
     }
@@ -138,7 +138,7 @@ const ParentHomework: React.FC = () => {
 
             {/* ── Multi-Child Switcher Bar ── */}
             {contextChildren.length > 1 && (
-                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
                     <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, display: 'block' }}>
                         Select Child
                     </Typography>
@@ -200,7 +200,7 @@ const ParentHomework: React.FC = () => {
                     sx={{
                         width: { xs: '100%', sm: 300 },
                         bgcolor: '#ffffff',
-                        '& .MuiOutlinedInput-root': { borderRadius: 3 }
+                        '& .MuiOutlinedInput-root': { borderRadius: 2 }
                     }}
                     InputProps={{
                         startAdornment: (
@@ -263,7 +263,7 @@ const ParentHomework: React.FC = () => {
                     {/* Informational Cards */}
                     <Grid container spacing={2.5} sx={{ maxWidth: 850, mx: 'auto', mb: 4, textAlign: 'left' }}>
                         <Grid size={{ xs: 12, sm: 4 }}>
-                            <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
+                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#2563eb' }}>
                                     <SchoolIcon fontSize="small" />
                                     <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Class Syllabus</Typography>
@@ -274,7 +274,7 @@ const ParentHomework: React.FC = () => {
                             </Box>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
-                            <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
+                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#8b5cf6' }}>
                                     <PersonIcon fontSize="small" />
                                     <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Contact Teachers</Typography>
@@ -285,7 +285,7 @@ const ParentHomework: React.FC = () => {
                             </Box>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
-                            <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
+                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#f59e0b' }}>
                                     <CalendarIcon fontSize="small" />
                                     <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Timetable</Typography>

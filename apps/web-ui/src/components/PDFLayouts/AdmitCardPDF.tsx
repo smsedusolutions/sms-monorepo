@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#fafafa',
         padding: 12,
         border: '1pt solid #eee',
-        borderRadius: 3,
+        borderRadius: 2,
         marginTop: 15,
     },
     instructionsTitle: {

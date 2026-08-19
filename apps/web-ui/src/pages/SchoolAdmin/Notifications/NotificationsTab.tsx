@@ -139,13 +139,13 @@ const NotificationsTab: React.FC = () => {
 
   return (
     <Box>
-      <Box sx={{ 
-        display: "flex", 
-        flexDirection: { xs: "column", sm: "row" }, 
-        justifyContent: "space-between", 
-        alignItems: { xs: "stretch", sm: "center" }, 
+      <Box sx={{
+        display: "flex",
+        flexDirection: { xs: "column", sm: "row" },
+        justifyContent: "space-between",
+        alignItems: { xs: "stretch", sm: "center" },
         mb: 3,
-        gap: 2 
+        gap: 2
       }}>
         {isMobile ? (
           <MobileSegmentedTabs
@@ -185,8 +185,8 @@ const NotificationsTab: React.FC = () => {
           startIcon={<MarkReadIcon />}
           onClick={() => markAllAsRead.mutate()}
           disabled={markAllAsRead.isPending || notifications.length === 0}
-          sx={{ 
-            borderRadius: 2.5, 
+          sx={{
+            borderRadius: 2.5,
             height: 42,
             px: 2.5,
             fontWeight: 700,
@@ -198,7 +198,7 @@ const NotificationsTab: React.FC = () => {
         </Button>
       </Box>
 
-      <Card sx={{ borderRadius: 3, boxShadow: theme.shadows[1], overflow: "hidden" }}>
+      <Card sx={{ borderRadius: 2, boxShadow: theme.shadows[1], overflow: "hidden" }}>
         {isLoading ? (
           <CardContent>
             {[1, 2, 3, 4, 5].map((i) => (

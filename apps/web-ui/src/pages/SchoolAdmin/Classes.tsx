@@ -126,12 +126,12 @@ const ClassesPage = () => {
                     <Typography variant="h5" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                         Classes
                     </Typography>
-                    <Chip 
-                        label={`${classes.length} Total`} 
-                        size="small" 
-                        color="primary" 
-                        variant="outlined" 
-                        sx={{ fontWeight: 700, borderRadius: '8px' }} 
+                    <Chip
+                        label={`${classes.length} Total`}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                        sx={{ fontWeight: 700, borderRadius: '8px' }}
                     />
                 </Box>
                 <Button
@@ -164,11 +164,11 @@ const ClassesPage = () => {
                         const sectionsCount = classItem.sections?.length || 0;
 
                         return (
-                            <Card 
+                            <Card
                                 key={classItem.classId}
                                 variant="outlined"
                                 sx={{
-                                    borderRadius: 3,
+                                    borderRadius: 2,
                                     mb: 1.5,
                                     borderColor: isExpanded ? 'primary.main' : 'divider',
                                     transition: 'all 0.2s ease',
@@ -178,19 +178,19 @@ const ClassesPage = () => {
                                 <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                                     {/* Top Row: Class Info & Quick Actions */}
                                     <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1 }}>
-                                        <Box 
+                                        <Box
                                             sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1, cursor: 'pointer' }}
                                             onClick={() => handleToggleExpand(classItem.classId)}
                                         >
-                                            <Box 
-                                                sx={{ 
-                                                    width: 40, 
-                                                    height: 40, 
-                                                    borderRadius: 2.5, 
-                                                    bgcolor: 'primary.50', 
-                                                    color: 'primary.main', 
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
+                                            <Box
+                                                sx={{
+                                                    width: 40,
+                                                    height: 40,
+                                                    borderRadius: 2.5,
+                                                    bgcolor: 'primary.50',
+                                                    color: 'primary.main',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
                                                     justifyContent: 'center',
                                                     flexShrink: 0,
                                                 }}
@@ -210,9 +210,9 @@ const ClassesPage = () => {
                                         {/* Status & Edit */}
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
                                             <StatusChip status={classItem.status || 'active'} />
-                                            <IconButton 
-                                                size="small" 
-                                                color="primary" 
+                                            <IconButton
+                                                size="small"
+                                                color="primary"
                                                 onClick={() => handleEdit(classItem)}
                                                 sx={{ p: 0.8 }}
                                             >
@@ -229,16 +229,16 @@ const ClassesPage = () => {
                                     </Box>
 
                                     {/* Middle Row: Meta Chips */}
-                                    <Box 
-                                        sx={{ 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            justifyContent: 'space-between', 
-                                            mt: 1.5, 
-                                            pt: 1, 
-                                            borderTop: '1px dashed', 
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            mt: 1.5,
+                                            pt: 1,
+                                            borderTop: '1px dashed',
                                             borderColor: 'divider',
-                                            cursor: 'pointer' 
+                                            cursor: 'pointer'
                                         }}
                                         onClick={() => handleToggleExpand(classItem.classId)}
                                     >
@@ -332,7 +332,7 @@ const ClassesPage = () => {
                 <TableContainer
                     component={Paper}
                     sx={{
-                        borderRadius: 3,
+                        borderRadius: 2,
                         boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                         border: '1px solid',
                         borderColor: 'divider',

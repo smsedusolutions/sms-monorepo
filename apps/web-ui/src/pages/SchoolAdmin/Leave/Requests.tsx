@@ -100,11 +100,11 @@ const LeaveRequests: React.FC = () => {
 
             {/* Summary Cards */}
             {summary && (
-                <Box sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' }, 
-                    gap: 1.5, 
-                    mb: 2.5 
+                <Box sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+                    gap: 1.5,
+                    mb: 2.5
                 }}>
                     <Card variant="outlined" sx={{ borderRadius: 2.5, bgcolor: 'background.paper', textAlign: 'center' }}>
                         <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
@@ -255,7 +255,7 @@ const LeaveRequests: React.FC = () => {
             ) : leaves.length === 0 ? (
                 <Alert severity="info" sx={{ borderRadius: 2 }}>No leave requests found matching your filters.</Alert>
             ) : (
-                <TableContainer component={Paper} sx={{ borderRadius: 3, border: '1px solid', borderColor: 'divider' }} elevation={0}>
+                <TableContainer component={Paper} sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider' }} elevation={0}>
                     <Table>
                         <TableHead sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
                             <TableRow>
@@ -323,10 +323,10 @@ const LeaveRequests: React.FC = () => {
             )}
 
             {/* View Details Dialog */}
-            <Dialog 
-                open={!!selectedLeave} 
-                onClose={() => setSelectedLeave(null)} 
-                maxWidth="sm" 
+            <Dialog
+                open={!!selectedLeave}
+                onClose={() => setSelectedLeave(null)}
+                maxWidth="sm"
                 fullWidth
                 fullScreen={isMobile}
                 PaperProps={{
@@ -396,10 +396,10 @@ const LeaveRequests: React.FC = () => {
                         </Box>
                     )}
                 </DialogContent>
-                <DialogActions sx={{ 
-                    px: { xs: 2, sm: 3 }, 
-                    py: 2, 
-                    borderTop: '1px solid', 
+                <DialogActions sx={{
+                    px: { xs: 2, sm: 3 },
+                    py: 2,
+                    borderTop: '1px solid',
                     borderColor: 'divider',
                     flexDirection: { xs: 'column-reverse', sm: 'row' },
                     gap: 1,
@@ -423,10 +423,10 @@ const LeaveRequests: React.FC = () => {
             </Dialog>
 
             {/* Process Dialog */}
-            <Dialog 
-                open={!!processDialog} 
-                onClose={() => { setProcessDialog(null); setRemarks(''); }} 
-                maxWidth="sm" 
+            <Dialog
+                open={!!processDialog}
+                onClose={() => { setProcessDialog(null); setRemarks(''); }}
+                maxWidth="sm"
                 fullWidth
                 fullScreen={isMobile}
                 PaperProps={{
@@ -435,7 +435,7 @@ const LeaveRequests: React.FC = () => {
                     }
                 }}
             >
-                <DialogTitle sx={{ 
+                <DialogTitle sx={{
                     color: processDialog?.action === 'approve' ? 'success.main' : 'error.main',
                     fontWeight: 700,
                     borderBottom: '1px solid',
@@ -466,10 +466,10 @@ const LeaveRequests: React.FC = () => {
                         </Box>
                     )}
                 </DialogContent>
-                <DialogActions sx={{ 
-                    px: { xs: 2, sm: 3 }, 
-                    py: 2, 
-                    borderTop: '1px solid', 
+                <DialogActions sx={{
+                    px: { xs: 2, sm: 3 },
+                    py: 2,
+                    borderTop: '1px solid',
                     borderColor: 'divider',
                     flexDirection: { xs: 'column-reverse', sm: 'row' },
                     gap: 1,

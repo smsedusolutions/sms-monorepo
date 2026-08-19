@@ -240,10 +240,10 @@ const PeriodDialog = ({ open, onClose, onSave, editData, shifts, nextPeriodNumbe
     };
 
     return (
-        <Dialog 
-            open={open} 
-            onClose={onClose} 
-            maxWidth="md" 
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="md"
             fullWidth
             fullScreen={isMobile}
             PaperProps={{
@@ -252,9 +252,9 @@ const PeriodDialog = ({ open, onClose, onSave, editData, shifts, nextPeriodNumbe
                 }
             }}
         >
-            <DialogTitle sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
+            <DialogTitle sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
                 borderBottom: '1px solid',
                 borderColor: 'divider',
@@ -359,10 +359,10 @@ const PeriodDialog = ({ open, onClose, onSave, editData, shifts, nextPeriodNumbe
                     )}
                 </Box>
             </DialogContent>
-            <DialogActions sx={{ 
-                px: { xs: 2, sm: 3 }, 
-                py: 2, 
-                borderTop: '1px solid', 
+            <DialogActions sx={{
+                px: { xs: 2, sm: 3 },
+                py: 2,
+                borderTop: '1px solid',
                 borderColor: 'divider',
                 flexDirection: { xs: 'column-reverse', sm: 'row' },
                 gap: 1,
@@ -636,7 +636,7 @@ const TimetableConfigPage = () => {
                     </Paper>
 
                     {/* Working Days */}
-                    <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, borderRadius: 3 }} elevation={0} variant="outlined">
+                    <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, borderRadius: 2 }} elevation={0} variant="outlined">
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                             <Typography variant="h6" fontWeight={700}>Working Days</Typography>
                             {updateConfig.isPending && <CircularProgress size={20} />}
@@ -659,7 +659,7 @@ const TimetableConfigPage = () => {
                     </Paper>
 
                     {/* Periods */}
-                    <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, borderRadius: 3 }} elevation={0} variant="outlined">
+                    <Paper sx={{ p: { xs: 2, sm: 3 }, mb: 3, borderRadius: 2 }} elevation={0} variant="outlined">
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
                             <Typography variant="h6" fontWeight={700}>Period Structure</Typography>
                             <Button

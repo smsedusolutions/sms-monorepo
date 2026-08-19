@@ -636,6 +636,143 @@ const deleteHomework = async (req, res) => {
     }
 };
 
+// ==========================================
+// SUBMIT HOMEWORK (Student)
+// POST /api/academics/school/:schoolId/homework/:homeworkId/submit
+// ==========================================
+const submitHomework = async (req, res) => {
+    try {
+        const { schoolId, homeworkId } = req.params;
+        const { content, attachmentUrl, attachmentFileName } = req.body;
+        const studentId = req.user?.studentId || req.user?.userId;
+
+        if (!studentId) {
+            return res.status(401).json({ success: false, message: 'Student identity required' });
+        }
+
+        const schoolDbName = await getSchoolDbName(schoolId);
+        const { Homework } = getModels(schoolDbName);
+
+        const homework = await Homework.findOne({ schoolId, homeworkId });
+        if (!homework) return res.status(404).json({ success: false, message: 'Homework not found' });
+        if (homework.status === 'cancelled') {
+            return res.status(400).json({ success: false, message: 'This homework has been cancelled' });
+        }
+
+        // Check if already submitted
+        const existing = homework.submissions.find(s => s.studentId === studentId);
+        if (existing) {
+            // Update existing submission
+            existing.content = content || existing.content;
+            existing.attachmentUrl = attachmentUrl || existing.attachmentUrl;
+            existing.attachmentFileName = attachmentFileName || existing.attachmentFileName;
+            existing.submittedAt = new Date();
+            existing.status = new Date() > new Date(homework.dueDate) ? 'late' : 'submitted';
+        } else {
+            const isLate = new Date() > new Date(homework.dueDate);
+            homework.submissions.push({
+                studentId,
+                content,
+                attachmentUrl,
+                attachmentFileName,
+                status: isLate ? 'late' : 'submitted',
+                submittedAt: new Date()
+            });
+        }
+
+        await homework.save();
+        res.status(200).json({ success: true, message: 'Homework submitted successfully', data: homework.submissions.find(s => s.studentId === studentId) });
+    } catch (error) {
+        console.error('Submit Homework Error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ==========================================
+// GET SUBMISSIONS FOR TEACHER
+// GET /api/academics/school/:schoolId/homework/:homeworkId/submissions
+// ==========================================
+const getHomeworkSubmissions = async (req, res) => {
+    try {
+        const { schoolId, homeworkId } = req.params;
+
+        const schoolDbName = await getSchoolDbName(schoolId);
+        const { Homework, Student } = getModels(schoolDbName);
+
+        const homework = await Homework.findOne({ schoolId, homeworkId }).lean();
+        if (!homework) return res.status(404).json({ success: false, message: 'Homework not found' });
+
+        // Get all students in this class to build full submission status (not just submitted ones)
+        const students = await Student.find({
+            schoolId,
+            classId: homework.classId,
+            ...(homework.sectionId ? { sectionId: homework.sectionId } : {}),
+            status: 'active'
+        }, 'studentId firstName lastName rollNumber profilePhoto').lean();
+
+        const submissionsMap = new Map();
+        (homework.submissions || []).forEach(s => submissionsMap.set(s.studentId, s));
+
+        const fullList = students.map(student => ({
+            studentId: student.studentId,
+            studentName: `${student.firstName} ${student.lastName}`,
+            rollNumber: student.rollNumber,
+            profilePhoto: student.profilePhoto,
+            submission: submissionsMap.get(student.studentId) || null,
+            submissionStatus: submissionsMap.has(student.studentId)
+                ? submissionsMap.get(student.studentId).status
+                : 'not_submitted'
+        }));
+
+        const summary = {
+            total: students.length,
+            submitted: fullList.filter(s => s.submissionStatus === 'submitted').length,
+            late: fullList.filter(s => s.submissionStatus === 'late').length,
+            reviewed: fullList.filter(s => s.submissionStatus === 'reviewed').length,
+            notSubmitted: fullList.filter(s => s.submissionStatus === 'not_submitted').length,
+        };
+
+        res.status(200).json({ success: true, data: { homework, submissions: fullList, summary } });
+    } catch (error) {
+        console.error('Get Submissions Error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ==========================================
+// REVIEW SUBMISSION (Teacher)
+// PATCH /api/academics/school/:schoolId/homework/:homeworkId/submissions/:studentId/review
+// ==========================================
+const reviewSubmission = async (req, res) => {
+    try {
+        const { schoolId, homeworkId, studentId } = req.params;
+        const { teacherRemarks, marksAwarded, maxMarks } = req.body;
+        const reviewedBy = req.user?.teacherId || req.user?.userId;
+
+        const schoolDbName = await getSchoolDbName(schoolId);
+        const { Homework } = getModels(schoolDbName);
+
+        const homework = await Homework.findOne({ schoolId, homeworkId });
+        if (!homework) return res.status(404).json({ success: false, message: 'Homework not found' });
+
+        const submission = homework.submissions.find(s => s.studentId === studentId);
+        if (!submission) return res.status(404).json({ success: false, message: 'Submission not found for this student' });
+
+        submission.status = 'reviewed';
+        submission.teacherRemarks = teacherRemarks;
+        submission.marksAwarded = marksAwarded;
+        submission.maxMarks = maxMarks;
+        submission.reviewedAt = new Date();
+        submission.reviewedBy = reviewedBy;
+
+        await homework.save();
+        res.status(200).json({ success: true, message: 'Submission reviewed successfully', data: submission });
+    } catch (error) {
+        console.error('Review Submission Error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     createHomework,
     getHomeworkByClass,
@@ -645,4 +782,7 @@ module.exports = {
     getHomeworkById,
     updateHomework,
     deleteHomework,
+    submitHomework,
+    getHomeworkSubmissions,
+    reviewSubmission,
 };

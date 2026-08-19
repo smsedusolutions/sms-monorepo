@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-    Box, Typography, Button, Paper, Card, CardContent, 
-    Avatar, Chip, Grid, List, ListItem, ListItemText, 
+import {
+    Box, Typography, Button, Paper, Card, CardContent,
+    Avatar, Chip, Grid, List, ListItem, ListItemText,
     ListItemIcon, Divider, CircularProgress, Alert
 } from '@mui/material';
-import { 
-    PlayArrow as StartIcon, Stop as StopIcon, 
+import {
+    PlayArrow as StartIcon, Stop as StopIcon,
     MyLocation as GpsIcon, HeadsetMic as SupportIcon
 } from '@mui/icons-material';
 import { io, Socket } from 'socket.io-client';
@@ -23,7 +23,7 @@ const DriverDashboard: React.FC = () => {
     const [isTripActive, setIsTripActive] = useState(false);
     const [currentRoute, setCurrentRoute] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    
+
     const socketRef = useRef<Socket | null>(null);
     const watchIdRef = useRef<number | null>(null);
     const { user, school } = useUserStore();
@@ -37,7 +37,7 @@ const DriverDashboard: React.FC = () => {
             try {
                 // Fetch route assigned to this driver
                 const res = await axios.get(`${TRANSPORT_API}/school/${schoolId}/routes`);
-                const assigned = res.data.data.find((r: any) => 
+                const assigned = res.data.data.find((r: any) =>
                     userId && (r.driverId === userId || r.driver?.userId === userId || r.email === user?.email)
                 );
                 setCurrentRoute(assigned);
@@ -57,7 +57,7 @@ const DriverDashboard: React.FC = () => {
             transports: ['websocket', 'polling'],
             withCredentials: true
         });
-        
+
         return () => {
             if (socketRef.current) socketRef.current.disconnect();
             if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
@@ -91,7 +91,7 @@ const DriverDashboard: React.FC = () => {
             console.error("Failed to save check-in status to DB:", err);
             // We continue anyway so tracking works, but ideally this should succeed
         }
-        
+
         // 1. Check-in to the route room
         if (socketRef.current && currentRoute) {
             socketRef.current.emit('driver-check-in', {
@@ -106,7 +106,7 @@ const DriverDashboard: React.FC = () => {
         watchIdRef.current = navigator.geolocation.watchPosition(
             (position) => {
                 const { latitude, longitude, heading, speed } = position.coords;
-                
+
                 // Emit location update via websocket
                 if (socketRef.current && currentRoute) {
                     socketRef.current.emit('update-location', {
@@ -134,7 +134,7 @@ const DriverDashboard: React.FC = () => {
         } catch (err) {
             console.error("Failed to save check-out status to DB:", err);
         }
-        
+
         // 1. Notify Backend
         if (socketRef.current && currentRoute) {
             socketRef.current.emit('driver-check-out', { schoolId, routeId: currentRoute.routeId });
@@ -158,7 +158,7 @@ const DriverDashboard: React.FC = () => {
                         elevation={0}
                         sx={{
                             p: { xs: 2, sm: 2.5 },
-                            borderRadius: 3,
+                            borderRadius: 2,
                             display: 'flex',
                             flexDirection: { xs: 'column', sm: 'row' },
                             alignItems: { xs: 'flex-start', sm: 'center' },
@@ -198,10 +198,10 @@ const DriverDashboard: React.FC = () => {
 
                 {/* Trip Control Card */}
                 <Grid size={{ xs: 12, md: 7 }}>
-                    <Card elevation={0} sx={{ borderRadius: 3, height: '100%', border: '1px solid #e2e8f0', bgcolor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                    <Card elevation={0} sx={{ borderRadius: 2, height: '100%', border: '1px solid #e2e8f0', bgcolor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
                         <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
                             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>Active Trip Control</Typography>
-                            
+
                             {!currentRoute ? (
                                 <Alert severity="warning" sx={{ borderRadius: 2 }}>
                                     No route currently assigned to you. Please contact administration.
@@ -220,9 +220,9 @@ const DriverDashboard: React.FC = () => {
 
                                     <Box sx={{ display: 'flex', gap: 2 }}>
                                         {!isTripActive ? (
-                                            <Button 
-                                                variant="contained" 
-                                                fullWidth 
+                                            <Button
+                                                variant="contained"
+                                                fullWidth
                                                 size="medium"
                                                 startIcon={<StartIcon />}
                                                 onClick={handleStartTrip}
@@ -231,10 +231,10 @@ const DriverDashboard: React.FC = () => {
                                                 Start Trip / Check-In
                                             </Button>
                                         ) : (
-                                            <Button 
-                                                variant="contained" 
+                                            <Button
+                                                variant="contained"
                                                 color="error"
-                                                fullWidth 
+                                                fullWidth
                                                 size="medium"
                                                 startIcon={<StopIcon />}
                                                 onClick={handleStopTrip}
@@ -252,7 +252,7 @@ const DriverDashboard: React.FC = () => {
 
                 {/* Route Details */}
                 <Grid size={{ xs: 12, md: 5 }}>
-                    <Card elevation={0} sx={{ borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                    <Card elevation={0} sx={{ borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
                         <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
                             <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1.5, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>Route Schedule</Typography>
                             {currentRoute?.stops && currentRoute.stops.length > 0 ? (
@@ -261,9 +261,9 @@ const DriverDashboard: React.FC = () => {
                                         <React.Fragment key={idx}>
                                             <ListItem sx={{ px: 0, py: 1 }}>
                                                 <ListItemIcon sx={{ minWidth: 38 }}>
-                                                    <Box sx={{ 
-                                                        width: 26, height: 26, borderRadius: '50%', 
-                                                        bgcolor: idx === 0 ? 'primary.main' : 'rgba(0,0,0,0.06)', 
+                                                    <Box sx={{
+                                                        width: 26, height: 26, borderRadius: '50%',
+                                                        bgcolor: idx === 0 ? 'primary.main' : 'rgba(0,0,0,0.06)',
                                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                         color: idx === 0 ? 'white' : 'text.primary',
                                                         fontWeight: 700,
@@ -272,8 +272,8 @@ const DriverDashboard: React.FC = () => {
                                                         {idx + 1}
                                                     </Box>
                                                 </ListItemIcon>
-                                                <ListItemText 
-                                                    primary={stop.name} 
+                                                <ListItemText
+                                                    primary={stop.name}
                                                     secondary={`Scheduled: ${stop.arrivalTime || '08:00 AM'}`}
                                                     primaryTypographyProps={{ fontWeight: 700, fontSize: '0.85rem' }}
                                                     secondaryTypographyProps={{ fontSize: '0.72rem' }}

@@ -97,7 +97,7 @@ const ParentTeachers: React.FC = () => {
     if (!selectedChild) {
         return (
             <Box sx={{ p: 3, maxWidth: 1300, mx: 'auto' }}>
-                <Alert severity="info" sx={{ borderRadius: 3 }}>Please select a child to view their teachers.</Alert>
+                <Alert severity="info" sx={{ borderRadius: 2 }}>Please select a child to view their teachers.</Alert>
             </Box>
         );
     }
@@ -105,7 +105,7 @@ const ParentTeachers: React.FC = () => {
     if (error) {
         return (
             <Box sx={{ p: 3, maxWidth: 1300, mx: 'auto' }}>
-                <Alert severity="error" sx={{ borderRadius: 3 }}>Failed to load teacher information. Please try again later.</Alert>
+                <Alert severity="error" sx={{ borderRadius: 2 }}>Failed to load teacher information. Please try again later.</Alert>
             </Box>
         );
     }
@@ -131,7 +131,7 @@ const ParentTeachers: React.FC = () => {
 
             {/* ── Multi-Child Switcher Bar ── */}
             {contextChildren.length > 1 && (
-                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
                     <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, display: 'block' }}>
                         Select Child
                     </Typography>
@@ -181,7 +181,7 @@ const ParentTeachers: React.FC = () => {
                     sx={{
                         width: { xs: '100%', sm: 340 },
                         bgcolor: '#ffffff',
-                        '& .MuiOutlinedInput-root': { borderRadius: 3 }
+                        '& .MuiOutlinedInput-root': { borderRadius: 2 }
                     }}
                     InputProps={{
                         startAdornment: (
