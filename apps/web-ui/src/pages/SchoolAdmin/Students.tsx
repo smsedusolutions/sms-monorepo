@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
-import { Box, IconButton, Tooltip, Switch, TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { Edit as EditIcon } from '@mui/icons-material';
+import { Box, IconButton, Tooltip, Switch, TextField, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
+import { Edit as EditIcon, Badge as BadgeIcon, Article as CertIcon } from '@mui/icons-material';
 import DataTable, { StatusChip } from '../../components/Table/DataTable';
 import type { Column } from '../../components/Table/DataTable';
 import StudentDialog from '../../components/Dialogs/AddStudentDialog';
+import StudentIDCardDialog from '../../components/Dialogs/StudentIDCardDialog';
+import TransferCertificateDialog from '../../components/Dialogs/TransferCertificateDialog';
 import ExcelBulkActions from '../../components/ExcelBulk/ExcelBulkActions';
 import { useGetStudents, useUpdateStudent, useBulkCreateStudents } from '../../queries/Student';
 import { useGetClasses } from '../../queries/Class';
@@ -43,6 +45,10 @@ const STUDENT_TEMPLATE_COLUMNS = [
 const StudentsPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editData, setEditData] = useState<Student | null>(null);
+  const [idCardDialogOpen, setIdCardDialogOpen] = useState(false);
+  const [idCardStudents, setIdCardStudents] = useState<Student[]>([]);
+  const [tcDialogOpen, setTcDialogOpen] = useState(false);
+  const [selectedTcStudent, setSelectedTcStudent] = useState<Student | null>(null);
 
   const schoolId = TokenService.getSchoolId() || "";
   const { page, setPage, limit, setLimit } = useAuth();
@@ -89,6 +95,25 @@ const StudentsPage = () => {
     setDialogOpen(true);
   };
 
+  const handlePrintIDCard = (student: Student) => {
+    setIdCardStudents([student]);
+    setIdCardDialogOpen(true);
+  };
+
+  const handleOpenTC = (student: Student) => {
+    setSelectedTcStudent(student);
+    setTcDialogOpen(true);
+  };
+
+  const handleBulkIDCards = () => {
+    if (students.length === 0) {
+      showNotification('No students available to generate ID cards', 'warning');
+      return;
+    }
+    setIdCardStudents(students);
+    setIdCardDialogOpen(true);
+  };
+
   const handleToggleStatus = async (student: Student) => {
     const newStatus = student.status === 'active' ? 'inactive' : 'active';
     try {
@@ -124,8 +149,8 @@ const StudentsPage = () => {
     });
 
     return {
-      sheetName: 'Students',
-      fileName: 'Student_Bulk_Upload_Template',
+      sheetName: 'Students Template',
+      fileName: 'students_bulk_upload_template',
       columns,
     };
   }, [classesData]);
@@ -164,7 +189,11 @@ const StudentsPage = () => {
   };
 
   const columns: Column<Student>[] = [
-    { id: 'studentId', label: 'ID', minWidth: 80, hide: 'md' },
+    {
+      id: 'studentId',
+      label: 'ID',
+      minWidth: 100,
+    },
     {
       id: 'firstName',
       label: 'Name',
@@ -203,10 +232,36 @@ const StudentsPage = () => {
     {
       id: 'actions',
       label: 'Actions',
-      minWidth: 120,
+      minWidth: 170,
       align: 'center',
       format: (_, row) => (
-        <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 0.5 }}>
+          <Tooltip title="Student ID Card">
+            <IconButton
+              size="small"
+              sx={{
+                color: '#4f46e5',
+                bgcolor: 'rgba(79, 70, 229, 0.08)',
+                '&:hover': { bgcolor: 'rgba(79, 70, 229, 0.16)' },
+              }}
+              onClick={(e) => { e.stopPropagation(); handlePrintIDCard(row); }}
+            >
+              <BadgeIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Generate Transfer Certificate (TC)">
+            <IconButton
+              size="small"
+              sx={{
+                color: '#0284c7',
+                bgcolor: 'rgba(2, 132, 199, 0.08)',
+                '&:hover': { bgcolor: 'rgba(2, 132, 199, 0.16)' },
+              }}
+              onClick={(e) => { e.stopPropagation(); handleOpenTC(row); }}
+            >
+              <CertIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Edit">
             <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); handleEdit(row); }}>
               <EditIcon fontSize="small" />
@@ -298,12 +353,33 @@ const StudentsPage = () => {
             display: 'flex', 
             flexDirection: { xs: 'column', sm: 'row' },
             justifyContent: { xs: 'center', md: 'flex-end' },
+            alignItems: 'center',
             width: { xs: '100%', md: 'auto' },
-            gap: 1,
+            gap: 1.5,
             '& > button': { 
               width: { xs: '100%', sm: 'auto' } 
             }
           }}>
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<BadgeIcon />}
+              onClick={handleBulkIDCards}
+              sx={{
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontWeight: 600,
+                borderColor: '#6366f1',
+                color: '#4f46e5',
+                '&:hover': {
+                  borderColor: '#4338ca',
+                  bgcolor: 'rgba(99, 102, 241, 0.06)',
+                },
+              }}
+            >
+              ID Cards
+            </Button>
+
             <ExcelBulkActions
               templateConfig={templateConfig}
               parseConfig={parseConfig}
@@ -341,6 +417,23 @@ const StudentsPage = () => {
         onClose={handleDialogClose}
         schoolId={schoolId}
         editData={editData}
+      />
+
+      <StudentIDCardDialog
+        open={idCardDialogOpen}
+        onClose={() => setIdCardDialogOpen(false)}
+        students={idCardStudents}
+        title={
+          idCardStudents.length === 1
+            ? `Student ID Card — ${idCardStudents[0].firstName} ${idCardStudents[0].lastName}`
+            : `Student ID Cards (${idCardStudents.length} Students)`
+        }
+      />
+
+      <TransferCertificateDialog
+        open={tcDialogOpen}
+        onClose={() => setTcDialogOpen(false)}
+        student={selectedTcStudent}
       />
     </Box>
   );

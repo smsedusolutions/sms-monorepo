@@ -36,16 +36,16 @@ const WHITE = '#ffffff';
 const styles = StyleSheet.create({
     page: { padding: 20, backgroundColor: BG, fontFamily: 'Helvetica' },
     cardRow: { flexDirection: 'row', gap: 14, marginBottom: 14 },
-    card: { flex: 1, backgroundColor: WHITE, borderRadius: 10, overflow: 'hidden', border: '1.5pt solid #1e3a5f' },
+    card: { flex: 1, backgroundColor: WHITE, borderRadius: 2, overflow: 'hidden', border: '1.5pt solid #1e3a5f' },
     cardHeader: { backgroundColor: BLUE, paddingVertical: 7, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 6 },
-    logo: { width: 28, height: 28, borderRadius: 14, backgroundColor: WHITE },
+    logo: { width: 28, height: 28, borderRadius: 2, backgroundColor: WHITE },
     headerTextBlock: { flex: 1 },
     schoolName: { color: WHITE, fontSize: 8, fontWeight: 'bold' },
     schoolSub: { color: '#93c5fd', fontSize: 6, marginTop: 1 },
-    idBadge: { backgroundColor: ACCENT, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 },
+    idBadge: { backgroundColor: ACCENT, borderRadius: 2, paddingHorizontal: 5, paddingVertical: 2 },
     idBadgeText: { color: WHITE, fontSize: 6, fontWeight: 'bold' },
     cardBody: { flexDirection: 'row', padding: 9, gap: 9 },
-    photoContainer: { width: 58, height: 70, borderRadius: 6, border: '1.5pt solid #2563eb', backgroundColor: BG, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+    photoContainer: { width: 58, height: 70, borderRadius: 2, border: '1.5pt solid #2563eb', backgroundColor: BG, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
     photo: { width: 58, height: 70, objectFit: 'cover' },
     photoPlaceholder: { fontSize: 6, color: '#94a3b8', textAlign: 'center' },
     infoBlock: { flex: 1, gap: 3 },
@@ -54,13 +54,13 @@ const styles = StyleSheet.create({
     label: { fontSize: 6.5, color: '#64748b', fontWeight: 'bold', width: 48 },
     value: { fontSize: 6.5, color: '#1e293b', flex: 1 },
     divider: { borderBottom: '0.5pt solid #e2e8f0', marginVertical: 3 },
-    bloodGroupBadge: { backgroundColor: '#fee2e2', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1, border: '0.5pt solid #fca5a5' },
+    bloodGroupBadge: { backgroundColor: '#fee2e2', borderRadius: 2, paddingHorizontal: 4, paddingVertical: 1, border: '0.5pt solid #fca5a5' },
     bloodGroupText: { color: '#dc2626', fontSize: 6.5, fontWeight: 'bold' },
     signatureLine: { borderTop: '0.5pt solid #94a3b8', marginTop: 4, paddingTop: 3 },
     signatureText: { fontSize: 6, color: '#94a3b8', textAlign: 'center' },
     emergencyStrip: { backgroundColor: '#fef3c7', paddingHorizontal: 9, paddingVertical: 3, flexDirection: 'row', gap: 4, alignItems: 'center' },
     emergencyLabel: { fontSize: 5.5, fontWeight: 'bold', color: '#92400e' },
-    emergencyValue: { fontSize: 6, color: '#78350f' },
+    emergencyValue: { fontSize: 6, color: '#78350f', fontWeight: 'bold' },
     cardFooter: { backgroundColor: BLUE, paddingVertical: 4, paddingHorizontal: 9, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     footerText: { color: '#93c5fd', fontSize: 6 },
     footerAccent: { color: ACCENT, fontSize: 6, fontWeight: 'bold' },
@@ -126,11 +126,11 @@ const IDCard: React.FC<{ student: StudentIDCardData }> = ({ student }) => (
             </View>
         </View>
 
-        {(student.parentName || student.parentContact) && (
+        {(student.parentContact || student.parentName) && (
             <View style={styles.emergencyStrip}>
                 <Text style={styles.emergencyLabel}>EMERGENCY CONTACT:</Text>
-                {student.parentName && <Text style={styles.emergencyValue}>{student.parentName}</Text>}
-                {student.parentContact && <Text style={styles.emergencyValue}>  |  {student.parentContact}</Text>}
+                {student.parentContact && <Text style={styles.emergencyValue}>{student.parentContact}</Text>}
+                {student.parentName && <Text style={styles.emergencyValue}> ({student.parentName})</Text>}
             </View>
         )}
 
