@@ -6,7 +6,6 @@ import {
     Schedule as TimeIcon,
     Person as PersonIcon,
 } from '@mui/icons-material';
-import { useIsMobile } from '../../hooks/useIsMobile';
 
 interface Stop {
     stopName: string;
@@ -33,8 +32,6 @@ export const RouteMapView: React.FC<RouteMapViewProps> = ({
     driverName,
     driverPhone,
 }) => {
-    const isMobile = useIsMobile();
-
     return (
         <Paper elevation={0} sx={{ p: { xs: 2, sm: 3 }, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
             {/* Header info */}

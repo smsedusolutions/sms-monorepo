@@ -14,11 +14,9 @@ import useApi from '../../../queries/useApi';
 import TokenService from '../../../queries/token/tokenService';
 import { useGetClasses } from '../../../queries/Class';
 import { useGetSubjects } from '../../../queries/Subject';
-import { useIsMobile } from '../../../hooks/useIsMobile';
 
 export const SyllabusOverview: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
-    const isMobile = useIsMobile();
     const [selectedClass, setSelectedClass] = useState('');
     const [selectedSubject, setSelectedSubject] = useState('');
 

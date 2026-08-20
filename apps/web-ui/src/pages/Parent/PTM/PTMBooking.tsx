@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     Box, Typography, Paper, Grid, Button, Chip, Alert, Skeleton,
-    CircularProgress, Snackbar, IconButton, Divider,
+    CircularProgress, Snackbar, Divider,
 } from '@mui/material';
 import {
     People as PTMIcon,
@@ -13,37 +13,33 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useApi from '../../../queries/useApi';
 import TokenService from '../../../queries/token/tokenService';
-import { useIsMobile } from '../../../hooks/useIsMobile';
 
 const PTMBooking: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const parentId = TokenService.getUserId() || '';
-    const isMobile = useIsMobile();
     const queryClient = useQueryClient();
     const [selectedSession, setSelectedSession] = useState<any>(null);
     const [selectedSlot, setSelectedSlot] = useState('');
     const [toast, setToast] = useState('');
-    const [bookedFor, setBookedFor] = useState('');
 
-    const { data, isLoading, error } = useQuery({
+    const { data, isLoading, error } = useQuery<any>({
         queryKey: ['ptm-parent', schoolId, parentId],
-        queryFn: () => useApi('GET', `/api/academics/school/${schoolId}/ptm/parent/${parentId}`),
+        queryFn: () => useApi<any>('GET', `/api/academics/school/${schoolId}/ptm/parent/${parentId}`),
         enabled: !!schoolId && !!parentId,
     });
 
-    const { data: slotsData, isLoading: loadingSlots } = useQuery({
+    const { data: slotsData, isLoading: loadingSlots } = useQuery<any>({
         queryKey: ['ptm-slots', schoolId, selectedSession?._id],
-        queryFn: () => useApi('GET', `/api/academics/school/${schoolId}/ptm/${selectedSession._id}/slots`),
+        queryFn: () => useApi<any>('GET', `/api/academics/school/${schoolId}/ptm/${selectedSession._id}/slots`),
         enabled: !!selectedSession,
     });
 
     const bookSlot = useMutation({
-        mutationFn: () => useApi('POST', `/api/academics/school/${schoolId}/ptm/${selectedSession._id}/book`, { parentId, slotTime: selectedSlot }),
-        onSuccess: (res: any) => {
+        mutationFn: () => useApi<any>('POST', `/api/academics/school/${schoolId}/ptm/${selectedSession._id}/book`, { parentId, slotTime: selectedSlot }),
+        onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['ptm-parent'] });
             queryClient.invalidateQueries({ queryKey: ['ptm-slots'] });
             setToast('Your PTM slot is confirmed!');
-            setBookedFor(selectedSlot);
             setSelectedSlot('');
         },
     });

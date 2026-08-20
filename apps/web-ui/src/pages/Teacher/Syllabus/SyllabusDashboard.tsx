@@ -1,22 +1,18 @@
 import React, { useState } from 'react';
 import {
-    Box, Typography, Paper, Grid, Button, LinearProgress, Chip, Skeleton,
+    Box, Typography, Paper, LinearProgress, Chip, Skeleton,
     Alert, Stack, Checkbox, FormControlLabel, Snackbar,
 } from '@mui/material';
 import {
     MenuBook as SyllabusIcon,
-    CheckCircle as DoneIcon,
-    Save as SaveIcon,
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useApi from '../../../queries/useApi';
 import TokenService from '../../../queries/token/tokenService';
-import { useIsMobile } from '../../../hooks/useIsMobile';
 
 export const SyllabusDashboard: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const teacherId = TokenService.getUserId() || '';
-    const isMobile = useIsMobile();
     const queryClient = useQueryClient();
     const [toast, setToast] = useState('');
 
