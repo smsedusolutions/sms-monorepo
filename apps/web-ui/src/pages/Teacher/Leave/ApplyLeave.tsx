@@ -60,20 +60,20 @@ const TeacherApplyLeave: React.FC = () => {
     const validate = () => {
         const newErrors: Record<string, string> = {};
         if (!formData.leaveType) newErrors.leaveType = 'Please select leave type';
-        
+
         const start = formData.startDate ? parse(formData.startDate, 'yyyy-MM-dd', new Date()) : null;
         const end = formData.endDate ? parse(formData.endDate, 'yyyy-MM-dd', new Date()) : null;
-        
+
         if (!start || !isValid(start)) newErrors.startDate = 'Please enter a valid start date';
         else if (start < startOfDay(new Date())) newErrors.startDate = 'Cannot be in the past';
-        
+
         if (!end || !isValid(end)) newErrors.endDate = 'Please enter a valid end date';
         else if (end < startOfDay(new Date())) newErrors.endDate = 'Cannot be in the past';
-        
+
         if (start && end && isValid(start) && isValid(end) && end < start) {
             newErrors.endDate = 'End date cannot be before start date';
         }
-        
+
         if (!formData.reason.trim()) newErrors.reason = 'Please provide a reason';
         if (formData.reason.trim().length < 10) newErrors.reason = 'Reason must be at least 10 characters';
 
@@ -199,7 +199,7 @@ const TeacherApplyLeave: React.FC = () => {
                                     startIcon={!applyMutation.isPending && <SendIcon />}
                                     sx={{
                                         py: 1.5,
-                                        borderRadius: 3,
+                                        borderRadius: 2,
                                         textTransform: 'none',
                                         fontSize: '1rem',
                                         fontWeight: 600,

@@ -512,7 +512,7 @@ const TransportRoutesPage = () => {
         onClose={() => setNotifDialogOpen(false)}
         maxWidth="xs"
         fullWidth
-        PaperProps={{ sx: { borderRadius: 3 } }}
+        PaperProps={{ sx: { borderRadius: 2 } }}
       >
         <NotificationsPanel
           routes={routes}

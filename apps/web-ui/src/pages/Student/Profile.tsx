@@ -92,7 +92,7 @@ const StudentProfile = () => {
                 sx={{
                     p: 4,
                     mb: 3,
-                    borderRadius: 3,
+                    borderRadius: 2,
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     color: 'white',
                     position: 'relative',

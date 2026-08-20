@@ -192,7 +192,7 @@ const AttendanceWidget: React.FC<AttendanceWidgetProps> = ({ compact = false }) 
                                 value={Number(percentage)}
                                 sx={{
                                     height: 6,
-                                    borderRadius: 3,
+                                    borderRadius: 2,
                                     bgcolor: 'grey.200',
                                     '& .MuiLinearProgress-bar': {
                                         bgcolor: Number(percentage) >= 75 ? 'success.main' :

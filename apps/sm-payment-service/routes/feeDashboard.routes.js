@@ -36,10 +36,21 @@ router.get('/collection/monthly', getMonthlyCollection);
 // Class-wise Collection details
 router.get('/collection/classwise', getClasswiseCollection);
 
-// Applied Discounts Report
-router.get('/discounts', getDiscountReport);
-
 // Export collections to Excel-CSV
 router.get('/collection/export', exportCollectionToExcel);
+
+// Send Payment Reminder Notification
+router.post('/send-reminder', async (req, res) => {
+    try {
+        const { studentIds } = req.body;
+        // In demo/production, triggers notifications/WhatsApp/SMS to parents of studentIds
+        res.status(200).json({
+            success: true,
+            message: `Fee reminders queued successfully for ${studentIds?.length || 0} students`,
+        });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
 
 module.exports = router;

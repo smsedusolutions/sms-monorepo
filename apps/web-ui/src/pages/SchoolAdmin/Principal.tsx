@@ -346,7 +346,7 @@ const PrincipalManagement: React.FC = () => {
                             {/* One-per-school note */}
                             <Alert
                                 severity="info"
-                                sx={{ borderRadius: 3 }}
+                                sx={{ borderRadius: 2 }}
                                 icon={<PrincipalIcon />}
                             >
                                 <Typography variant="body2" fontWeight={600} gutterBottom>

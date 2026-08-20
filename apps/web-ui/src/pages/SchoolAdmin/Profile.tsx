@@ -176,7 +176,7 @@ const SchoolAdminProfile = () => {
         sx={{
           p: 4,
           mb: 3,
-          borderRadius: 3,
+          borderRadius: 2,
           background: "linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)",
           color: "white",
           position: "relative",

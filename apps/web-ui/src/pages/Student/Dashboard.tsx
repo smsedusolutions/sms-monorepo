@@ -168,7 +168,7 @@ const StudentDashboard: React.FC = () => {
                 sx={{
                     p: { xs: 2, sm: 2.5 },
                     mb: { xs: 2, sm: 3 },
-                    borderRadius: 3,
+                    borderRadius: 2,
                     border: '1px solid #e2e8f0',
                     bgcolor: '#ffffff',
                     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.03)',
@@ -295,7 +295,7 @@ const StudentDashboard: React.FC = () => {
                         sx={{
                             p: { xs: 2, sm: 2.5 },
                             height: '100%',
-                            borderRadius: 3,
+                            borderRadius: 2,
                             border: '1px solid #e2e8f0',
                             bgcolor: '#ffffff',
                             boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
@@ -398,7 +398,7 @@ const StudentDashboard: React.FC = () => {
                         sx={{
                             p: { xs: 2, sm: 2.5 },
                             height: '100%',
-                            borderRadius: 3,
+                            borderRadius: 2,
                             border: '1px solid #e2e8f0',
                             bgcolor: '#ffffff',
                             boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
@@ -504,7 +504,7 @@ const StudentDashboard: React.FC = () => {
                         sx={{
                             p: { xs: 2, sm: 2.5 },
                             height: '100%',
-                            borderRadius: 3,
+                            borderRadius: 2,
                             border: '1px solid #e2e8f0',
                             bgcolor: '#ffffff',
                             boxShadow: '0 4px 16px rgba(0,0,0,0.03)',

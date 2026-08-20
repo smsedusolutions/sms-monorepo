@@ -103,7 +103,7 @@ const StudentResults = () => {
                     {/* Overview Cards even when no results */}
                     <Grid container spacing={3} sx={{ mb: 4 }}>
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                            <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+                            <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
                                 <CardContent sx={{ textAlign: 'center', py: 3 }}>
                                     <ResultsIcon sx={{ fontSize: 40, mb: 1, opacity: 0.9 }} />
                                     <Typography variant="h4" fontWeight={700}>0</Typography>
@@ -156,7 +156,7 @@ const StudentResults = () => {
                     {/* Overview Cards */}
                     <Grid container spacing={3} sx={{ mb: 4 }}>
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                            <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+                            <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
                                 <CardContent sx={{ textAlign: 'center', py: 3 }}>
                                     <ResultsIcon sx={{ fontSize: 40, mb: 1, opacity: 0.9 }} />
                                     <Typography variant="h4" fontWeight={700}>{publishedExams.length}</Typography>
@@ -166,7 +166,7 @@ const StudentResults = () => {
                         </Grid>
 
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                            <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: 'white' }}>
+                            <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: 'white' }}>
                                 <CardContent sx={{ textAlign: 'center', py: 3 }}>
                                     <TrendingUpIcon sx={{ fontSize: 40, mb: 1, opacity: 0.9 }} />
                                     <Typography variant="h4" fontWeight={700}>{avgGradePoints}</Typography>
@@ -176,7 +176,7 @@ const StudentResults = () => {
                         </Grid>
 
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                            <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
+                            <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: 'white' }}>
                                 <CardContent sx={{ textAlign: 'center', py: 3 }}>
                                     <StarIcon sx={{ fontSize: 40, mb: 1, opacity: 0.9 }} />
                                     <Typography variant="h4" fontWeight={700}>{totalSubjects}</Typography>
@@ -186,7 +186,7 @@ const StudentResults = () => {
                         </Grid>
 
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                            <Card sx={{ borderRadius: 3, background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' }}>
+                            <Card sx={{ borderRadius: 2, background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' }}>
                                 <CardContent sx={{ textAlign: 'center', py: 3 }}>
                                     <TrophyIcon sx={{ fontSize: 40, mb: 1, color: '#e65100' }} />
                                     <Typography variant="h4" fontWeight={700} color="#5d4037">
@@ -250,64 +250,64 @@ const StudentResults = () => {
                                     </Button>
                                 </Box>
 
-                            <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
-                                <Table size="small">
-                                    <TableHead>
-                                        <TableRow sx={{ bgcolor: '#f8fafc' }}>
-                                            <TableCell sx={{ fontWeight: 600 }}>Subject</TableCell>
-                                            <TableCell sx={{ fontWeight: 600 }} align="center">Marks Obtained</TableCell>
-                                            <TableCell sx={{ fontWeight: 600 }} align="center">Grade</TableCell>
-                                            <TableCell sx={{ fontWeight: 600 }} align="center">Grade Points</TableCell>
-                                            <TableCell sx={{ fontWeight: 600 }}>Remarks</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {exam.results?.length > 0 ? exam.results.map((result: any, idx: number) => (
-                                            <TableRow key={idx} hover>
-                                                <TableCell>
-                                                    <Typography variant="body2" fontWeight={500}>
-                                                        {getSubjectName(result.subjectId)}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell align="center">
-                                                    <Typography variant="body2" fontWeight={600}>
-                                                        {result.marksObtained ?? '-'}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell align="center">
-                                                    <Chip
-                                                        label={result.grade || 'N/A'}
-                                                        size="small"
-                                                        sx={{
-                                                            fontWeight: 700,
-                                                            color: 'white',
-                                                            bgcolor: getGradeColor(result.grade),
-                                                            minWidth: 40,
-                                                        }}
-                                                    />
-                                                </TableCell>
-                                                <TableCell align="center">
-                                                    <Typography variant="body2">{result.points ?? '-'}</Typography>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {result.remarks || '-'}
-                                                    </Typography>
-                                                </TableCell>
+                                <TableContainer component={Paper} variant="outlined" sx={{ borderRadius: 2 }}>
+                                    <Table size="small">
+                                        <TableHead>
+                                            <TableRow sx={{ bgcolor: '#f8fafc' }}>
+                                                <TableCell sx={{ fontWeight: 600 }}>Subject</TableCell>
+                                                <TableCell sx={{ fontWeight: 600 }} align="center">Marks Obtained</TableCell>
+                                                <TableCell sx={{ fontWeight: 600 }} align="center">Grade</TableCell>
+                                                <TableCell sx={{ fontWeight: 600 }} align="center">Grade Points</TableCell>
+                                                <TableCell sx={{ fontWeight: 600 }}>Remarks</TableCell>
                                             </TableRow>
-                                        )) : (
-                                            <TableRow>
-                                                <TableCell colSpan={5} align="center">
-                                                    <Typography variant="body2" color="text.secondary">No results available for this exam.</Typography>
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </Box>
-                    );
-                })}
+                                        </TableHead>
+                                        <TableBody>
+                                            {exam.results?.length > 0 ? exam.results.map((result: any, idx: number) => (
+                                                <TableRow key={idx} hover>
+                                                    <TableCell>
+                                                        <Typography variant="body2" fontWeight={500}>
+                                                            {getSubjectName(result.subjectId)}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell align="center">
+                                                        <Typography variant="body2" fontWeight={600}>
+                                                            {result.marksObtained ?? '-'}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell align="center">
+                                                        <Chip
+                                                            label={result.grade || 'N/A'}
+                                                            size="small"
+                                                            sx={{
+                                                                fontWeight: 700,
+                                                                color: 'white',
+                                                                bgcolor: getGradeColor(result.grade),
+                                                                minWidth: 40,
+                                                            }}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell align="center">
+                                                        <Typography variant="body2">{result.points ?? '-'}</Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Typography variant="body2" color="text.secondary">
+                                                            {result.remarks || '-'}
+                                                        </Typography>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )) : (
+                                                <TableRow>
+                                                    <TableCell colSpan={5} align="center">
+                                                        <Typography variant="body2" color="text.secondary">No results available for this exam.</Typography>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </Box>
+                        );
+                    })}
 
                     {/* Grade Distribution */}
                     {Object.keys(gradeDistribution).length > 0 && (

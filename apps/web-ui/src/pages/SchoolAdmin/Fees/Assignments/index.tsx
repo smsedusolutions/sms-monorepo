@@ -327,7 +327,7 @@ const FeeAssignments: React.FC = () => {
             </Box>
 
             {/* Filter Section */}
-            <Card sx={{ borderRadius: 3, border: '1px solid #e2e8f0', boxShadow: 'none', mb: { xs: 2, sm: 3 } }}>
+            <Card sx={{ borderRadius: 2, border: '1px solid #e2e8f0', boxShadow: 'none', mb: { xs: 2, sm: 3 } }}>
                 <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
                     <Grid container spacing={1.5} alignItems="center">
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -435,7 +435,7 @@ const FeeAssignments: React.FC = () => {
 
                     {activeDrawerAccount && (
                         <Stack spacing={2.5}>
-                            <Card sx={{ bgcolor: '#eff6ff', border: '1px solid #dbeafe', boxShadow: 'none', borderRadius: 3 }}>
+                            <Card sx={{ bgcolor: '#eff6ff', border: '1px solid #dbeafe', boxShadow: 'none', borderRadius: 2 }}>
                                 <CardContent sx={{ p: 2 }}>
                                     <Typography variant="subtitle1" fontWeight={700} color="#1e3a8a">{activeDrawerAccount.studentName}</Typography>
                                     <Typography variant="body2" color="text.secondary">Class: {activeDrawerAccount.className}</Typography>
@@ -595,7 +595,7 @@ const FeeAssignments: React.FC = () => {
                                     const dVal = d.discountValue !== undefined ? d.discountValue : d.value;
                                     return (
                                         <MenuItem key={dId} value={dId}>
-                                             {d.name} ({d.discountType === 'percentage' ? `${dVal}%` : formatCurrency(dVal)} waiver)
+                                            {d.name} ({d.discountType === 'percentage' ? `${dVal}%` : formatCurrency(dVal)} waiver)
                                         </MenuItem>
                                     );
                                 })}

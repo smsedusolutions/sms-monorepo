@@ -8,6 +8,9 @@ const timetableRoutes = require('./routes/timetable.routes');
 const examRoutes = require('./routes/exam.routes');
 const homeworkRoutes = require('./routes/homework.routes');
 const academicYearRoutes = require('./routes/academic-year.routes');
+const ptmRoutes = require('./routes/ptm.routes');
+const calendarRoutes = require('./routes/calendar.routes');
+const syllabusRoutes = require('./routes/syllabus.routes');
 const { commonRateLimiter } = require('@sms/shared/middlewares');
 
 const app = express();
@@ -49,6 +52,9 @@ app.use('/api/academics/school/:schoolId', timetableRoutes);
 app.use('/api/academics/school/:schoolId', examRoutes);
 app.use('/api/academics/school/:schoolId', academicYearRoutes);
 app.use('/api/academics/school/:schoolId/homework', homeworkRoutes);
+app.use('/api/academics/school/:schoolId/ptm', ptmRoutes);
+app.use('/api/academics/school/:schoolId/calendar', calendarRoutes);
+app.use('/api/academics/school/:schoolId/syllabus', syllabusRoutes);
 
 // Health check endpoint
 app.get('/health', (_req, res) => {

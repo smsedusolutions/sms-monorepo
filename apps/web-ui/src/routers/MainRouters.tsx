@@ -69,6 +69,11 @@ const EmailTemplateList = lazy(() => import("../pages/SchoolAdmin/EmailTemplates
 const EmailTemplateEditor = lazy(() => import("../pages/SchoolAdmin/EmailTemplates/Editor"));
 const ExamConfiguration = lazy(() => import("../pages/SchoolAdmin/Exam/ExamConfiguration"));
 const ExamScheduler = lazy(() => import("../pages/SchoolAdmin/Exam/ExamScheduler"));
+const Gradebook = lazy(() => import("../pages/SchoolAdmin/Exam/Gradebook"));
+const FeeDefaulterList = lazy(() => import("../pages/SchoolAdmin/Fees/Reports/DefaulterList"));
+const SchoolCalendar = lazy(() => import("../pages/SchoolAdmin/Calendar/SchoolCalendar"));
+const PTMManagement = lazy(() => import("../pages/SchoolAdmin/PTM/PTMManagement"));
+const DisciplineRecord = lazy(() => import("../pages/SchoolAdmin/Students/DisciplineRecord"));
 
 // Teacher Pages
 const TeacherDashboard = lazy(() => import("../pages/Teacher/Dashboard"));
@@ -80,6 +85,7 @@ const TeacherProfile = lazy(() => import("../pages/Teacher/Profile"));
 const TeacherMyRequests = lazy(() => import("../pages/Teacher/MyRequests"));
 const TeacherHomework = lazy(() => import("../pages/Teacher/Homework"));
 const CreateHomework = lazy(() => import("../pages/Teacher/Homework/CreateHomework"));
+const TeacherPTMSchedule = lazy(() => import("../pages/Teacher/PTM/MyPTMSchedule"));
 const TeacherAnnouncements = lazy(() => import("../pages/Teacher/Announcements"));
 const TeacherApplyLeave = lazy(() => import("../pages/Teacher/Leave/ApplyLeave"));
 const TeacherMyLeaves = lazy(() => import("../pages/Teacher/Leave/MyLeaves"));
@@ -129,6 +135,8 @@ const ParentLeaveHistory = lazy(() => import("../pages/Parent/Leave/History"));
 const ParentExamSchedule = lazy(() => import("../pages/Parent/Exam/Schedule"));
 const ParentExamResults = lazy(() => import("../pages/Parent/Exam/Results"));
 const ParentTransport = lazy(() => import("../pages/Parent/Transport/ParentTransport"));
+const PTMBooking = lazy(() => import("../pages/Parent/PTM/PTMBooking"));
+const ParentFeeStatement = lazy(() => import("../pages/Parent/Fees/FeeStatement"));
 
 // Shared Pages
 const NotificationsPage = lazy(() => import("../pages/Shared/Notifications"));
@@ -272,6 +280,19 @@ const MainRouters = () => {
           <Route path="/school-admin/fees/receipts" element={<Receipts />} />
           <Route path="/school-admin/fees/reports" element={<FeeReports />} />
           <Route path="/school-admin/fees/discounts" element={<FeeDiscounts />} />
+          <Route path="/school-admin/fees/defaulters" element={<FeeDefaulterList />} />
+
+          {/* Calendar */}
+          <Route path="/school-admin/calendar" element={<SchoolCalendar />} />
+
+          {/* PTM Management */}
+          <Route path="/school-admin/ptm" element={<PTMManagement />} />
+
+          {/* Discipline Records */}
+          <Route path="/school-admin/students/discipline" element={<DisciplineRecord />} />
+
+          {/* Gradebook */}
+          <Route path="/school-admin/exam/gradebook" element={<Gradebook />} />
         </Route>
 
         {/* Teacher Routes */}
@@ -292,6 +313,9 @@ const MainRouters = () => {
           {/* Homework Routes (Teacher) */}
           <Route path="/teacher/homework" element={<TeacherHomework />} />
           <Route path="/teacher/homework/create" element={<CreateHomework />} />
+
+          {/* PTM Schedule (Teacher) */}
+          <Route path="/teacher/ptm" element={<TeacherPTMSchedule />} />
 
           {/* Announcements Routes (Teacher) */}
           <Route path="/teacher/announcements" element={<TeacherAnnouncements />} />
@@ -345,6 +369,8 @@ const MainRouters = () => {
             <Route path="/parent/notifications" element={<NotificationsPage />} />
             <Route path="/parent/transport" element={<ParentTransport />} />
             <Route path="/parent/fees" element={<ParentFees />} />
+            <Route path="/parent/fees/statement" element={<ParentFeeStatement />} />
+            <Route path="/parent/ptm" element={<PTMBooking />} />
             <Route path="/parent/chat" element={<ChatPage />} />
           </Route>
         </Route>

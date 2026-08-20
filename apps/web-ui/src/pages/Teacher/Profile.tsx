@@ -108,7 +108,7 @@ const TeacherProfile = () => {
         sx={{
           p: 4,
           mb: 3,
-          borderRadius: 3,
+          borderRadius: 2,
           background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
           color: "white",
           position: "relative",

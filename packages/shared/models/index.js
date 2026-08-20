@@ -74,4 +74,10 @@ module.exports = {
     FeeDiscountSchema: require('./fee-discount.model'),
     StudentDiscountSchema: require('./student-discount.model'),
     PromotionLogSchema: require('./promotion-log.model'),
+
+    // Calendar, PTM, Discipline, Syllabus
+    PTMSchema: require('./ptm.model'),
+    CalendarEventSchema: require('./calendar-event.model'),
+    DisciplineSchema: require('./discipline.model'),
+    SyllabusSchema: require('./syllabus.model'),
 };

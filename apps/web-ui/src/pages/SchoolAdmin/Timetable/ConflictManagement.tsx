@@ -165,7 +165,7 @@ const ConflictManagement = () => {
                         Conflict Management
                     </Typography>
                 ) : (
-                    <Chip 
+                    <Chip
                         label={totalConflicts === 0 ? "All Schedules Conflict-free" : `${totalConflicts} Active Conflict${totalConflicts > 1 ? 's' : ''}`}
                         color={totalConflicts === 0 ? "success" : "error"}
                         size="small"
@@ -184,15 +184,15 @@ const ConflictManagement = () => {
             </Box>
 
             {/* Summary Cards */}
-            <Box sx={{ 
-                display: 'grid', 
-                gridTemplateColumns: { xs: 'repeat(3, 1fr)', sm: 'repeat(3, 1fr)' }, 
-                gap: 1.5, 
-                mb: 2.5 
+            <Box sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: 'repeat(3, 1fr)', sm: 'repeat(3, 1fr)' },
+                gap: 1.5,
+                mb: 2.5
             }}>
-                <Card 
+                <Card
                     variant="outlined"
-                    sx={{ 
+                    sx={{
                         borderRadius: 2.5,
                         bgcolor: totalConflicts === 0 ? '#15803d' : '#b91c1c',
                         color: 'white',
@@ -240,7 +240,7 @@ const ConflictManagement = () => {
                 <>
                     {/* Teacher Conflicts */}
                     {teacherConflicts.length > 0 && (
-                        <Paper sx={{ mb: 3, p: { xs: 1.5, sm: 2 }, borderRadius: 3 }} variant="outlined">
+                        <Paper sx={{ mb: 3, p: { xs: 1.5, sm: 2 }, borderRadius: 2 }} variant="outlined">
                             <Typography variant="h6" fontWeight={700} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                                 <PersonIcon color="primary" />
                                 Teacher Double-Booking Conflicts
@@ -300,9 +300,9 @@ const ConflictManagement = () => {
                                         </TableHead>
                                         <TableBody>
                                             {teacherConflicts.map((conflict, index) => (
-                                                <TableRow 
-                                                    key={index} 
-                                                    sx={{ 
+                                                <TableRow
+                                                    key={index}
+                                                    sx={{
                                                         '&:vertical-align': 'top',
                                                         '& td': {
                                                             borderBottom: index < teacherConflicts.length - 1 ? '2px dashed !important' : 'none',
@@ -388,7 +388,7 @@ const ConflictManagement = () => {
 
                     {/* Room Conflicts */}
                     {roomConflicts.length > 0 && (
-                        <Paper sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 3, mb: 3 }} variant="outlined">
+                        <Paper sx={{ p: { xs: 1.5, sm: 2 }, borderRadius: 2, mb: 3 }} variant="outlined">
                             <Typography variant="h6" fontWeight={700} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                                 <RoomIcon color="secondary" />
                                 Room Double-Booking Conflicts
@@ -501,10 +501,10 @@ const ConflictManagement = () => {
             )}
 
             {/* Reassign Teacher Dialog */}
-            <Dialog 
-                open={reassignDialogOpen} 
-                onClose={handleCloseReassign} 
-                maxWidth="xs" 
+            <Dialog
+                open={reassignDialogOpen}
+                onClose={handleCloseReassign}
+                maxWidth="xs"
                 fullWidth
                 fullScreen={isMobile}
                 PaperProps={{
@@ -554,10 +554,10 @@ const ConflictManagement = () => {
                         )}
                     </Box>
                 </DialogContent>
-                <DialogActions sx={{ 
-                    px: { xs: 2, sm: 3 }, 
-                    py: 2, 
-                    borderTop: '1px solid', 
+                <DialogActions sx={{
+                    px: { xs: 2, sm: 3 },
+                    py: 2,
+                    borderTop: '1px solid',
                     borderColor: 'divider',
                     flexDirection: { xs: 'column-reverse', sm: 'row' },
                     gap: 1,

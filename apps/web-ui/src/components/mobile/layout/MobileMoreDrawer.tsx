@@ -60,8 +60,8 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
     userRole === 'super_admin'
       ? superAdminMenus?.data
       : userRole === 'sch_admin'
-      ? schoolAdminMenus?.data
-      : userMenus?.data || [];
+        ? schoolAdminMenus?.data
+        : userMenus?.data || [];
 
   const menuItems = transformMenuData(rawMenus || [], userRole);
 
@@ -151,7 +151,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
             sx={{
               width: 44,
               height: 5,
-              borderRadius: 3,
+              borderRadius: 2,
               bgcolor: '#cbd5e1',
               mb: 1.5,
             }}
@@ -280,8 +280,8 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                       bgcolor: isDirectActive
                         ? 'rgba(99, 102, 241, 0.08)'
                         : isParentOfActive
-                        ? 'rgba(99, 102, 241, 0.03)'
-                        : 'transparent',
+                          ? 'rgba(99, 102, 241, 0.03)'
+                          : 'transparent',
                       cursor: 'pointer',
                       '&:active': { bgcolor: '#f1f5f9' },
                     }}

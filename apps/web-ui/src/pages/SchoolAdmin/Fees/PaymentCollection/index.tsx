@@ -163,7 +163,7 @@ const CollectPayment: React.FC = () => {
                     <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>Enter collections parameters, partial splits, checks, late overrides.</Typography>
                 </Box>
 
-                <Card sx={{ borderRadius: 3, border: '1px solid #f2f5f9', p: { xs: 1.5, sm: 3 }, boxShadow: 'none', bgcolor: '#fff', mb: 4 }}>
+                <Card sx={{ borderRadius: 2, border: '1px solid #f2f5f9', p: { xs: 1.5, sm: 3 }, boxShadow: 'none', bgcolor: '#fff', mb: 4 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, flexDirection: { xs: 'column', sm: 'row' }, mb: 3, gap: 1.5 }}>
                         <Typography variant="h6" fontWeight={700} sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                             Collecting Fees for: <span style={{ color: '#3b82f6' }}>{selectedStudent.studentName}</span> ({selectedStudent.className})
@@ -176,7 +176,7 @@ const CollectPayment: React.FC = () => {
                     <Grid container spacing={3}>
                         {/* Selected line items list */}
                         <Grid size={{ xs: 12, lg: 8 }}>
-                            <Card sx={{ borderRadius: 3, border: '1px solid #f1f5f9', boxShadow: 'none', mb: 3 }}>
+                            <Card sx={{ borderRadius: 2, border: '1px solid #f1f5f9', boxShadow: 'none', mb: 3 }}>
                                 <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
                                     <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>Select Fee Categories to Collect</Typography>
                                     <Stack spacing={2}>
@@ -232,7 +232,7 @@ const CollectPayment: React.FC = () => {
                             <Card sx={{ borderRadius: 4, border: '1px solid #f1f5f9', boxShadow: 'none', mb: 3 }}>
                                 <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                                     <Typography variant="subtitle1" fontWeight={700}>Payment Summary</Typography>
-                                    <Box sx={{ bgcolor: '#f8fafc', p: 2, borderRadius: 3 }}>
+                                    <Box sx={{ bgcolor: '#f8fafc', p: 2, borderRadius: 2 }}>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                             <Typography variant="body2" color="text.secondary">Fee Total</Typography>
                                             <Typography variant="body2" fontWeight={600}>{formatCurrency(totalFeesToPay)}</Typography>

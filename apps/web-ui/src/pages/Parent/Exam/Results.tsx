@@ -73,7 +73,7 @@ const ParentExamResults: React.FC = () => {
     if (!selectedChild) {
         return (
             <Box sx={{ p: 3, maxWidth: 1300, mx: 'auto' }}>
-                <Alert severity="info" sx={{ borderRadius: 3 }}>Please select a child to view their exam results.</Alert>
+                <Alert severity="info" sx={{ borderRadius: 2 }}>Please select a child to view their exam results.</Alert>
             </Box>
         );
     }
@@ -81,7 +81,7 @@ const ParentExamResults: React.FC = () => {
     if (error) {
         return (
             <Box sx={{ p: 3, maxWidth: 1300, mx: 'auto' }}>
-                <Alert severity="error" sx={{ borderRadius: 3 }}>Failed to load examination results. Please try again later.</Alert>
+                <Alert severity="error" sx={{ borderRadius: 2 }}>Failed to load examination results. Please try again later.</Alert>
             </Box>
         );
     }
@@ -107,7 +107,7 @@ const ParentExamResults: React.FC = () => {
 
             {/* ── Multi-Child Switcher Bar ── */}
             {contextChildren.length > 1 && (
-                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
                     <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, display: 'block' }}>
                         Select Child
                     </Typography>
@@ -196,7 +196,7 @@ const ParentExamResults: React.FC = () => {
                     {/* Feature Information Grid */}
                     <Grid container spacing={2.5} sx={{ maxWidth: 850, mx: 'auto', mb: 4, textAlign: 'left' }}>
                         <Grid size={{ xs: 12, sm: 4 }}>
-                            <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
+                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#2563eb' }}>
                                     <CalendarIcon fontSize="small" />
                                     <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Exam Timetable</Typography>
@@ -207,7 +207,7 @@ const ParentExamResults: React.FC = () => {
                             </Box>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
-                            <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
+                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#10b981' }}>
                                     <SchoolIcon fontSize="small" />
                                     <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Grading Standard</Typography>
@@ -218,7 +218,7 @@ const ParentExamResults: React.FC = () => {
                             </Box>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
-                            <Box sx={{ p: 2.5, borderRadius: 3, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
+                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#8b5cf6' }}>
                                     <NotifyIcon fontSize="small" />
                                     <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Instant Alerts</Typography>

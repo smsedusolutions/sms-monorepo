@@ -264,7 +264,7 @@ const ParentLeaveHistory: React.FC = () => {
                     sx={{
                         p: 4,
                         textAlign: 'center',
-                        borderRadius: 3,
+                        borderRadius: 2,
                         border: '1px dashed',
                         borderColor: 'divider',
                         bgcolor: 'background.paper',

@@ -185,7 +185,7 @@ const ParentFees: React.FC = () => {
             </Alert>
 
             {/* Child tabs */}
-            <Card sx={{ borderRadius: 3, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
+            <Card sx={{ borderRadius: 2, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
                 <Box sx={{ borderBottom: '1px solid #f1f5f9' }}>
                     <Tabs
                         value={activeTab}

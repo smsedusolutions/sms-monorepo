@@ -81,7 +81,7 @@ const PrincipalProfile = () => {
             <Grid container spacing={3}>
                 {/* Profile Card */}
                 <Grid size={{ xs: 12, md: 4 }}>
-                    <Card sx={{ borderRadius: 3, overflow: 'hidden' }}>
+                    <Card sx={{ borderRadius: 2, overflow: 'hidden' }}>
                         {/* Gradient Header */}
                         <Box
                             sx={{
@@ -172,7 +172,7 @@ const PrincipalProfile = () => {
 
                 {/* Details Panel */}
                 <Grid size={{ xs: 12, md: 8 }}>
-                    <Paper sx={{ p: 3, borderRadius: 3, height: '100%' }}>
+                    <Paper sx={{ p: 3, borderRadius: 2, height: '100%' }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                             <Typography variant="h6" fontWeight={700}>
                                 Account Information

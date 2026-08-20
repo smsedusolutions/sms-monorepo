@@ -253,7 +253,7 @@ const TeacherMyLeaves: React.FC = () => {
                     sx={{
                         p: 4,
                         textAlign: 'center',
-                        borderRadius: 3,
+                        borderRadius: 2,
                         border: '1px dashed',
                         borderColor: 'divider',
                         bgcolor: 'background.paper',
@@ -472,7 +472,7 @@ const TeacherMyLeaves: React.FC = () => {
                 onClose={() => setSelectedLeave(null)}
                 maxWidth="sm"
                 fullWidth
-                PaperProps={{ sx: { borderRadius: 3 } }}
+                PaperProps={{ sx: { borderRadius: 2 } }}
             >
                 <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Leave Request Details</DialogTitle>
                 <DialogContent dividers>
@@ -550,7 +550,7 @@ const TeacherMyLeaves: React.FC = () => {
             <Dialog
                 open={!!deleteConfirm}
                 onClose={() => setDeleteConfirm(null)}
-                PaperProps={{ sx: { borderRadius: 3 } }}
+                PaperProps={{ sx: { borderRadius: 2 } }}
             >
                 <DialogTitle sx={{ fontWeight: 700 }}>Cancel Leave Request?</DialogTitle>
                 <DialogContent>

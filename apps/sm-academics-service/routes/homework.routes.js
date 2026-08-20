@@ -10,6 +10,9 @@ const {
     getHomeworkById,
     updateHomework,
     deleteHomework,
+    submitHomework,
+    getHomeworkSubmissions,
+    reviewSubmission,
 } = require('../controllers/homework.controller');
 
 // Create homework (Teacher only)
@@ -48,6 +51,34 @@ router.get(
     Authenticated,
     authorizeRoles('teacher', 'sch_admin'),
     getTeacherHomework
+);
+
+// ==========================================
+// SUBMISSION ROUTES
+// ==========================================
+
+// Student submits homework
+router.post(
+    '/:homeworkId/submit',
+    Authenticated,
+    authorizeRoles('student'),
+    submitHomework
+);
+
+// Teacher views all submissions for a homework
+router.get(
+    '/:homeworkId/submissions',
+    Authenticated,
+    authorizeRoles('teacher', 'sch_admin', 'principal'),
+    getHomeworkSubmissions
+);
+
+// Teacher reviews/marks a specific submission
+router.patch(
+    '/:homeworkId/submissions/:studentId/review',
+    Authenticated,
+    authorizeRoles('teacher', 'sch_admin'),
+    reviewSubmission
 );
 
 // Get single homework by ID

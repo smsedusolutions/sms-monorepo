@@ -48,7 +48,7 @@ export const MobileBottomSheet: React.FC<MobileBottomSheetProps> = ({
           sx={{
             width: 42,
             height: 5,
-            borderRadius: 3,
+            borderRadius: 2,
             bgcolor: '#cbd5e1',
           }}
         />

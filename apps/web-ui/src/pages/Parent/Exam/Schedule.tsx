@@ -76,7 +76,7 @@ const ParentExamSchedule: React.FC = () => {
         return (
             <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
                 <Skeleton variant="text" width="40%" height={36} sx={{ mb: 2 }} />
-                <Skeleton variant="rectangular" width="100%" height={240} sx={{ borderRadius: 3 }} />
+                <Skeleton variant="rectangular" width="100%" height={240} sx={{ borderRadius: 2 }} />
             </Box>
         );
     }
@@ -112,7 +112,7 @@ const ParentExamSchedule: React.FC = () => {
 
             {/* Child Selector Pills */}
             {contextChildren.length > 1 && (
-                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
                     <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, display: 'block' }}>
                         Select Child
                     </Typography>
@@ -255,7 +255,7 @@ const ParentExamSchedule: React.FC = () => {
 
             {/* Exam Content */}
             {examsLoading ? (
-                <Skeleton variant="rectangular" width="100%" height={260} sx={{ borderRadius: 3 }} />
+                <Skeleton variant="rectangular" width="100%" height={260} sx={{ borderRadius: 2 }} />
             ) : tabExams.length === 0 ? (
                 <Paper
                     elevation={0}

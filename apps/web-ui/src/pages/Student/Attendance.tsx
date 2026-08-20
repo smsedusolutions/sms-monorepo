@@ -246,7 +246,7 @@ const StudentAttendance: React.FC = () => {
                             elevation={0}
                             sx={{
                                 p: { xs: 2, sm: 2.5 },
-                                borderRadius: 3,
+                                borderRadius: 2,
                                 background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
                                 color: 'white',
                                 height: '100%',

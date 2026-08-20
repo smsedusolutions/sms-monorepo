@@ -236,7 +236,7 @@ const TeacherStudentLeaves: React.FC = () => {
                     sx={{
                         p: 4,
                         textAlign: 'center',
-                        borderRadius: 3,
+                        borderRadius: 2,
                         border: '1px dashed',
                         borderColor: 'divider',
                         bgcolor: 'background.paper',
@@ -453,7 +453,7 @@ const TeacherStudentLeaves: React.FC = () => {
                 onClose={() => setSelectedLeave(null)}
                 maxWidth="sm"
                 fullWidth
-                PaperProps={{ sx: { borderRadius: 3 } }}
+                PaperProps={{ sx: { borderRadius: 2 } }}
             >
                 <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Student Leave Details</DialogTitle>
                 <DialogContent dividers>
@@ -491,7 +491,7 @@ const TeacherStudentLeaves: React.FC = () => {
             <Dialog
                 open={!!processDialog}
                 onClose={() => { setProcessDialog(null); setRemarks(''); }}
-                PaperProps={{ sx: { borderRadius: 3 } }}
+                PaperProps={{ sx: { borderRadius: 2 } }}
             >
                 <DialogTitle sx={{ fontWeight: 700 }}>
                     {processDialog?.action === 'approve' ? 'Approve' : 'Reject'} Leave Request?

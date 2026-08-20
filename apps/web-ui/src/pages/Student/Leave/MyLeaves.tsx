@@ -63,7 +63,7 @@ const StudentMyLeaves: React.FC = () => {
     const allLeaves = data?.data?.leaves || [];
     const summary = data?.data?.summary;
 
-    const leaves = statusFilter 
+    const leaves = statusFilter
         ? allLeaves.filter(leave => leave.status === statusFilter)
         : allLeaves;
 
@@ -253,7 +253,7 @@ const StudentMyLeaves: React.FC = () => {
                     sx={{
                         p: 4,
                         textAlign: 'center',
-                        borderRadius: 3,
+                        borderRadius: 2,
                         border: '1px dashed',
                         borderColor: 'divider',
                         bgcolor: 'background.paper',
@@ -476,7 +476,7 @@ const StudentMyLeaves: React.FC = () => {
                 onClose={() => setSelectedLeave(null)}
                 maxWidth="sm"
                 fullWidth
-                PaperProps={{ sx: { borderRadius: 3 } }}
+                PaperProps={{ sx: { borderRadius: 2 } }}
             >
                 <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Leave Request Details</DialogTitle>
                 <DialogContent dividers>
@@ -558,7 +558,7 @@ const StudentMyLeaves: React.FC = () => {
             <Dialog
                 open={!!deleteConfirm}
                 onClose={() => setDeleteConfirm(null)}
-                PaperProps={{ sx: { borderRadius: 3 } }}
+                PaperProps={{ sx: { borderRadius: 2 } }}
             >
                 <DialogTitle sx={{ fontWeight: 700 }}>Cancel Leave Request?</DialogTitle>
                 <DialogContent>
