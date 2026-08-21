@@ -19,14 +19,21 @@
 /* Touch & Interaction Optimizations */
 @media (max-width: 768px) {
   html, body {
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  body:has(.mobile-app-container) {
     height: 100%;
     height: 100dvh;
     overflow: hidden;
     overscroll-behavior-y: none;
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
     user-select: none;
-    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   /* Allow text selection inside inputs and readable content */

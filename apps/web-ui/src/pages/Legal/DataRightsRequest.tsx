@@ -1,16 +1,8 @@
 /**
- * DataRightsRequest — DPDP Act §12 Self-Service Rights Request Form
+ * Data Rights Request Form — SMS Edu Solutions
  *
- * Enables Data Principals to submit requests for:
- *  - Access (summary of their data)
- *  - Correction (fix inaccurate data)
- *  - Erasure (delete their data)
- *  - Withdraw Consent
- *
- * Submission sends a structured email to the Grievance Officer.
- * [LEGAL REVIEW REQUIRED] — Form text and response template need lawyer review.
- * [IMPLEMENTATION NOTE] — In production, replace the mailto: handler with a
- *   backend POST to /api/auth/data-rights and store requests in the DB.
+ * Simple, user-friendly form allowing students, parents, and teachers to exercise
+ * their legal rights under India's Digital Personal Data Protection Act, 2023 (DPDP Act).
  */
 
 import React, { useState } from 'react';
@@ -18,6 +10,7 @@ import {
   Box,
   Typography,
   Container,
+  Paper,
   TextField,
   Button,
   Select,
@@ -25,22 +18,17 @@ import {
   FormControl,
   InputLabel,
   FormHelperText,
-  Alert,
-  Chip,
   RadioGroup,
   FormControlLabel,
   Radio,
   FormLabel,
-  Fade,
   Divider,
-  Paper,
 } from '@mui/material';
 import {
-  AssignmentInd,
-  CheckCircle,
   ArrowBack,
-  Gavel,
+  CheckCircle,
   Send,
+  CheckCircleOutline,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import LegalFooter from '../../components/shared/LegalFooter';
@@ -59,13 +47,12 @@ interface FormErrors {
   fullName?: string;
   email?: string;
   role?: string;
-  schoolName?: string;
   requestType?: string;
   details?: string;
   declaration?: string;
 }
 
-const GRIEVANCE_EMAIL = 'grievance@smsedusolutions.com'; // [LEGAL REVIEW REQUIRED]
+const GRIEVANCE_EMAIL = 'grievance@smsedusolutions.com';
 
 const DataRightsRequest: React.FC = () => {
   const navigate = useNavigate();
@@ -86,14 +73,14 @@ const DataRightsRequest: React.FC = () => {
 
   const validate = (): boolean => {
     const e: FormErrors = {};
-    if (!form.fullName.trim()) e.fullName = 'Full name is required';
-    if (!form.email.trim()) e.email = 'Email address is required';
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Enter a valid email address';
+    if (!form.fullName.trim()) e.fullName = 'Please enter your full name';
+    if (!form.email.trim()) e.email = 'Please enter your email address';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Please enter a valid email address';
     if (!form.role) e.role = 'Please select your role';
-    if (!form.requestType) e.requestType = 'Please select the type of request';
-    if (!form.details.trim()) e.details = 'Please provide details about your request';
-    else if (form.details.trim().length < 20) e.details = 'Please provide at least 20 characters of detail';
-    if (!form.declaration) e.declaration = 'You must declare that the information provided is accurate';
+    if (!form.requestType) e.requestType = 'Please select the type of DPDP Act request';
+    if (!form.details.trim()) e.details = 'Please describe your request in simple words';
+    else if (form.details.trim().length < 15) e.details = 'Please provide a bit more detail (at least 15 characters)';
+    if (!form.declaration) e.declaration = 'Please check the box to confirm this information is correct';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -105,319 +92,363 @@ const DataRightsRequest: React.FC = () => {
     if (errors[field as keyof FormErrors]) setErrors((p) => ({ ...p, [field]: undefined }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
     setIsLoading(true);
 
-    // [IMPLEMENTATION NOTE] Replace with API call in production:
-    // await fetch('/api/auth/data-rights', { method: 'POST', body: JSON.stringify(form) })
-
-    // mailto: fallback for current implementation
-    const subject = encodeURIComponent(`DPDP Data Rights Request — ${form.requestType} — ${form.email}`);
+    // Compose simple mailto link for direct dispatch to grievance officer
+    const subject = encodeURIComponent(`DPDP Act Request: ${form.requestType} - ${form.fullName}`);
     const body = encodeURIComponent(
-      `DPDP ACT DATA RIGHTS REQUEST\n` +
-      `=====================================\n` +
-      `Request Type: ${form.requestType}\n` +
-      `Full Name: ${form.fullName}\n` +
-      `Email: ${form.email}\n` +
-      `Role: ${form.role}\n` +
-      `School: ${form.schoolName || 'N/A'}\n` +
-      `Submitted: ${new Date().toISOString()}\n\n` +
-      `Details:\n${form.details}\n\n` +
-      `Declaration: Data Principal declares information is accurate.`
+      `DPDP ACT (INDIA) DATA RIGHTS REQUEST\n` +
+      `-----------------------------------------\n` +
+      `Request Type : ${form.requestType}\n` +
+      `Full Name    : ${form.fullName}\n` +
+      `Email        : ${form.email}\n` +
+      `Role         : ${form.role}\n` +
+      `School       : ${form.schoolName || 'Not specified'}\n` +
+      `Date         : ${new Date().toLocaleDateString('en-IN')}\n\n` +
+      `Details of Request:\n${form.details}\n\n` +
+      `Declaration: The applicant confirms they are the Data Principal or legal guardian under the DPDP Act.`
     );
 
     window.location.href = `mailto:${GRIEVANCE_EMAIL}?subject=${subject}&body=${body}`;
 
-    // Simulate brief delay then show success
     setTimeout(() => {
       setIsLoading(false);
       setSubmitted(true);
-    }, 800);
+    }, 600);
   };
 
-  const requestTypes = [
-    { value: 'access', label: 'Access — Request a summary of my personal data (DPDP Act §11)' },
-    { value: 'correction', label: 'Correction — Fix inaccurate or incomplete personal data (DPDP Act §12)' },
-    { value: 'erasure', label: 'Erasure — Delete my personal data (DPDP Act §12)' },
-    { value: 'withdraw_consent', label: 'Withdraw Consent — Stop processing based on my consent (DPDP Act §6)' },
-    { value: 'grievance', label: 'Grievance — Raise a complaint about data processing (DPDP Act §13)' },
-    { value: 'nominee', label: 'Nominee — Register a nominee for my data rights (DPDP Act §14)' },
+  const requestOptions = [
+    {
+      value: 'Access Data (DPDP Act §11)',
+      label: '1. See My Data (DPDP Act §11) — I want a copy/summary of personal data held about me.',
+    },
+    {
+      value: 'Correct Data (DPDP Act §12)',
+      label: '2. Fix Mistakes in My Data (DPDP Act §12) — I want to update or correct inaccurate details.',
+    },
+    {
+      value: 'Erase Data (DPDP Act §12)',
+      label: '3. Delete My Data (DPDP Act §12) — I want my personal data deleted as I no longer use this school service.',
+    },
+    {
+      value: 'Withdraw Consent (DPDP Act §6)',
+      label: '4. Stop Optional Processing (DPDP Act §6) — I want to withdraw consent for non-essential features.',
+    },
+    {
+      value: 'Grievance / Complaint (DPDP Act §13)',
+      label: '5. DPDP Act Complaint (DPDP Act §13) — I have a grievance regarding how my personal data was handled.',
+    },
+    {
+      value: 'Register Nominee (DPDP Act §14)',
+      label: '6. Register a Nominee (DPDP Act §14) — I want to appoint a trusted person to manage my DPDP Act data rights.',
+    },
   ];
 
   if (submitted) {
     return (
-      <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', p: 3 }}>
-        <Fade in timeout={600}>
-          <Box sx={{ textAlign: 'center', maxWidth: 480 }}>
-            <Box
-              sx={{
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #10B981, #059669)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mx: 'auto',
-                mb: 3,
-                boxShadow: '0 8px 24px rgba(16,185,129,0.4)',
-              }}
-            >
-              <CheckCircle sx={{ color: 'white', fontSize: 40 }} />
-            </Box>
-            <Typography sx={{ fontWeight: 900, fontSize: '1.6rem', color: '#0F172A', mb: 1, letterSpacing: '-0.5px' }}>
-              Request Submitted
+      <Box
+        sx={{
+          minHeight: '100vh',
+          width: '100%',
+          bgcolor: '#f8fafc',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 3,
+        }}
+      >
+        <Paper
+          elevation={0}
+          sx={{
+            maxWidth: 540,
+            width: '100%',
+            p: { xs: 3, sm: 5 },
+            bgcolor: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '8px',
+            textAlign: 'center',
+          }}
+        >
+          <CheckCircle sx={{ color: '#16a34a', fontSize: 56, mb: 2 }} />
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>
+            DPDP Act Request Submitted
+          </Typography>
+          <Typography sx={{ fontSize: '0.92rem', color: '#475569', lineHeight: 1.6, mb: 3 }}>
+            Your request under the <strong>Digital Personal Data Protection Act (DPDP Act)</strong> has been sent to our Grievance Officer at <strong>{GRIEVANCE_EMAIL}</strong>.
+          </Typography>
+          <Box sx={{ p: 2, bgcolor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '6px', mb: 3, textAlign: 'left' }}>
+            <Typography sx={{ fontSize: '0.85rem', color: '#166534', fontWeight: 600, mb: 0.5 }}>
+              What happens next under the DPDP Act?
             </Typography>
-            <Typography sx={{ fontSize: '0.9rem', color: '#64748B', lineHeight: 1.7, mb: 3 }}>
-              Your data rights request has been submitted to our Grievance Officer at{' '}
-              <strong>{GRIEVANCE_EMAIL}</strong>. We will acknowledge your request within{' '}
-              <strong>7 days</strong> and resolve it within <strong>30 days</strong> as required by the DPDP Act 2023.
+            <Typography sx={{ fontSize: '0.82rem', color: '#15803d', lineHeight: 1.5 }}>
+              • We will acknowledge your request within <strong>7 days</strong>.<br />
+              • We will complete and resolve your request within <strong>30 days</strong> as required by the DPDP Act (India).
             </Typography>
-            <Alert severity="info" sx={{ borderRadius: '12px', mb: 3, textAlign: 'left', fontSize: '0.82rem' }}>
-              {/* [LEGAL REVIEW REQUIRED] Response SLA and escalation path */}
-              If you do not receive a response within 30 days, you may escalate to the <strong>Data Protection Board of India</strong> at <strong>https://dpboard.gov.in</strong>.
-            </Alert>
-            <Button
-              variant="contained"
-              onClick={() => navigate('/login')}
-              sx={{
-                borderRadius: '12px',
-                textTransform: 'none',
-                fontWeight: 700,
-                px: 4,
-                background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
-              }}
-            >
-              Return to Login
-            </Button>
           </Box>
-        </Fade>
+          <Button
+            variant="contained"
+            onClick={() => navigate('/login')}
+            sx={{
+              bgcolor: '#4f46e5',
+              textTransform: 'none',
+              fontWeight: 600,
+              px: 3,
+              py: 1,
+              borderRadius: '6px',
+              '&:hover': { bgcolor: '#4338ca' },
+            }}
+          >
+            Return to Login
+          </Button>
+        </Paper>
       </Box>
     );
   }
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
+    <Box
+      sx={{
+        minHeight: '100vh',
+        width: '100%',
+        bgcolor: '#f8fafc',
+        color: '#1e293b',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Top Simple Navigation Header */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #064E3B 0%, #0F172A 100%)',
-          py: { xs: 4, md: 5 },
-          px: 3,
-          position: 'relative',
-          overflow: 'hidden',
+          bgcolor: '#ffffff',
+          borderBottom: '1px solid #e2e8f0',
+          py: 2,
+          px: { xs: 2, md: 4 },
         }}
       >
-        <Box sx={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '24px 24px', pointerEvents: 'none' }} />
-        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+        <Container maxWidth="md" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Button
             startIcon={<ArrowBack />}
             onClick={() => navigate(-1)}
-            sx={{ color: 'rgba(255,255,255,0.6)', mb: 3, textTransform: 'none', '&:hover': { color: 'white' } }}
+            variant="text"
+            sx={{ color: '#475569', textTransform: 'none', fontWeight: 600, fontSize: '0.9rem' }}
           >
             Back
           </Button>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Box sx={{ width: 48, height: 48, borderRadius: '14px', background: 'linear-gradient(135deg, #10B981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 20px rgba(16,185,129,0.4)' }}>
-              <AssignmentInd sx={{ color: 'white', fontSize: 24 }} />
-            </Box>
-            <Box>
-              <Typography sx={{ fontWeight: 900, fontSize: { xs: '1.5rem', md: '1.9rem' }, color: 'white', lineHeight: 1.1, letterSpacing: '-0.5px' }}>
-                Data Rights Request
-              </Typography>
-              <Typography sx={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', mt: 0.3 }}>
-                Exercise your rights under the Digital Personal Data Protection Act 2023
-              </Typography>
-            </Box>
-          </Box>
-          <Chip
-            icon={<Gavel sx={{ fontSize: 12, color: '#6EE7B7' }} />}
-            label="Requests processed within 30 days · DPDP Act §11–§14"
-            sx={{ fontSize: '0.7rem', fontWeight: 700, bgcolor: 'rgba(16,185,129,0.2)', color: '#6EE7B7', border: '1px solid rgba(16,185,129,0.3)', '& .MuiChip-icon': { color: '#6EE7B7' } }}
-          />
-        </Container>
-      </Box>
-
-      {/* Legal Review Banner */}
-      {/* [LEGAL REVIEW REQUIRED] Remove before go-live */}
-      <Box sx={{ bgcolor: '#FEF3C7', borderBottom: '2px solid #F59E0B', py: 1.5, px: 3 }}>
-        <Container maxWidth="md">
-          <Typography sx={{ fontSize: '0.78rem', color: '#92400E', fontWeight: 700, textAlign: 'center' }}>
-            ⚠️ [LEGAL REVIEW REQUIRED] — This form is a compliance draft. Production: replace mailto handler with backend API and store requests in database.
+          <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>
+            DPDP Act Self-Service Portal
           </Typography>
         </Container>
       </Box>
 
-      <Container maxWidth="md" sx={{ py: 5, flex: 1 }}>
-        {/* Info box */}
-        <Alert severity="info" sx={{ mb: 4, borderRadius: '12px', fontSize: '0.85rem' }}>
-          Under the DPDP Act 2023, you have the right to access, correct, erase your personal data, and withdraw consent. We will acknowledge your request within <strong>7 days</strong> and resolve it within <strong>30 days</strong>. Provide as much detail as possible to help us process your request efficiently.
-        </Alert>
-
-        <Paper elevation={0} sx={{ borderRadius: '16px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-          <Box sx={{ p: { xs: 3, md: 4 } }}>
-            <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#0F172A', mb: 3 }}>
-              Your Information
+      {/* Main Content Area */}
+      <Container maxWidth="md" sx={{ py: { xs: 3, md: 5 }, flex: 1 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2.5, sm: 4, md: 5 },
+            bgcolor: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '8px',
+          }}
+        >
+          {/* Header */}
+          <Box sx={{ mb: 3.5 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', sm: '1.9rem' }, color: '#0f172a', mb: 1 }}>
+              Data Rights Request Form (DPDP Act, 2023)
             </Typography>
-
-            <Box component="form" onSubmit={handleSubmit}>
-              {/* Personal Details */}
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5, mb: 3 }}>
-                <TextField
-                  label="Full Name *"
-                  value={form.fullName}
-                  onChange={handleChange('fullName')}
-                  error={!!errors.fullName}
-                  helperText={errors.fullName}
-                  fullWidth
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
-                />
-                <TextField
-                  label="Email Address *"
-                  type="email"
-                  value={form.email}
-                  onChange={handleChange('email')}
-                  error={!!errors.email}
-                  helperText={errors.email}
-                  fullWidth
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
-                />
-              </Box>
-
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2.5, mb: 3 }}>
-                <FormControl fullWidth error={!!errors.role}>
-                  <InputLabel>Your Role *</InputLabel>
-                  <Select
-                    value={form.role}
-                    label="Your Role *"
-                    onChange={(e) => { setForm((p) => ({ ...p, role: e.target.value })); setErrors((p) => ({ ...p, role: undefined })); }}
-                    sx={{ borderRadius: '10px' }}
-                  >
-                    {['Student', 'Parent / Guardian', 'Teacher', 'School Admin', 'Principal', 'Driver', 'Other'].map((r) => (
-                      <MenuItem key={r} value={r}>{r}</MenuItem>
-                    ))}
-                  </Select>
-                  {errors.role && <FormHelperText>{errors.role}</FormHelperText>}
-                </FormControl>
-
-                <TextField
-                  label="School Name (if applicable)"
-                  value={form.schoolName}
-                  onChange={handleChange('schoolName')}
-                  fullWidth
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
-                />
-              </Box>
-
-              <Divider sx={{ my: 3 }} />
-
-              {/* Request Type */}
-              <Typography sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#0F172A', mb: 2 }}>
-                Request Details
+            <Typography sx={{ fontSize: '0.9rem', color: '#64748b', mb: 2 }}>
+              Exercise your legal rights under India's Digital Personal Data Protection Act (DPDP Act)
+            </Typography>
+            <Box
+              sx={{
+                bgcolor: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                p: 2,
+                borderRadius: '6px',
+              }}
+            >
+              <Typography sx={{ fontSize: '0.88rem', color: '#166534', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CheckCircleOutline sx={{ fontSize: 18 }} />
+                Your Rights Under the DPDP Act
               </Typography>
-
-              <FormControl component="fieldset" error={!!errors.requestType} sx={{ mb: 3, width: '100%' }}>
-                <FormLabel component="legend" sx={{ fontWeight: 600, fontSize: '0.9rem', color: '#374151', mb: 1 }}>
-                  Type of Request *
-                </FormLabel>
-                <RadioGroup
-                  value={form.requestType}
-                  onChange={(e) => { setForm((p) => ({ ...p, requestType: e.target.value })); setErrors((p) => ({ ...p, requestType: undefined })); }}
-                >
-                  {requestTypes.map(({ value, label }) => (
-                    <FormControlLabel
-                      key={value}
-                      value={value}
-                      control={<Radio size="small" sx={{ '&.Mui-checked': { color: '#6366F1' } }} />}
-                      label={<Typography sx={{ fontSize: '0.85rem', color: '#374151' }}>{label}</Typography>}
-                      sx={{ mb: 0.5 }}
-                    />
-                  ))}
-                </RadioGroup>
-                {errors.requestType && <FormHelperText>{errors.requestType}</FormHelperText>}
-              </FormControl>
-
-              <TextField
-                label="Details of Your Request *"
-                multiline
-                rows={5}
-                value={form.details}
-                onChange={handleChange('details')}
-                error={!!errors.details}
-                helperText={errors.details || `Please describe your request in detail. Include: which data you're referring to, the time period, and any additional context. (${form.details.length} characters)`}
-                fullWidth
-                placeholder="e.g., 'I would like a copy of all personal data held about me, specifically my attendance records and exam marks for the academic year 2025–2026...'"
-                sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
-              />
-
-              {/* Declaration */}
-              <Box
-                sx={{
-                  p: 2,
-                  border: `1px solid ${errors.declaration ? '#EF4444' : '#E2E8F0'}`,
-                  borderRadius: '12px',
-                  bgcolor: '#F8FAFC',
-                  mb: 3,
-                  cursor: 'pointer',
-                }}
-                onClick={() => { setForm((p) => ({ ...p, declaration: !p.declaration })); setErrors((p) => ({ ...p, declaration: undefined })); }}
-              >
-                <FormControlLabel
-                  control={
-                    <Radio
-                      checked={form.declaration}
-                      size="small"
-                      sx={{ '&.Mui-checked': { color: '#6366F1' } }}
-                    />
-                  }
-                  label={
-                    <Typography sx={{ fontSize: '0.85rem', color: '#374151' }}>
-                      {/* [LEGAL REVIEW REQUIRED] Declaration text */}
-                      I declare that the information provided above is accurate and complete. I understand that providing false information may affect processing of my request. I am the Data Principal (or authorised representative) for the data described above.
-                    </Typography>
-                  }
-                />
-                {errors.declaration && (
-                  <Typography sx={{ fontSize: '0.75rem', color: '#EF4444', mt: 1, ml: 4 }}>
-                    {errors.declaration}
-                  </Typography>
-                )}
-              </Box>
-
-              <Button
-                type="submit"
-                variant="contained"
-                fullWidth
-                size="large"
-                disabled={isLoading}
-                endIcon={<Send />}
-                sx={{
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 700,
-                  py: 1.6,
-                  fontSize: '0.95rem',
-                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                  boxShadow: '0 6px 20px rgba(16,185,129,0.4)',
-                  '&:hover': { transform: 'translateY(-1px)', boxShadow: '0 8px 24px rgba(16,185,129,0.5)' },
-                  transition: 'all 0.2s',
-                }}
-              >
-                {isLoading ? 'Submitting...' : 'Submit Data Rights Request'}
-              </Button>
-
-              <Typography sx={{ fontSize: '0.75rem', color: '#94A3B8', textAlign: 'center', mt: 1.5 }}>
-                Requests are sent to grievance@smsedusolutions.com · {/* [LEGAL REVIEW REQUIRED] */}
-                Response within 30 days · DPDP Act §11–§14
+              <Typography sx={{ fontSize: '0.85rem', color: '#15803d', mt: 0.5, lineHeight: 1.5 }}>
+                Under the <strong>DPDP Act (Sections 11–14)</strong>, you have the right to request a copy of your personal data, fix mistakes, ask for deletion, withdraw consent, or submit a complaint. All DPDP Act requests are resolved within <strong>30 days</strong>.
               </Typography>
             </Box>
           </Box>
+
+          <Divider sx={{ mb: 4 }} />
+
+          {/* Form */}
+          <Box component="form" onSubmit={handleSubmit}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a', mb: 2 }}>
+              1. Your Contact Information
+            </Typography>
+
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mb: 3 }}>
+              <TextField
+                label="Your Full Name *"
+                value={form.fullName}
+                onChange={handleChange('fullName')}
+                error={!!errors.fullName}
+                helperText={errors.fullName}
+                fullWidth
+                size="small"
+              />
+              <TextField
+                label="Your Email Address *"
+                type="email"
+                value={form.email}
+                onChange={handleChange('email')}
+                error={!!errors.email}
+                helperText={errors.email}
+                fullWidth
+                size="small"
+              />
+            </Box>
+
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mb: 4 }}>
+              <FormControl fullWidth size="small" error={!!errors.role}>
+                <InputLabel>Your Role *</InputLabel>
+                <Select
+                  value={form.role}
+                  label="Your Role *"
+                  onChange={(e) => {
+                    setForm((p) => ({ ...p, role: e.target.value }));
+                    setErrors((p) => ({ ...p, role: undefined }));
+                  }}
+                >
+                  <MenuItem value="Parent / Guardian">Parent / Guardian</MenuItem>
+                  <MenuItem value="Student">Student</MenuItem>
+                  <MenuItem value="Teacher / Staff">Teacher / Staff</MenuItem>
+                  <MenuItem value="School Administrator">School Administrator</MenuItem>
+                  <MenuItem value="Driver / Transport Staff">Driver / Transport Staff</MenuItem>
+                  <MenuItem value="Other">Other</MenuItem>
+                </Select>
+                {errors.role && <FormHelperText>{errors.role}</FormHelperText>}
+              </FormControl>
+
+              <TextField
+                label="School Name (Optional)"
+                value={form.schoolName}
+                onChange={handleChange('schoolName')}
+                fullWidth
+                size="small"
+              />
+            </Box>
+
+            <Divider sx={{ mb: 4 }} />
+
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a', mb: 2 }}>
+              2. Select Your DPDP Act Request Type
+            </Typography>
+
+            <FormControl component="fieldset" error={!!errors.requestType} sx={{ mb: 3, width: '100%' }}>
+              <FormLabel component="legend" sx={{ fontSize: '0.88rem', fontWeight: 600, color: '#334155', mb: 1 }}>
+                Which right would you like to exercise under the DPDP Act? *
+              </FormLabel>
+              <RadioGroup
+                value={form.requestType}
+                onChange={(e) => {
+                  setForm((p) => ({ ...p, requestType: e.target.value }));
+                  setErrors((p) => ({ ...p, requestType: undefined }));
+                }}
+              >
+                {requestOptions.map((opt) => (
+                  <FormControlLabel
+                    key={opt.value}
+                    value={opt.value}
+                    control={<Radio size="small" sx={{ '&.Mui-checked': { color: '#4f46e5' } }} />}
+                    label={<Typography sx={{ fontSize: '0.88rem', color: '#334155', py: 0.25 }}>{opt.label}</Typography>}
+                    sx={{ mb: 0.5 }}
+                  />
+                ))}
+              </RadioGroup>
+              {errors.requestType && <FormHelperText sx={{ mt: 1 }}>{errors.requestType}</FormHelperText>}
+            </FormControl>
+
+            <Box sx={{ mb: 3 }}>
+              <TextField
+                label="Please describe what information you are referring to *"
+                multiline
+                rows={4}
+                value={form.details}
+                onChange={handleChange('details')}
+                error={!!errors.details}
+                helperText={errors.details || "For example: 'I am requesting a copy of my child's attendance and grade records for Grade 7' or 'Please update my mobile number to 9876543210'"}
+                fullWidth
+                size="small"
+              />
+            </Box>
+
+            {/* Confirmation Checkbox */}
+            <Box
+              sx={{
+                p: 2,
+                bgcolor: '#f8fafc',
+                border: `1px solid ${errors.declaration ? '#ef4444' : '#e2e8f0'}`,
+                borderRadius: '6px',
+                mb: 3,
+                cursor: 'pointer',
+              }}
+              onClick={() => {
+                setForm((p) => ({ ...p, declaration: !p.declaration }));
+                setErrors((p) => ({ ...p, declaration: undefined }));
+              }}
+            >
+              <FormControlLabel
+                control={
+                  <Radio
+                    checked={form.declaration}
+                    size="small"
+                    sx={{ '&.Mui-checked': { color: '#4f46e5' } }}
+                  />
+                }
+                label={
+                  <Typography sx={{ fontSize: '0.85rem', color: '#334155' }}>
+                    I confirm that I am the Data Principal (or the parent/legal guardian) entitled to submit this request under India's <strong>DPDP Act</strong>.
+                  </Typography>
+                }
+              />
+              {errors.declaration && (
+                <Typography sx={{ fontSize: '0.78rem', color: '#ef4444', mt: 0.5, ml: 3.5 }}>
+                  {errors.declaration}
+                </Typography>
+              )}
+            </Box>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isLoading}
+              endIcon={<Send sx={{ fontSize: 16 }} />}
+              sx={{
+                bgcolor: '#4f46e5',
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.92rem',
+                py: 1.25,
+                px: 3,
+                borderRadius: '6px',
+                '&:hover': { bgcolor: '#4338ca' },
+              }}
+            >
+              {isLoading ? 'Submitting...' : 'Submit DPDP Act Request'}
+            </Button>
+          </Box>
         </Paper>
 
+        {/* Footer */}
         <Box sx={{ mt: 4 }}>
-          <LegalFooter light accentColor="#10B981" />
+          <LegalFooter light />
         </Box>
       </Container>
     </Box>

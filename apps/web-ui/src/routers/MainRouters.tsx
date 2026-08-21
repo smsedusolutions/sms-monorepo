@@ -194,6 +194,8 @@ const MainRouters = () => {
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
         <Route path="/data-rights" element={<DataRightsRequest />} />
+        <Route path="/dataright" element={<DataRightsRequest />} />
+        <Route path="/datarights" element={<DataRightsRequest />} />
 
         {/* Super Admin Routes */}
         <Route element={<ProtectedRoute allowedRoles={["super_admin"]} />}>

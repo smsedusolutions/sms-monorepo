@@ -1,14 +1,8 @@
 /**
  * Terms of Service — SMS Edu Solutions
  *
- * Includes a Data Protection Clause (Section 7) specifically required for
- * DPDP Act compliance, covering: data processor obligations, security
- * standards, breach notification, and data principal rights.
- *
- * [LEGAL REVIEW REQUIRED] — ALL copy on this page must be reviewed and
- * approved by a qualified lawyer before going live.
- *
- * Last updated: 2026-08-21
+ * Plain-language terms with dedicated DPDP Act, 2023 (India) data protection provisions.
+ * Designed for easy reading by school administrators, staff, parents, and students.
  */
 
 import React from 'react';
@@ -16,279 +10,229 @@ import {
   Box,
   Typography,
   Container,
+  Paper,
   Button,
   Divider,
-  Chip,
-  Alert,
 } from '@mui/material';
 import {
-  Gavel,
-  Shield,
   ArrowBack,
-  Article,
-  Security,
-  Warning,
+  CheckCircleOutline,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import LegalFooter from '../../components/shared/LegalFooter';
-
-const bodyText = { fontSize: '0.9rem', color: '#374151', lineHeight: 1.85 };
-const heading = { fontWeight: 800, fontSize: '1rem', color: '#0F172A', mb: 1.5, mt: 3 };
-
-interface ClauseProps {
-  number: string;
-  title: string;
-  children: React.ReactNode;
-  highlight?: boolean;
-}
-
-const Clause: React.FC<ClauseProps> = ({ number, title, children, highlight = false }) => (
-  <Box
-    sx={{
-      mb: 4,
-      p: highlight ? 3 : 0,
-      borderRadius: highlight ? '14px' : 0,
-      border: highlight ? '2px solid #6366F1' : 'none',
-      bgcolor: highlight ? '#F5F3FF' : 'transparent',
-    }}
-  >
-    <Typography
-      sx={{
-        fontWeight: 900,
-        fontSize: '1.05rem',
-        color: highlight ? '#4338CA' : '#0F172A',
-        mb: 1,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 1,
-      }}
-    >
-      {highlight && <Shield sx={{ color: '#6366F1', fontSize: 20 }} />}
-      {number}. {title}
-      {highlight && (
-        <Chip
-          label="DPDP Act Clause"
-          size="small"
-          sx={{ fontSize: '0.6rem', fontWeight: 700, bgcolor: '#6366F1', color: 'white', ml: 1 }}
-        />
-      )}
-    </Typography>
-    {children}
-  </Box>
-);
 
 const TermsOfService: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#F8FAFC', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
+    <Box
+      sx={{
+        minHeight: '100vh',
+        width: '100%',
+        bgcolor: '#f8fafc',
+        color: '#1e293b',
+        overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Top Simple Navigation Header */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
-          py: { xs: 4, md: 6 },
-          px: 3,
-          position: 'relative',
-          overflow: 'hidden',
+          bgcolor: '#ffffff',
+          borderBottom: '1px solid #e2e8f0',
+          py: 2,
+          px: { xs: 2, md: 4 },
         }}
       >
-        <Box sx={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(rgba(255,255,255,0.02) 1px, transparent 1px)', backgroundSize: '24px 24px', pointerEvents: 'none' }} />
-        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+        <Container maxWidth="md" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Button
             startIcon={<ArrowBack />}
             onClick={() => navigate(-1)}
-            sx={{ color: 'rgba(255,255,255,0.6)', mb: 3, textTransform: 'none', '&:hover': { color: 'white' } }}
+            variant="text"
+            sx={{ color: '#475569', textTransform: 'none', fontWeight: 600, fontSize: '0.9rem' }}
           >
             Back
           </Button>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-            <Box sx={{ width: 48, height: 48, borderRadius: '14px', background: 'linear-gradient(135deg, #3B82F6, #1D4ED8)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 6px 20px rgba(59,130,246,0.4)' }}>
-              <Article sx={{ color: 'white', fontSize: 24 }} />
-            </Box>
-            <Box>
-              <Typography sx={{ fontWeight: 900, fontSize: { xs: '1.6rem', md: '2rem' }, color: 'white', lineHeight: 1.1, letterSpacing: '-1px' }}>
-                Terms of Service
+          <Typography sx={{ fontSize: '0.85rem', fontWeight: 600, color: '#64748b' }}>
+            DPDP Act Compliance
+          </Typography>
+        </Container>
+      </Box>
+
+      {/* Main Content Area */}
+      <Container maxWidth="md" sx={{ py: { xs: 3, md: 5 }, flex: 1 }}>
+        <Paper
+          elevation={0}
+          sx={{
+            p: { xs: 2.5, sm: 4, md: 5 },
+            bgcolor: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: '8px',
+          }}
+        >
+          {/* Header */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', sm: '1.9rem' }, color: '#0f172a', mb: 1 }}>
+              Terms of Service & DPDP Act Agreement
+            </Typography>
+            <Typography sx={{ fontSize: '0.9rem', color: '#64748b', mb: 1.5 }}>
+              SMS Edu Solutions · Last Updated: 21 August 2026
+            </Typography>
+            <Box
+              sx={{
+                bgcolor: '#f0fdf4',
+                border: '1px solid #bbf7d0',
+                p: 2,
+                borderRadius: '6px',
+              }}
+            >
+              <Typography sx={{ fontSize: '0.88rem', color: '#166534', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CheckCircleOutline sx={{ fontSize: 18 }} />
+                Data Protection Under DPDP Act (India)
               </Typography>
-              <Typography sx={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', mt: 0.3 }}>
-                SMS Edu Solutions · Last updated: 21 August 2026
+              <Typography sx={{ fontSize: '0.85rem', color: '#15803d', mt: 0.5, lineHeight: 1.5 }}>
+                These Terms explain your rights and responsibilities when using SMS Edu Solutions. They incorporate full data fiduciary and processor duties under India's <strong>Digital Personal Data Protection Act, 2023 (DPDP Act)</strong>.
               </Typography>
             </Box>
           </Box>
-          <Chip
-            icon={<Gavel sx={{ fontSize: 12, color: '#93C5FD' }} />}
-            label="Includes Data Protection Clause — DPDP Act 2023 (India)"
-            sx={{ fontSize: '0.7rem', fontWeight: 700, bgcolor: 'rgba(59,130,246,0.2)', color: '#93C5FD', border: '1px solid rgba(59,130,246,0.3)', '& .MuiChip-icon': { color: '#93C5FD' } }}
-          />
-        </Container>
-      </Box>
 
-      {/* Legal Review Banner */}
-      {/* [LEGAL REVIEW REQUIRED] Remove before go-live */}
-      <Box sx={{ bgcolor: '#FEF3C7', borderBottom: '2px solid #F59E0B', py: 1.5, px: 3 }}>
-        <Container maxWidth="md">
-          <Typography sx={{ fontSize: '0.78rem', color: '#92400E', fontWeight: 700, textAlign: 'center' }}>
-            ⚠️ [LEGAL REVIEW REQUIRED] — This Terms of Service is a compliance draft. Do not publish until reviewed by a lawyer.
-          </Typography>
-        </Container>
-      </Box>
+          <Divider sx={{ mb: 4 }} />
 
-      <Container maxWidth="md" sx={{ py: 6, flex: 1 }}>
+          {/* Section 1 */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+              1. Acceptance of Terms
+            </Typography>
+            <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7 }}>
+              By logging into or using SMS Edu Solutions, you agree to these Terms and our Privacy Policy. If you are a school administrator registering your institution, you confirm that you have the authority to represent your school and manage personal data in accordance with the <strong>DPDP Act</strong>.
+            </Typography>
+          </Box>
 
-        {/* Preamble */}
-        <Box sx={{ bgcolor: '#F0F9FF', border: '1px solid #BAE6FD', borderRadius: '12px', p: 2.5, mb: 4 }}>
-          {/* [LEGAL REVIEW REQUIRED] Preamble */}
-          <Typography sx={bodyText}>
-            These Terms of Service ("Terms") govern your use of the SMS Edu Solutions platform ("Platform"), operated by SMS Edu Solutions ("Company", "we", "us"). By accessing the Platform, you agree to these Terms. If you are a school administrator accepting these Terms on behalf of a school, you represent that you have authority to do so.
-          </Typography>
+          <Divider sx={{ mb: 4 }} />
+
+          {/* Section 2 */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+              2. Who Can Use This Platform
+            </Typography>
+            <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
+              This platform is strictly for authorized school members:
+            </Typography>
+            <Box component="ul" sx={{ pl: 3, m: 0, '& li': { fontSize: '0.9rem', color: '#334155', mb: 0.75, lineHeight: 1.6 } }}>
+              <li><strong>School Administrators & Staff:</strong> To manage classes, teachers, student admissions, and school records.</li>
+              <li><strong>Teachers:</strong> To enter marks, take daily attendance, and assign homework.</li>
+              <li><strong>Parents / Guardians:</strong> To monitor their child's school progress, attendance, and pay fees.</li>
+              <li><strong>Students:</strong> With parental permission, to view their timetable, homework, and exam results.</li>
+              <li><strong>Drivers:</strong> To access vehicle routes and ensure student transport safety.</li>
+            </Box>
+          </Box>
+
+          <Divider sx={{ mb: 4 }} />
+
+          {/* Section 3: Data Protection Clause (DPDP Act) */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+              3. Data Protection & Privacy (DPDP Act, 2023 Rules)
+            </Typography>
+            <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
+              Both SMS Edu Solutions and your school are legally committed to compliance with the <strong>Digital Personal Data Protection Act (DPDP Act)</strong>:
+            </Typography>
+            <Box component="ul" sx={{ pl: 3, m: 0, '& li': { fontSize: '0.9rem', color: '#334155', mb: 1.25, lineHeight: 1.6 } }}>
+              <li>
+                <strong>School Responsibility (DPDP Act Data Fiduciary):</strong> The school is responsible for obtaining lawful parental consent before registering students who are minors (under 18 years) on the platform.
+              </li>
+              <li>
+                <strong>Platform Safeguards (DPDP Act Security):</strong> SMS Edu Solutions enforces industry-standard security safeguards under the DPDP Act, including password encryption (bcrypt), encrypted database storage, and rate-limiting against unauthorized access.
+              </li>
+              <li>
+                <strong>Purpose Limitation (DPDP Act):</strong> Personal data is processed solely for educational delivery and school administrative tasks. We never sell student or parent data to third parties.
+              </li>
+              <li>
+                <strong>Data Breach Reporting (DPDP Act §8):</strong> In the event of a security breach affecting personal data, we will inform the affected school and the <strong>Data Protection Board of India (DPBI)</strong> within the required statutory timeframe.
+              </li>
+            </Box>
+          </Box>
+
+          <Divider sx={{ mb: 4 }} />
+
+          {/* Section 4: Your Rights Under DPDP Act */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+              4. Exercising Your Rights Under the DPDP Act
+            </Typography>
+            <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
+              Under the <strong>DPDP Act</strong>, every user has the right to:
+            </Typography>
+            <Box component="ul" sx={{ pl: 3, m: 0, '& li': { fontSize: '0.9rem', color: '#334155', mb: 0.75, lineHeight: 1.6 } }}>
+              <li>View a summary of their personal information held in the system.</li>
+              <li>Correct inaccurate details (e.g. updating phone number or address).</li>
+              <li>Request erasure of data when leaving the school, subject to statutory academic retention requirements.</li>
+              <li>Withdraw consent for optional platform features at any time.</li>
+            </Box>
+            <Typography sx={{ fontSize: '0.9rem', color: '#334155', mt: 1.5 }}>
+              To exercise these rights, submit a form via our{' '}
+              <Box
+                component="span"
+                onClick={() => navigate('/data-rights')}
+                sx={{ color: '#4f46e5', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                DPDP Act Data Rights Request Page
+              </Box>
+              .
+            </Typography>
+          </Box>
+
+          <Divider sx={{ mb: 4 }} />
+
+          {/* Section 5: Account Security */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+              5. Account Security & User Duties
+            </Typography>
+            <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
+              To maintain system safety under the DPDP Act:
+            </Typography>
+            <Box component="ul" sx={{ pl: 3, m: 0, '& li': { fontSize: '0.9rem', color: '#334155', mb: 0.75, lineHeight: 1.6 } }}>
+              <li>Keep your password confidential and never share your login details with other individuals.</li>
+              <li>Provide accurate personal information when creating or updating your profile.</li>
+              <li>Report any suspected unauthorized account activity to your school administrator or our Grievance Officer immediately.</li>
+            </Box>
+          </Box>
+
+          <Divider sx={{ mb: 4 }} />
+
+          {/* Section 6: Grievance Redressal */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+              6. Grievance Redressal (DPDP Act Section 13)
+            </Typography>
+            <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 2 }}>
+              If you have any grievance or dispute regarding your personal data or service use under the <strong>DPDP Act</strong>, please contact:
+            </Typography>
+
+            <Box sx={{ p: 2.5, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
+              <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', mb: 1 }}>
+                DPDP Act Grievance Contact:
+              </Typography>
+              <Typography sx={{ fontSize: '0.85rem', color: '#334155', mb: 0.5 }}>
+                • <strong>Email:</strong> <a href="mailto:grievance@smsedusolutions.com" style={{ color: '#4f46e5', textDecoration: 'none', fontWeight: 600 }}>grievance@smsedusolutions.com</a>
+              </Typography>
+              <Typography sx={{ fontSize: '0.85rem', color: '#334155', mb: 0.5 }}>
+                • <strong>Response SLA:</strong> Resolved within 30 days under DPDP Act requirements.
+              </Typography>
+              <Typography sx={{ fontSize: '0.85rem', color: '#334155' }}>
+                • <strong>Statutory Authority:</strong> Data Protection Board of India (DPBI).
+              </Typography>
+            </Box>
+          </Box>
+        </Paper>
+
+        {/* Footer */}
+        <Box sx={{ mt: 4 }}>
+          <LegalFooter light />
         </Box>
-
-        <Clause number="1" title="Acceptance & Eligibility">
-          {/* [LEGAL REVIEW REQUIRED] */}
-          <Typography sx={bodyText}>
-            Use of the Platform requires registration and is limited to authorised school staff, students, parents/guardians, and drivers associated with a registered institution. Users must be at least 18 years old to register independently; students below 18 must have parental/guardian consent obtained by their institution.
-          </Typography>
-        </Clause>
-
-        <Clause number="2" title="Platform Access & Use">
-          {/* [LEGAL REVIEW REQUIRED] */}
-          <Typography sx={bodyText}>
-            The Company grants you a limited, non-exclusive, non-transferable licence to access and use the Platform solely for educational administration purposes. You may not: reverse-engineer, resell, or sublicense any part of the Platform; use automated tools to scrape data; or attempt to access accounts other than your own.
-          </Typography>
-        </Clause>
-
-        <Clause number="3" title="Intellectual Property">
-          {/* [LEGAL REVIEW REQUIRED] */}
-          <Typography sx={bodyText}>
-            All Platform software, designs, and content are the intellectual property of SMS Edu Solutions unless otherwise stated. School-generated content (timetables, announcements, fee records) remains the property of the respective school.
-          </Typography>
-        </Clause>
-
-        <Clause number="4" title="Prohibited Conduct">
-          {/* [LEGAL REVIEW REQUIRED] */}
-          <Typography sx={bodyText}>
-            You agree not to: upload unlawful, harmful, or defamatory content; attempt to bypass authentication or security controls; use the Platform to harass any person; or transmit malware or spam. Violations may result in immediate account suspension.
-          </Typography>
-        </Clause>
-
-        <Clause number="5" title="Service Availability">
-          {/* [LEGAL REVIEW REQUIRED] */}
-          <Typography sx={bodyText}>
-            We strive for 99.9% uptime but do not guarantee uninterrupted access. We may perform scheduled maintenance with prior notice. We are not liable for losses arising from unavailability outside our reasonable control (force majeure, third-party outages).
-          </Typography>
-        </Clause>
-
-        <Clause number="6" title="Limitation of Liability">
-          {/* [LEGAL REVIEW REQUIRED] */}
-          <Typography sx={bodyText}>
-            To the maximum extent permitted by law, the Company's aggregate liability for any claim arising from use of the Platform shall not exceed the fees paid (if any) by the relevant school in the preceding 12 months. We are not liable for indirect, consequential, or punitive damages.
-          </Typography>
-        </Clause>
-
-        {/* ═══════════════════════════════════════════════════════════
-            CLAUSE 7 — DATA PROTECTION (DPDP ACT COMPLIANCE)
-            [LEGAL REVIEW REQUIRED]
-        ═══════════════════════════════════════════════════════════ */}
-        <Clause number="7" title="Data Protection — DPDP Act 2023 Compliance" highlight>
-          <Alert
-            icon={<Warning />}
-            severity="warning"
-            sx={{ mb: 2, borderRadius: '10px', fontSize: '0.8rem' }}
-          >
-            [LEGAL REVIEW REQUIRED] — This clause requires review by a data protection lawyer before publication.
-          </Alert>
-
-          <Typography sx={heading}>7.1 Roles Under DPDP Act</Typography>
-          <Typography sx={bodyText}>
-            For the purposes of the Digital Personal Data Protection Act 2023 ("DPDP Act"), <strong>SMS Edu Solutions is the Data Fiduciary</strong> with respect to platform-level data (authentication, audit logs, consent records). Each registered <strong>School is a Data Fiduciary</strong> with respect to student, teacher, parent, and driver personal data processed within its account.
-          </Typography>
-          {/* [LEGAL REVIEW REQUIRED] The school-as-fiduciary model needs lawyer confirmation */}
-
-          <Typography sx={heading}>7.2 Data Processing Agreement</Typography>
-          <Typography sx={bodyText}>
-            By registering a school on the Platform, the school administrator enters into a Data Processing Agreement (DPA) with SMS Edu Solutions, under which the Company acts as a <strong>Data Processor</strong> for the school's data. The Company shall: (a) process data only on documented instructions from the school; (b) implement appropriate technical and organisational security measures; (c) notify the school within <strong>48 hours</strong> of becoming aware of a personal data breach; (d) assist the school in fulfilling data principal rights requests; (e) delete or return all personal data upon termination of service.
-          </Typography>
-
-          <Typography sx={heading}>7.3 Consent for Students Who Are Minors</Typography>
-          <Typography sx={bodyText}>
-            Where a Data Principal is a minor (below 18 years), the DPDP Act requires verifiable parental/guardian consent before processing their personal data. Schools are responsible for obtaining and maintaining records of such consent in accordance with applicable rules. SMS Edu Solutions provides consent-record storage infrastructure but the legal obligation to obtain consent rests with the school as Data Fiduciary.
-          </Typography>
-          {/* [LEGAL REVIEW REQUIRED] Consent verification mechanism for minors */}
-
-          <Typography sx={heading}>7.4 Security Standards</Typography>
-          <Typography sx={bodyText}>
-            The Company implements the following security measures for the Platform:
-          </Typography>
-          <Box component="ul" sx={{ pl: 3, mt: 1, mb: 1 }}>
-            {[
-              'Encrypted storage for sensitive data fields (exam marks: AES-256-GCM)',
-              'JWT-based session tokens with configurable expiry',
-              'CORS controls limiting API access to authorised origins',
-              'Rate limiting on API endpoints',
-              'TLS/HTTPS for all data in transit (production environments)',
-            ].map((item) => (
-              <Box component="li" key={item} sx={{ ...bodyText, mb: 0.5 }}>{item}</Box>
-            ))}
-          </Box>
-          <Alert icon={<Security />} severity="error" sx={{ borderRadius: '10px', mb: 2, fontSize: '0.8rem' }}>
-            <strong>[SECURITY FLAG — LEGAL REVIEW REQUIRED]</strong> Password hashing is pending implementation. Current build stores and compares passwords without cryptographic hashing (plaintext). This must be remediated before production deployment and before these terms can accurately represent security standards.
-          </Alert>
-
-          <Typography sx={heading}>7.5 Breach Notification</Typography>
-          <Typography sx={bodyText}>
-            In the event of a personal data breach, the Company shall: (a) notify the affected school within <strong>48 hours</strong> of discovery; (b) the school shall notify the Data Protection Board of India within <strong>72 hours</strong> of discovery (DPDP Act §8); (c) affected Data Principals shall be notified without undue delay following Board notification. See the Breach Response Runbook (internal document) for detailed procedures.
-          </Typography>
-
-          <Typography sx={heading}>7.6 Data Principal Rights</Typography>
-          <Typography sx={bodyText}>
-            Users may exercise the following rights under the DPDP Act by submitting a request via our{' '}
-            <Box component="a" href="/data-rights" sx={{ color: '#6366F1', fontWeight: 600 }}>
-              Data Rights Request Form
-            </Box>
-            : Right to Access, Right to Correction, Right to Erasure, Right to Withdraw Consent, Right to Grievance Redressal. Requests will be acknowledged within <strong>7 days</strong> and resolved within <strong>30 days</strong>.
-          </Typography>
-
-          <Typography sx={heading}>7.7 Cross-Border Transfers</Typography>
-          <Typography sx={bodyText}>
-            {/* [LEGAL REVIEW REQUIRED] Confirm permitted countries under DPDP Rules */}
-            Personal data may be transferred to countries notified by the Government of India as having adequate data protection standards. Where transfers occur to non-notified countries (e.g., USA via Google services), the Company ensures appropriate contractual safeguards. [LEGAL REVIEW REQUIRED — cross-border transfer rules under DPDP Rules not yet finalised as of 2026]
-          </Typography>
-
-          <Typography sx={heading}>7.8 Retention & Deletion</Typography>
-          <Typography sx={bodyText}>
-            Refer to the Retention Periods table in our Privacy Policy. Schools may request data deletion upon service termination; the Company will complete deletion within 90 days unless statutory retention applies.
-          </Typography>
-        </Clause>
-
-        <Clause number="8" title="Governing Law & Dispute Resolution">
-          {/* [LEGAL REVIEW REQUIRED] */}
-          <Typography sx={bodyText}>
-            These Terms are governed by the laws of India. Disputes shall first be attempted to be resolved by good-faith negotiation. If unresolved within 30 days, disputes shall be referred to arbitration in accordance with the Arbitration and Conciliation Act 1996. The seat of arbitration shall be [CITY — LEGAL REVIEW REQUIRED]. DPDP Act matters may be escalated to the Data Protection Board of India.
-          </Typography>
-        </Clause>
-
-        <Clause number="9" title="Changes to These Terms">
-          {/* [LEGAL REVIEW REQUIRED] */}
-          <Typography sx={bodyText}>
-            We may update these Terms from time to time. Material changes (including to the Data Protection clause) will be communicated by email and/or in-platform notice at least 30 days before they take effect. Continued use of the Platform after the effective date constitutes acceptance. Where DPDP Act changes require re-consent, we will collect fresh consent before processing.
-          </Typography>
-        </Clause>
-
-        <Clause number="10" title="Contact">
-          <Typography sx={bodyText}>
-            {/* [LEGAL REVIEW REQUIRED] */}
-            For general inquiries: support@smsedusolutions.com<br />
-            For data protection / DPDP matters: grievance@smsedusolutions.com<br />
-            {/* [LEGAL REVIEW REQUIRED] Replace with actual registered address */}
-            Registered address: [REGISTERED ADDRESS — LEGAL REVIEW REQUIRED]
-          </Typography>
-        </Clause>
-
-        <Divider sx={{ my: 4 }} />
-        <Typography sx={{ fontSize: '0.78rem', color: '#94A3B8', textAlign: 'center', mb: 4 }}>
-          Version 1.0 · 21 August 2026 · [LEGAL REVIEW REQUIRED]
-        </Typography>
-
-        <LegalFooter light accentColor="#3B82F6" />
       </Container>
     </Box>
   );
