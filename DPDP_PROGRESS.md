@@ -86,18 +86,18 @@ Appears on: Login, Privacy Policy, Terms, Data Rights pages.
 
 ---
 
-## 🔴 Security Gaps Found & Flagged
+## 🔴 Security Gaps Audit & Remediation Status
 
-| ID | Gap | Location | Severity |
-|----|-----|----------|----------|
-| GAP-001 | **Plaintext password storage & comparison** — `if (password !== user.password)` | `auth.controller.js` L74, L114, L188 | 🔴 CRITICAL |
-| GAP-002 | **Fail-open encryption fallback key** — hardcoded key if env var missing | `marks-crypto.js` L4 | 🔴 CRITICAL |
-| GAP-003 | **No rate limiting on auth routes** — brute force unprotected | `sm-auth-services/index.js` | 🟡 HIGH |
-| GAP-004 | **HTTPS not enforced** — no HSTS, no redirect middleware | Backend services | 🟡 HIGH |
-| GAP-005 | **Error messages leak internals** — `error: error.message` in 500s | Multiple controllers | 🟠 MEDIUM |
-| GAP-006 | **No CAPTCHA on login** — combined with GAP-003 | `LoginPage.tsx` | 🟠 MEDIUM |
-| GAP-007 | **No data retention automation** — no TTL indexes | All schemas | 🟠 MEDIUM |
-| GAP-008 | **Consent GET endpoint lacks authentication** — any userId accessible | `consent.routes.js` | 🟠 MEDIUM |
+| ID | Gap | Location | Severity | Status | Remediation |
+|----|-----|----------|----------|--------|-------------|
+| GAP-001 | **Plaintext password storage & comparison** | `auth.controller.js`, `student.controller.js`, `teacher.controller.js`, `parent.controller.js`, `principal.controller.js`, `driver.controller.js`, `user.controller.js` | 🔴 CRITICAL | **RESOLVED** | Implemented `bcryptjs` (12 rounds) with migration-aware verification, opportunistic rehash on legacy logins, and write-time hashing on all creation/update points. |
+| GAP-002 | **Fail-open encryption fallback key** | `marks-crypto.js` | 🔴 CRITICAL | **RESOLVED** | Removed hardcoded fallback secret; service now fails loudly and safely at startup if `MARKS_ENCRYPTION_KEY` is not set. |
+| GAP-003 | **No rate limiting on auth routes** | `sm-auth-services` | 🟡 HIGH | **RESOLVED** | Added `authRateLimiter` (20 req / 15 min) to `/login`, `strictRateLimiter` (5 req / 15 min) to OTP endpoints, and `commonRateLimiter` globally. |
+| GAP-004 | **HTTPS & Security Headers not enforced** | `sm-auth-services/index.js` | 🟡 HIGH | **RESOLVED** | Added HSTS (`Strict-Transport-Security`), `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, and `Referrer-Policy` headers. |
+| GAP-005 | **Error messages leak internals** | Controllers | 🟠 MEDIUM | IN PROGRESS | Production environments suppress internal error stack traces. |
+| GAP-006 | **No CAPTCHA on login** | `LoginPage.tsx` | 🟠 MEDIUM | OPEN | Recommended bot-protection integration. |
+| GAP-007 | **No data retention automation** | Schemas | 🟠 MEDIUM | OPEN | Scheduled retention cleanup / TTL index recommendation logged. |
+| GAP-008 | **Consent GET endpoint lacks authentication** | `consent.routes.js` | 🟠 MEDIUM | **RESOLVED** | Protected `GET /api/auth/consent/:userId` with `Authenticated` middleware and user/role access checks. |
 
 ---
 
@@ -122,24 +122,24 @@ All marked [LEGAL REVIEW REQUIRED] in code:
 
 ---
 
-## 🔓 Open Items (Not Yet Implemented)
+## 🔓 Open Items & Remediation Log
 
-| # | Item | Priority |
-|---|------|----------|
-| OI-001 | Fix plaintext passwords — bcrypt migration + user reset flow | 🔴 CRITICAL |
-| OI-002 | Remove fail-open encryption fallback | 🔴 CRITICAL |
-| OI-003 | Rate limiting on auth routes | 🟡 HIGH |
-| OI-004 | HTTPS + HSTS enforcement | 🟡 HIGH |
-| OI-005 | Frontend: POST to /api/auth/consent after login checkbox tick | 🟡 HIGH |
-| OI-006 | Protect GET /api/auth/consent/:userId with JWT auth middleware | 🟠 MEDIUM |
-| OI-007 | Replace DataRightsRequest mailto: with backend API + DB | 🟠 MEDIUM |
-| OI-008 | Data retention automation (TTL indexes + purge crons) | 🟠 MEDIUM |
-| OI-009 | CAPTCHA on login form (consent-gated) | 🟠 MEDIUM |
-| OI-010 | Consent re-collection flow on policy version bump | 🟡 HIGH |
-| OI-011 | Minor consent verification at school level | 🟡 HIGH |
-| OI-012 | Data Processing Agreements with each school | 🟡 HIGH |
-| OI-013 | Officially appoint Grievance Officer per DPDP Act §13 | 🟡 HIGH |
-| OI-014 | Check DPBI registration requirement for platform size | TBD |
+| # | Item | Priority | Status |
+|---|------|----------|--------|
+| OI-001 | Fix plaintext passwords — bcrypt migration + user reset flow | 🔴 CRITICAL | **RESOLVED** |
+| OI-002 | Remove fail-open encryption fallback | 🔴 CRITICAL | **RESOLVED** |
+| OI-003 | Rate limiting on auth routes | 🟡 HIGH | **RESOLVED** |
+| OI-004 | HTTPS + HSTS enforcement & security headers | 🟡 HIGH | **RESOLVED** |
+| OI-005 | Frontend: POST to /api/auth/consent after login checkbox tick | 🟡 HIGH | **RESOLVED** |
+| OI-006 | Protect GET /api/auth/consent/:userId with JWT auth middleware | 🟠 MEDIUM | **RESOLVED** |
+| OI-007 | Replace DataRightsRequest mailto: with backend API + DB | 🟠 MEDIUM | OPEN |
+| OI-008 | Data retention automation (TTL indexes + purge crons) | 🟠 MEDIUM | OPEN |
+| OI-009 | CAPTCHA on login form (consent-gated) | 🟠 MEDIUM | OPEN |
+| OI-010 | Consent re-collection flow on policy version bump | 🟡 HIGH | OPEN |
+| OI-011 | Minor consent verification at school level | 🟡 HIGH | OPEN (Procedural) |
+| OI-012 | Data Processing Agreements with each school | 🟡 HIGH | OPEN (Legal) |
+| OI-013 | Officially appoint Grievance Officer per DPDP Act §13 | 🟡 HIGH | OPEN (Operational) |
+| OI-014 | Check DPBI registration requirement for platform size | TBD | OPEN (Regulatory) |
 
 ---
 

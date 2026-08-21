@@ -10,7 +10,7 @@ const {
   getPaginationParams,
   formatPaginationResponse,
 } = require("../utils/pagination");
-const { logActivity } = require("@sms/shared/utils");
+const { logActivity, hashPassword } = require("@sms/shared/utils"); // SECURITY: GAP-001 bcrypt
 
 /**
  * Get Parent model for a specific school database
@@ -125,13 +125,16 @@ const createParent = async (req, res) => {
     // Generate parentId
     const parentId = await generateParentId(Parent);
 
+    // SECURITY (GAP-001): Hash password before storage
+    const hashedPassword = await hashPassword(password);
+
     const newParent = new Parent({
       parentId,
       schoolId,
       firstName,
       lastName,
       email: normalizedEmail,
-      password, // Plain text for now
+      password: hashedPassword,
       phone,
       studentIds: studentIds || [],
       relationship,
@@ -444,6 +447,11 @@ const updateParentById = async (req, res) => {
     delete updateData.parentId;
     delete updateData.schoolId;
     delete updateData.role;
+
+    // SECURITY (GAP-001): If password is being updated, hash it before saving
+    if (updateData.password) {
+      updateData.password = await hashPassword(updateData.password);
+    }
 
     const schoolDbName = await getSchoolDbName(schoolId);
     if (!schoolDbName) {

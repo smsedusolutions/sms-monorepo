@@ -17,14 +17,11 @@ import {
   School as SchoolIcon,
   ArrowForward,
   VerifiedUser,
-  HeadsetMic,
-  Policy,
-  Article,
   LocationOn,
   Phone,
   Language,
 } from '@mui/icons-material';
-import { useLogin } from '../queries/Auth';
+import { useLogin, useRecordConsent } from '../queries/Auth';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import TokenService from '../queries/token/tokenService';
@@ -51,6 +48,7 @@ const LoginPage: React.FC = () => {
   const [consentGiven, setConsentGiven] = useState(false);
 
   const loginMutation = useLogin();
+  const recordConsentMutation = useRecordConsent();
   const isLoading = loginMutation.isPending;
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -122,6 +120,19 @@ const LoginPage: React.FC = () => {
           if (res?.data?.token) {
             login(res.data.token);
             fetchProfile(); // fire-and-forget — don't block navigation
+
+            // Record DPDP consent record in backend (fire-and-forget)
+            const user = res?.data?.user;
+            if (consentGiven && user) {
+              recordConsentMutation.mutate({
+                userId: user.userId || user.adminId || formData.email,
+                schoolId: user.schoolId || null,
+                role: user.role || 'student',
+                email: user.email || formData.email,
+                source: 'login',
+              });
+            }
+
             navigate(getRedirectPath(TokenService.getRole() || 'super_admin'));
           } else {
             setLoginError('Invalid server response - no token received');
@@ -148,6 +159,18 @@ const LoginPage: React.FC = () => {
           if (res?.data?.token) {
             login(res.data.token);
             fetchProfile(); // fire-and-forget — don't block navigation
+
+            const user = res?.data?.user;
+            if (user) {
+              recordConsentMutation.mutate({
+                userId: user.userId || user.adminId || payload.email,
+                schoolId: user.schoolId || null,
+                role: user.role || 'student',
+                email: user.email || payload.email,
+                source: 'login',
+              });
+            }
+
             navigate(
               getRedirectPath(TokenService.getRole() || 'super_admin')
             );

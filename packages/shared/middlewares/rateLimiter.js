@@ -21,7 +21,26 @@ const commonRateLimiter = rateLimit({
 });
 
 /**
- * Stricter rate limiter for sensitive operations (Auth, etc.)
+ * Auth rate limiter for login endpoints
+ * Default: 20 requests per 15 minutes per IP
+ */
+const authRateLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        success: false,
+        message: "Too many login attempts from this IP, please try again after 15 minutes",
+    },
+    skip: (req) => {
+        const ip = req.ip || req.connection.remoteAddress;
+        return ip === '::1' || ip === '127.0.0.1' || ip.includes('::ffff:127.0.0.1');
+    },
+});
+
+/**
+ * Stricter rate limiter for sensitive operations (OTP, etc.)
  * Default: 5 requests per 15 minutes per IP
  */
 const strictRateLimiter = rateLimit({
@@ -33,9 +52,14 @@ const strictRateLimiter = rateLimit({
         success: false,
         message: "Too many attempts, please try again after 15 minutes",
     },
+    skip: (req) => {
+        const ip = req.ip || req.connection.remoteAddress;
+        return ip === '::1' || ip === '127.0.0.1' || ip.includes('::ffff:127.0.0.1');
+    },
 });
 
 module.exports = {
     commonRateLimiter,
+    authRateLimiter,
     strictRateLimiter
 };

@@ -7,6 +7,7 @@ const {
   getPaginationParams,
   formatPaginationResponse,
 } = require("../utils/pagination");
+const { hashPassword } = require("@sms/shared/utils"); // SECURITY: GAP-001 bcrypt
 
 const { generateNextId } = require("@sms/shared/utils");
 
@@ -52,12 +53,15 @@ const createUser = async (req, res) => {
     // Generate userId
     const userId = await generateUserId();
 
+    // SECURITY (GAP-001): Hash password before storage
+    const hashedPassword = await hashPassword(password);
+
     const newUser = new User({
       ...rest,
       userId,
       username,
       email: normalizedEmail,
-      password, // Plain text for now
+      password: hashedPassword,
       role: role || "sch_admin",
       schoolId,
       contactNumber,
@@ -176,6 +180,11 @@ const updateUserById = async (req, res) => {
 
     // Prevent updating userId
     delete updateData.userId;
+
+    // SECURITY (GAP-001): If password is being updated, hash it before saving
+    if (updateData.password) {
+      updateData.password = await hashPassword(updateData.password);
+    }
 
     // Get current user for email comparison
     const currentUser = await User.findOne({ userId });

@@ -12,13 +12,12 @@
 const express = require('express');
 const router = express.Router();
 const { recordConsent, getConsentHistory } = require('../controllers/consent.controller');
+const { Authenticated } = require('@sms/shared/middlewares');
 
-// POST — record a consent decision (called at login after checkbox is ticked)
+// POST — record a consent decision (called at login or profile update)
 router.post('/', recordConsent);
 
-// GET — retrieve consent history for a specific user
-// [LEGAL REVIEW REQUIRED] Add auth middleware before production deployment:
-// router.get('/:userId', requireAuth, requireSelfOrGrievanceOfficer, getConsentHistory);
-router.get('/:userId', getConsentHistory);
+// GET — retrieve consent history for a specific user (protected)
+router.get('/:userId', Authenticated, getConsentHistory);
 
 module.exports = router;

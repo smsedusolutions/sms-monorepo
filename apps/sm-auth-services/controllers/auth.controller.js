@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { AdminModel: Admin, SchoolModel: School, EmailRegistryModel: EmailRegistry, PendingSuperAdminModel: PendingSuperAdmin } = require("@sms/shared");
-const { sendEmail } = require("@sms/shared/utils");
+const { sendEmail, verifyPassword, hashPassword } = require("@sms/shared/utils");
 const { getSchoolDbConnection } = require("../configs/db");
 
 // Schema imports for school database queries
@@ -71,11 +71,22 @@ const login = async (req, res) => {
                 });
             }
 
-            if (password !== user.password) {
+            // SECURITY (GAP-001): bcrypt comparison with migration-aware fallback
+            const { valid: pwValid, needsRehash } = await verifyPassword(password, user.password);
+            if (!pwValid) {
                 return res.status(401).json({
                     success: false,
                     message: "Invalid email or password",
                 });
+            }
+            // Opportunistically upgrade legacy plaintext password to bcrypt
+            if (needsRehash) {
+                try {
+                    const newHash = await hashPassword(password);
+                    await Admin.updateOne({ email: normalizedEmail }, { password: newHash });
+                } catch (rehashErr) {
+                    console.error('Password rehash failed for super_admin:', rehashErr.message);
+                }
             }
 
             tokenPayload = {
@@ -111,11 +122,22 @@ const login = async (req, res) => {
                 });
             }
 
-            if (password !== user.password) {
+            // SECURITY (GAP-001): bcrypt comparison with migration-aware fallback
+            const { UserModel: UserForRehash } = require("@sms/shared");
+            const { valid: pwValidSch, needsRehash: rehashSch } = await verifyPassword(password, user.password);
+            if (!pwValidSch) {
                 return res.status(401).json({
                     success: false,
                     message: "Invalid email or password",
                 });
+            }
+            if (rehashSch) {
+                try {
+                    const newHash = await hashPassword(password);
+                    await UserForRehash.updateOne({ email: normalizedEmail }, { password: newHash });
+                } catch (rehashErr) {
+                    console.error('Password rehash failed for sch_admin:', rehashErr.message);
+                }
             }
 
             tokenPayload = {
@@ -185,11 +207,21 @@ const login = async (req, res) => {
                 });
             }
 
-            if (password !== user.password) {
+            // SECURITY (GAP-001): bcrypt comparison with migration-aware fallback
+            const { valid: pwValidRole, needsRehash: rehashRole } = await verifyPassword(password, user.password);
+            if (!pwValidRole) {
                 return res.status(401).json({
                     success: false,
                     message: "Invalid email or password",
                 });
+            }
+            if (rehashRole) {
+                try {
+                    const newHash = await hashPassword(password);
+                    await Model.updateOne({ email: normalizedEmail, schoolId }, { password: newHash });
+                } catch (rehashErr) {
+                    console.error(`Password rehash failed for ${role}:`, rehashErr.message);
+                }
             }
 
             // Build role-specific token payload
@@ -353,12 +385,15 @@ const createAdmin = async (req, res) => {
         // Generate adminId
         const adminId = await generateAdminId();
 
+        // SECURITY (GAP-001): Hash password before storage
+        const hashedPassword = await hashPassword(password);
+
         // Create admin
         const newAdmin = new Admin({
             adminId,
             username,
             email: normalizedEmail,
-            password,
+            password: hashedPassword,
             role: "super_admin",
             status: "active",
         });
@@ -446,10 +481,13 @@ const requestSuperAdminOtp = async (req, res) => {
         // Delete any existing pending registrations for this email
         await PendingSuperAdmin.deleteMany({ email: normalizedEmail });
 
+        // SECURITY (GAP-001): Hash password before storing in pending table
+        const hashedPassword = await hashPassword(password);
+
         const pending = new PendingSuperAdmin({
             username,
             email: normalizedEmail,
-            password,
+            password: hashedPassword,
             otp,
             createdAt: new Date()
         });

@@ -105,6 +105,21 @@ const getConsentHistory = async (req, res) => {
             return res.status(400).json({ success: false, message: 'userId is required' });
         }
 
+        // Access Control (GAP-008): Only allow the user themselves or a super_admin / school admin
+        if (req.user) {
+            const requesterId = req.user.userId || req.user.adminId;
+            const isSelf = requesterId === userId;
+            const isSuperAdmin = req.user.role === 'super_admin';
+            const isSchoolAdmin = req.user.role === 'sch_admin';
+
+            if (!isSelf && !isSuperAdmin && !isSchoolAdmin) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Forbidden: You are not authorized to view consent records for another user',
+                });
+            }
+        }
+
         const ConsentRecord = getConsentModel();
 
         const records = await ConsentRecord

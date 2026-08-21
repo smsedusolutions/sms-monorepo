@@ -9,7 +9,7 @@ const {
   getPaginationParams,
   formatPaginationResponse,
 } = require("../utils/pagination");
-const { logActivity } = require("@sms/shared/utils");
+const { logActivity, hashPassword } = require("@sms/shared/utils"); // SECURITY: GAP-001 bcrypt
 
 const getDriverModel = (schoolDbName) => {
   const schoolDb = getSchoolDbConnection(schoolDbName);
@@ -45,9 +45,12 @@ exports.createDriver = async (req, res) => {
     const Driver = getDriverModel(schoolDbName);
     const driverId = await generateDriverId(Driver);
 
+    // SECURITY (GAP-001): Hash password before storage
+    const hashedPassword = await hashPassword(password);
+
     const newDriver = new Driver({
       driverId, schoolId, firstName, lastName, email: normalizedEmail,
-      password, phone, licenseNumber, licenseExpiry, status: status || "active", profileImage
+      password: hashedPassword, phone, licenseNumber, licenseExpiry, status: status || "active", profileImage
     });
 
     const savedDriver = await newDriver.save();
@@ -95,6 +98,11 @@ exports.updateDriver = async (req, res) => {
 
     const currentDriver = await Driver.findOne({ driverId });
     if (!currentDriver) return res.status(404).json({ success: false, message: "Driver not found" });
+
+    // SECURITY (GAP-001): If password is being updated, hash it before saving
+    if (updateData.password) {
+      updateData.password = await hashPassword(updateData.password);
+    }
 
     if (updateData.email && updateData.email.toLowerCase() !== currentDriver.email) {
        // Update logic for email registry...

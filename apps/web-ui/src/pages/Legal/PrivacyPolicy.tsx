@@ -12,7 +12,7 @@
  * Last updated: 2026-08-21
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Box,
   Typography,
