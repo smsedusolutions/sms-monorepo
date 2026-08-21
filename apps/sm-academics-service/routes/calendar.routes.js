@@ -4,10 +4,11 @@ const { Authenticated, authorizeRoles } = require('@sms/shared/middlewares');
 const {
     getCalendarEvents,
     createCalendarEvent,
+    updateCalendarEvent,
     deleteCalendarEvent,
 } = require('../controllers/calendar.controller');
 
-// Get calendar events (All authenticated users)
+// Get calendar events (All authenticated users - filtered by role)
 router.get(
     '/',
     Authenticated,
@@ -22,7 +23,15 @@ router.post(
     createCalendarEvent
 );
 
-// Delete calendar event
+// Update calendar event (Admin & Principal)
+router.put(
+    '/:eventId',
+    Authenticated,
+    authorizeRoles('sch_admin', 'principal'),
+    updateCalendarEvent
+);
+
+// Delete calendar event (Admin & Principal)
 router.delete(
     '/:eventId',
     Authenticated,

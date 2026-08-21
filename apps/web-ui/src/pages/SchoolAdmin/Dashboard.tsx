@@ -17,6 +17,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import DashboardCard from '../../components/Dashboard/DashboardCard';
 import ExamPerformanceChart from '../../components/Dashboard/ExamPerformanceChart';
+import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidget';
 import { useGetSchoolDashboardStats } from '../../queries/SchoolDashboard';
 import { useGetLeaveStats } from '../../queries/Leave';
 import { useGetExams, useGetExamPublishStatus } from '../../queries/Exam';
@@ -223,6 +224,9 @@ const SchoolAdminDashboard = () => {
                     Failed to load dashboard stats. Please try again.
                 </Alert>
             )}
+
+            {/* Upcoming Events & Exams Gadget (Next 7 days) */}
+            <UpcomingEventsWidget calendarPath="/school-admin/calendar" />
 
             {/* Stats Cards - 2x2 on mobile, 4 in a row on desktop */}
             <Grid container spacing={{ xs: 1.5, sm: 2 }}>

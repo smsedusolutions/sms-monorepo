@@ -31,6 +31,7 @@ import type { ChildStats, Announcement, Homework, Student } from '../../types';
 import { AppButton } from '../../components/shared/AppButton';
 import { AppSection } from '../../components/shared/AppSection';
 import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
+import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidget';
 
 const ParentDashboard = () => {
     const navigate = useNavigate();
@@ -267,6 +268,11 @@ const ParentDashboard = () => {
                             )}
                         </Grid>
                     </AppSection>
+
+                    {/* Upcoming Events Gadget */}
+                    <Box sx={{ mt: { xs: 2, sm: 2.5 } }}>
+                        <UpcomingEventsWidget calendarPath="/parent/calendar" />
+                    </Box>
 
                     {/* Attendance Short Report Card Widget */}
                     <Box sx={{ my: { xs: 2, sm: 2.5 } }}>

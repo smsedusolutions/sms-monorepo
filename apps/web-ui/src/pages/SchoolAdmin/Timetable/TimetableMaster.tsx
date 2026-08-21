@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import {
   Box,
   Typography,
@@ -427,12 +427,30 @@ const TimetableMaster = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [aiGenerateDialogOpen, setAiGenerateDialogOpen] = useState(false);
   const { showNotification } = useNotificationStore();
-
   const [selectedDayTab, setSelectedDayTab] = useState<string>(() =>
     new Date().toLocaleDateString("en-US", { weekday: "long" }).toLowerCase()
   );
 
-  const [tabIndex, setTabIndex] = useUrlTab(0, ['manual', 'ai', 'published', 'rejected']);
+  // Variable to control AI Generative Tab visibility (Under Development)
+  // Set enableAITabRef.current = false to hide the AI tab, or true to enable it on localhost
+  const enableAITabRef = useRef<boolean>(false);
+  const [showAiTab] = useState<boolean>(enableAITabRef.current);
+
+  // Available tabs depending on whether AI tab is enabled
+  const availableTabKeys = useMemo(() => {
+    return showAiTab
+      ? ['manual', 'ai', 'published', 'rejected']
+      : ['manual', 'published', 'rejected'];
+  }, [showAiTab]);
+
+  const [tabIndex, setTabIndex] = useUrlTab(0, availableTabKeys);
+  const activeTabKey = availableTabKeys[tabIndex] || 'manual';
+
+  const isManualTab = activeTabKey === 'manual';
+  const isAiTab = activeTabKey === 'ai';
+  const isPublishedTab = activeTabKey === 'published';
+  const isRejectedTab = activeTabKey === 'rejected';
+
   const [selectedAiVersion, setSelectedAiVersion] = useState<number | undefined>(undefined);
 
   useEffect(() => {
@@ -442,16 +460,16 @@ const TimetableMaster = () => {
   }, [isMobile]);
 
   // Track visited tabs to fetch data lazily on tab visit
-  const [visitedTabs, setVisitedTabs] = useState<Set<number>>(() => new Set([tabIndex]));
+  const [visitedTabKeys, setVisitedTabKeys] = useState<Set<string>>(() => new Set([activeTabKey]));
 
   useEffect(() => {
-    setVisitedTabs(prev => {
-      if (prev.has(tabIndex)) return prev;
+    setVisitedTabKeys(prev => {
+      if (prev.has(activeTabKey)) return prev;
       const updated = new Set(prev);
-      updated.add(tabIndex);
+      updated.add(activeTabKey);
       return updated;
     });
-  }, [tabIndex]);
+  }, [activeTabKey]);
 
   // Get today's date for leave checking
   const today = new Date().toISOString().split("T")[0];
@@ -469,12 +487,12 @@ const TimetableMaster = () => {
   const { data: activeClassesData } = useGetActiveClasses(schoolId);
 
   // AI & Schedule data fetching (lazy loaded on tab visit)
-  const { data: aiDraftData, isLoading: aiDraftLoading } = useGetAIDraft(schoolId, selectedAiVersion, { enabled: visitedTabs.has(1) });
-  const { data: aiVersionsData } = useGetAIDraftVersions(schoolId, { enabled: visitedTabs.has(1) });
-  const { data: activeScheduleData } = useGetActiveSchedule(schoolId, undefined, undefined, { enabled: visitedTabs.has(2) });
+  const { data: aiDraftData, isLoading: aiDraftLoading } = useGetAIDraft(schoolId, selectedAiVersion, { enabled: showAiTab && visitedTabKeys.has('ai') });
+  const { data: aiVersionsData } = useGetAIDraftVersions(schoolId, { enabled: showAiTab && visitedTabKeys.has('ai') });
+  const { data: activeScheduleData } = useGetActiveSchedule(schoolId, undefined, undefined, { enabled: visitedTabKeys.has('published') });
   const deleteAiVersion = useDeleteAIDraftVersion(schoolId);
   // Rejected timetable submissions (lazy loaded on tab visit)
-  const { data: rejectedSchedulesData, isLoading: rejectedLoading } = useGetTimetableSchedules(schoolId, 'rejected', undefined, { enabled: visitedTabs.has(3) });
+  const { data: rejectedSchedulesData, isLoading: rejectedLoading } = useGetTimetableSchedules(schoolId, 'rejected', undefined, { enabled: visitedTabKeys.has('rejected') });
   const resubmitSchedule = useResubmitTimetable(schoolId);
 
   const createEntry = useCreateEntry(schoolId);
@@ -953,12 +971,14 @@ const TimetableMaster = () => {
           sx={{ minHeight: 40 }}
         >
           <Tab label={isMobile ? "Manual" : "1. Manual Timetable"} sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1, fontSize: { xs: '0.85rem', sm: '0.9rem' } }} />
-          <Tab label={isMobile ? "AI Drafts" : "2. AI Generator & Drafts"} sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1, fontSize: { xs: '0.85rem', sm: '0.9rem' } }} />
-          <Tab label={isMobile ? "Live" : "3. Published Live"} sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1, fontSize: { xs: '0.85rem', sm: '0.9rem' } }} />
+          {showAiTab && (
+            <Tab label={isMobile ? "AI Drafts" : "2. AI Generator & Drafts"} sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1, fontSize: { xs: '0.85rem', sm: '0.9rem' } }} />
+          )}
+          <Tab label={isMobile ? "Live" : `${showAiTab ? '3' : '2'}. Published Live`} sx={{ textTransform: 'none', fontWeight: 600, minHeight: 40, py: 1, fontSize: { xs: '0.85rem', sm: '0.9rem' } }} />
           <Tab
             label={
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                {isMobile ? "Rejected" : "4. Rejected Submissions"}
+                {isMobile ? "Rejected" : `${showAiTab ? '4' : '3'}. Rejected Submissions`}
                 {rejectedSchedules.length > 0 && (
                   <Chip label={rejectedSchedules.length} size="small" color="error" sx={{ height: 16, fontSize: 10, fontWeight: 700 }} />
                 )}
@@ -1007,7 +1027,7 @@ const TimetableMaster = () => {
         </Box>
 
         {/* Tab 0: Manual Actions */}
-        {tabIndex === 0 && (
+        {isManualTab && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
               <AppButton
@@ -1071,8 +1091,8 @@ const TimetableMaster = () => {
           </Box>
         )}
 
-        {/* Tab 1: AI Actions */}
-        {tabIndex === 1 && (
+        {/* Tab 1: AI Actions (Only on localhost) */}
+        {isAiTab && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
               {aiVersions.length > 0 && (
@@ -1138,7 +1158,7 @@ const TimetableMaster = () => {
         )}
 
         {/* Tab 2: Live Actions */}
-        {tabIndex === 2 && (
+        {isPublishedTab && (
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
               <Chip label="LIVE" color="success" size="small" sx={{ fontWeight: 700, height: 22 }} />
@@ -1248,7 +1268,7 @@ const TimetableMaster = () => {
               </Box>
             )}
 
-          {timetableLoading || (tabIndex === 1 && aiDraftLoading) ? (
+          {timetableLoading || (isAiTab && aiDraftLoading) ? (
             <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
               <CircularProgress size={32} />
             </Box>
@@ -1331,7 +1351,7 @@ const TimetableMaster = () => {
                           </td>
                         ) : (
                           config.workingDays.map((day) => {
-                            const entry = tabIndex === 1
+                            const entry = isAiTab
                               ? aiEntryMap[`${day}-${period.periodNumber}`]
                               : entryMap[`${day}-${period.periodNumber}`];
                             const substitute =
@@ -1351,7 +1371,7 @@ const TimetableMaster = () => {
                                     : entry
                                       ? getEntryColor(entry)
                                       : "white",
-                                  cursor: tabIndex === 0 ? "pointer" : "default",
+                                  cursor: isManualTab ? "pointer" : "default",
                                   position: "relative",
                                   border: hasSubstitute
                                     ? "2px solid #ff9800"
@@ -1360,13 +1380,13 @@ const TimetableMaster = () => {
                                       : undefined,
                                 }}
                                 onClick={() => {
-                                  if (tabIndex === 0) {
+                                  if (isManualTab) {
                                     handleSlotClick(day, period.periodNumber);
                                   }
                                 }}
                               >
                                 {entry ? (
-                                  <Box sx={{ position: "relative", pr: tabIndex === 0 ? 3 : 0, minHeight: 44, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-start", textAlign: "left" }}>
+                                  <Box sx={{ position: "relative", pr: isManualTab ? 3 : 0, minHeight: 44, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-start", textAlign: "left" }}>
                                     <Typography
                                       variant="body2"
                                       fontWeight={600}
@@ -1416,7 +1436,7 @@ const TimetableMaster = () => {
                                       />
                                     )}
 
-                                    {tabIndex === 0 && (
+                                    {isManualTab && (
                                       <IconButton
                                         size="small"
                                         sx={{
@@ -1496,7 +1516,7 @@ const TimetableMaster = () => {
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                     {allPeriods.map((period) => {
                       const isNonRegular = period.type !== "regular";
-                      const entry = tabIndex === 1
+                      const entry = isAiTab
                         ? aiEntryMap[`${currentDay}-${period.periodNumber}`]
                         : entryMap[`${currentDay}-${period.periodNumber}`];
                       const substitute = substituteMap[`${currentDay}-${period.periodNumber}`];
@@ -1537,12 +1557,12 @@ const TimetableMaster = () => {
                             borderRadius: 1.5,
                             borderColor: '#e2e8f0',
                             bgcolor: hasSubstitute ? '#fffbeb' : 'background.paper',
-                            cursor: tabIndex === 0 ? 'pointer' : 'default',
+                            cursor: isManualTab ? 'pointer' : 'default',
                             transition: 'background-color 0.15s ease',
                             '&:hover': { bgcolor: '#f8fafc' },
                           }}
                           onClick={() => {
-                            if (tabIndex === 0) {
+                            if (isManualTab) {
                               handleSlotClick(currentDay, period.periodNumber);
                             }
                           }}
@@ -1552,7 +1572,7 @@ const TimetableMaster = () => {
                               Period {period.periodNumber} • {formatSingleTime(period.startTime, timeFormat)} - {formatSingleTime(period.endTime, timeFormat)} ({period.duration}m)
                             </Typography>
 
-                            {entry && tabIndex === 0 && (
+                            {entry && isManualTab && (
                               <Box sx={{ display: 'flex', gap: 0.25 }}>
                                 <IconButton
                                   size="small"
@@ -1607,7 +1627,7 @@ const TimetableMaster = () => {
                               <Typography variant="body2" color="text.secondary" fontStyle="italic">
                                 No class scheduled
                               </Typography>
-                              {tabIndex === 0 && (
+                              {isManualTab && (
                                 <Typography variant="caption" color="primary" fontWeight={600}>
                                   + Assign
                                 </Typography>
@@ -1634,7 +1654,7 @@ const TimetableMaster = () => {
                   </Typography>
                   {allPeriods.map((period) => {
                     const isNonRegular = period.type !== "regular";
-                    const entry = tabIndex === 1
+                    const entry = isAiTab
                       ? aiEntryMap[`${day}-${period.periodNumber}`]
                       : entryMap[`${day}-${period.periodNumber}`];
                     const isOnLeave =
@@ -1694,7 +1714,7 @@ const TimetableMaster = () => {
                           bgcolor: entry
                             ? getEntryColor(entry)
                             : "action.hover",
-                          cursor: "pointer",
+                          cursor: isManualTab ? "pointer" : "default",
                           border:
                             isOnLeave && day === todayDayName
                               ? "2px solid #f44336"
@@ -1703,7 +1723,7 @@ const TimetableMaster = () => {
                           "&:hover": { transform: "scale(1.01)" },
                         }}
                         onClick={() =>
-                          handleSlotClick(day, period.periodNumber)
+                          isManualTab && handleSlotClick(day, period.periodNumber)
                         }
                       >
                         <Box sx={{ minWidth: 100 }}>
@@ -1746,18 +1766,20 @@ const TimetableMaster = () => {
                                   />
                                 )}
                               </Box>
-                              <DeleteIcon
-                                fontSize="small"
-                                sx={{
-                                  color: "error.light",
-                                  opacity: 0.5,
-                                  "&:hover": { opacity: 1 },
-                                }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteEntry(entry.entryId);
-                                }}
-                              />
+                              {isManualTab && (
+                                <DeleteIcon
+                                  fontSize="small"
+                                  sx={{
+                                    color: "error.light",
+                                    opacity: 0.5,
+                                    "&:hover": { opacity: 1 },
+                                  }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteEntry(entry.entryId);
+                                  }}
+                                />
+                              )}
                             </Box>
                           ) : (
                             <Typography
@@ -1779,14 +1801,14 @@ const TimetableMaster = () => {
         </Box>
       )}
 
-      {!selectedClass && tabIndex !== 3 && (
+      {!selectedClass && !isRejectedTab && (
         <Alert severity="info">
           Please select a class and section to view or edit the timetable.
         </Alert>
       )}
 
-      {/* Tab 4: Rejected Submissions */}
-      {tabIndex === 3 && (
+      {/* Rejected Submissions */}
+      {isRejectedTab && (
         <Paper sx={{ p: 0, mt: 0, borderRadius: 2, overflow: 'hidden' }}>
           <Box sx={{ p: 2, bgcolor: '#fff5f5', borderLeft: '4px solid #ef4444', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
             <Box>

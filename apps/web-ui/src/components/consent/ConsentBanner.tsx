@@ -1,224 +1,279 @@
 /**
- * ConsentBanner — DPDP Act compliance component
+ * ConsentBanner — DPDP Act Compliance Component
  *
- * Displays a consent banner for non-essential data processors (Google Charts).
- * Only shown when the user has not yet made a consent decision.
+ * Professional bottom-docked privacy consent banner modeled after
+ * modern enterprise standards (Stripe, Vercel, GitHub, Apple).
  *
- * Decisions:
- *  - "Accept All"       → enables analytics/Google Charts
- *  - "Necessary Only"   → blocks non-essential scripts
- *
- * The banner itself is essential infrastructure and does not require consent.
- *
- * [LEGAL REVIEW REQUIRED] — Banner copy should be reviewed by a data protection
- * lawyer before production deployment.
+ * Only shown until the user makes a consent decision.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
   Button,
-  Fade,
+  Slide,
   Paper,
-  Divider,
   Chip,
+  Collapse,
 } from '@mui/material';
-import { Shield, Cookie, OpenInNew } from '@mui/icons-material';
+import {
+  ShieldOutlined as ShieldIcon,
+  CookieOutlined as CookieIcon,
+  KeyboardArrowDown as ArrowDownIcon,
+  KeyboardArrowUp as ArrowUpIcon,
+  OpenInNew as ExternalIcon,
+} from '@mui/icons-material';
 import { useConsent } from './useConsent';
 import { useNavigate } from 'react-router-dom';
 
 const ConsentBanner: React.FC = () => {
   const { hasDecided, acceptAll, acceptNecessaryOnly } = useConsent();
+  const [showDetails, setShowDetails] = useState(false);
   const navigate = useNavigate();
 
   if (hasDecided) return null;
 
   return (
-    <Fade in timeout={800}>
+    <Slide direction="up" in mountOnEnter unmountOnExit timeout={400}>
       <Paper
-        elevation={12}
+        elevation={0}
         sx={{
           position: 'fixed',
-          bottom: { xs: 0, sm: 24 },
-          left: { xs: 0, sm: '50%' },
-          transform: { xs: 'none', sm: 'translateX(-50%)' },
-          width: { xs: '100%', sm: 'auto' },
-          minWidth: { sm: 540 },
-          maxWidth: { sm: 640 },
-          zIndex: 9999,
-          borderRadius: { xs: '16px 16px 0 0', sm: '16px' },
-          overflow: 'hidden',
-          border: '1px solid rgba(99,102,241,0.2)',
-          background: 'linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%)',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 99999,
+          bgcolor: 'rgba(255, 255, 255, 0.98)',
+          backdropFilter: 'blur(16px)',
+          borderTop: '1px solid #e2e8f0',
+          boxShadow: '0 -10px 40px rgba(0, 0, 0, 0.08), 0 -2px 6px rgba(0, 0, 0, 0.02)',
+          px: { xs: 2, sm: 3, md: 4 },
+          py: { xs: 2, sm: 2.2 },
         }}
       >
-        {/* Header */}
         <Box
           sx={{
-            px: 3,
-            pt: 2.5,
-            pb: 1.5,
+            maxWidth: 1320,
+            mx: 'auto',
             display: 'flex',
-            alignItems: 'center',
-            gap: 1.5,
-            borderBottom: '1px solid rgba(255,255,255,0.07)',
+            flexDirection: { xs: 'column', md: 'row' },
+            alignItems: { xs: 'stretch', md: 'center' },
+            justifyContent: 'space-between',
+            gap: { xs: 2, md: 3 },
           }}
         >
-          <Box
-            sx={{
-              width: 36,
-              height: 36,
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <Cookie sx={{ color: 'white', fontSize: 18 }} />
-          </Box>
-          <Box>
-            <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: 'white', lineHeight: 1.3 }}>
-              Your Privacy Choices
-            </Typography>
-            <Typography sx={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.5)', mt: 0.2 }}>
-              Under the Digital Personal Data Protection Act 2023 (India)
-            </Typography>
-          </Box>
-          <Chip
-            icon={<Shield sx={{ fontSize: 12 }} />}
-            label="DPDP Act"
-            size="small"
-            sx={{
-              ml: 'auto',
-              fontSize: '0.6rem',
-              fontWeight: 700,
-              bgcolor: 'rgba(99,102,241,0.2)',
-              color: '#A5B4FC',
-              border: '1px solid rgba(99,102,241,0.3)',
-              '& .MuiChip-icon': { color: '#A5B4FC' },
-            }}
-          />
-        </Box>
-
-        {/* Body */}
-        <Box sx={{ px: 3, py: 2 }}>
-          {/* [LEGAL REVIEW REQUIRED] Banner copy below */}
-          <Typography sx={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.65, mb: 1.5 }}>
-            We use <strong style={{ color: 'white' }}>necessary cookies</strong> to operate this platform (authentication, session management). We also use <strong style={{ color: 'white' }}>Google Charts</strong> to render dashboard analytics, which may send data to Google's servers.
-          </Typography>
-          <Typography sx={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.55)', lineHeight: 1.6 }}>
-            You may choose <em>Necessary Only</em> to block Google Charts without affecting platform functionality. Your choice is stored locally and can be changed at any time via the{' '}
+          {/* Left: Info section */}
+          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, flex: 1 }}>
             <Box
-              component="span"
-              onClick={() => navigate('/privacy')}
               sx={{
-                color: '#A5B4FC',
-                cursor: 'pointer',
-                fontWeight: 600,
-                textDecoration: 'underline',
-                '&:hover': { color: '#C4B5FD' },
+                width: 40,
+                height: 40,
+                borderRadius: '10px',
+                bgcolor: '#f1f5f9',
+                border: '1px solid #e2e8f0',
+                display: { xs: 'none', sm: 'flex' },
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                color: '#334155',
+                mt: 0.2,
               }}
             >
-              Privacy Policy
+              <CookieIcon sx={{ fontSize: 22 }} />
             </Box>
-            .
-          </Typography>
 
-          {/* Third-party disclosure */}
-          <Box
-            sx={{
-              mt: 2,
-              p: 1.5,
-              borderRadius: '10px',
-              bgcolor: 'rgba(255,255,255,0.04)',
-              border: '1px solid rgba(255,255,255,0.07)',
-            }}
-          >
-            <Typography sx={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.4)', mb: 1, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              Non-essential third parties (require consent)
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Box
-                sx={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  bgcolor: '#F59E0B',
-                  flexShrink: 0,
-                }}
-              />
-              <Typography sx={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.65)', flex: 1 }}>
-                <strong style={{ color: 'white' }}>Google Charts</strong> — Dashboard visualisations (gstatic.com)
-              </Typography>
-              <Box
-                component="a"
-                href="https://policies.google.com/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                sx={{ color: '#A5B4FC', display: 'flex', alignItems: 'center' }}
-              >
-                <OpenInNew sx={{ fontSize: 12 }} />
+            <Box sx={{ flex: 1 }}>
+              {/* Header line */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 0.5 }}>
+                <Typography
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: { xs: '0.92rem', sm: '0.98rem' },
+                    color: '#0f172a',
+                    letterSpacing: '-0.01em',
+                  }}
+                >
+                  Privacy & Cookie Preferences
+                </Typography>
+                <Chip
+                  icon={<ShieldIcon sx={{ fontSize: '12px !important', color: '#475569' }} />}
+                  label="DPDP Act 2023 Compliant"
+                  size="small"
+                  sx={{
+                    fontSize: '0.68rem',
+                    fontWeight: 600,
+                    bgcolor: '#f8fafc',
+                    color: '#475569',
+                    border: '1px solid #e2e8f0',
+                    height: 22,
+                  }}
+                />
               </Box>
+
+              {/* Description */}
+              <Typography
+                sx={{
+                  fontSize: { xs: '0.8rem', sm: '0.84rem' },
+                  color: '#475569',
+                  lineHeight: 1.55,
+                  maxWidth: { md: 780, lg: 900 },
+                }}
+              >
+                We use essential cookies for secure login and session management. We also use Google Charts for analytics visualizations. You can choose to accept all or keep only essential cookies.{' '}
+                <Box
+                  component="span"
+                  onClick={() => navigate('/privacy')}
+                  sx={{
+                    color: '#2563eb',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    textDecoration: 'underline',
+                    '&:hover': { color: '#1d4ed8' },
+                  }}
+                >
+                  Privacy Policy
+                </Box>
+                .
+              </Typography>
+
+              {/* Collapsible Details */}
+              <Collapse in={showDetails}>
+                <Box
+                  sx={{
+                    mt: 1.5,
+                    p: 1.5,
+                    borderRadius: '8px',
+                    bgcolor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    maxWidth: 780,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      color: '#64748b',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.04em',
+                      mb: 0.8,
+                    }}
+                  >
+                    Non-Essential Processors (Requires Consent)
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#f59e0b' }} />
+                      <Typography sx={{ fontSize: '0.78rem', color: '#334155' }}>
+                        <strong style={{ color: '#0f172a' }}>Google Charts</strong> — Dashboard visual analytics & charts (gstatic.com)
+                      </Typography>
+                    </Box>
+                    <Box
+                      component="a"
+                      href="https://policies.google.com/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{
+                        color: '#64748b',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        fontSize: '0.72rem',
+                        textDecoration: 'none',
+                        '&:hover': { color: '#0f172a' },
+                      }}
+                    >
+                      Policy <ExternalIcon sx={{ fontSize: 12 }} />
+                    </Box>
+                  </Box>
+                </Box>
+              </Collapse>
+
+              {/* Toggle details text button */}
+              <Typography
+                component="button"
+                onClick={() => setShowDetails(prev => !prev)}
+                sx={{
+                  mt: 0.6,
+                  fontSize: '0.74rem',
+                  fontWeight: 600,
+                  color: '#64748b',
+                  background: 'none',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.3,
+                  '&:hover': { color: '#0f172a' },
+                }}
+              >
+                {showDetails ? 'Hide details' : 'View details'}
+                {showDetails ? <ArrowUpIcon sx={{ fontSize: 14 }} /> : <ArrowDownIcon sx={{ fontSize: 14 }} />}
+              </Typography>
             </Box>
           </Box>
-        </Box>
 
-        <Divider sx={{ borderColor: 'rgba(255,255,255,0.07)' }} />
-
-        {/* Actions */}
-        <Box
-          sx={{
-            px: 3,
-            py: 2,
-            display: 'flex',
-            gap: 1.5,
-            flexDirection: { xs: 'column', sm: 'row' },
-          }}
-        >
-          <Button
-            fullWidth
-            variant="outlined"
-            onClick={acceptNecessaryOnly}
+          {/* Right: Actions */}
+          <Box
             sx={{
-              borderRadius: '10px',
-              textTransform: 'none',
-              fontWeight: 600,
-              fontSize: '0.82rem',
-              py: 1.2,
-              borderColor: 'rgba(255,255,255,0.2)',
-              color: 'rgba(255,255,255,0.7)',
-              '&:hover': { borderColor: 'rgba(255,255,255,0.4)', bgcolor: 'rgba(255,255,255,0.05)' },
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1.5,
+              flexShrink: 0,
+              width: { xs: '100%', sm: 'auto' },
             }}
           >
-            Necessary Only
-          </Button>
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={acceptAll}
-            sx={{
-              borderRadius: '10px',
-              textTransform: 'none',
-              fontWeight: 700,
-              fontSize: '0.82rem',
-              py: 1.2,
-              background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
-              boxShadow: '0 4px 16px rgba(99,102,241,0.45)',
-              '&:hover': {
-                boxShadow: '0 6px 20px rgba(99,102,241,0.6)',
-                transform: 'translateY(-1px)',
-              },
-              transition: 'all 0.2s',
-            }}
-          >
-            Accept All
-          </Button>
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={acceptNecessaryOnly}
+              sx={{
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.84rem',
+                py: 1,
+                px: { xs: 2, sm: 2.5 },
+                borderColor: '#cbd5e1',
+                color: '#334155',
+                bgcolor: '#ffffff',
+                minWidth: { sm: 140 },
+                '&:hover': {
+                  borderColor: '#94a3b8',
+                  bgcolor: '#f8fafc',
+                },
+              }}
+            >
+              Necessary Only
+            </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={acceptAll}
+              sx={{
+                borderRadius: '8px',
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '0.84rem',
+                py: 1,
+                px: { xs: 2, sm: 3 },
+                bgcolor: '#2563eb',
+                color: '#ffffff',
+                boxShadow: 'none',
+                minWidth: { sm: 130 },
+                '&:hover': {
+                  bgcolor: '#1d4ed8',
+                  boxShadow: 'none',
+                },
+              }}
+            >
+              Accept All
+            </Button>
+          </Box>
         </Box>
       </Paper>
-    </Fade>
+    </Slide>
   );
 };
 

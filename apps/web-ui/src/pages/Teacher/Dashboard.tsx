@@ -37,6 +37,7 @@ import { useTimeSettingsStore } from '../../stores/timeSettingsStore';
 import { formatTimeDisplay } from '../../utils/timeUtils';
 import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
 import ExamPerformanceChart from '../../components/Dashboard/ExamPerformanceChart';
+import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidget';
 import type { Class, Student } from '../../types';
 
 const TeacherDashboard: React.FC = () => {
@@ -206,6 +207,9 @@ const TeacherDashboard: React.FC = () => {
                     Failed to load dashboard stats. Please try again.
                 </Alert>
             )}
+
+            {/* Upcoming Events & Schedule Gadget */}
+            <UpcomingEventsWidget calendarPath="/teacher/calendar" />
 
             {/* Quick Stats Grid */}
             <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mb: { xs: 2, sm: 3 } }}>

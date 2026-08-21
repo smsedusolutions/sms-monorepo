@@ -5,13 +5,7 @@
  * (and therefore contact gstatic.com) when the user has granted
  * analytics consent via the ConsentBanner.
  *
- * When consent is not granted, a privacy-friendly placeholder is shown
- * so the UI layout is preserved.
- *
- * Usage:
- *   <ConsentGatedChart height={260}>
- *     <Chart chartType="ColumnChart" data={...} />
- *   </ConsentGatedChart>
+ * Minimal, clean styling with neutral tones.
  */
 
 import React from 'react';
@@ -34,11 +28,9 @@ const ConsentGatedChart: React.FC<ConsentGatedChartProps> = ({
   const navigate = useNavigate();
 
   if (hasAnalyticsConsent) {
-    // Consent granted — render the chart normally
     return <>{children}</>;
   }
 
-  // Consent not granted — show placeholder
   const message = hasDecided
     ? 'Analytics charts are disabled (Necessary Only consent).'
     : 'Please choose your privacy preferences to enable charts.';
@@ -51,51 +43,55 @@ const ConsentGatedChart: React.FC<ConsentGatedChartProps> = ({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 1.5,
-        bgcolor: 'rgba(99,102,241,0.04)',
-        border: '1px dashed rgba(99,102,241,0.25)',
-        borderRadius: '12px',
+        gap: 1.2,
+        bgcolor: '#f8fafc',
+        border: '1px dashed #cbd5e1',
+        borderRadius: '10px',
         p: 3,
         textAlign: 'center',
       }}
     >
       <Box
         sx={{
-          width: 44,
-          height: 44,
-          borderRadius: '12px',
-          bgcolor: 'rgba(99,102,241,0.1)',
+          width: 40,
+          height: 40,
+          borderRadius: '8px',
+          bgcolor: '#f1f5f9',
+          border: '1px solid #e2e8f0',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
         {hasDecided ? (
-          <BarChart sx={{ color: '#6366F1', fontSize: 22 }} />
+          <BarChart sx={{ color: '#475569', fontSize: 20 }} />
         ) : (
-          <Lock sx={{ color: '#6366F1', fontSize: 22 }} />
+          <Lock sx={{ color: '#475569', fontSize: 20 }} />
         )}
       </Box>
       <Box>
-        <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#374151', mb: 0.5 }}>
+        <Typography sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#0f172a', mb: 0.3 }}>
           {hasDecided ? 'Chart Hidden' : 'Consent Required'}
         </Typography>
-        <Typography sx={{ fontSize: '0.78rem', color: '#64748B', maxWidth: 240, lineHeight: 1.5 }}>
+        <Typography sx={{ fontSize: '0.78rem', color: '#64748b', maxWidth: 260, lineHeight: 1.5 }}>
           {message}
         </Typography>
       </Box>
-      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center' }}>
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center', mt: 0.5 }}>
         {!hasDecided && (
           <Button
             size="small"
             variant="contained"
             onClick={acceptAll}
             sx={{
-              borderRadius: '8px',
+              borderRadius: '6px',
               textTransform: 'none',
               fontWeight: 600,
               fontSize: '0.75rem',
-              background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
+              bgcolor: '#0f172a',
+              color: '#ffffff',
+              boxShadow: 'none',
+              '&:hover': { bgcolor: '#1e293b', boxShadow: 'none' },
             }}
           >
             Accept Analytics
@@ -106,12 +102,13 @@ const ConsentGatedChart: React.FC<ConsentGatedChartProps> = ({
           variant="outlined"
           onClick={() => navigate('/privacy#consent')}
           sx={{
-            borderRadius: '8px',
+            borderRadius: '6px',
             textTransform: 'none',
             fontWeight: 600,
             fontSize: '0.75rem',
-            borderColor: '#6366F1',
-            color: '#6366F1',
+            borderColor: '#cbd5e1',
+            color: '#475569',
+            '&:hover': { borderColor: '#94a3b8', bgcolor: '#ffffff' },
           }}
         >
           {hasDecided ? 'Change Preferences' : 'Privacy Policy'}
