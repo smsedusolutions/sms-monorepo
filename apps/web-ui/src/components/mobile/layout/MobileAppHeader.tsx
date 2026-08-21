@@ -3,17 +3,22 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box, Typography, IconButton, Avatar, Badge,
   Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
-  Tooltip,
+  Tooltip, Menu, MenuItem, Divider,
 } from '@mui/material';
 import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
 import NotificationsRoundedIcon from '@mui/icons-material/NotificationsRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
+import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import PersonOutlineRoundedIcon from '@mui/icons-material/PersonOutlineRounded';
 import { useUserStore } from '../../../stores/userStore';
 import { useRoleStore } from '../../../stores/roleStore';
 import { useAuth } from '../../../context/AuthContext';
 import { useBreadcrumbs } from '../../../hooks/useBreadcrumbs';
 import { useGetUnreadCount } from '../../../queries/Notification';
+import { useTimeSettingsStore } from '../../../stores/timeSettingsStore';
 import TokenService from '../../../queries/token/tokenService';
 import { AppButton } from '../../shared/AppButton';
 
@@ -36,7 +41,11 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
   const { getBasePath } = useRoleStore();
   const { logout } = useAuth();
   const { items: breadcrumbs } = useBreadcrumbs();
+  const { timeFormat, setTimeFormat } = useTimeSettingsStore();
+
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [settingsAnchorEl, setSettingsAnchorEl] = useState<null | HTMLElement>(null);
+  const [showTimeFormatOptions, setShowTimeFormatOptions] = useState(false);
 
   const userRole = TokenService.getRole() || user?.role || '';
   const schoolId = TokenService.getSchoolId() || school?.schoolId || user?.schoolId || '';
@@ -82,8 +91,14 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
     }
   };
 
-  const handleSettings = () => {
-    navigate(profilePath);
+  const handleSettingsClick = (e: React.MouseEvent<HTMLElement>) => {
+    setSettingsAnchorEl(e.currentTarget);
+    setShowTimeFormatOptions(false);
+  };
+
+  const handleCloseSettings = () => {
+    setSettingsAnchorEl(null);
+    setShowTimeFormatOptions(false);
   };
 
   const handleLogout = () => {
@@ -202,15 +217,16 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
                   </IconButton>
                 </Tooltip>
 
-                {/* Settings / Profile Icon */}
-                <Tooltip title="Settings">
+                {/* Settings / Format Changer Icon */}
+                <Tooltip title="Settings & Preferences">
                   <IconButton
-                    onClick={handleSettings}
+                    onClick={handleSettingsClick}
                     size="small"
                     sx={{
                       width: 32,
                       height: 32,
-                      color: '#475569',
+                      color: settingsAnchorEl ? '#6366f1' : '#475569',
+                      bgcolor: settingsAnchorEl ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
                       borderRadius: '8px',
                       '&:active': { transform: 'scale(0.92)' },
                     }}
@@ -241,7 +257,7 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
 
                 {/* User Profile Avatar */}
                 <IconButton
-                  onClick={onOpenMore || handleSettings}
+                  onClick={onOpenMore || (() => navigate(profilePath))}
                   size="small"
                   sx={{
                     p: 0,
@@ -271,6 +287,148 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
           </Box>
         </Box>
       </header>
+
+      {/* Settings & Preferences Menu for Mobile */}
+      <Menu
+        anchorEl={settingsAnchorEl}
+        open={Boolean(settingsAnchorEl)}
+        onClose={handleCloseSettings}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+        PaperProps={{
+          sx: {
+            mt: 1,
+            width: 250,
+            borderRadius: 2,
+            bgcolor: '#1e293b',
+            color: '#ffffff',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 12px 36px rgba(0, 0, 0, 0.45)',
+            py: 0.5,
+          },
+        }}
+      >
+        <Box sx={{ px: 2, py: 1 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: '#94a3b8',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              fontSize: '0.65rem',
+              letterSpacing: '0.5px',
+            }}
+          >
+            Settings & Preferences
+          </Typography>
+        </Box>
+
+        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)', my: 0.5 }} />
+
+        {/* Time Format Header Item */}
+        <MenuItem
+          onClick={() => setShowTimeFormatOptions((prev) => !prev)}
+          sx={{
+            py: 1,
+            px: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.08)' },
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+            <AccessTimeRoundedIcon sx={{ fontSize: 18, color: '#38bdf8' }} />
+            <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#f8fafc' }}>
+              Time Format
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+            <Typography sx={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600 }}>
+              {timeFormat === '12h' ? '12h (AM/PM)' : '24h'}
+            </Typography>
+            <ChevronRightRoundedIcon
+              sx={{
+                fontSize: 16,
+                color: '#94a3b8',
+                transform: showTimeFormatOptions ? 'rotate(90deg)' : 'none',
+                transition: 'transform 0.2s',
+              }}
+            />
+          </Box>
+        </MenuItem>
+
+        {/* Time Format Sub-Options */}
+        {showTimeFormatOptions && (
+          <Box sx={{ bgcolor: 'rgba(0, 0, 0, 0.25)', py: 0.5, mx: 1, borderRadius: 1.5, mb: 0.5 }}>
+            <MenuItem
+              selected={timeFormat === '12h'}
+              onClick={() => {
+                setTimeFormat('12h');
+                handleCloseSettings();
+              }}
+              sx={{
+                py: 0.75,
+                px: 2,
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '0.78rem',
+                color: timeFormat === '12h' ? '#38bdf8' : '#e2e8f0',
+                fontWeight: timeFormat === '12h' ? 700 : 500,
+                '&.Mui-selected': { bgcolor: 'rgba(56, 189, 248, 0.12)' },
+                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.06)' },
+              }}
+            >
+              <span>12 Hours (AM/PM)</span>
+              {timeFormat === '12h' && <CheckRoundedIcon sx={{ fontSize: 16, color: '#38bdf8' }} />}
+            </MenuItem>
+            <MenuItem
+              selected={timeFormat === '24h'}
+              onClick={() => {
+                setTimeFormat('24h');
+                handleCloseSettings();
+              }}
+              sx={{
+                py: 0.75,
+                px: 2,
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '0.78rem',
+                color: timeFormat === '24h' ? '#38bdf8' : '#e2e8f0',
+                fontWeight: timeFormat === '24h' ? 700 : 500,
+                '&.Mui-selected': { bgcolor: 'rgba(56, 189, 248, 0.12)' },
+                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.06)' },
+              }}
+            >
+              <span>24 Hours</span>
+              {timeFormat === '24h' && <CheckRoundedIcon sx={{ fontSize: 16, color: '#38bdf8' }} />}
+            </MenuItem>
+          </Box>
+        )}
+
+        <Divider sx={{ borderColor: 'rgba(255, 255, 255, 0.08)', my: 0.5 }} />
+
+        {/* Profile Link Option */}
+        <MenuItem
+          onClick={() => {
+            handleCloseSettings();
+            navigate(profilePath);
+          }}
+          sx={{
+            py: 1,
+            px: 2,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.25,
+            '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.08)' },
+          }}
+        >
+          <PersonOutlineRoundedIcon sx={{ fontSize: 18, color: '#a78bfa' }} />
+          <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#f8fafc' }}>
+            My Profile
+          </Typography>
+        </MenuItem>
+      </Menu>
 
       {/* Logout Confirmation Dialog */}
       <Dialog
