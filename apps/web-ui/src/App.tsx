@@ -6,6 +6,7 @@ import MainRouters from "./routers/MainRouters";
 import { AuthProvider } from "./context/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import GlobalNotification from "./components/GlobalNotification";
+import ConsentBanner from "./components/consent/ConsentBanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +29,8 @@ function App() {
           <GlobalNotification />
           <AuthProvider>
             <BrowserRouter>
+              {/* DPDP Act 2023 — Consent banner for non-essential third-party services */}
+              <ConsentBanner />
               <MainRouters />
             </BrowserRouter>
           </AuthProvider>
@@ -38,5 +41,3 @@ function App() {
 }
 
 export default App;
-
-

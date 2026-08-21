@@ -12,6 +12,11 @@ const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
 const UnauthorizedPage = lazy(() => import("../pages/UnauthorizedPage"));
 const CreateSuperAdminSecret = lazy(() => import("../pages/SuperAdmin/CreateSuperAdminSecret"));
 
+// Legal / DPDP Compliance Pages
+const PrivacyPolicy = lazy(() => import("../pages/Legal/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("../pages/Legal/TermsOfService"));
+const DataRightsRequest = lazy(() => import("../pages/Legal/DataRightsRequest"));
+
 // Super Admin Pages
 const SuperAdminDashboard = lazy(() => import("../pages/SuperAdmin/Dashboard"));
 const Schools = lazy(() => import("../pages/SuperAdmin/Schools"));
@@ -184,6 +189,11 @@ const MainRouters = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/secret-setup-super-admin" element={<CreateSuperAdminSecret />} />
+
+        {/* Legal / DPDP Compliance Routes — public, no authentication required */}
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/data-rights" element={<DataRightsRequest />} />
 
         {/* Super Admin Routes */}
         <Route element={<ProtectedRoute allowedRoles={["super_admin"]} />}>

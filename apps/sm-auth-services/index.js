@@ -6,6 +6,8 @@ const { matchOrigin } = require('@sms/shared/utils');
 const { connectDB, ensureDbConnection } = require('./configs/db');
 const authRoutes = require('./routes/auth.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+// DPDP Act 2023 — consent audit routes
+const consentRoutes = require('./routes/consent.routes');
 
 const app = express();
 
@@ -44,6 +46,8 @@ app.use(ensureDbConnection);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/auth/:schoolId/dashboard', dashboardRoutes);
+// DPDP Act 2023 — consent audit log endpoints
+app.use('/api/auth/consent', consentRoutes);
 
 // Health check endpoint
 app.get('/health', (_req, res) => {

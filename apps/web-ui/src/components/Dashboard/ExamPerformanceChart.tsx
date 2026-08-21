@@ -3,6 +3,7 @@ import { Box, Typography, Skeleton, Paper, Chip } from '@mui/material';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import { Chart } from 'react-google-charts';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import ConsentGatedChart from '../consent/ConsentGatedChart';
 
 interface ExamPerformanceChartProps {
     passed?: number;
@@ -125,13 +126,15 @@ export const ExamPerformanceChart: React.FC<ExamPerformanceChartProps> = ({
                     </Typography>
                 </Box>
             ) : (
-                <Chart
-                    chartType="PieChart"
-                    data={chartData}
-                    options={options}
-                    width="100%"
-                    height={isMobile ? '200px' : '240px'}
-                />
+                <ConsentGatedChart height={isMobile ? 200 : 240}>
+                    <Chart
+                        chartType="PieChart"
+                        data={chartData}
+                        options={options}
+                        width="100%"
+                        height={isMobile ? '200px' : '240px'}
+                    />
+                </ConsentGatedChart>
             )}
         </Paper>
     );
