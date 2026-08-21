@@ -59,6 +59,9 @@ export * from "./Leave";
 // Fee Management (Payment Service)
 export * from "./Fee";
 
+// Academic Calendar (Academics Service)
+export * from "./Calendar";
+
 export { default as useApi } from "./useApi";
 
 

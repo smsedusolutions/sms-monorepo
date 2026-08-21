@@ -13,6 +13,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import DashboardCard from '../../components/Dashboard/DashboardCard';
+import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidget';
 import { useGetSchoolDashboardStats } from '../../queries/SchoolDashboard';
 import { useGetLeaveStats } from '../../queries/Leave';
 import { useGetTimetableSchedules } from '../../queries/Timetable';
@@ -196,6 +197,9 @@ const PrincipalDashboard = () => {
                     Failed to load dashboard stats. Please try again.
                 </Alert>
             )}
+
+            {/* Upcoming Events Gadget */}
+            <UpcomingEventsWidget calendarPath="/principal/calendar" />
 
             {/* Stats Cards - 2x2 on mobile, 4 on desktop */}
             <Box sx={{ mb: { xs: 2.5, sm: 3.5 } }}>

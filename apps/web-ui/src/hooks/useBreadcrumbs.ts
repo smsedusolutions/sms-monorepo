@@ -131,6 +131,23 @@ const ROUTE_LABELS: Record<string, string> = {
   '/parent/transport': 'Transport Info',
   '/parent/fees': 'Fees',
 
+  // Principal Routes
+  '/principal/dashboard': 'Dashboard',
+  '/principal/teachers': 'Teachers',
+  '/principal/students': 'Students',
+  '/principal/attendance': 'Attendance',
+  '/principal/timetable': 'Timetable',
+  '/principal/timetable/review': 'Timetable Review',
+  '/principal/calendar': 'Calendar',
+  '/principal/exam': 'Exam',
+  '/principal/exam/approval': 'Exam Approval',
+  '/principal/exam/results': 'Exam Results',
+  '/principal/leave': 'Leave',
+  '/principal/leave/teacher-requests': 'Teacher Leave Requests',
+  '/principal/announcements': 'Announcements',
+  '/principal/notifications': 'Notifications',
+  '/principal/profile': 'My Profile',
+
   // Driver Routes
   '/driver/dashboard': 'Dashboard',
   '/driver/profile': 'My Profile',

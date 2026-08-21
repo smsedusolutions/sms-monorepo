@@ -77,6 +77,7 @@ const ExamScheduler = lazy(() => import("../pages/SchoolAdmin/Exam/ExamScheduler
 const Gradebook = lazy(() => import("../pages/SchoolAdmin/Exam/Gradebook"));
 const FeeDefaulterList = lazy(() => import("../pages/SchoolAdmin/Fees/Reports/DefaulterList"));
 const SchoolCalendar = lazy(() => import("../pages/SchoolAdmin/Calendar/SchoolCalendar"));
+const AcademicCalendar = lazy(() => import("../pages/Shared/Calendar/AcademicCalendar"));
 const PTMManagement = lazy(() => import("../pages/SchoolAdmin/PTM/PTMManagement"));
 const DisciplineRecord = lazy(() => import("../pages/SchoolAdmin/Students/DisciplineRecord"));
 
@@ -329,6 +330,9 @@ const MainRouters = () => {
           {/* PTM Schedule (Teacher) */}
           <Route path="/teacher/ptm" element={<TeacherPTMSchedule />} />
 
+          {/* Academic Calendar (Teacher) */}
+          <Route path="/teacher/calendar" element={<AcademicCalendar />} />
+
           {/* Announcements Routes (Teacher) */}
           <Route path="/teacher/announcements" element={<TeacherAnnouncements />} />
 
@@ -355,6 +359,7 @@ const MainRouters = () => {
           <Route path="/student/leave/apply" element={<StudentApplyLeave />} />
           <Route path="/student/leave/my" element={<StudentMyLeaves />} />
           <Route path="/student/timetable" element={<StudentTimetable />} />
+          <Route path="/student/calendar" element={<AcademicCalendar />} />
           <Route path="/student/exam/my-exams" element={<MyExams />} />
           <Route path="/student/homework" element={<StudentHomework />} />
           <Route path="/student/announcements" element={<StudentAnnouncements />} />
@@ -374,6 +379,7 @@ const MainRouters = () => {
             <Route path="/parent/attendance" element={<ParentAttendance />} />
             <Route path="/parent/teachers" element={<ParentTeachers />} />
             <Route path="/parent/timetable" element={<ParentTimetable />} />
+            <Route path="/parent/calendar" element={<AcademicCalendar />} />
             <Route path="/parent/leave/apply" element={<ParentApplyLeave />} />
             <Route path="/parent/leave/history" element={<ParentLeaveHistory />} />
             <Route path="/parent/exam/scheduler" element={<ParentExamSchedule />} />
@@ -396,6 +402,7 @@ const MainRouters = () => {
           <Route path="/principal/exam/approval" element={<PrincipalExamApproval />} />
           <Route path="/principal/exam/results" element={<PrincipalExamResults />} />
           <Route path="/principal/attendance" element={<PrincipalAttendance />} />
+          <Route path="/principal/calendar" element={<AcademicCalendar />} />
           <Route path="/principal/teachers" element={<PrincipalTeachers />} />
           <Route path="/principal/students" element={<PrincipalStudents />} />
           <Route path="/principal/announcements" element={<PrincipalAnnouncements />} />

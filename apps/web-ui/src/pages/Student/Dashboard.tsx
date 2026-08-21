@@ -27,6 +27,7 @@ import { useGetAnnouncements } from '../../queries/Announcement';
 import { useGetHomeworkByStudent } from '../../queries/Homework';
 import { useGetSubjects } from '../../queries/Subject';
 import { useGetTeachers } from '../../queries/Teacher';
+import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidget';
 
 const StudentDashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -284,6 +285,9 @@ const StudentDashboard: React.FC = () => {
                     </Grid>
                 )}
             </Paper>
+
+            {/* ── Upcoming Events & Exams Gadget ── */}
+            <UpcomingEventsWidget calendarPath="/student/calendar" />
 
             {/* ── 3 Main Dashboard Cards: Timetable, Homework, Announcements ── */}
             <Grid container spacing={{ xs: 2, sm: 2.5 }} sx={{ mb: { xs: 2, sm: 3 } }}>
