@@ -11,4 +11,5 @@ module.exports = {
   ...require("./activityLogger"),
   ...require("./originMatcher"),
   ...require("./idGenerator"),
+  ...require("./passwordUtils"),
 };

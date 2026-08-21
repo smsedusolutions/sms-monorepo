@@ -17,14 +17,11 @@ import {
   School as SchoolIcon,
   ArrowForward,
   VerifiedUser,
-  HeadsetMic,
-  Policy,
-  Article,
   LocationOn,
   Phone,
   Language,
 } from '@mui/icons-material';
-import { useLogin } from '../queries/Auth';
+import { useLogin, useRecordConsent } from '../queries/Auth';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import TokenService from '../queries/token/tokenService';
@@ -35,6 +32,7 @@ import { AppButton } from '../components/shared/AppButton';
 import useSubdomainSchool from '../hooks/useSubdomainSchool';
 import LoginPageSkeleton from '../components/login/LoginPageSkeleton';
 import CustomLoginPage from '../components/login/CustomLoginPage';
+import LegalFooter from '../components/shared/LegalFooter';
 
 interface LoginForm { email: string; password: string; }
 interface LoginErrors { email?: string; password?: string; }
@@ -45,8 +43,12 @@ const LoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  // DPDP Act §6 — explicit opt-in consent before processing personal data
+  // [LEGAL REVIEW REQUIRED] Consent wording below must be reviewed by a lawyer
+  const [consentGiven, setConsentGiven] = useState(false);
 
   const loginMutation = useLogin();
+  const recordConsentMutation = useRecordConsent();
   const isLoading = loginMutation.isPending;
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -118,6 +120,19 @@ const LoginPage: React.FC = () => {
           if (res?.data?.token) {
             login(res.data.token);
             fetchProfile(); // fire-and-forget — don't block navigation
+
+            // Record DPDP consent record in backend (fire-and-forget)
+            const user = res?.data?.user;
+            if (consentGiven && user) {
+              recordConsentMutation.mutate({
+                userId: user.userId || user.adminId || formData.email,
+                schoolId: user.schoolId || null,
+                role: user.role || 'student',
+                email: user.email || formData.email,
+                source: 'login',
+              });
+            }
+
             navigate(getRedirectPath(TokenService.getRole() || 'super_admin'));
           } else {
             setLoginError('Invalid server response - no token received');
@@ -144,6 +159,18 @@ const LoginPage: React.FC = () => {
           if (res?.data?.token) {
             login(res.data.token);
             fetchProfile(); // fire-and-forget — don't block navigation
+
+            const user = res?.data?.user;
+            if (user) {
+              recordConsentMutation.mutate({
+                userId: user.userId || user.adminId || payload.email,
+                schoolId: user.schoolId || null,
+                role: user.role || 'student',
+                email: user.email || payload.email,
+                source: 'login',
+              });
+            }
+
             navigate(
               getRedirectPath(TokenService.getRole() || 'super_admin')
             );
@@ -886,7 +913,45 @@ const LoginPage: React.FC = () => {
                     Remember me for 30 days
                   </Typography>
                 }
-                sx={{ mb: 3, mt: 0.5 }}
+                sx={{ mb: 1.5, mt: 0.5 }}
+              />
+
+              {/* DPDP Act §6 — Per-purpose opt-in consent checkbox */}
+              {/* [LEGAL REVIEW REQUIRED] Consent copy must be reviewed by a lawyer before go-live */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={consentGiven}
+                    onChange={(e) => setConsentGiven(e.target.checked)}
+                    size="small"
+                    id="dpdp-consent-checkbox"
+                    sx={{
+                      color: '#CBD5E1',
+                      '&.Mui-checked': { color: primary },
+                      alignSelf: 'flex-start',
+                      mt: '-2px',
+                    }}
+                  />
+                }
+                label={
+                  <Typography
+                    variant="body2"
+                    sx={{ color: '#64748B', fontSize: '0.79rem', lineHeight: 1.5 }}
+                  >
+                    I have read and agree to the{' '}
+                    <Typography
+                      component="a"
+                      href="/privacy"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{ color: primary, fontWeight: 700, fontSize: '0.79rem', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+                    >
+                      Privacy Policy
+                    </Typography>
+                    {' '}and consent to processing of my personal data for account management and platform services.
+                  </Typography>
+                }
+                sx={{ mb: 3, mt: 0, alignItems: 'flex-start' }}
               />
 
               <AppButton
@@ -894,6 +959,7 @@ const LoginPage: React.FC = () => {
                 type="submit"
                 variant="contained"
                 loading={isLoading}
+                disabled={!consentGiven}
                 size="large"
                 endIcon={!isLoading && <ArrowForward sx={{ fontSize: 18 }} />}
                 sx={{
@@ -902,13 +968,15 @@ const LoginPage: React.FC = () => {
                   fontWeight: 700,
                   textTransform: 'none',
                   borderRadius: '12px',
-                  background: `linear-gradient(135deg, ${primary} 0%, ${accent} 100%)`,
-                  boxShadow: `0 8px 24px ${primary}45`,
+                  background: consentGiven
+                    ? `linear-gradient(135deg, ${primary} 0%, ${accent} 100%)`
+                    : '#E2E8F0',
+                  boxShadow: consentGiven ? `0 8px 24px ${primary}45` : 'none',
                   mb: 3,
-                  '&:hover': {
+                  '&:hover': consentGiven ? {
                     transform: 'translateY(-1px)',
                     boxShadow: `0 12px 28px ${primary}60`,
-                  },
+                  } : {},
                   transition: 'all 0.2s ease',
                 }}
               >
@@ -940,58 +1008,8 @@ const LoginPage: React.FC = () => {
               </Typography>
             </Box>
 
-            {/* Footer */}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'center',
-                mt: 3,
-                pt: 2.5,
-                borderTop: '1px solid #F1F5F9',
-                gap: 0,
-              }}
-            >
-              {[
-                { icon: <HeadsetMic sx={{ fontSize: 13 }} />, label: 'Support' },
-                { icon: <Policy sx={{ fontSize: 13 }} />, label: 'Privacy' },
-                { icon: <Article sx={{ fontSize: 13 }} />, label: 'Terms' },
-              ].map(({ icon, label }, i) => (
-                <React.Fragment key={label}>
-                  {i > 0 && (
-                    <Box
-                      sx={{
-                        width: '1px',
-                        bgcolor: '#E2E8F0',
-                        mx: 2,
-                        alignSelf: 'stretch',
-                      }}
-                    />
-                  )}
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.5,
-                      cursor: 'pointer',
-                      color: '#94A3B8',
-                      '&:hover': { color: primary },
-                      transition: 'color 0.15s',
-                    }}
-                  >
-                    {icon}
-                    <Typography
-                      sx={{
-                        fontSize: '0.72rem',
-                        fontWeight: 600,
-                        letterSpacing: '0.01em',
-                      }}
-                    >
-                      {label}
-                    </Typography>
-                  </Box>
-                </React.Fragment>
-              ))}
-            </Box>
+            {/* Footer — DPDP Act compliant with working links + Grievance Officer */}
+            <LegalFooter accentColor={primary} light />
           </Box>
         </Fade>
       </Box>

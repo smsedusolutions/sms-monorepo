@@ -16,8 +16,10 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import DashboardCard from '../../components/Dashboard/DashboardCard';
+import ExamPerformanceChart from '../../components/Dashboard/ExamPerformanceChart';
 import { useGetSchoolDashboardStats } from '../../queries/SchoolDashboard';
 import { useGetLeaveStats } from '../../queries/Leave';
+import { useGetExams, useGetExamPublishStatus } from '../../queries/Exam';
 import TokenService from '../../queries/token/tokenService';
 import { useNavigate } from 'react-router-dom';
 
@@ -149,10 +151,49 @@ const SchoolAdminDashboard = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const { data, isLoading, error } = useGetSchoolDashboardStats(schoolId);
     const { data: leaveData } = useGetLeaveStats(schoolId);
+    const { data: examsData, isLoading: isExamsLoading } = useGetExams(schoolId);
     const navigate = useNavigate();
 
     const stats = data?.data;
     const leaveStats = leaveData?.data;
+    const exams = examsData?.data || [];
+
+    // Find the latest active or published exam
+    const activeExam = exams.find((e: any) => e.status === 'published' || e.status === 'completed') || exams[0];
+
+    const { data: publishStatusData, isLoading: isStatusLoading } = useGetExamPublishStatus(
+        schoolId,
+        activeExam?.examId || ''
+    );
+    const publishData = publishStatusData?.data;
+
+    const examName = publishData?.exam?.name || activeExam?.name;
+    const examStatus = publishData?.exam?.status || activeExam?.status;
+
+    let totalPassed = 0;
+    let totalFailed = 0;
+    let totalAbsent = 0;
+
+    if (publishData?.subjects && publishData.subjects.length > 0) {
+        publishData.subjects.forEach((subj: any) => {
+            if (subj.publishStatus === 'final_published') {
+                totalPassed += subj.passedCount || 0;
+                totalFailed += subj.failedCount || 0;
+                totalAbsent += subj.absentCount || 0;
+            }
+        });
+    }
+
+    const totalResults = totalPassed + totalFailed + totalAbsent;
+    const hasPublishedResults = publishData?.summary?.finalPublishedCount && publishData.summary.finalPublishedCount > 0;
+
+    const statusMessage = !activeExam
+        ? 'No examinations created or scheduled yet'
+        : examStatus === 'draft' || examStatus === 'scheduled' || !hasPublishedResults
+        ? `${examName || 'Examination'} is scheduled • Results pending marks evaluation`
+        : totalResults === 0
+        ? 'Evaluation and result publishing in progress'
+        : undefined;
 
     return (
         <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
@@ -240,6 +281,20 @@ const SchoolAdminDashboard = () => {
                     </>
                 )}
             </Grid>
+
+            {/* Exam Performance Section */}
+            <Box sx={{ mt: { xs: 2.5, sm: 3 } }}>
+                <ExamPerformanceChart
+                    title="School-Wide Exam Performance"
+                    examName={examName}
+                    examStatus={examStatus}
+                    isLoading={isExamsLoading || isStatusLoading}
+                    passed={totalPassed}
+                    failed={totalFailed}
+                    absent={totalAbsent}
+                    statusMessage={statusMessage}
+                />
+            </Box>
 
             {/* Quick Actions Section */}
             <Box sx={{ mt: { xs: 3, sm: 4 }, mb: 2 }}>

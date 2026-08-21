@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography, Skeleton, Paper } from '@mui/material';
 import { Chart } from 'react-google-charts';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import ConsentGatedChart from '../consent/ConsentGatedChart';
 
 interface MonthlyFee { month: string; collected: number; outstanding: number; }
 interface FeeCollectionChartProps {
@@ -46,13 +47,15 @@ export const FeeCollectionChart: React.FC<FeeCollectionChartProps> = ({
                     <Typography color="text.secondary" variant="body2">No fee data available</Typography>
                 </Box>
             ) : (
-                <Chart
-                    chartType="ColumnChart"
-                    data={chartData}
-                    options={options}
-                    width="100%"
-                    height={isMobile ? '220px' : '260px'}
-                />
+                <ConsentGatedChart height={isMobile ? 220 : 260}>
+                    <Chart
+                        chartType="ColumnChart"
+                        data={chartData}
+                        options={options}
+                        width="100%"
+                        height={isMobile ? '220px' : '260px'}
+                    />
+                </ConsentGatedChart>
             )}
         </Paper>
     );

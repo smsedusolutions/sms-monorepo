@@ -6,6 +6,8 @@ const { matchOrigin } = require('@sms/shared/utils');
 const { connectDB, ensureDbConnection } = require('./configs/db');
 const authRoutes = require('./routes/auth.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
+// DPDP Act 2023 — consent audit routes
+const consentRoutes = require('./routes/consent.routes');
 
 const app = express();
 
@@ -30,10 +32,22 @@ const corsOptions = {
 };
 
 const compression = require('compression');
+const { commonRateLimiter } = require('@sms/shared/middlewares');
+
+// Security Headers Middleware (GAP-004)
+app.use((req, res, next) => {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    next();
+});
 
 // Middleware
 app.use(cors(corsOptions));
 app.use(compression());
+app.use(commonRateLimiter);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -44,6 +58,8 @@ app.use(ensureDbConnection);
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/auth/:schoolId/dashboard', dashboardRoutes);
+// DPDP Act 2023 — consent audit log endpoints
+app.use('/api/auth/consent', consentRoutes);
 
 // Health check endpoint
 app.get('/health', (_req, res) => {

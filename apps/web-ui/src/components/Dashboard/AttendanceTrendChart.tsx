@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Typography, Skeleton, Paper } from '@mui/material';
 import { Chart } from 'react-google-charts';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import ConsentGatedChart from '../consent/ConsentGatedChart';
 
 interface DayAttendance { date: string; percentage: number; }
 interface AttendanceTrendChartProps {
@@ -54,13 +55,15 @@ export const AttendanceTrendChart: React.FC<AttendanceTrendChartProps> = ({
                     <Typography color="text.secondary" variant="body2">No attendance data available</Typography>
                 </Box>
             ) : (
-                <Chart
-                    chartType="LineChart"
-                    data={chartData}
-                    options={options}
-                    width="100%"
-                    height={isMobile ? '220px' : '260px'}
-                />
+                <ConsentGatedChart height={isMobile ? 220 : 260}>
+                    <Chart
+                        chartType="LineChart"
+                        data={chartData}
+                        options={options}
+                        width="100%"
+                        height={isMobile ? '220px' : '260px'}
+                    />
+                </ConsentGatedChart>
             )}
         </Paper>
     );

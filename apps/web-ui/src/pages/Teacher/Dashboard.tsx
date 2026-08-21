@@ -32,9 +32,11 @@ import { useGetTeacherDashboardStats } from '../../queries/TeacherDashboard';
 import { useGetTeacherById } from '../../queries/Teacher';
 import { useGetClasses } from '../../queries/Class';
 import { useGetStudents } from '../../queries/Student';
+import { useGetExams, useGetExamPublishStatus } from '../../queries/Exam';
 import { useTimeSettingsStore } from '../../stores/timeSettingsStore';
 import { formatTimeDisplay } from '../../utils/timeUtils';
 import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
+import ExamPerformanceChart from '../../components/Dashboard/ExamPerformanceChart';
 import type { Class, Student } from '../../types';
 
 const TeacherDashboard: React.FC = () => {
@@ -52,10 +54,20 @@ const TeacherDashboard: React.FC = () => {
     const { data: teacherData } = useGetTeacherById(schoolId, teacherId);
     const { data: classesData } = useGetClasses(schoolId);
     const { data: studentsData } = useGetStudents(schoolId, { limit: 1000 });
+    const { data: examsData, isLoading: isExamsLoading } = useGetExams(schoolId);
 
     const teacher = teacherData?.data;
     const allClasses: Class[] = classesData?.data || [];
     const allStudents: Student[] = studentsData?.data || [];
+    const exams = examsData?.data || [];
+
+    const activeExam = exams.find((e: any) => e.status === 'published' || e.status === 'completed') || exams[0];
+
+    const { data: publishStatusData, isLoading: isStatusLoading } = useGetExamPublishStatus(
+        schoolId,
+        activeExam?.examId || ''
+    );
+    const publishData = publishStatusData?.data;
 
     // Derive assigned class cards with exact section & student counts
     const myClassCards = useMemo(() => {
@@ -450,7 +462,7 @@ const TeacherDashboard: React.FC = () => {
                                                         {formatTimeDisplay(period.time, timeFormat)}
                                                     </Typography>
                                                 </Box>
-                                                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                                                 <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                                                     <Typography variant="subtitle2" fontWeight={700} color="text.primary" noWrap sx={{ fontSize: '0.85rem' }}>{period.subject}</Typography>
                                                     <Typography variant="caption" color="text.secondary" fontWeight={500} noWrap sx={{ display: 'block', fontSize: '0.72rem' }}>{period.class}</Typography>
                                                 </Box>
@@ -466,6 +478,53 @@ const TeacherDashboard: React.FC = () => {
                             </Grid>
                         )}
                     </Box>
+
+                    {(() => {
+                        const examName = publishData?.exam?.name || activeExam?.name;
+                        const examStatus = publishData?.exam?.status || activeExam?.status;
+
+                        let teacherPassed = 0;
+                        let teacherFailed = 0;
+                        let teacherAbsent = 0;
+
+                        const teacherClassIds = new Set(myClassCards.map((c) => c.classId));
+
+                        if (publishData?.subjects && publishData.subjects.length > 0) {
+                            publishData.subjects.forEach((subj: any) => {
+                                if (teacherClassIds.has(subj.classId) && subj.publishStatus === 'final_published') {
+                                    teacherPassed += subj.passedCount || 0;
+                                    teacherFailed += subj.failedCount || 0;
+                                    teacherAbsent += subj.absentCount || 0;
+                                }
+                            });
+                        }
+
+                        const totalTeacherResults = teacherPassed + teacherFailed + teacherAbsent;
+                        const hasPublishedResults = publishData?.summary?.finalPublishedCount && publishData.summary.finalPublishedCount > 0;
+
+                        const teacherStatusMessage = !activeExam
+                            ? 'No examinations scheduled yet'
+                            : examStatus === 'draft' || examStatus === 'scheduled' || !hasPublishedResults
+                            ? `${examName || 'Examination'} is scheduled • Results pending marks evaluation`
+                            : totalTeacherResults === 0
+                            ? 'Class results evaluation and publishing in progress'
+                            : undefined;
+
+                        return (
+                            <Box sx={{ mb: { xs: 2.5, sm: 3 } }}>
+                                <ExamPerformanceChart
+                                    title="Class Exam Performance"
+                                    examName={examName ? `${examName} (My Assigned Classes)` : undefined}
+                                    examStatus={examStatus}
+                                    isLoading={isExamsLoading || isStatusLoading}
+                                    passed={teacherPassed}
+                                    failed={teacherFailed}
+                                    absent={teacherAbsent}
+                                    statusMessage={teacherStatusMessage}
+                                />
+                            </Box>
+                        );
+                    })()}
 
                     <Box sx={{ mb: { xs: 2, sm: 3 } }}>
                         <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>Pending Tasks</Typography>

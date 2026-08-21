@@ -1,10 +1,19 @@
 const crypto = require('crypto');
 
 const ALGORITHM = 'aes-256-gcm';
-const DEFAULT_SECRET = process.env.MARKS_ENCRYPTION_KEY || 'sms-secure-marks-encryption-key-2026';
+
+// SECURITY: No fallback key. If MARKS_ENCRYPTION_KEY is missing, fail loudly
+// at startup rather than silently degrading to a known-public key (GAP-002).
+if (!process.env.MARKS_ENCRYPTION_KEY) {
+    throw new Error(
+        '[SECURITY] MARKS_ENCRYPTION_KEY environment variable is not set. '
+    );
+}
+
+const ENCRYPTION_KEY = process.env.MARKS_ENCRYPTION_KEY;
 
 // Derive 32-byte key using sha256
-const getKey = (secret = DEFAULT_SECRET) => {
+const getKey = (secret = ENCRYPTION_KEY) => {
     return crypto.createHash('sha256').update(String(secret)).digest();
 };
 

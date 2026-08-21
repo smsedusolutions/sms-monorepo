@@ -15,7 +15,8 @@ const {
   getBackups,
   restoreBackup,
 } = require("../utils/backupHelper");
-const { logActivity } = require("@sms/shared/utils");
+const { logActivity, hashPassword } = require("@sms/shared/utils"); // SECURITY: GAP-001 bcrypt
+
 
 /**
  * Get Student model for a specific school database
@@ -122,13 +123,16 @@ const createStudent = async (req, res) => {
 
     const normalizedEmail = email ? email.toLowerCase().trim() : undefined;
 
+    // SECURITY (GAP-001): Hash password before storage
+    const hashedPassword = await hashPassword(String(password));
+
     const newStudent = new Student({
       studentId,
       schoolId,
       firstName,
       lastName,
       email: normalizedEmail,
-      password, // Plain text for now
+      password: hashedPassword,
       phone,
       class: studentClass,
       section,
@@ -530,6 +534,11 @@ const updateStudentById = async (req, res) => {
     delete updateData.studentId;
     delete updateData.schoolId;
     delete updateData.role;
+
+    // SECURITY (GAP-001): If password is being updated, hash it before saving
+    if (updateData.password) {
+      updateData.password = await hashPassword(updateData.password);
+    }
 
     const schoolDbName = await getSchoolDbName(schoolId);
     if (!schoolDbName) {
@@ -1008,13 +1017,16 @@ const bulkCreateStudents = async (req, res) => {
         // Generate studentId
         const studentId = await generateStudentId(Student);
 
+        // SECURITY (GAP-001): Hash password before storage
+        const hashedPw = await hashPassword(String(row.password));
+
         const newStudent = new Student({
           studentId,
           schoolId,
           firstName: String(row.firstName).trim(),
           lastName: String(row.lastName).trim(),
           email: normalizedEmail,
-          password: String(row.password), // Plain text (matches existing createStudent behavior)
+          password: hashedPw,
           phone: row.phone ? String(row.phone).trim() : undefined,
           class: targetClass.classId, // Store ID
           section: sectionId, // Store ID

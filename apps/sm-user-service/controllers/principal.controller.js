@@ -9,7 +9,7 @@ const {
   getPaginationParams,
   formatPaginationResponse,
 } = require("../utils/pagination");
-const { logActivity } = require("@sms/shared/utils");
+const { logActivity, hashPassword } = require("@sms/shared/utils"); // SECURITY: GAP-001 bcrypt
 
 const getPrincipalModel = (schoolDbName) => {
   const schoolDb = getSchoolDbConnection(schoolDbName);
@@ -61,13 +61,16 @@ exports.createPrincipal = async (req, res) => {
 
     const principalId = await generatePrincipalId(Principal);
 
+    // SECURITY (GAP-001): Hash password before storage
+    const hashedPassword = await hashPassword(password);
+
     const newPrincipal = new Principal({
       principalId,
       schoolId,
       firstName,
       lastName,
       email: normalizedEmail,
-      password,
+      password: hashedPassword,
       phone,
       status: status || "active",
       profileImage,
@@ -151,6 +154,11 @@ exports.updatePrincipal = async (req, res) => {
     const schoolDbName = await getSchoolDbName(schoolId);
     if (!schoolDbName) {
       return res.status(404).json({ success: false, message: "School not found" });
+    }
+
+    // SECURITY (GAP-001): If password is being updated, hash it before saving
+    if (updateData.password) {
+      updateData.password = await hashPassword(updateData.password);
     }
 
     const Principal = getPrincipalModel(schoolDbName);
