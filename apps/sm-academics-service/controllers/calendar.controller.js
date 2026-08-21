@@ -1,11 +1,6 @@
 const { getSchoolDbConnection } = require('../configs/db');
-const { CalendarEventSchema, PTMSchema, ExamSchema, ExamScheduleSchema, SchoolModel } = require('@sms/shared/models');
-
-const getSchoolDbName = async (schoolId) => {
-    const school = await SchoolModel.findOne({ schoolId }).lean();
-    if (!school) throw new Error('School not found');
-    return school.schoolDatabaseName || `sms_${schoolId.toLowerCase()}`;
-};
+const { getSchoolDbName } = require('../utils/schoolDbHelper');
+const { CalendarEventSchema, PTMSchema, ExamSchema, ExamScheduleSchema } = require('@sms/shared/models');
 
 const getModels = (schoolDbName) => {
     const conn = getSchoolDbConnection(schoolDbName);
