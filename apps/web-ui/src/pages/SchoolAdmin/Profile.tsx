@@ -342,8 +342,9 @@ const SchoolAdminProfile: React.FC = () => {
                   type="email"
                 />
                 <PhoneInput
+                  name="phone"
                   value={formData.phone}
-                  onChange={(val) => setFormData((prev) => ({ ...prev, phone: val }))}
+                  onChange={handleChange}
                   label="Contact Phone"
                   fullWidth
                 />

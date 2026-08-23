@@ -390,7 +390,7 @@ const PrincipalProfile: React.FC = () => {
                 schoolId={schoolId}
                 userId={userId}
                 userName={userName}
-                userType="principal"
+                userType="sch_admin"
                 fieldType={requestFieldType}
                 currentValue={currentFieldValue}
             />

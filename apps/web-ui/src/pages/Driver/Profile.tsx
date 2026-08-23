@@ -19,7 +19,6 @@ import {
     DirectionsBus as BusIcon,
     Email as EmailIcon,
     Phone as PhoneIcon,
-    AltRoute as RouteIcon,
     Edit as EditIcon,
     School as SchoolIcon,
     VerifiedUser as VerifiedIcon,
