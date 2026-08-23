@@ -185,7 +185,10 @@ const AddMenusDialog: React.FC<AddMenusDialogProps> = ({
         (r) => r.roleCode?.toLowerCase() === String(roleCode).toLowerCase()
       );
       if (role?.prefix) {
-        const hasOrder = newOrders.some((o) => o.startsWith(role.prefix));
+        const hasOrder = newOrders.some((o) => {
+          const m = String(o).match(/^([A-Z]+)(\d*)$/);
+          return m ? m[1] === role.prefix : o.startsWith(role.prefix);
+        });
         if (!hasOrder) {
           const nextSeq = getNextSequence(role.prefix);
           newOrders.push(`${role.prefix}${nextSeq}`);
@@ -679,7 +682,8 @@ const AddMenusDialog: React.FC<AddMenusDialogProps> = ({
                   .filter(Boolean)
                   .map((order) => {
                     const o = String(order);
-                    const prefix = o.match(/^[A-Z]+/)?.[0];
+                    const m = o.match(/^([A-Z]+)(\d*)$/);
+                    const prefix = m ? m[1] : o.match(/^[A-Z]+/)?.[0];
                     const role = storeRoles.find(r => r.prefix === prefix);
                     const color = role?.colorTheme || "default";
 
@@ -736,12 +740,13 @@ const AddMenusDialog: React.FC<AddMenusDialogProps> = ({
                       const orders = Array.isArray(formData.menuOrder)
                         ? formData.menuOrder
                         : [formData.menuOrder];
-                      const match = orders.find((o) =>
-                        String(o).startsWith(activeOrderPrefix),
-                      );
-                      return match
-                        ? String(match).replace(activeOrderPrefix, "")
-                        : "";
+                      const match = orders.find((o) => {
+                        const m = String(o).match(/^([A-Z]+)(\d*)$/);
+                        return m ? m[1] === activeOrderPrefix : false;
+                      });
+                      if (!match) return "";
+                      const m = String(match).match(/^([A-Z]+)(\d*)$/);
+                      return m ? m[2] : String(match).slice(activeOrderPrefix.length);
                     })()}
                     onChange={(e) => {
                       const newValue = e.target.value;
@@ -754,9 +759,10 @@ const AddMenusDialog: React.FC<AddMenusDialogProps> = ({
                         )
                           .filter(Boolean)
                           .map(String);
-                        const filtered = currentOrders.filter(
-                          (o) => !o.startsWith(activeOrderPrefix),
-                        );
+                        const filtered = currentOrders.filter((o) => {
+                          const m = String(o).match(/^([A-Z]+)(\d*)$/);
+                          return m ? m[1] !== activeOrderPrefix : !o.startsWith(activeOrderPrefix);
+                        });
                         if (newValue) {
                           filtered.push(newCode);
                         }

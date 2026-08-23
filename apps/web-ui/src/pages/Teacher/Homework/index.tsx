@@ -29,16 +29,25 @@ import { AppCard } from '../../../components/shared/AppCard';
 import { AppButton } from '../../../components/shared/AppButton';
 import HomeworkDialog from '../../../components/Dialogs/HomeworkDialog';
 import { useUrlTab } from '../../../hooks/useUrlTab';
+import { useLocation } from 'react-router-dom';
 
 const TeacherHomework: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const teacherId = TokenService.getTeacherId() || '';
+    const location = useLocation();
 
     const [tabValue, setTabValue] = useUrlTab(0, ['active', 'completed', 'all']);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [homeworkToDelete, setHomeworkToDelete] = useState<Homework | null>(null);
     const [isHomeworkDialogOpen, setIsHomeworkDialogOpen] = useState(false);
     const [homeworkToEdit, setHomeworkToEdit] = useState<Homework | null>(null);
+
+    React.useEffect(() => {
+        if (location.state?.openDialog || location.state?.openCreateDialog) {
+            setIsHomeworkDialogOpen(true);
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
 
     const statusFilter = tabValue === 0 ? 'active' : tabValue === 1 ? 'completed' : undefined;
 

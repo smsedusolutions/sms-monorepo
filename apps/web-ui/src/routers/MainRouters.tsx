@@ -61,6 +61,7 @@ const StudentFees = lazy(() => import("../pages/Student/Fees"));
 
 // Driver Pages
 const DriverDashboard = lazy(() => import("../pages/Driver/DriverDashboard"));
+const DriverProfile = lazy(() => import("../pages/Driver/Profile"));
 
 
 const TimetableConfig = lazy(() => import("../pages/SchoolAdmin/Timetable/TimetableConfig"));
@@ -143,6 +144,7 @@ const ParentExamResults = lazy(() => import("../pages/Parent/Exam/Results"));
 const ParentTransport = lazy(() => import("../pages/Parent/Transport/ParentTransport"));
 const PTMBooking = lazy(() => import("../pages/Parent/PTM/PTMBooking"));
 const ParentFeeStatement = lazy(() => import("../pages/Parent/Fees/FeeStatement"));
+const ParentProfile = lazy(() => import("../pages/Parent/Profile"));
 
 // Shared Pages
 const NotificationsPage = lazy(() => import("../pages/Shared/Notifications"));
@@ -388,6 +390,7 @@ const MainRouters = () => {
             <Route path="/parent/transport" element={<ParentTransport />} />
             <Route path="/parent/fees" element={<ParentFees />} />
             <Route path="/parent/fees/statement" element={<ParentFeeStatement />} />
+            <Route path="/parent/profile" element={<ParentProfile />} />
             <Route path="/parent/ptm" element={<PTMBooking />} />
             <Route path="/parent/chat" element={<ChatPage />} />
           </Route>
@@ -414,7 +417,7 @@ const MainRouters = () => {
         {/* Driver Routes */}
         <Route element={<ProtectedRoute allowedRoles={["driver"]} />}>
           <Route path="/driver/dashboard" element={<DriverDashboard />} />
-          <Route path="/driver/profile" element={<TeacherProfile />} /> {/* Reuse profile for now */}
+          <Route path="/driver/profile" element={<DriverProfile />} />
           <Route path="/driver/notifications" element={<NotificationsPage />} />
         </Route>
 
