@@ -119,7 +119,7 @@ const NotificationsPage: React.FC = () => {
                 break;
             case 'chat_invite':
             case 'chat_accepted':
-                navigate('/chat');
+                navigate(`${rolePrefix}/chat`);
                 break;
             default:
                 break;
