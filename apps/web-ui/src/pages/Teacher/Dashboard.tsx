@@ -52,8 +52,8 @@ const TeacherDashboard: React.FC = () => {
     const stats = data?.data;
 
     // Fetch teacher profile, classes, and students for assigned class cards
-    const { data: teacherData } = useGetTeacherById(schoolId, teacherId);
-    const { data: classesData } = useGetClasses(schoolId);
+    const { data: teacherData, isLoading: isTeacherLoading } = useGetTeacherById(schoolId, teacherId);
+    const { data: classesData, isLoading: isClassesLoading } = useGetClasses(schoolId);
     const { data: studentsData } = useGetStudents(schoolId, { limit: 1000 });
     const { data: examsData, isLoading: isExamsLoading } = useGetExams(schoolId);
 
@@ -72,6 +72,8 @@ const TeacherDashboard: React.FC = () => {
 
     // Derive assigned class cards with exact section & student counts
     const myClassCards = useMemo(() => {
+        if (!teacher) return [];
+
         const teacherClasses: string[] = teacher?.classes || [];
         const teacherSections: string[] = (teacher as any)?.sections || [];
         const classTeacherSectionId: string = teacher?.classTeacherSectionId || '';
@@ -109,7 +111,7 @@ const TeacherDashboard: React.FC = () => {
         const assignedClassIds = Object.keys(classAssignedMap);
         const targetClasses = assignedClassIds.length > 0
             ? allClasses.filter((c) => assignedClassIds.includes(c.classId))
-            : allClasses;
+            : [];
 
         return targetClasses.map((c) => {
             const assignedSecSet = classAssignedMap[c.classId];
@@ -348,68 +350,81 @@ const TeacherDashboard: React.FC = () => {
             </Grid>
 
             {/* My Assigned Classes Section */}
-            {myClassCards.length > 0 && (
+            {(isTeacherLoading || isClassesLoading || myClassCards.length > 0) && (
                 <Box sx={{ mb: { xs: 2.5, sm: 3 } }}>
-                    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>My Assigned Classes</Typography>
-                    <Grid container spacing={{ xs: 1.5, sm: 2 }}>
-                        {myClassCards.map((c, index) => {
-                            const color = cardColors[index % cardColors.length];
-                            return (
-                                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={c.classId}>
-                                    <Card
-                                        onClick={() => navigate('/teacher/attendance')}
-                                        sx={{
-                                            borderRadius: 2.5,
-                                            boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-                                            border: `1px solid ${color.accent}30`,
-                                            bgcolor: 'background.paper',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.18s ease',
-                                            '&:hover': {
-                                                transform: 'translateY(-2px)',
-                                                boxShadow: `0 6px 18px ${color.accent}20`,
-                                            }
-                                        }}
-                                    >
-                                        <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                                                <Avatar sx={{ bgcolor: color.iconBg, color: color.accent, width: 36, height: 36, borderRadius: 2 }}>
-                                                    <ClassIcon sx={{ fontSize: 18 }} />
-                                                </Avatar>
-                                                {c.isClassTeacher && (
-                                                    <Chip
-                                                        icon={<StarIcon sx={{ fontSize: '12px !important' }} />}
-                                                        label="Class Teacher"
-                                                        size="small"
-                                                        sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 700, fontSize: '0.65rem', height: 20 }}
-                                                    />
-                                                )}
-                                            </Box>
+                    <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>
+                        My Assigned Classes
+                    </Typography>
 
-                                            <Typography variant="subtitle1" fontWeight={800} color="#1e293b" sx={{ fontSize: '0.95rem', mb: 0.5 }}>
-                                                {c.className}
-                                            </Typography>
-
-                                            <Box sx={{ display: 'flex', gap: 2, mt: 0.5, flexWrap: 'wrap' }}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    <SchoolIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
-                                                    <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: '0.72rem' }}>
-                                                        {c.sectionLabel}
-                                                    </Typography>
-                                                </Box>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                    <GroupsIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
-                                                    <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: '0.72rem' }}>
-                                                        {c.studentCount} Students
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        </CardContent>
-                                    </Card>
+                    {isTeacherLoading || isClassesLoading ? (
+                        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
+                            {[1, 2, 3].map((i) => (
+                                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
+                                    <Skeleton variant="rectangular" height={110} sx={{ borderRadius: 2.5 }} />
                                 </Grid>
-                            );
-                        })}
-                    </Grid>
+                            ))}
+                        </Grid>
+                    ) : (
+                        <Grid container spacing={{ xs: 1.5, sm: 2 }}>
+                            {myClassCards.map((c, index) => {
+                                const color = cardColors[index % cardColors.length];
+                                return (
+                                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={c.classId}>
+                                        <Card
+                                            onClick={() => navigate('/teacher/attendance')}
+                                            sx={{
+                                                borderRadius: 2.5,
+                                                boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                                                border: `1px solid ${color.accent}30`,
+                                                bgcolor: 'background.paper',
+                                                cursor: 'pointer',
+                                                transition: 'all 0.18s ease',
+                                                '&:hover': {
+                                                    transform: 'translateY(-2px)',
+                                                    boxShadow: `0 6px 18px ${color.accent}20`,
+                                                }
+                                            }}
+                                        >
+                                            <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                                                    <Avatar sx={{ bgcolor: color.iconBg, color: color.accent, width: 36, height: 36, borderRadius: 2 }}>
+                                                        <ClassIcon sx={{ fontSize: 18 }} />
+                                                    </Avatar>
+                                                    {c.isClassTeacher && (
+                                                        <Chip
+                                                            icon={<StarIcon sx={{ fontSize: '12px !important' }} />}
+                                                            label="Class Teacher"
+                                                            size="small"
+                                                            sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 700, fontSize: '0.65rem', height: 20 }}
+                                                        />
+                                                    )}
+                                                </Box>
+
+                                                <Typography variant="subtitle1" fontWeight={800} color="#1e293b" sx={{ fontSize: '0.95rem', mb: 0.5 }}>
+                                                    {c.className}
+                                                </Typography>
+
+                                                <Box sx={{ display: 'flex', gap: 2, mt: 0.5, flexWrap: 'wrap' }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                        <SchoolIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
+                                                        <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: '0.72rem' }}>
+                                                            {c.sectionLabel}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                        <GroupsIcon sx={{ fontSize: 15, color: 'text.secondary' }} />
+                                                        <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: '0.72rem' }}>
+                                                            {c.studentCount} Students
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </CardContent>
+                                        </Card>
+                                    </Grid>
+                                );
+                            })}
+                        </Grid>
+                    )}
                 </Box>
             )}
 
@@ -466,7 +481,7 @@ const TeacherDashboard: React.FC = () => {
                                                         {formatTimeDisplay(period.time, timeFormat)}
                                                     </Typography>
                                                 </Box>
-                                                 <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                                                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                                                     <Typography variant="subtitle2" fontWeight={700} color="text.primary" noWrap sx={{ fontSize: '0.85rem' }}>{period.subject}</Typography>
                                                     <Typography variant="caption" color="text.secondary" fontWeight={500} noWrap sx={{ display: 'block', fontSize: '0.72rem' }}>{period.class}</Typography>
                                                 </Box>
@@ -509,10 +524,10 @@ const TeacherDashboard: React.FC = () => {
                         const teacherStatusMessage = !activeExam
                             ? 'No examinations scheduled yet'
                             : examStatus === 'draft' || examStatus === 'scheduled' || !hasPublishedResults
-                            ? `${examName || 'Examination'} is scheduled • Results pending marks evaluation`
-                            : totalTeacherResults === 0
-                            ? 'Class results evaluation and publishing in progress'
-                            : undefined;
+                                ? `${examName || 'Examination'} is scheduled • Results pending marks evaluation`
+                                : totalTeacherResults === 0
+                                    ? 'Class results evaluation and publishing in progress'
+                                    : undefined;
 
                         return (
                             <Box sx={{ mb: { xs: 2.5, sm: 3 } }}>
@@ -587,8 +602,8 @@ const TeacherDashboard: React.FC = () => {
                     <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>Quick Actions</Typography>
                     <Grid container spacing={1.5}>
                         {[
-                            { label: 'Add Homework', icon: <AddIcon />, onClick: () => navigate('/teacher/homework/add'), color: '#3b82f6' },
-                            { label: 'Book Exam', icon: <ScheduleIcon />, onClick: () => navigate('/teacher/exam/book'), color: '#8b5cf6' },
+                            { label: 'Add Homework', icon: <AddIcon />, onClick: () => navigate('/teacher/homework', { state: { openDialog: true } }), color: '#3b82f6' },
+                            { label: 'Exam Scheduler', icon: <ScheduleIcon />, onClick: () => navigate('/teacher/exam/scheduler'), color: '#8b5cf6' },
                             { label: 'Chat Parents', icon: <ChatIcon />, onClick: () => navigate('/teacher/chat'), color: '#7c3aed' },
                             { label: 'Apply Leave', icon: <EventIcon />, onClick: () => navigate('/teacher/leave/apply'), color: '#f59e0b' },
                         ].map((action) => (
