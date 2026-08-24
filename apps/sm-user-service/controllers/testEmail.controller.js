@@ -1,4 +1,5 @@
 const { sendEmail } = require('@sms/shared/utils');
+const sanitizeHtml = require('sanitize-html');
 
 /**
  * Test email sending functionality
@@ -15,6 +16,12 @@ const sendTestEmail = async (req, res) => {
             });
         }
 
+        // SECURITY (XSS): Sanitize user-supplied message to plain text only
+        // to prevent HTML/script injection into the outgoing email body.
+        const safeMessage = message
+            ? sanitizeHtml(String(message), { allowedTags: [], allowedAttributes: {} })
+            : 'This is a test email from your School Management System. If you\'re seeing this, your email configuration is working correctly! 🚀';
+
         const htmlContent = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
                 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -24,7 +31,7 @@ const sendTestEmail = async (req, res) => {
                 <div style="padding: 30px; background-color: #f9f9f9;">
                     <h2 style="color: #333; margin-top: 0;">Hello from SMS!</h2>
                     <p style="color: #666; font-size: 16px; line-height: 1.6;">
-                        ${message || 'This is a test email from your School Management System. If you\'re seeing this, your email configuration is working correctly! 🚀'}
+                        ${safeMessage}
                     </p>
                     
                     <div style="background-color: white; padding: 20px; border-left: 4px solid #667eea; margin: 20px 0;">

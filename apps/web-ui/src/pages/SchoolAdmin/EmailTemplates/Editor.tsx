@@ -36,6 +36,7 @@ import TokenService from '../../../queries/token/tokenService';
 import type { UpdateEmailTemplateInput, Placeholder } from '../../../types/emailTemplate';
 import { ImageUpload } from '../../../components/ImageUpload';
 import { IMAGEKIT_FOLDERS } from '../../../utils/imagekit';
+import DOMPurify from 'dompurify';
 
 const EmailTemplateEditor: React.FC = () => {
     const { id } = useParams<{ id: string }>();
@@ -419,7 +420,14 @@ const EmailTemplateEditor: React.FC = () => {
                                     overflow: 'auto',
                                     maxHeight: '60vh',
                                 }}
-                                dangerouslySetInnerHTML={{ __html: previewMutation.data.html }}
+                                // SECURITY (XSS): sanitize server-returned HTML before rendering
+                                // to strip any <script> tags or event handlers injected via template content
+                                dangerouslySetInnerHTML={{
+                                    __html: DOMPurify.sanitize(previewMutation.data.html, {
+                                        ADD_TAGS: ['style'],
+                                        FORCE_BODY: true,
+                                    })
+                                }}
                             />
                         </Box>
                     ) : (

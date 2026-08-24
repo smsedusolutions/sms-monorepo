@@ -28,7 +28,11 @@ const verifyWsToken = (req) => {
       return null;
     }
 
-    const secret = process.env.JWT_SECRET || "wertyujikjnb";
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        console.error('❌ [wsAuth] JWT_SECRET environment variable is not set — rejecting connection.');
+        return null;
+    }
     const decoded = jwt.verify(token, secret);
     return decoded;
   } catch (err) {

@@ -1,5 +1,30 @@
 const { EmailTemplateSchema } = require('@sms/shared/models');
 const { getDefaultPlaceholders, resolvePlaceholders } = require('@sms/shared/utils');
+const sanitizeHtml = require('sanitize-html');
+
+// SECURITY (XSS/SSTI): Allowed HTML elements and attributes for email preview sanitization.
+// This prevents malicious script injection via template content while preserving email-safe markup.
+const emailSanitizeOptions = {
+    allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+        'html', 'head', 'body', 'meta', 'title', 'style',
+        'table', 'thead', 'tbody', 'tr', 'th', 'td',
+        'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'p', 'div', 'span', 'a', 'br', 'hr', 'strong', 'em', 'b', 'i',
+        'ul', 'ol', 'li', 'center',
+    ]),
+    allowedAttributes: {
+        '*': ['style', 'class', 'id', 'align', 'valign', 'width', 'height', 'cellpadding', 'cellspacing', 'border', 'bgcolor'],
+        'a': ['href', 'target', 'rel'],
+        'img': ['src', 'alt', 'width', 'height', 'style'],
+        'td': ['colspan', 'rowspan'],
+        'th': ['colspan', 'rowspan'],
+        'meta': ['charset', 'name', 'content'],
+    },
+    allowedSchemes: ['http', 'https', 'mailto', 'data'],
+    // Strip all event handlers (onclick, onerror, onload, etc.)
+    allowedSchemesByTag: {},
+    disallowedTagsMode: 'discard',
+};
 
 /**
  * Create a new email template
@@ -342,9 +367,14 @@ const previewTemplate = async (req, res) => {
             schoolPhone: data.school?.phone,
         });
 
+        // SECURITY (XSS/SSTI): sanitize the fully-resolved HTML before returning to the client.
+        // This strips <script> tags, event handlers, and javascript: URIs that could be injected
+        // via template htmlContent stored in the database.
+        const sanitizedHtml = sanitizeHtml(styledHtml, emailSanitizeOptions);
+
         res.json({
             subject: resolvedSubject,
-            html: styledHtml,
+            html: sanitizedHtml,
             bannerImage: finalBanner,
         });
     } catch (error) {

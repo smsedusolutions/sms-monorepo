@@ -3,7 +3,7 @@ const {
   SchoolModel: School,
   SubjectSchema: subjectSchema,
 } = require("@sms/shared");
-const { logActivity } = require("@sms/shared/utils");
+const { logActivity, escapeRegex } = require("@sms/shared/utils"); // SECURITY: ReDoS
 
 /**
  * Get Subject model for a specific school database
@@ -192,7 +192,8 @@ const getAllSubjects = async (req, res) => {
     }
     
     if (search) {
-      const searchRegex = new RegExp(search, "i");
+      // SECURITY (ReDoS): escape user-supplied search string before building RegExp
+      const searchRegex = new RegExp(escapeRegex(search), "i");
       const searchConditions = [{ name: searchRegex }, { code: searchRegex }];
       if (query.$or) {
         query.$and = [{ $or: query.$or }, { $or: searchConditions }];
@@ -224,7 +225,8 @@ const getAllSubjects = async (req, res) => {
     const teacherQuery = { status: "active" };
     if (filterClassId && filterClassId !== "general") {
       // Regex to match "classId#sectionId" for the filtered class
-      teacherQuery.classes = { $regex: new RegExp(`^${filterClassId}#`) };
+      // SECURITY (ReDoS): escape filterClassId before using in $regex
+      teacherQuery.classes = { $regex: new RegExp(`^${escapeRegex(filterClassId)}#`) };
     }
 
     const allTeachers = await TeacherModel.find(teacherQuery)
