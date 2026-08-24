@@ -50,54 +50,61 @@ const markClassAttendance = async (req, res) => {
 
         const AttendanceModel = await getAttendanceModel(schoolId);
         const attendanceDate = getDateOnly(date || new Date());
-        const markedBy = req.user?.userId || req.user?.teacherId;
-        const markedByRole = req.user?.role;
+        const markedBy = req.user?.userId || req.user?.teacherId || "system";
+        const markedByRole = req.user?.role || "teacher";
 
-        const results = [];
-        const errors = [];
+        const validRecords = attendanceRecords.filter((r) => r && r.studentId && r.status);
 
-        for (const record of attendanceRecords) {
-            try {
-                // Check if attendance already exists for this student on this date
-                const existing = await AttendanceModel.findOne({
-                    studentId: record.studentId,
-                    date: attendanceDate,
-                });
+        if (validRecords.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No valid attendance records to mark",
+                data: { totalCount: 0 },
+            });
+        }
 
-                if (existing) {
-                    // Update existing
-                    existing.status = record.status;
-                    existing.remarks = record.remarks || existing.remarks;
-                    existing.markedBy = markedBy;
-                    existing.markedByRole = markedByRole;
-                    await existing.save();
-                    results.push({ studentId: record.studentId, action: "updated" });
-                } else {
-                    // Create new
-                    const newAttendance = new AttendanceModel({
-                        attendanceId: generateAttendanceId(),
-                        schoolId,
-                        classId,
-                        sectionId,
+        // Prepare bulkWrite operations (1 atomic MongoDB command)
+        const bulkOps = validRecords.map((record) => {
+            const updateFields = {
+                status: record.status,
+                markedBy,
+                markedByRole,
+                classId,
+                schoolId,
+            };
+            if (sectionId) updateFields.sectionId = sectionId;
+            if (record.remarks !== undefined) updateFields.remarks = record.remarks;
+
+            return {
+                updateOne: {
+                    filter: {
                         studentId: record.studentId,
                         date: attendanceDate,
-                        status: record.status,
-                        markedBy,
-                        markedByRole,
-                        remarks: record.remarks,
-                    });
-                    await newAttendance.save();
-                    results.push({ studentId: record.studentId, action: "created" });
-                }
-            } catch (err) {
-                errors.push({ studentId: record.studentId, error: err.message });
-            }
-        }
+                    },
+                    update: {
+                        $set: updateFields,
+                        $setOnInsert: {
+                            attendanceId: generateAttendanceId(),
+                            date: attendanceDate,
+                            studentId: record.studentId,
+                        },
+                    },
+                    upsert: true,
+                },
+            };
+        });
+
+        const bulkResult = await AttendanceModel.bulkWrite(bulkOps, { ordered: false });
 
         res.status(200).json({
             success: true,
-            message: `Attendance marked for ${results.length} students`,
-            data: { results, errors },
+            message: `Attendance marked for ${validRecords.length} students`,
+            data: {
+                totalCount: validRecords.length,
+                matchedCount: bulkResult.matchedCount,
+                modifiedCount: bulkResult.modifiedCount,
+                upsertedCount: bulkResult.upsertedCount,
+            },
         });
     } catch (error) {
         console.error("Error marking attendance:", error);

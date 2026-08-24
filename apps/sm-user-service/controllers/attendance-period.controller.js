@@ -42,7 +42,7 @@ const markPeriodAttendance = async (req, res) => {
         const { classId, sectionId, date, period, subjectId, teacherId, attendanceRecords, isSubstitute } = req.body;
         // attendanceRecords = [{ studentId, status, remarks? }]
 
-        if (!classId || !period || !subjectId || !teacherId || !attendanceRecords) {
+        if (!classId || !period || !subjectId || !teacherId || !attendanceRecords || !Array.isArray(attendanceRecords)) {
             return res.status(400).json({
                 success: false,
                 message: "classId, period, subjectId, teacherId, and attendanceRecords are required",
@@ -51,57 +51,64 @@ const markPeriodAttendance = async (req, res) => {
 
         const AttendanceModel = await getAttendanceModel(schoolId);
         const attendanceDate = getDateOnly(date || new Date());
-        const markedBy = req.user?.userId || req.user?.teacherId;
+        const markedBy = req.user?.userId || req.user?.teacherId || "system";
 
-        const results = [];
-        const errors = [];
+        const validRecords = attendanceRecords.filter((r) => r && r.studentId && r.status);
 
-        for (const record of attendanceRecords) {
-            try {
-                // Check if attendance already exists for this student, date, and period
-                const existing = await AttendanceModel.findOne({
-                    studentId: record.studentId,
-                    date: attendanceDate,
-                    period: period,
-                });
+        if (validRecords.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No valid attendance records to mark",
+                data: { totalCount: 0 },
+            });
+        }
 
-                if (existing) {
-                    // Update existing
-                    existing.status = record.status;
-                    existing.remarks = record.remarks || existing.remarks;
-                    existing.markedBy = markedBy;
-                    existing.isSubstitute = isSubstitute || false;
-                    await existing.save();
-                    results.push({ studentId: record.studentId, action: "updated" });
-                } else {
-                    // Create new
-                    const newAttendance = new AttendanceModel({
-                        attendanceId: generateAttendanceId(),
-                        schoolId,
-                        classId,
-                        sectionId,
+        // Prepare bulkWrite operations (1 atomic MongoDB command)
+        const bulkOps = validRecords.map((record) => {
+            const updateFields = {
+                status: record.status,
+                markedBy,
+                subjectId,
+                teacherId,
+                classId,
+                schoolId,
+                isSubstitute: isSubstitute || false,
+            };
+            if (sectionId) updateFields.sectionId = sectionId;
+            if (record.remarks !== undefined) updateFields.remarks = record.remarks;
+
+            return {
+                updateOne: {
+                    filter: {
                         studentId: record.studentId,
                         date: attendanceDate,
-                        period,
-                        subjectId,
-                        teacherId,
-                        status: record.status,
-                        markedBy,
-                        isSubstitute: isSubstitute || false,
-                        remarks: record.remarks,
-                    });
-                    await newAttendance.save();
-                    results.push({ studentId: record.studentId, action: "created" });
-                }
-            } catch (err) {
-                errors.push({ studentId: record.studentId, error: err.message });
-            }
-        }
+                        period: Number(period),
+                    },
+                    update: {
+                        $set: updateFields,
+                        $setOnInsert: {
+                            attendanceId: generateAttendanceId(),
+                            date: attendanceDate,
+                            period: Number(period),
+                            studentId: record.studentId,
+                        },
+                    },
+                    upsert: true,
+                },
+            };
+        });
+
+        const bulkResult = await AttendanceModel.bulkWrite(bulkOps, { ordered: false });
 
         const response = res.status(200).json({
             success: true,
-            message: `Period ${period} attendance marked for ${results.length} students`,
-            data: { results, errors },
+            message: `Period ${period} attendance marked for ${validRecords.length} students`,
+            data: {
+                totalCount: validRecords.length,
+                matchedCount: bulkResult.matchedCount,
+                modifiedCount: bulkResult.modifiedCount,
+                upsertedCount: bulkResult.upsertedCount,
+            },
         });
 
         // Integrated Logging
