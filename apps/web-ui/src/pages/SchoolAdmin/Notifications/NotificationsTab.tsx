@@ -319,10 +319,10 @@ const NotificationsTab: React.FC = () => {
         )}
       </Card>
 
-      {pagination && pagination.pages > 1 && (
+      {pagination && ((pagination.pages || (pagination as any).totalPages || 1) > 1) && (
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", mt: 3, mb: 1, pb: { xs: 8, sm: 2 }, gap: 0.75 }}>
           <Pagination
-            count={pagination.pages}
+            count={pagination.pages || (pagination as any).totalPages || 1}
             page={page}
             onChange={(_, value) => setPage(value)}
             color="primary"
@@ -346,7 +346,7 @@ const NotificationsTab: React.FC = () => {
             }}
           />
           <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem", fontWeight: 500 }}>
-            Page {page} of {pagination.pages} ({pagination.total || 0} total)
+            Page {page} of {pagination.pages || (pagination as any).totalPages || 1} ({pagination.total || 0} total)
           </Typography>
         </Box>
       )}

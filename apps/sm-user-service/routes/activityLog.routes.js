@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router({ mergeParams: true });
 const { Authenticated } = require('@sms/shared/middlewares');
-const { getLogs, getLogStats, clearLogs } = require('../controllers/activityLog.controller');
+const { getLogs, getLogById, getLogStats, clearLogs } = require('../controllers/activityLog.controller');
 
 // GET all activity logs (School Admin Only)
 router.get(
@@ -15,6 +15,13 @@ router.get(
     '/stats',
     Authenticated,
     getLogStats
+);
+
+// GET single log by ID with metadata (School Admin Only)
+router.get(
+    '/:logId',
+    Authenticated,
+    getLogById
 );
 
 // DELETE clear logs (School Admin Only)

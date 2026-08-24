@@ -126,6 +126,11 @@ const createTeacher = async (req, res) => {
       const { ClassSchema: classSchema } = require("@sms/shared");
       const Class = schoolDb.model("Class", classSchema);
 
+      await Teacher.updateMany(
+        { teacherId: { $ne: savedTeacher.teacherId }, classes: { $in: classes } },
+        { $pull: { classes: { $in: classes } } }
+      );
+
       await Promise.all(
         classes
           .filter((pair) => pair.includes("#"))
@@ -526,18 +531,25 @@ const updateTeacherById = async (req, res) => {
             })
         );
 
-        // Set classTeacherId on newly assigned sections
-        await Promise.all(
-          added
-            .filter((pair) => pair.includes("#"))
-            .map((pair) => {
-              const [cId, sId] = pair.split("#");
-              return Class.findOneAndUpdate(
-                { classId: cId, "sections.sectionId": sId },
-                { $set: { "sections.$.classTeacherId": teacherId } },
-              );
-            })
-        );
+        // Set classTeacherId on newly assigned sections & remove from any previous teachers
+        if (added.length > 0) {
+          await Teacher.updateMany(
+            { teacherId: { $ne: teacherId }, classes: { $in: added } },
+            { $pull: { classes: { $in: added } } }
+          );
+
+          await Promise.all(
+            added
+              .filter((pair) => pair.includes("#"))
+              .map((pair) => {
+                const [cId, sId] = pair.split("#");
+                return Class.findOneAndUpdate(
+                  { classId: cId, "sections.sectionId": sId },
+                  { $set: { "sections.$.classTeacherId": teacherId } },
+                );
+              })
+          );
+        }
       }
     }
 

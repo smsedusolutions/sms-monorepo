@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import useApi from "../useApi";
 import type { Notification, NotificationFilters } from "../../types";
 
@@ -36,6 +36,7 @@ export const useGetMyNotifications = (
             filters as Record<string, unknown>
         ),
         enabled: !!schoolId,
+        placeholderData: keepPreviousData,
     });
 };
 

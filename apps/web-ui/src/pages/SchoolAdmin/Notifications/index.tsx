@@ -102,7 +102,11 @@ const SchoolAdminNotifications: React.FC = () => {
   };
 
   const handleFilterChange = (field: keyof ActivityLogFilters, value: any) => {
-    setFilters((prev) => ({ ...prev, [field]: value, page: 1 }));
+    setFilters((prev) => ({
+      ...prev,
+      [field]: value,
+      ...(field !== "page" ? { page: 1 } : {}),
+    }));
   };
 
   const handlePurgeLogs = () => {
@@ -166,13 +170,6 @@ const SchoolAdminNotifications: React.FC = () => {
   const handleCopyId = () => {
     if (activeLog) {
       navigator.clipboard.writeText(activeLog.logId);
-      handleMenuClose();
-    }
-  };
-
-  const handleCopyMetadata = () => {
-    if (activeLog && activeLog.metadata) {
-      navigator.clipboard.writeText(JSON.stringify(activeLog.metadata, null, 2));
       handleMenuClose();
     }
   };
@@ -722,28 +719,7 @@ const SchoolAdminNotifications: React.FC = () => {
                 <Typography variant="body1" sx={{ mt: 0.5, p: 2, bgcolor: alpha(theme.palette.grey[500], 0.05), borderRadius: 2, border: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
                   {selectedLog.description}
                 </Typography>
-              </Grid>
-
-              {selectedLog.metadata && Object.keys(selectedLog.metadata).length > 0 && (
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="overline" color="text.secondary" fontWeight={700}>Technical Metadata</Typography>
-                  <Box sx={{
-                    mt: 1, p: 2,
-                    bgcolor: "#1e293b",
-                    color: "#f8fafc",
-                    borderRadius: 2,
-                    fontFamily: "monospace",
-                    fontSize: "0.85rem",
-                    overflowX: "auto",
-                    boxShadow: "inset 0 2px 4px rgba(0,0,0,0.2)"
-                  }}>
-                    <pre style={{ margin: 0 }}>
-                      {JSON.stringify(selectedLog.metadata, null, 2)}
-                    </pre>
-                  </Box>
-                </Grid>
-              )}
-            </Grid>
+              </Grid>            </Grid>
           )}
         </DialogContent>
         <Divider />
@@ -787,12 +763,6 @@ const SchoolAdminNotifications: React.FC = () => {
             <CopyIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Copy Log ID</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={handleCopyMetadata} disabled={!activeLog?.metadata || Object.keys(activeLog.metadata).length === 0}>
-          <ListItemIcon>
-            <CopyIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Copy Metadata</ListItemText>
         </MenuItem>
         <Divider sx={{ my: 0.5 }} />
         <MenuItem onClick={handleFilterByEntity}>

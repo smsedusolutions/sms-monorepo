@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import useApi from "../useApi";
 import type { ActivityLog, LogStatistics, ApiResponse, ActivityLogFilters } from "../../types";
 
@@ -8,6 +8,7 @@ export const useGetActivityLogs = (schoolId: string, filters: ActivityLogFilters
     queryFn: () =>
       useApi<ApiResponse<ActivityLog[]>>("GET", `/api/school/${schoolId}/logs`, undefined, filters as any),
     enabled: !!schoolId,
+    placeholderData: keepPreviousData,
   });
 };
 

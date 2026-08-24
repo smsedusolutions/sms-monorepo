@@ -11,6 +11,7 @@ import { useGetTeacherById } from '../../queries/Teacher';
 import type { Parent, Class } from '../../types';
 import TokenService from '../../queries/token/tokenService';
 import { useAuth } from '../../context/AuthContext';
+import { AppSearchInput } from '../../components/shared/AppSearchInput';
 
 const TeacherParentsPage = () => {
     const navigate = useNavigate();
@@ -180,13 +181,11 @@ const TeacherParentsPage = () => {
         <Box sx={{ p: { xs: 2, sm: 3 } }}>
             {/* Filter Bar */}
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3, alignItems: 'center' }}>
-                <TextField
+                <AppSearchInput
                     label="Search Parents"
-                    variant="outlined"
-                    size="small"
-                    value={search}
-                    onChange={(e) => handleSearchChange(e.target.value)}
                     placeholder="Search parent name, email, phone..."
+                    value={search}
+                    onSearch={(val) => handleSearchChange(val)}
                     sx={{ minWidth: 260, flex: { xs: 1, sm: 'none' } }}
                 />
 

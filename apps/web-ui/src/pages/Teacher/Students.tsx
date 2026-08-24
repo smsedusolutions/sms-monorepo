@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Box, IconButton, Tooltip, TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import { Box, IconButton, Tooltip, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { Edit as EditIcon, Block as BlockIcon } from '@mui/icons-material';
 import DataTable, { StatusChip } from '../../components/Table/DataTable';
 import type { Column } from '../../components/Table/DataTable';
@@ -10,6 +10,7 @@ import { useGetTeacherById } from '../../queries/Teacher';
 import type { Student, Class } from '../../types';
 import TokenService from '../../queries/token/tokenService';
 import { useAuth } from '../../context/AuthContext';
+import { AppSearchInput } from '../../components/shared/AppSearchInput';
 
 const TeacherStudentsPage = () => {
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -162,13 +163,11 @@ const TeacherStudentsPage = () => {
         <Box sx={{ p: { xs: 2, sm: 3 } }}>
             {/* Filter Bar */}
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 3, alignItems: 'center' }}>
-                <TextField
+                <AppSearchInput
                     label="Search Students / Parents"
-                    variant="outlined"
-                    size="small"
-                    value={search}
-                    onChange={(e) => handleSearchChange(e.target.value)}
                     placeholder="Search by student name or parent name..."
+                    value={search}
+                    onSearch={(val) => handleSearchChange(val)}
                     sx={{ minWidth: 260, flex: { xs: 1, sm: 'none' } }}
                 />
 

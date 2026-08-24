@@ -66,6 +66,7 @@ const getLogs = async (req, res) => {
 
         const [logs, total] = await Promise.all([
             ActivityLog.find(query)
+                .select("-metadata")
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit),
@@ -82,6 +83,33 @@ const getLogs = async (req, res) => {
     } catch (error) {
         console.error("Get Logs Error:", error.message);
         res.status(500).json({ success: false, message: "Failed to fetch logs", error: error.message });
+    }
+};
+
+/**
+ * GET Single Activity Log by ID (includes metadata for specific logId lookup)
+ * GET /api/school/:schoolId/logs/:logId
+ */
+const getLogById = async (req, res) => {
+    try {
+        const { schoolId, logId } = req.params;
+        const schoolDbName = await getSchoolDbName(schoolId);
+        if (!schoolDbName) return res.status(404).json({ success: false, message: "School not found" });
+
+        const ActivityLog = getActivityLogModel(schoolDbName);
+        const log = await ActivityLog.findOne({ schoolId, logId });
+
+        if (!log) {
+            return res.status(404).json({ success: false, message: "Activity log not found" });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: log
+        });
+    } catch (error) {
+        console.error("Get Log By ID Error:", error.message);
+        res.status(500).json({ success: false, message: "Failed to fetch log details", error: error.message });
     }
 };
 
@@ -168,6 +196,7 @@ const clearLogs = async (req, res) => {
 
 module.exports = {
     getLogs,
+    getLogById,
     getLogStats,
     clearLogs
 };
