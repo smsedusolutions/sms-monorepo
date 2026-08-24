@@ -101,11 +101,28 @@ export function checkIsWithinWorkingHours(startStr = '08:00', endStr = '16:00'):
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  const [startH, startM] = (startStr || '08:00').split(':').map(Number);
-  const [endH, endM] = (endStr || '16:00').split(':').map(Number);
+  const parseTimeStr = (t: string, defaultH: number, defaultM: number) => {
+    if (!t) return defaultH * 60 + defaultM;
+    const match = t.trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(AM|PM))?$/i);
+    if (match) {
+      let h = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      const ampm = match[3]?.toUpperCase();
+      if (ampm === 'PM' && h < 12) h += 12;
+      if (ampm === 'AM' && h === 12) h = 0;
+      return h * 60 + m;
+    }
+    // Fallback
+    const parts = t.split(':');
+    let h = parseInt(parts[0], 10);
+    let m = parseInt(parts[1], 10);
+    if (isNaN(h)) h = defaultH;
+    if (isNaN(m)) m = defaultM;
+    return h * 60 + m;
+  };
 
-  const startMinutes = (isNaN(startH) ? 8 : startH) * 60 + (isNaN(startM) ? 0 : startM);
-  const endMinutes = (isNaN(endH) ? 16 : endH) * 60 + (isNaN(endM) ? 0 : endM);
+  const startMinutes = parseTimeStr(startStr, 8, 0);
+  const endMinutes = parseTimeStr(endStr, 16, 0);
 
   const isWithin = currentMinutes >= startMinutes && currentMinutes <= endMinutes;
   const formattedRange = formatWorkingHoursRange(startStr, endStr);
