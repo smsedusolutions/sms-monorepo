@@ -8,7 +8,7 @@ const {
   getPaginationParams,
   formatPaginationResponse,
 } = require("../utils/pagination");
-const { logActivity, hashPassword } = require("@sms/shared/utils"); // SECURITY: GAP-001 bcrypt
+const { logActivity, hashPassword, escapeRegex } = require("@sms/shared/utils"); // SECURITY: GAP-001 bcrypt, ReDoS
 
 /**
  * Get Teacher model for a specific school database
@@ -126,6 +126,11 @@ const createTeacher = async (req, res) => {
       const { ClassSchema: classSchema } = require("@sms/shared");
       const Class = schoolDb.model("Class", classSchema);
 
+      await Teacher.updateMany(
+        { teacherId: { $ne: savedTeacher.teacherId }, classes: { $in: classes } },
+        { $pull: { classes: { $in: classes } } }
+      );
+
       await Promise.all(
         classes
           .filter((pair) => pair.includes("#"))
@@ -180,10 +185,12 @@ const getTeacherById = async (req, res) => {
     }
 
     const Teacher = getTeacherModel(schoolDbName);
+    // SECURITY (ReDoS): escape path param before using in $regex to prevent catastrophic backtracking
+    const safeTeacherId = escapeRegex(teacherId);
     const query = {
       $or: [
-        { teacherId: { $regex: new RegExp(`^${teacherId}$`, "i") } },
-        { userId: { $regex: new RegExp(`^${teacherId}$`, "i") } },
+        { teacherId: { $regex: new RegExp(`^${safeTeacherId}$`, "i") } },
+        { userId: { $regex: new RegExp(`^${safeTeacherId}$`, "i") } },
       ],
     };
     if (require("mongoose").isValidObjectId(teacherId)) {
@@ -311,7 +318,8 @@ const getAllTeachers = async (req, res) => {
     if (department) query.department = department;
     if (status) query.status = status;
     if (search) {
-      const regex = new RegExp(search, "i");
+      // SECURITY (ReDoS): escape user-supplied search string before building RegExp
+      const regex = new RegExp(escapeRegex(search), "i");
       query.$or = [
         { firstName: regex },
         { lastName: regex },
@@ -526,18 +534,25 @@ const updateTeacherById = async (req, res) => {
             })
         );
 
-        // Set classTeacherId on newly assigned sections
-        await Promise.all(
-          added
-            .filter((pair) => pair.includes("#"))
-            .map((pair) => {
-              const [cId, sId] = pair.split("#");
-              return Class.findOneAndUpdate(
-                { classId: cId, "sections.sectionId": sId },
-                { $set: { "sections.$.classTeacherId": teacherId } },
-              );
-            })
-        );
+        // Set classTeacherId on newly assigned sections & remove from any previous teachers
+        if (added.length > 0) {
+          await Teacher.updateMany(
+            { teacherId: { $ne: teacherId }, classes: { $in: added } },
+            { $pull: { classes: { $in: added } } }
+          );
+
+          await Promise.all(
+            added
+              .filter((pair) => pair.includes("#"))
+              .map((pair) => {
+                const [cId, sId] = pair.split("#");
+                return Class.findOneAndUpdate(
+                  { classId: cId, "sections.sectionId": sId },
+                  { $set: { "sections.$.classTeacherId": teacherId } },
+                );
+              })
+          );
+        }
       }
     }
 

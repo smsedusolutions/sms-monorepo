@@ -26,6 +26,15 @@ const SALT_ROUNDS = 12;
 const BCRYPT_PREFIX = '$2';
 
 /**
+ * Maximum password length accepted by this application.
+ * bcrypt silently truncates input at 72 bytes, so passwords longer than this:
+ *   1. Provide no extra security (bcrypt ignores the extra bytes).
+ *   2. Are a DoS vector — hashing a 1 MB string blocks the event loop for seconds.
+ * We cap at 72 to match bcrypt's effective limit.
+ */
+const MAX_PASSWORD_LENGTH = 72;
+
+/**
  * Hash a plaintext password.
  * @param {string} plainPassword
  * @returns {Promise<string>} bcrypt hash
@@ -33,6 +42,11 @@ const BCRYPT_PREFIX = '$2';
 const hashPassword = async (plainPassword) => {
     if (!plainPassword || typeof plainPassword !== 'string') {
         throw new Error('hashPassword: plainPassword must be a non-empty string');
+    }
+    // SECURITY (LPDoS): Reject passwords exceeding bcrypt's effective 72-byte limit.
+    // Hashing extremely long strings blocks the Node.js event loop.
+    if (plainPassword.length > MAX_PASSWORD_LENGTH) {
+        throw new Error(`hashPassword: password must not exceed ${MAX_PASSWORD_LENGTH} characters`);
     }
     return bcrypt.hash(plainPassword, SALT_ROUNDS);
 };
@@ -53,6 +67,11 @@ const hashPassword = async (plainPassword) => {
  */
 const verifyPassword = async (plainPassword, storedValue) => {
     if (!plainPassword || !storedValue) {
+        return { valid: false, needsRehash: false };
+    }
+
+    // SECURITY (LPDoS): Reject oversized passwords immediately — never feed them to bcrypt.
+    if (typeof plainPassword === 'string' && plainPassword.length > MAX_PASSWORD_LENGTH) {
         return { valid: false, needsRehash: false };
     }
 
@@ -84,4 +103,5 @@ module.exports = {
     verifyPassword,
     isBcryptHash,
     SALT_ROUNDS,
+    MAX_PASSWORD_LENGTH,
 };

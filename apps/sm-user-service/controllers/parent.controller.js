@@ -10,7 +10,7 @@ const {
   getPaginationParams,
   formatPaginationResponse,
 } = require("../utils/pagination");
-const { logActivity, hashPassword } = require("@sms/shared/utils"); // SECURITY: GAP-001 bcrypt
+const { logActivity, hashPassword, escapeRegex } = require("@sms/shared/utils"); // SECURITY: GAP-001 bcrypt, ReDoS
 
 /**
  * Get Parent model for a specific school database
@@ -224,10 +224,12 @@ const getParentById = async (req, res) => {
     }
 
     const Parent = getParentModel(schoolDbName);
+    // SECURITY (ReDoS): escape path param before using in $regex
+    const safeParentId = escapeRegex(parentId);
     const query = {
       $or: [
-        { parentId: { $regex: new RegExp(`^${parentId}$`, "i") } },
-        { userId: { $regex: new RegExp(`^${parentId}$`, "i") } },
+        { parentId: { $regex: new RegExp(`^${safeParentId}$`, "i") } },
+        { userId: { $regex: new RegExp(`^${safeParentId}$`, "i") } },
       ],
     };
     if (require("mongoose").isValidObjectId(parentId)) {
@@ -717,7 +719,8 @@ const searchParents = async (req, res) => {
     const Parent = getParentModel(schoolDbName);
 
     // Search by parentId, email, firstName, lastName, phone with partial matching
-    const searchRegex = new RegExp(query, "i");
+    // SECURITY (ReDoS): escape user-supplied search query before building RegExp
+    const searchRegex = new RegExp(escapeRegex(query), "i");
 
     const parents = await Parent.find({
       $or: [

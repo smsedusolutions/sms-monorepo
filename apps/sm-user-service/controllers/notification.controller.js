@@ -35,10 +35,12 @@ const getMyNotifications = async (req, res) => {
 
         let query = { userId: actualUserId };
 
-        if (isRead !== undefined) {
+        // SECURITY (NoSQL Injection): Only accept plain scalar values for query filters.
+        // Reject objects like {"$gt": ""} that could manipulate Mongoose queries.
+        if (isRead !== undefined && typeof isRead === 'string') {
             query.isRead = isRead === 'true';
         }
-        if (type) {
+        if (type && typeof type === 'string') {
             query.type = type;
         }
 

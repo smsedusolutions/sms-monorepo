@@ -5,7 +5,6 @@ import {
   Tooltip,
   Chip,
   Switch,
-  TextField,
   FormControl,
   InputLabel,
   Select,
@@ -20,6 +19,7 @@ import type { Teacher } from "../../types";
 import TokenService from "../../queries/token/tokenService";
 import { useAuth } from "../../context/AuthContext";
 import { useNotification } from "../../hooks/useNotification";
+import { AppSearchInput } from "../../components/shared/AppSearchInput";
 
 const TeachersPage = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -169,13 +169,14 @@ const TeachersPage = () => {
           alignItems: "center",
         }}
       >
-        <TextField
+        <AppSearchInput
           label="Search"
-          variant="outlined"
-          size="small"
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search by name or email..."
+          value={search}
+          onSearch={(val) => {
+            setSearch(val);
+            setPage(1);
+          }}
           sx={{ minWidth: 240 }}
         />
         <FormControl size="small" sx={{ minWidth: 150 }}>

@@ -17,18 +17,96 @@ const generateAttendanceId = () => {
     return `TATT${timestamp}${random}`.toUpperCase();
 };
 
-// Get today's date at midnight
-const getDateOnly = (dateArg = new Date()) => {
-    let d;
-    if (typeof dateArg === "string" && dateArg.includes("-")) {
-        const [year, month, day] = dateArg.split("-").map(Number);
-        d = new Date();
-        d.setFullYear(year, month - 1, day);
-    } else {
-        d = new Date(dateArg);
+// Timezone helper: get school's configured timezone or default to Asia/Kolkata
+const getSchoolTimeZone = (school) => {
+    return school?.attendanceSettings?.timezone || school?.timezone || "Asia/Kolkata";
+};
+
+// Get current hour, minute and total minutes from midnight in school timezone
+const getSchoolLocalTime = (date = new Date(), timeZone = "Asia/Kolkata") => {
+    try {
+        const timeStr = date.toLocaleTimeString("en-GB", {
+            timeZone,
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+        const [h, m] = timeStr.split(":").map(Number);
+        const hours = isNaN(h) ? date.getUTCHours() : (h === 24 ? 0 : h);
+        const minutes = isNaN(m) ? date.getUTCMinutes() : m;
+        return { hours, minutes, totalMinutes: hours * 60 + minutes };
+    } catch (e) {
+        return {
+            hours: date.getHours(),
+            minutes: date.getMinutes(),
+            totalMinutes: date.getHours() * 60 + date.getMinutes(),
+        };
     }
-    d.setHours(0, 0, 0, 0);
-    return d;
+};
+
+// Parse time string (e.g. "08:00", "16:00", "8:30 AM") to minutes from midnight
+const parseTimeToMinutes = (timeStr, defaultH = 8, defaultM = 0) => {
+    if (!timeStr || typeof timeStr !== "string") return defaultH * 60 + defaultM;
+    const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?(?:\s*(AM|PM))?$/i);
+    if (match) {
+        let h = parseInt(match[1], 10);
+        const m = parseInt(match[2], 10);
+        const ampm = match[3] && match[3].toUpperCase();
+        if (ampm === "PM" && h < 12) h += 12;
+        if (ampm === "AM" && h === 12) h = 0;
+        return h * 60 + (isNaN(m) ? defaultM : m);
+    }
+    const parts = timeStr.split(":");
+    let h = parseInt(parts[0], 10);
+    let m = parseInt(parts[1], 10);
+    if (isNaN(h)) h = defaultH;
+    if (isNaN(m)) m = defaultM;
+    return h * 60 + m;
+};
+
+// Format time string to 12-hour AM/PM format
+const format12Hour = (timeStr) => {
+    if (!timeStr) return "";
+    const minutes = parseTimeToMinutes(timeStr, 8, 0);
+    let h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    const ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12;
+    if (h === 0) h = 12;
+    const minPart = m > 0 ? `:${String(m).padStart(2, "0")}` : "";
+    return `${h}${minPart} ${ampm}`;
+};
+
+// Get today's date at midnight in school timezone (as UTC midnight Date object)
+const getDateOnly = (dateArg = new Date(), timeZone = "Asia/Kolkata") => {
+    let year, month, day;
+    if (typeof dateArg === "string" && dateArg.includes("-")) {
+        const parts = dateArg.split("T")[0].split("-").map(Number);
+        year = parts[0];
+        month = parts[1];
+        day = parts[2];
+    } else {
+        const d = dateArg instanceof Date ? dateArg : new Date(dateArg);
+        try {
+            const dateStr = d.toLocaleDateString("en-CA", { timeZone });
+            const parts = dateStr.split("-").map(Number);
+            year = parts[0];
+            month = parts[1];
+            day = parts[2];
+        } catch (e) {
+            year = d.getFullYear();
+            month = d.getMonth() + 1;
+            day = d.getDate();
+        }
+    }
+    return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+};
+
+// Get end of day (23:59:59.999 UTC)
+const getEndOfDay = (startDate) => {
+    const end = new Date(startDate);
+    end.setUTCHours(23, 59, 59, 999);
+    return end;
 };
 
 /**
@@ -60,8 +138,6 @@ const teacherCheckIn = async (req, res) => {
     try {
         const { schoolId } = req.params;
         const teacherId = req.user?.teacherId || req.body.teacherId;
-        const today = getDateOnly();
-        console.log("[DEBUG teacherCheckIn] schoolId:", schoolId, "teacherId:", teacherId, "today:", today.toISOString(), "now:", new Date().toISOString());
         const { latitude, longitude } = req.body;
 
         if (!teacherId) {
@@ -80,30 +156,19 @@ const teacherCheckIn = async (req, res) => {
             });
         }
 
-        // Validate working hours
-        const workingHours = school.attendanceSettings?.workingHours || { start: "08:00", end: "16:00" };
+        const timeZone = getSchoolTimeZone(school);
+        const today = getDateOnly(new Date(), timeZone);
+        const endOfDay = getEndOfDay(today);
         const now = new Date();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        console.log("[DEBUG teacherCheckIn] schoolId:", schoolId, "teacherId:", teacherId, "today:", today.toISOString(), "now:", now.toISOString());
 
-        const [startH, startM] = (workingHours.start || '08:00').split(':').map(Number);
-        const [endH, endM] = (workingHours.end || '16:00').split(':').map(Number);
+        // Validate working hours in school's timezone
+        const workingHours = school.attendanceSettings?.workingHours || { start: "08:00", end: "16:00" };
+        const { totalMinutes: currentMinutes } = getSchoolLocalTime(now, timeZone);
 
-        const startMinutes = (isNaN(startH) ? 8 : startH) * 60 + (isNaN(startM) ? 0 : startM);
-        const endMinutes = (isNaN(endH) ? 16 : endH) * 60 + (isNaN(endM) ? 0 : endM);
-
-        const format12Hour = (timeStr) => {
-            if (!timeStr) return '';
-            const [hStr, mStr] = timeStr.split(':');
-            let h = parseInt(hStr, 10);
-            const m = parseInt(mStr || '0', 10);
-            if (isNaN(h)) return timeStr;
-            const ampm = h >= 12 ? 'PM' : 'AM';
-            h = h % 12;
-            if (h === 0) h = 12;
-            const minPart = m > 0 ? `:${String(m).padStart(2, '0')}` : '';
-            return `${h}${minPart} ${ampm}`;
-        };
-        const formattedRange = `${format12Hour(workingHours.start || '08:00')} - ${format12Hour(workingHours.end || '16:00')}`;
+        const startMinutes = parseTimeToMinutes(workingHours.start || "08:00", 8, 0);
+        const endMinutes = parseTimeToMinutes(workingHours.end || "16:00", 16, 0);
+        const formattedRange = `${format12Hour(workingHours.start || "08:00")} - ${format12Hour(workingHours.end || "16:00")}`;
 
         if (currentMinutes < startMinutes || currentMinutes > endMinutes) {
             return res.status(403).json({
@@ -140,8 +205,6 @@ const teacherCheckIn = async (req, res) => {
         }
 
         const AttendanceModel = await getAttendanceModel(schoolId);
-        const endOfDay = new Date(today);
-        endOfDay.setHours(23, 59, 59, 999);
 
         // Check if already checked in
         let attendance = await AttendanceModel.findOne({
@@ -212,10 +275,11 @@ const teacherCheckOut = async (req, res) => {
             });
         }
 
+        const school = await School.findOne({ schoolId });
+        const timeZone = getSchoolTimeZone(school);
         const AttendanceModel = await getAttendanceModel(schoolId);
-        const today = getDateOnly();
-        const endOfDay = new Date(today);
-        endOfDay.setHours(23, 59, 59, 999);
+        const today = getDateOnly(new Date(), timeZone);
+        const endOfDay = getEndOfDay(today);
         const now = new Date();
 
         const attendance = await AttendanceModel.findOne({
@@ -267,10 +331,11 @@ const getTeacherStatus = async (req, res) => {
         const { schoolId } = req.params;
         const teacherId = req.user?.teacherId || req.query.teacherId;
 
+        const school = await School.findOne({ schoolId });
+        const timeZone = getSchoolTimeZone(school);
         const AttendanceModel = await getAttendanceModel(schoolId);
-        const today = getDateOnly();
-        const endOfDay = new Date(today);
-        endOfDay.setHours(23, 59, 59, 999);
+        const today = getDateOnly(new Date(), timeZone);
+        const endOfDay = getEndOfDay(today);
 
         console.log("[DEBUG getTeacherStatus] schoolId:", schoolId, "teacherId:", teacherId, "today:", today.toISOString(), "endOfDay:", endOfDay.toISOString());
 
@@ -312,57 +377,64 @@ const markTeacherAttendance = async (req, res) => {
             });
         }
 
+        const school = await School.findOne({ schoolId });
+        const timeZone = getSchoolTimeZone(school);
         const AttendanceModel = await getAttendanceModel(schoolId);
-        const attendanceDate = getDateOnly(date || new Date());
-        const startOfDay = new Date(attendanceDate);
-        const endOfDay = new Date(attendanceDate);
-        endOfDay.setHours(23, 59, 59, 999);
-        const markedBy = req.user?.userId;
+        const attendanceDate = getDateOnly(date || new Date(), timeZone);
+        const markedBy = req.user?.userId || "system";
         const markedByRole = req.user?.role || "sch_admin";
 
-        const results = [];
-        const errors = [];
+        const validRecords = attendanceRecords.filter((r) => r && r.teacherId && r.status);
 
-        for (const record of attendanceRecords) {
-            try {
-                let attendance = await AttendanceModel.findOne({
-                    teacherId: record.teacherId,
-                    date: { $gte: startOfDay, $lte: endOfDay },
-                });
+        if (validRecords.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No valid teacher attendance records to mark",
+                data: { totalCount: 0 },
+            });
+        }
 
-                if (attendance) {
-                    // Update
-                    attendance.status = record.status;
-                    attendance.leaveType = record.leaveType;
-                    attendance.remarks = record.remarks;
-                    attendance.markedBy = markedBy;
-                    attendance.markedByRole = markedByRole;
-                } else {
-                    // Create
-                    attendance = new AttendanceModel({
-                        attendanceId: generateAttendanceId(),
-                        schoolId,
+        // Prepare bulkWrite operations (1 atomic MongoDB command)
+        const bulkOps = validRecords.map((record) => {
+            const updateFields = {
+                status: record.status,
+                markedBy,
+                markedByRole,
+                schoolId,
+            };
+            if (record.leaveType) updateFields.leaveType = record.leaveType;
+            if (record.remarks !== undefined) updateFields.remarks = record.remarks;
+
+            return {
+                updateOne: {
+                    filter: {
                         teacherId: record.teacherId,
                         date: attendanceDate,
-                        status: record.status,
-                        leaveType: record.leaveType,
-                        remarks: record.remarks,
-                        markedBy,
-                        markedByRole,
-                    });
-                }
+                    },
+                    update: {
+                        $set: updateFields,
+                        $setOnInsert: {
+                            attendanceId: generateAttendanceId(),
+                            date: attendanceDate,
+                            teacherId: record.teacherId,
+                        },
+                    },
+                    upsert: true,
+                },
+            };
+        });
 
-                await attendance.save();
-                results.push({ teacherId: record.teacherId, action: attendance.isNew ? "created" : "updated" });
-            } catch (err) {
-                errors.push({ teacherId: record.teacherId, error: err.message });
-            }
-        }
+        const bulkResult = await AttendanceModel.bulkWrite(bulkOps, { ordered: false });
 
         res.status(200).json({
             success: true,
-            message: `Teacher attendance marked for ${results.length} teachers`,
-            data: { results, errors },
+            message: `Teacher attendance marked for ${validRecords.length} teachers`,
+            data: {
+                totalCount: validRecords.length,
+                matchedCount: bulkResult.matchedCount,
+                modifiedCount: bulkResult.modifiedCount,
+                upsertedCount: bulkResult.upsertedCount,
+            },
         });
     } catch (error) {
         console.error("Error marking teacher attendance:", error);
@@ -382,13 +454,14 @@ const getTeachersAttendance = async (req, res) => {
     try {
         const { schoolId, date } = req.params;
 
+        const school = await School.findOne({ schoolId });
+        const timeZone = getSchoolTimeZone(school);
         const AttendanceModel = await getAttendanceModel(schoolId);
-        const attendanceDate = getDateOnly(date);
+        const attendanceDate = getDateOnly(date, timeZone);
         
         // Use date range query for robustness (start of day to end of day)
         const startOfDay = new Date(attendanceDate);
-        const endOfDay = new Date(attendanceDate);
-        endOfDay.setHours(23, 59, 59, 999);
+        const endOfDay = getEndOfDay(attendanceDate);
 
         console.log("[DEBUG getTeachersAttendance] schoolId:", schoolId, "dateParam:", date, "startOfDay:", startOfDay.toISOString(), "endOfDay:", endOfDay.toISOString());
 
@@ -431,13 +504,15 @@ const getTeacherHistory = async (req, res) => {
         const { schoolId, teacherId } = req.params;
         const { startDate, endDate } = req.query;
 
+        const school = await School.findOne({ schoolId });
+        const timeZone = getSchoolTimeZone(school);
         const AttendanceModel = await getAttendanceModel(schoolId);
 
         const query = { teacherId };
         if (startDate && endDate) {
             query.date = {
-                $gte: getDateOnly(startDate),
-                $lte: getDateOnly(endDate),
+                $gte: getDateOnly(startDate, timeZone),
+                $lte: getEndOfDay(getDateOnly(endDate, timeZone)),
             };
         }
 

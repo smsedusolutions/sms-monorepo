@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, IconButton, Tooltip, Switch, TextField, FormControl, InputLabel, Select, MenuItem, Chip, Typography } from "@mui/material";
+import { Box, IconButton, Tooltip, Switch, FormControl, InputLabel, Select, MenuItem, Chip, Typography } from "@mui/material";
 
 import { Edit as EditIcon } from "@mui/icons-material";
 import DataTable, { StatusChip } from "../../components/Table/DataTable";
@@ -9,6 +9,7 @@ import { useGetParents, useUpdateParent } from "../../queries/Parent";
 import type { Parent, ParentFilters } from "../../types";
 import TokenService from "../../queries/token/tokenService";
 import { useAuth } from "../../context/AuthContext";
+import { AppSearchInput } from "../../components/shared/AppSearchInput";
 import { useNotificationStore } from "../../stores/notificationStore";
 
 const ParentsPage = () => {
@@ -166,13 +167,11 @@ const ParentsPage = () => {
           gap: { xs: 1, sm: 2 }, 
           flex: 1 
         }}>
-          <TextField
+          <AppSearchInput
             label="Search"
-            variant="outlined"
-            size="small"
-            value={filters.search}
-            onChange={(e) => handleFilterChange({ search: e.target.value })}
             placeholder="Search parents..."
+            value={filters.search}
+            onSearch={(val) => handleFilterChange({ search: val })}
             sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: { sm: 250 } }}
           />
           

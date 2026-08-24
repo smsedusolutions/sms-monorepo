@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Box, IconButton, Tooltip, Switch, TextField, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
+import { Box, IconButton, Tooltip, Switch, FormControl, InputLabel, Select, MenuItem, Button } from '@mui/material';
 import { Edit as EditIcon, Badge as BadgeIcon, Article as CertIcon } from '@mui/icons-material';
 import DataTable, { StatusChip } from '../../components/Table/DataTable';
 import type { Column } from '../../components/Table/DataTable';
@@ -14,6 +14,7 @@ import type { TemplateConfig, ParseConfig } from '../../utils/excelBulk';
 import TokenService from '../../queries/token/tokenService';
 import { useAuth } from '../../context/AuthContext';
 import { useNotificationStore } from '../../stores/notificationStore';
+import { AppSearchInput } from '../../components/shared/AppSearchInput';
 
 // Student Excel template column definitions
 const STUDENT_TEMPLATE_COLUMNS = [
@@ -303,13 +304,11 @@ const StudentsPage = () => {
             gap: { xs: 1, sm: 2 }, 
             flex: 1 
           }}>
-            <TextField
+            <AppSearchInput
               label="Search"
-              variant="outlined"
-              size="small"
-              value={filters.search}
-              onChange={(e) => handleFilterChange({ search: e.target.value })}
               placeholder="Search students..."
+              value={filters.search}
+              onSearch={(val) => handleFilterChange({ search: val })}
               sx={{ width: { xs: '100%', sm: 'auto' }, minWidth: { sm: 250 } }}
             />
             
