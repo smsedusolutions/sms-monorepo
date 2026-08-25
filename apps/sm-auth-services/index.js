@@ -1,38 +1,24 @@
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 require('dotenv').config();
-const { matchOrigin } = require('@sms/shared/utils');
 
 const { connectDB, ensureDbConnection } = require('./configs/db');
 const authRoutes = require('./routes/auth.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 // DPDP Act 2023 — consent audit routes
 const consentRoutes = require('./routes/consent.routes');
+const { commonRateLimiter } = require('@sms/shared/middlewares');
+const { getCorsOptions } = require('@sms/shared/utils');
 
 const app = express();
 
-// CORS Configuration
-const allowedUrls = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',').map(url => url.trim())
-    : ['http://localhost:3000', 'http://localhost:5173', "https://sms-web-ui.vercel.app", "https://*.vercel.app"];
+// Trust proxy for Vercel / serverless / reverse proxies to resolve client IPs accurately
+app.set('trust proxy', 1);
 
-const corsOptions = {
-    origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, Postman, etc.)
-        if (!origin || allowedUrls.some(url => matchOrigin(origin, url))) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    credentials: true,
-    optionsSuccessStatus: 200
-};
-
-const compression = require('compression');
-const { commonRateLimiter } = require('@sms/shared/middlewares');
+// Unified dynamic CORS configuration
+const corsOptions = getCorsOptions();
+app.use(cors(corsOptions));
 
 // Security Headers Middleware (GAP-004)
 app.use((req, res, next) => {
@@ -45,7 +31,6 @@ app.use((req, res, next) => {
 });
 
 // Middleware
-app.use(cors(corsOptions));
 app.use(compression());
 app.use(commonRateLimiter);
 
@@ -84,5 +69,3 @@ connectDB()
     });
 
 module.exports = app;
-
-// Trigger redeployment
