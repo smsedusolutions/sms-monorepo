@@ -2,6 +2,9 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const http = require("http");
+const compression = require("compression");
+const { getCorsOptions } = require("@sms/shared/utils");
+const { commonRateLimiter } = require("@sms/shared/middlewares");
 
 console.log("🔑 [sm-chat-service] Active JWT_SECRET prefix:", process.env.JWT_SECRET ? process.env.JWT_SECRET.substring(0, 4) + "****" : "MISSING");
 
@@ -13,11 +16,15 @@ const { initWebSocketGateway } = require("./websocket/wsGateway");
 
 const app = express();
 
-const compression = require("compression");
+// Trust proxy for reverse proxies / serverless / hosting providers
+app.set("trust proxy", 1);
 
-// Middlewares
-app.use(cors());
+// Unified dynamic CORS configuration
+const corsOptions = getCorsOptions();
+app.use(cors(corsOptions));
+
 app.use(compression());
+app.use(commonRateLimiter);
 app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 

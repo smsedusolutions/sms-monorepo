@@ -2,7 +2,7 @@
 const socketIo = require('socket.io');
 const { TransportRouteSchema, NotificationSchema } = require('@sms/shared/models');
 const { getSchoolDbConnection } = require('../configs/db');
-const { sendEmail } = require('@sms/shared/utils');
+const { sendEmail, isOriginAllowed } = require('@sms/shared/utils');
 const { v4: uuidv4 } = require('uuid');
 
 let io;
@@ -10,7 +10,12 @@ let io;
 const initSocket = (server) => {
     io = socketIo(server, {
         cors: {
-            origin: ["http://localhost:3000", "http://localhost:5173", "https://sms-web-ui.vercel.app"],
+            origin: (origin, callback) => {
+                if (isOriginAllowed(origin)) {
+                    return callback(null, true);
+                }
+                return callback(null, false);
+            },
             methods: ["GET", "POST"],
             credentials: true
         },

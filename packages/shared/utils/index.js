@@ -23,6 +23,7 @@ module.exports = {
   ...pagination,
   ...require("./activityLogger"),
   ...require("./originMatcher"),
+  ...require("./corsConfig"),
   ...require("./idGenerator"),
   ...require("./passwordUtils"),
   escapeRegex,

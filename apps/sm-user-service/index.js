@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 require('dotenv').config();
 
 const { connectDB, ensureDbConnection } = require('./configs/db');
@@ -26,52 +27,17 @@ const roleRoutes = require('./routes/role.routes');
 const disciplineRoutes = require('./routes/discipline.routes');
 const { initCronJobs } = require('./utils/cronJobs');
 const { commonRateLimiter } = require('@sms/shared/middlewares');
-const { matchOrigin } = require('@sms/shared/utils');
+const { getCorsOptions } = require('@sms/shared/utils');
 
 const app = express();
 
-// Comprehensive CORS Configuration
-const defaultAllowedOrigins = [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://localhost:*',
-    'https://sms-web-ui.vercel.app',
-    'https://*.vercel.app',
-];
+// Trust proxy for Vercel / serverless / reverse proxies to resolve client IPs accurately
+app.set('trust proxy', 1);
 
-const envAllowed = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',').map(url => url.trim()).filter(Boolean)
-    : [];
-
-const allowedOriginsList = Array.from(new Set([...defaultAllowedOrigins, ...envAllowed]));
-
-const corsOptions = {
-    origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, Postman, curl, server-to-server)
-        if (!origin) {
-            return callback(null, true);
-        }
-
-
-        const isAllowed = allowedOriginsList.some(pattern => matchOrigin(origin, pattern));
-        if (isAllowed) {
-            return callback(null, true);
-        }
-
-        console.warn(`[CORS] Request from unlisted origin: "${origin}"`);
-        // Return false without crashing the Express pipeline with an unhandled exception
-        callback(null, false);
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
-    credentials: true,
-    optionsSuccessStatus: 200
-};
-
-const compression = require('compression');
-
-// Middleware
+// Unified dynamic CORS configuration
+const corsOptions = getCorsOptions();
 app.use(cors(corsOptions));
+
 app.use(compression());
 app.use(commonRateLimiter);
 
@@ -126,5 +92,3 @@ app.listen(PORT, async () => {
 });
 
 module.exports = app;
-
-// Trigger redeployment - Added principal role middleware authorization to routes
