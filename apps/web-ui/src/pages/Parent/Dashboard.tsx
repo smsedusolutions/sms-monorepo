@@ -20,7 +20,7 @@ import {
     Check as CheckIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { Chart } from 'react-google-charts';
+import DonutChart from '../../components/Charts/DonutChart';
 import TokenService from '../../queries/token/tokenService';
 import { useGetParentDashboard, useGetChildAttendance } from '../../queries/ParentPortal';
 import { useGetAnnouncements } from '../../queries/Announcement';
@@ -74,16 +74,12 @@ const ParentDashboard = () => {
 
     const percentageColor = getAttendanceColor(attendancePercentage);
 
-    // Google Donut Chart Data
-    const donutData = useMemo(() => {
-        return [
-            ['Status', 'Days'],
-            ['Present', summary?.present || 0],
-            ['Absent', summary?.absent || 0],
-            ['Late', summary?.late || 0],
-            ['Leave', summary?.leave || 0],
-        ];
-    }, [summary]);
+    const donutSegments = useMemo(() => [
+        { label: 'Present', value: summary?.present || 0, color: '#10b981' },
+        { label: 'Absent',  value: summary?.absent  || 0, color: '#ef4444' },
+        { label: 'Late',    value: summary?.late    || 0, color: '#f59e0b' },
+        { label: 'Leave',   value: summary?.leave   || 0, color: '#8b5cf6' },
+    ], [summary]);
 
     const handleChildSelect = (child: ChildStats) => {
         const foundContextChild = contextChildren.find(c => c.studentId === child.studentId);
@@ -364,32 +360,15 @@ const ParentDashboard = () => {
                                 <Grid container spacing={2} alignItems="center">
                                     {/* Donut Chart Visual */}
                                     <Grid size={{ xs: 12, sm: 4.5 }}>
-                                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
-                                            <Chart
-                                                chartType="PieChart"
-                                                data={donutData}
-                                                options={{
-                                                    pieHole: 0.65,
-                                                    colors: ['#10b981', '#ef4444', '#f59e0b', '#8b5cf6'],
-                                                    legend: 'none',
-                                                    chartArea: { width: '92%', height: '92%' },
-                                                    backgroundColor: 'transparent',
-                                                    pieSliceBorderColor: 'transparent',
-                                                }}
-                                                width="135px"
-                                                height="135px"
+                                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                            <DonutChart
+                                                segments={donutSegments}
+                                                size={135}
+                                                holeRatio={0.65}
+                                                centerLabel={`${Math.round(attendancePercentage)}%`}
+                                                centerSublabel="Attendance"
+                                                centerColor={percentageColor}
                                             />
-                                            <Box sx={{
-                                                position: 'absolute', display: 'flex', flexDirection: 'column',
-                                                alignItems: 'center', justifyContent: 'center', textAlign: 'center', pointerEvents: 'none'
-                                            }}>
-                                                <Typography variant="h5" fontWeight={800} sx={{ color: percentageColor, lineHeight: 1, fontSize: '1.35rem' }}>
-                                                    {attendancePercentage}%
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ mt: 0.25, fontSize: '0.68rem' }}>
-                                                    Attendance
-                                                </Typography>
-                                            </Box>
                                         </Box>
                                     </Grid>
 

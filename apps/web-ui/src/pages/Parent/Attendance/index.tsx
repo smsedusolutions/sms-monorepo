@@ -18,10 +18,14 @@ import {
     FilterList as FilterIcon,
     Badge as BadgeIcon,
 } from '@mui/icons-material';
-import { Chart } from 'react-google-charts';
+import DonutChart from '../../../components/Charts/DonutChart';
+import SVGBarChart from '../../../components/Charts/SVGBarChart';
+import SVGAreaChart from '../../../components/Charts/SVGAreaChart';
 import { useChildSelector } from '../../../context/ChildSelectorContext';
 import { useGetChildAttendance } from '../../../queries/ParentPortal';
 import TokenService from '../../../queries/token/tokenService';
+import { AppDatePicker } from '../../../components/shared/AppDatePicker';
+import { format, isValid } from 'date-fns';
 import { exportAttendancePDF, exportAttendanceExcel } from '../../../utils/attendanceExport';
 import type { AttendanceRecord, AttendanceSummaryData } from '../../../utils/attendanceExport';
 
@@ -197,24 +201,9 @@ const ParentAttendance: React.FC = () => {
         } finally { setExporting(null); }
     };
 
-    // Google Charts data
-    const donutData = [
-        ['Status', 'Days'],
-        ['Present', summary?.present || 0],
-        ['Absent', summary?.absent || 0],
-        ['Late', summary?.late || 0],
-        ['Half Day', summary?.halfDay || 0],
-        ['Leave', summary?.leave || 0],
-    ];
-
-    const barData = [
-        ['Week', 'Present', 'Absent', 'Late'],
-        ...weeklyData.map(w => [w.label, w.present, w.absent, w.late]),
-    ];
-
     const lineData = useMemo(() => {
         const sorted = [...rawAttendance].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        const rows: (string | number)[][] = [['Date', 'Attendance (1=Present, 0=Absent)']];
+        const rows: (string | number)[][] = [['Date', 'Attendance']];
         sorted.forEach(r => {
             const d = new Date(r.date);
             rows.push([d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }), r.status === 'present' ? 1 : r.status === 'late' ? 0.5 : 0]);
@@ -361,20 +350,49 @@ const ParentAttendance: React.FC = () => {
                             </FormControl>
                         </>
                     ) : (
-                        <>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flexWrap: 'wrap' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                                 <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: '0.72rem' }}>From</Typography>
-                                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
-                                    max={endDate}
-                                    style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12, height: 32 }} />
+                                <AppDatePicker
+                                    value={startDate ? new Date(startDate) : null}
+                                    onChange={(date: Date | null) => setStartDate(date && isValid(date) ? format(date, 'yyyy-MM-dd') : '')}
+                                    maxDate={endDate ? new Date(endDate) : undefined}
+                                    disableMargin
+                                    fullWidth={false}
+                                    inputSx={{
+                                        '& .MuiInputBase-input': {
+                                            py: 0.5,
+                                            px: 1,
+                                            fontSize: '0.8rem',
+                                            height: 20,
+                                        },
+                                        height: 32,
+                                        width: 145,
+                                    }}
+                                />
                             </Box>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
                                 <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: '0.72rem' }}>To</Typography>
-                                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
-                                    min={startDate} max={now.toISOString().split('T')[0]}
-                                    style={{ padding: '6px 8px', borderRadius: 6, border: '1px solid #e2e8f0', fontSize: 12, height: 32 }} />
+                                <AppDatePicker
+                                    value={endDate ? new Date(endDate) : null}
+                                    onChange={(date: Date | null) => setEndDate(date && isValid(date) ? format(date, 'yyyy-MM-dd') : '')}
+                                    minDate={startDate ? new Date(startDate) : undefined}
+                                    maxDate={now}
+                                    disableMargin
+                                    fullWidth={false}
+                                    inputSx={{
+                                        '& .MuiInputBase-input': {
+                                            py: 0.5,
+                                            px: 1,
+                                            fontSize: '0.8rem',
+                                            height: 20,
+                                        },
+                                        height: 32,
+                                        width: 145,
+                                    }}
+                                />
                             </Box>
-                        </>
+                        </Box>
                     )}
 
                     <Divider orientation="vertical" flexItem sx={{ display: { xs: 'none', md: 'block' } }} />
@@ -499,20 +517,17 @@ const ParentAttendance: React.FC = () => {
                                         <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>No data available</Typography>
                                     </Box>
                                 ) : (
-                                    <Chart
-                                        chartType="PieChart"
-                                        data={donutData}
-                                        options={{
-                                            pieHole: 0.55,
-                                            colors: ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'],
-                                            legend: { position: 'right', textStyle: { fontSize: 11 } },
-                                            chartArea: { width: '85%', height: '85%' },
-                                            pieSliceBorderColor: '#fff',
-                                            backgroundColor: 'transparent',
-                                            tooltip: { trigger: 'focus' },
-                                        }}
-                                        width="100%"
-                                        height="180px"
+                                    <DonutChart
+                                        segments={[
+                                            { label: 'Present',  value: summary?.present  || 0, color: '#10b981' },
+                                            { label: 'Absent',   value: summary?.absent   || 0, color: '#ef4444' },
+                                            { label: 'Late',     value: summary?.late     || 0, color: '#f59e0b' },
+                                            { label: 'Half Day', value: summary?.halfDay  || 0, color: '#3b82f6' },
+                                            { label: 'Leave',    value: summary?.leave    || 0, color: '#8b5cf6' },
+                                        ]}
+                                        size={160}
+                                        holeRatio={0.55}
+                                        showLegend
                                     />
                                 )}
                             </Card>
@@ -527,20 +542,13 @@ const ParentAttendance: React.FC = () => {
                                         <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>No data available</Typography>
                                     </Box>
                                 ) : (
-                                    <Chart
-                                        chartType="ColumnChart"
-                                        data={barData}
-                                        options={{
-                                            colors: ['#10b981', '#ef4444', '#f59e0b'],
-                                            legend: { position: 'top', textStyle: { fontSize: 10 } },
-                                            chartArea: { width: '85%', height: '70%' },
-                                            bar: { groupWidth: '70%' },
-                                            backgroundColor: 'transparent',
-                                            vAxis: { minValue: 0, format: '0', gridlines: { color: '#f1f5f9' }, textStyle: { fontSize: 10 } },
-                                            hAxis: { textStyle: { fontSize: 10 } },
-                                        }}
-                                        width="100%"
-                                        height="180px"
+                                    <SVGBarChart
+                                        data={[
+                                            ['Week', 'Present', 'Absent', 'Late'],
+                                            ...weeklyData.map(w => [w.label, w.present, w.absent, w.late]),
+                                        ]}
+                                        colors={['#10b981', '#ef4444', '#f59e0b']}
+                                        height={180}
                                     />
                                 )}
                             </Card>
@@ -581,22 +589,14 @@ const ParentAttendance: React.FC = () => {
                                         <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>Not enough data for trend chart</Typography>
                                     </Box>
                                 ) : (
-                                    <Chart
-                                        chartType="AreaChart"
-                                        data={lineData}
-                                        options={{
-                                            colors: ['#6366f1'],
-                                            legend: { position: 'none' },
-                                            chartArea: { width: '88%', height: '70%' },
-                                            backgroundColor: 'transparent',
-                                            areaOpacity: 0.2,
-                                            vAxis: { minValue: 0, maxValue: 1, ticks: [0, 0.5, 1], format: '0.#', gridlines: { color: '#f1f5f9' }, textStyle: { fontSize: 9 } },
-                                            hAxis: { textStyle: { fontSize: 8.5 }, slantedText: true, slantedTextAngle: 45 },
-                                            curveType: 'function',
-                                        }}
-                                        width="100%"
-                                        height="180px"
-                                    />
+                                        <SVGAreaChart
+                                            data={lineData}
+                                            colors={['#6366f1']}
+                                            height={180}
+                                            filled
+                                            yMin={0}
+                                            yMax={1}
+                                        />
                                 )}
                             </Card>
                         </Grid>

@@ -43,6 +43,8 @@ import {
 import { useGetClasses } from '../../../../queries/Class';
 import { useAcademicYear } from '../../../../hooks/useAcademicYear';
 import { AppTable } from '../../../../components/shared/AppTable';
+import { AppDatePicker } from '../../../../components/shared/AppDatePicker';
+import { format, isValid } from 'date-fns';
 import type { FeeStructure, FeeCategory } from '../../../../types/fee.types';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { useIsMobile } from '../../../../hooks/useIsMobile';
@@ -561,7 +563,16 @@ const FeeStructures: React.FC = () => {
                                                     <Controller
                                                         name={`installments.${index}.dueDate`}
                                                         control={control}
-                                                        render={({ field }: any) => <TextField {...field} type="date" label="Due Date" InputLabelProps={{ shrink: true }} />}
+                                                        render={({ field }: any) => (
+                                                            <AppDatePicker
+                                                                label="Due Date"
+                                                                value={field.value ? new Date(field.value) : null}
+                                                                onChange={(date: Date | null) => field.onChange(date && isValid(date) ? format(date, 'yyyy-MM-dd') : '')}
+                                                                disableMargin
+                                                                fullWidth={false}
+                                                                containerSx={{ width: 160 }}
+                                                            />
+                                                        )}
                                                     />
                                                     <Controller
                                                         name={`installments.${index}.percentageOfTotal`}

@@ -27,6 +27,8 @@ import {
 } from '../../../../queries/Fee';
 import { useUrlTab } from '../../../../hooks/useUrlTab';
 import { AppTable } from '../../../../components/shared/AppTable';
+import { AppDatePicker } from '../../../../components/shared/AppDatePicker';
+import { format, isValid } from 'date-fns';
 
 import { useIsMobile } from '../../../../hooks/useIsMobile';
 import { useAcademicYear } from '../../../../hooks/useAcademicYear';
@@ -112,25 +114,22 @@ const FeeReports: React.FC = () => {
                             </TextField>
                         </Grid>
                         <Grid size={{ xs: 6, sm: 4 }}>
-                            <TextField
-                                type="date"
-                                size="small"
-                                fullWidth
+                            <AppDatePicker
                                 label="Export Start Date"
-                                InputLabelProps={{ shrink: true }}
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
+                                value={startDate ? new Date(startDate) : null}
+                                onChange={(date: Date | null) => setStartDate(date && isValid(date) ? format(date, 'yyyy-MM-dd') : '')}
+                                disableMargin
+                                fullWidth
                             />
                         </Grid>
                         <Grid size={{ xs: 6, sm: 4 }}>
-                            <TextField
-                                type="date"
-                                size="small"
-                                fullWidth
+                            <AppDatePicker
                                 label="Export End Date"
-                                InputLabelProps={{ shrink: true }}
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
+                                value={endDate ? new Date(endDate) : null}
+                                onChange={(date: Date | null) => setEndDate(date && isValid(date) ? format(date, 'yyyy-MM-dd') : '')}
+                                minDate={startDate ? new Date(startDate) : undefined}
+                                disableMargin
+                                fullWidth
                             />
                         </Grid>
                     </Grid>
