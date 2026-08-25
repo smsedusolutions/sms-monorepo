@@ -1,5 +1,4 @@
-const { sendEmail } = require('@sms/shared/utils');
-const sanitizeHtml = require('sanitize-html');
+const { sendEmail, stripHtml } = require('@sms/shared/utils');
 
 /**
  * Test email sending functionality
@@ -19,7 +18,7 @@ const sendTestEmail = async (req, res) => {
         // SECURITY (XSS): Sanitize user-supplied message to plain text only
         // to prevent HTML/script injection into the outgoing email body.
         const safeMessage = message
-            ? sanitizeHtml(String(message), { allowedTags: [], allowedAttributes: {} })
+            ? stripHtml(String(message))
             : 'This is a test email from your School Management System. If you\'re seeing this, your email configuration is working correctly! 🚀';
 
         const htmlContent = `

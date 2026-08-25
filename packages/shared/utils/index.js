@@ -24,6 +24,7 @@ module.exports = {
   ...require("./activityLogger"),
   ...require("./originMatcher"),
   ...require("./corsConfig"),
+  ...require("./htmlSanitizer"),
   ...require("./idGenerator"),
   ...require("./passwordUtils"),
   escapeRegex,
