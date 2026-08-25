@@ -51,12 +51,13 @@ const corsOptions = {
         if (!origin) {
             return callback(null, true);
         }
-        
+
+
         const isAllowed = allowedOriginsList.some(pattern => matchOrigin(origin, pattern));
         if (isAllowed) {
             return callback(null, true);
         }
-        
+
         console.warn(`[CORS] Request from unlisted origin: "${origin}"`);
         // Return false without crashing the Express pipeline with an unhandled exception
         callback(null, false);
