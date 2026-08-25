@@ -19,6 +19,7 @@ const allowedUrls = process.env.ALLOWED_ORIGINS
     "http://localhost:3000",
     "http://localhost:5173",
     "https://sms-web-ui.vercel.app",
+    "https://*.vercel.app"
   ];
 
 const corsOptions = {
