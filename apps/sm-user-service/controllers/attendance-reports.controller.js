@@ -60,18 +60,21 @@ const populateNames = async (schoolDb, attendanceData) => {
     return Array.isArray(attendanceData) ? populated : populated[0];
 };
 
-// Get today's date at midnight
+// Get today's date at midnight UTC for consistent cross-timezone comparisons
 const getDateOnly = (dateArg = new Date()) => {
-    let d;
+    let year, month, day;
     if (typeof dateArg === "string" && dateArg.includes("-")) {
-        const [year, month, day] = dateArg.split("-").map(Number);
-        d = new Date();
-        d.setFullYear(year, month - 1, day);
+        const parts = dateArg.split("T")[0].split("-").map(Number);
+        year = parts[0];
+        month = parts[1];
+        day = parts[2];
     } else {
-        d = new Date(dateArg);
+        const d = dateArg instanceof Date ? dateArg : new Date(dateArg);
+        year = d.getUTCFullYear();
+        month = d.getUTCMonth() + 1;
+        day = d.getUTCDate();
     }
-    d.setHours(0, 0, 0, 0);
-    return d;
+    return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
 };
 
 // Helper to get school database connection
@@ -372,7 +375,7 @@ const getDateRangeReport = async (req, res) => {
         const schoolDb = await getSchoolDb(schoolId);
         const start = getDateOnly(startDate);
         const end = getDateOnly(endDate);
-        end.setHours(23, 59, 59, 999);
+        end.setUTCHours(23, 59, 59, 999);
 
         const report = {
             startDate: start,

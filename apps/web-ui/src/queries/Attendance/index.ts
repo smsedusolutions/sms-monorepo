@@ -23,15 +23,15 @@ export const attendanceKeys = {
     // Simple
     simpleClass: (schoolId: string, classId: string, date: string) =>
         ["attendance", "simple", schoolId, classId, date] as const,
-    simpleStudent: (schoolId: string, studentId: string) =>
-        ["attendance", "simple", "student", schoolId, studentId] as const,
+    simpleStudent: (schoolId: string, studentId: string, startDate?: string, endDate?: string) =>
+        ["attendance", "simple", "student", schoolId, studentId, startDate, endDate] as const,
     simpleSummary: (schoolId: string) =>
         ["attendance", "simple", "summary", schoolId] as const,
     // Period
-    periodClass: (schoolId: string, classId: string, date: string, period?: number) =>
-        ["attendance", "period", schoolId, classId, date, period] as const,
-    periodStudent: (schoolId: string, studentId: string) =>
-        ["attendance", "period", "student", schoolId, studentId] as const,
+    periodClass: (schoolId: string, classId: string, date: string, period?: number, sectionId?: string) =>
+        ["attendance", "period", schoolId, classId, date, period, sectionId] as const,
+    periodStudent: (schoolId: string, studentId: string, startDate?: string, endDate?: string, subjectId?: string) =>
+        ["attendance", "period", "student", schoolId, studentId, startDate, endDate, subjectId] as const,
     // Checkin
     checkinDaily: (schoolId: string, date: string) =>
         ["attendance", "checkin", schoolId, date] as const,
@@ -69,8 +69,8 @@ export const useMarkSimpleAttendance = (schoolId: string) => {
                 data
             ),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["attendance", "simple", schoolId] });
-            queryClient.invalidateQueries({ queryKey: ["attendance", "reports", schoolId] });
+            queryClient.invalidateQueries({ queryKey: ["attendance"] });
+            queryClient.invalidateQueries({ queryKey: ["parent-portal"] });
         },
     });
 };
@@ -101,7 +101,7 @@ export const useGetSimpleStudentAttendance = (
     endDate?: string
 ) => {
     return useQuery({
-        queryKey: attendanceKeys.simpleStudent(schoolId, studentId),
+        queryKey: attendanceKeys.simpleStudent(schoolId, studentId, startDate, endDate),
         queryFn: () =>
             useApi<ApiResponse<{ attendance: AttendanceSimple[]; summary: AttendanceSummary }>>(
                 "GET",
@@ -123,7 +123,8 @@ export const useUpdateSimpleAttendance = (schoolId: string) => {
                 { status, remarks }
             ),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["attendance", "simple", schoolId] });
+            queryClient.invalidateQueries({ queryKey: ["attendance"] });
+            queryClient.invalidateQueries({ queryKey: ["parent-portal"] });
         },
     });
 };
@@ -142,8 +143,8 @@ export const useMarkPeriodAttendance = (schoolId: string) => {
                 data
             ),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["attendance", "period", schoolId] });
-            queryClient.invalidateQueries({ queryKey: ["attendance", "reports", schoolId] });
+            queryClient.invalidateQueries({ queryKey: ["attendance"] });
+            queryClient.invalidateQueries({ queryKey: ["parent-portal"] });
         },
     });
 };
@@ -155,11 +156,12 @@ export const useGetPeriodClassAttendance = (
     period?: number,
     sectionId?: string
 ) => {
-    const url = period
+    const url = period !== undefined
         ? `/api/school/${schoolId}/attendance/period/class/${classId}/${date}/${period}`
         : `/api/school/${schoolId}/attendance/period/class/${classId}/${date}`;
+
     return useQuery({
-        queryKey: attendanceKeys.periodClass(schoolId, classId, date, period),
+        queryKey: attendanceKeys.periodClass(schoolId, classId, date, period, sectionId),
         queryFn: () =>
             useApi<ApiResponse<AttendancePeriod[]>>(
                 "GET",
@@ -179,7 +181,7 @@ export const useGetPeriodStudentAttendance = (
     subjectId?: string
 ) => {
     return useQuery({
-        queryKey: attendanceKeys.periodStudent(schoolId, studentId),
+        queryKey: attendanceKeys.periodStudent(schoolId, studentId, startDate, endDate, subjectId),
         queryFn: () =>
             useApi<ApiResponse<{ attendance: AttendancePeriod[]; overall: AttendanceSummary }>>(
                 "GET",

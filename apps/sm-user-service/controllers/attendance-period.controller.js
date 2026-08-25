@@ -18,18 +18,27 @@ const generateAttendanceId = () => {
     return `ATTP${timestamp}${random} `.toUpperCase();
 };
 
-// Get today's date at midnight
+// Get today's date at midnight UTC for consistent cross-timezone comparisons
 const getDateOnly = (dateArg = new Date()) => {
-    let d;
+    let year, month, day;
     if (typeof dateArg === "string" && dateArg.includes("-")) {
-        const [year, month, day] = dateArg.split("-").map(Number);
-        d = new Date();
-        d.setFullYear(year, month - 1, day);
+        const parts = dateArg.split("T")[0].split("-").map(Number);
+        year = parts[0];
+        month = parts[1];
+        day = parts[2];
     } else {
-        d = new Date(dateArg);
+        const d = dateArg instanceof Date ? dateArg : new Date(dateArg);
+        year = d.getUTCFullYear();
+        month = d.getUTCMonth() + 1;
+        day = d.getUTCDate();
     }
-    d.setHours(0, 0, 0, 0);
-    return d;
+    return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+};
+
+// Get end of day (23:59:59.999 UTC) for range query upper bounds
+const getEndOfDay = (dateArg = new Date()) => {
+    const d = getDateOnly(dateArg);
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 23, 59, 59, 999));
 };
 
 /**
@@ -220,11 +229,10 @@ const getStudentPeriodAttendance = async (req, res) => {
         const AttendanceModel = await getAttendanceModel(schoolId);
 
         const query = { studentId };
-        if (startDate && endDate) {
-            query.date = {
-                $gte: getDateOnly(startDate),
-                $lte: getDateOnly(endDate),
-            };
+        if (startDate || endDate) {
+            query.date = {};
+            if (startDate) query.date.$gte = getDateOnly(startDate);
+            if (endDate) query.date.$lte = getEndOfDay(endDate);
         }
         if (subjectId) query.subjectId = subjectId;
 
@@ -279,11 +287,10 @@ const getSubjectAttendanceSummary = async (req, res) => {
         const AttendanceModel = await getAttendanceModel(schoolId);
 
         const query = { subjectId };
-        if (startDate && endDate) {
-            query.date = {
-                $gte: getDateOnly(startDate),
-                $lte: getDateOnly(endDate),
-            };
+        if (startDate || endDate) {
+            query.date = {};
+            if (startDate) query.date.$gte = getDateOnly(startDate);
+            if (endDate) query.date.$lte = getEndOfDay(endDate);
         }
         if (classId) query.classId = classId;
         if (sectionId) query.sectionId = sectionId;
