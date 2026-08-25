@@ -16,6 +16,7 @@ import {
     LocalFireDepartment as StreakIcon,
     TrendingUp as TrendIcon,
     FilterList as FilterIcon,
+    Badge as BadgeIcon,
 } from '@mui/icons-material';
 import { Chart } from 'react-google-charts';
 import { useChildSelector } from '../../../context/ChildSelectorContext';
@@ -49,7 +50,7 @@ const STATUS_LABELS: Record<string, string> = {
 const ParentAttendance: React.FC = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const user = TokenService.getUser();
-    const { selectedChild, isLoading: loadingChild } = useChildSelector();
+    const { selectedChild, setSelectedChild, children: contextChildren, isLoading: loadingChild } = useChildSelector();
 
     const now = new Date();
     const [filterMode, setFilterMode] = useState<FilterMode>('monthly');
@@ -282,6 +283,48 @@ const ParentAttendance: React.FC = () => {
                     </Button>
                 </ButtonGroup>
             </Box>
+
+            {/* ── Multi-Child Switcher Bar ── */}
+            {contextChildren.length > 1 && (
+                <Paper elevation={0} sx={{ p: { xs: 1.5, sm: 2 }, mb: { xs: 2, sm: 2.5 }, borderRadius: 2.5, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+                    <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, display: 'block' }}>
+                        Select Child
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
+                        {contextChildren.map((child) => {
+                            const isSelected = selectedChild?.studentId === child.studentId;
+                            return (
+                                <Button
+                                    key={child.studentId}
+                                    variant={isSelected ? 'contained' : 'outlined'}
+                                    size="small"
+                                    onClick={() => setSelectedChild(child)}
+                                    startIcon={<BadgeIcon fontSize="small" />}
+                                    sx={{
+                                        borderRadius: '20px',
+                                        fontWeight: 600,
+                                        textTransform: 'none',
+                                        px: 2,
+                                        py: 0.75,
+                                        fontSize: '0.8125rem',
+                                        flexShrink: 0,
+                                        bgcolor: isSelected ? '#4f46e5' : '#ffffff',
+                                        color: isSelected ? '#ffffff' : '#475569',
+                                        borderColor: isSelected ? '#4f46e5' : '#cbd5e1',
+                                        boxShadow: isSelected ? '0 2px 8px rgba(79, 70, 229, 0.25)' : 'none',
+                                        '&:hover': {
+                                            bgcolor: isSelected ? '#4338ca' : '#f1f5f9',
+                                            borderColor: isSelected ? '#4338ca' : '#94a3b8',
+                                        }
+                                    }}
+                                >
+                                    {child.firstName} {child.lastName} {child.className ? `(${child.className}${child.sectionName ? `-${child.sectionName}` : ''})` : ''}
+                                </Button>
+                            );
+                        })}
+                    </Box>
+                </Paper>
+            )}
 
             {/* ── Filter Bar ── */}
             <Paper elevation={0} sx={{ p: { xs: 1.5, sm: 2 }, mb: { xs: 2, sm: 2.5 }, borderRadius: 2.5, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>

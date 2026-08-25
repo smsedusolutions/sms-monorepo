@@ -28,8 +28,8 @@ export const attendanceKeys = {
     simpleSummary: (schoolId: string) =>
         ["attendance", "simple", "summary", schoolId] as const,
     // Period
-    periodClass: (schoolId: string, classId: string, date: string, period?: number) =>
-        ["attendance", "period", schoolId, classId, date, period] as const,
+    periodClass: (schoolId: string, classId: string, date: string, period?: number, sectionId?: string) =>
+        ["attendance", "period", schoolId, classId, date, period, sectionId] as const,
     periodStudent: (schoolId: string, studentId: string, startDate?: string, endDate?: string, subjectId?: string) =>
         ["attendance", "period", "student", schoolId, studentId, startDate, endDate, subjectId] as const,
     // Checkin
@@ -153,15 +153,22 @@ export const useGetPeriodClassAttendance = (
     schoolId: string,
     classId: string,
     date: string,
-    period?: number
+    period?: number,
+    sectionId?: string
 ) => {
     const url = period !== undefined
         ? `/api/school/${schoolId}/attendance/period/class/${classId}/${date}/${period}`
         : `/api/school/${schoolId}/attendance/period/class/${classId}/${date}`;
 
     return useQuery({
-        queryKey: attendanceKeys.periodClass(schoolId, classId, date, period),
-        queryFn: () => useApi<ApiResponse<AttendancePeriod[]>>("GET", url),
+        queryKey: attendanceKeys.periodClass(schoolId, classId, date, period, sectionId),
+        queryFn: () =>
+            useApi<ApiResponse<AttendancePeriod[]>>(
+                "GET",
+                url,
+                undefined,
+                sectionId ? { sectionId } : undefined
+            ),
         enabled: !!schoolId && !!classId && !!date,
     });
 };
