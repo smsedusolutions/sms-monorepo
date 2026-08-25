@@ -58,6 +58,7 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   const isLoading =
     isLoadingSuperAdmin || isLoadingSchoolAdmin || isLoadingUserMenus;
 
+
   if (isLoading) {
     return (
       <Box
