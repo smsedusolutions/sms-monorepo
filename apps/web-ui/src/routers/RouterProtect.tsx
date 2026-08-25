@@ -9,7 +9,6 @@ import {
   useGetUserMenus,
 } from "../queries/Menus";
 import { useRoleStore } from "../stores/roleStore";
-import { Box, CircularProgress } from "@mui/material";
 
 interface ProtectedRouteProps {
   allowedRoles: string[];
@@ -58,22 +57,10 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   const isLoading =
     isLoadingSuperAdmin || isLoadingSchoolAdmin || isLoadingUserMenus;
 
-
-  if (isLoading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-          background: "#f8fafc",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
+  // ⚡ Performance: Do NOT block rendering on menu loading.
+  // The role-level auth check above (token-based) already ran synchronously.
+  // We only apply the menu-based path-gating after menus have finished loading.
+  // This eliminates the full-viewport spinner that was delaying LCP by 1-2s.
 
   const menus =
     userRole === "super_admin"
@@ -213,7 +200,7 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   // skip the path validation — the role-level guard above is sufficient.
   const hasMenuData = (menus || []).length > 0;
 
-  if (hasMenuData && isRoleRoute && !isAllowed) {
+  if (!isLoading && hasMenuData && isRoleRoute && !isAllowed) {
     return <Navigate to="/not-found" replace />;
   }
 

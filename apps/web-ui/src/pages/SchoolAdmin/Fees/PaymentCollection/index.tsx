@@ -26,6 +26,8 @@ import ReceiptIcon from '@mui/icons-material/Receipt';
 import TokenService from '../../../../queries/token/tokenService';
 import { useGetFeeAssignments, useRecordPayment } from '../../../../queries/Fee';
 import { AppTable } from '../../../../components/shared/AppTable';
+import { AppDatePicker } from '../../../../components/shared/AppDatePicker';
+import { format, isValid } from 'date-fns';
 import type { StudentFeeAccount } from '../../../../types/fee.types';
 import { useIsMobile } from '../../../../hooks/useIsMobile';
 
@@ -263,13 +265,11 @@ const CollectPayment: React.FC = () => {
                                         <MenuItem value="bank_transfer">Direct Bank Transfer</MenuItem>
                                     </TextField>
 
-                                    <TextField
-                                        size="small"
+                                    <AppDatePicker
                                         label="Payment Date"
-                                        type="date"
-                                        InputLabelProps={{ shrink: true }}
-                                        value={paymentDate}
-                                        onChange={(e) => setPaymentDate(e.target.value)}
+                                        value={paymentDate ? new Date(paymentDate) : null}
+                                        onChange={(date: Date | null) => setPaymentDate(date && isValid(date) ? format(date, 'yyyy-MM-dd') : '')}
+                                        disableMargin
                                         fullWidth
                                     />
 

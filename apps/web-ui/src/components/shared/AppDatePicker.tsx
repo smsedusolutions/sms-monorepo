@@ -5,7 +5,7 @@ import { DatePicker, type DatePickerProps } from '@mui/x-date-pickers/DatePicker
 import { Box, Typography, alpha, type Theme } from '@mui/material';
 
 export interface AppDatePickerProps extends Omit<DatePickerProps<any>, 'renderInput' | 'slots' | 'slotProps'> {
-  label: string;
+  label?: string;
   labelHint?: string;
   helperText?: string;
   error?: boolean;
@@ -13,6 +13,11 @@ export interface AppDatePickerProps extends Omit<DatePickerProps<any>, 'renderIn
   fullWidth?: boolean;
   value?: Date | null;
   onChange: (value: Date | null) => void;
+  containerSx?: any;
+  disableMargin?: boolean;
+  inputSx?: any;
+  placeholder?: string;
+  size?: 'small' | 'medium';
 }
 
 export const AppDatePicker: React.FC<AppDatePickerProps> = ({
@@ -22,11 +27,16 @@ export const AppDatePicker: React.FC<AppDatePickerProps> = ({
   error,
   required,
   fullWidth = true,
+  containerSx,
+  disableMargin = false,
+  inputSx,
+  placeholder,
+  size = 'small',
   ...props
 }) => {
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ mb: 2, width: fullWidth ? '100%' : 'auto' }}>
+      <Box sx={{ mb: disableMargin ? 0 : 2, width: fullWidth ? '100%' : 'auto', ...containerSx }}>
         {label && (
           <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 0.5 }}>
             <Typography variant="subtitle2" component="label" sx={{ fontWeight: 600, color: 'text.primary' }}>
@@ -50,11 +60,12 @@ export const AppDatePicker: React.FC<AppDatePickerProps> = ({
           closeOnSelect
           slotProps={{
             textField: {
-              fullWidth: true,
+              fullWidth,
               error,
               helperText,
-              size: 'small',
-              hiddenLabel: true,
+              size,
+              placeholder,
+              hiddenLabel: !label,
               sx: {
                 '& .MuiOutlinedInput-root': {
                   borderRadius: 1.5,
@@ -67,6 +78,7 @@ export const AppDatePicker: React.FC<AppDatePickerProps> = ({
                     backgroundColor: 'background.paper',
                     boxShadow: (theme: Theme) => `0 0 0 2px ${alpha(theme.palette.primary.main, 0.1)}`,
                   },
+                  ...inputSx,
                 },
               },
             },

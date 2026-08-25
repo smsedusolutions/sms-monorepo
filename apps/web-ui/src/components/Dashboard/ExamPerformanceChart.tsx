@@ -1,9 +1,8 @@
 import React from 'react';
 import { Box, Typography, Skeleton, Paper, Chip } from '@mui/material';
 import EventNoteIcon from '@mui/icons-material/EventNote';
-import { Chart } from 'react-google-charts';
 import { useIsMobile } from '../../hooks/useIsMobile';
-import ConsentGatedChart from '../consent/ConsentGatedChart';
+import DonutChart from '../Charts/DonutChart';
 
 interface ExamPerformanceChartProps {
     passed?: number;
@@ -28,25 +27,6 @@ export const ExamPerformanceChart: React.FC<ExamPerformanceChartProps> = ({
 }) => {
     const isMobile = useIsMobile();
     const total = passed + failed + absent;
-
-    const chartData = [
-        ['Result', 'Students'],
-        ['Passed', passed],
-        ['Failed', failed],
-        ['Absent', absent],
-    ];
-
-    const options = {
-        title: '',
-        chartArea: { width: '90%', height: '80%' },
-        legend: { position: 'right', textStyle: { fontSize: isMobile ? 10 : 12 } },
-        colors: ['#22c55e', '#ef4444', '#94a3b8'],
-        pieHole: 0.5,
-        backgroundColor: 'transparent',
-        animation: { startup: true, easing: 'out', duration: 700 },
-        pieSliceText: 'value',
-        slices: { 0: { offset: 0.05 } },
-    };
 
     const passRate = total > 0 ? Math.round((passed / total) * 100) : 0;
 
@@ -126,15 +106,18 @@ export const ExamPerformanceChart: React.FC<ExamPerformanceChartProps> = ({
                     </Typography>
                 </Box>
             ) : (
-                <ConsentGatedChart height={isMobile ? 200 : 240}>
-                    <Chart
-                        chartType="PieChart"
-                        data={chartData}
-                        options={options}
-                        width="100%"
-                        height={isMobile ? '200px' : '240px'}
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 1 }}>
+                    <DonutChart
+                        segments={[
+                            { label: 'Passed', value: passed, color: '#22c55e' },
+                            { label: 'Failed', value: failed, color: '#ef4444' },
+                            { label: 'Absent', value: absent, color: '#94a3b8' },
+                        ]}
+                        size={isMobile ? 160 : 190}
+                        holeRatio={0.52}
+                        showLegend
                     />
-                </ConsentGatedChart>
+                </Box>
             )}
         </Paper>
     );

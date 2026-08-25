@@ -1,8 +1,7 @@
-import React from 'react';
+﻿import React from 'react';
 import { Box, Typography, Skeleton, Paper } from '@mui/material';
-import { Chart } from 'react-google-charts';
 import { useIsMobile } from '../../hooks/useIsMobile';
-import ConsentGatedChart from '../consent/ConsentGatedChart';
+import SVGBarChart from '../Charts/SVGBarChart';
 
 interface MonthlyFee { month: string; collected: number; outstanding: number; }
 interface FeeCollectionChartProps {
@@ -15,27 +14,12 @@ export const FeeCollectionChart: React.FC<FeeCollectionChartProps> = ({
     data = [], isLoading, title = 'Monthly Fee Collection'
 }) => {
     const isMobile = useIsMobile();
+    const chartHeight = isMobile ? 220 : 260;
 
-    const chartData = [
+    const chartData: (string | number)[][] = [
         ['Month', 'Collected (₹)', 'Outstanding (₹)'],
         ...data.map(d => [d.month, d.collected, d.outstanding]),
     ];
-
-    const options = {
-        title: '',
-        chartArea: { width: isMobile ? '70%' : '75%', height: '65%' },
-        legend: { position: 'top', textStyle: { fontSize: isMobile ? 10 : 12 } },
-        colors: ['#22c55e', '#f87171'],
-        bar: { groupWidth: '65%' },
-        vAxis: {
-            format: '₹#,###',
-            textStyle: { fontSize: isMobile ? 9 : 11 },
-            minValue: 0,
-        },
-        hAxis: { textStyle: { fontSize: isMobile ? 9 : 11 } },
-        backgroundColor: 'transparent',
-        animation: { startup: true, easing: 'out', duration: 600 },
-    };
 
     return (
         <Paper elevation={0} sx={{ p: { xs: 2, sm: 2.5 }, borderRadius: 2, border: '1px solid', borderColor: 'divider', height: '100%' }}>
@@ -47,15 +31,11 @@ export const FeeCollectionChart: React.FC<FeeCollectionChartProps> = ({
                     <Typography color="text.secondary" variant="body2">No fee data available</Typography>
                 </Box>
             ) : (
-                <ConsentGatedChart height={isMobile ? 220 : 260}>
-                    <Chart
-                        chartType="ColumnChart"
-                        data={chartData}
-                        options={options}
-                        width="100%"
-                        height={isMobile ? '220px' : '260px'}
-                    />
-                </ConsentGatedChart>
+                <SVGBarChart
+                    data={chartData}
+                    colors={['#22c55e', '#f87171']}
+                    height={chartHeight}
+                />
             )}
         </Paper>
     );
