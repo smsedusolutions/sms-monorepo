@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@sms/shared": "*",
+    "compression": "^1.8.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
