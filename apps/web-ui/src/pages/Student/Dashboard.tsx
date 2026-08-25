@@ -28,6 +28,7 @@ import { useGetHomeworkByStudent } from '../../queries/Homework';
 import { useGetSubjects } from '../../queries/Subject';
 import { useGetTeachers } from '../../queries/Teacher';
 import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidget';
+import DashboardErrorState from '../../components/shared/DashboardErrorState';
 
 const StudentDashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -44,15 +45,15 @@ const StudentDashboard: React.FC = () => {
     const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
     // Queries
-    const { data: attendanceData, isLoading: attendanceLoading, error: attendanceError } = useGetSimpleStudentAttendance(
+    const { data: attendanceData, isLoading: attendanceLoading, error: attendanceError, isError: isAttendanceError, refetch: refetchAttendance } = useGetSimpleStudentAttendance(
         schoolId, studentId, startDate, endDate
     );
     const { data: configData } = useGetActiveConfig(schoolId);
-    const { data: timetableData, isLoading: timetableLoading } = useGetClassTimetable(schoolId, userClass, userSection);
-    const { data: announcementData, isLoading: announcementsLoading } = useGetAnnouncements(schoolId);
-    const { data: homeworkData, isLoading: homeworkLoading } = useGetHomeworkByStudent(schoolId, studentId, { status: 'active' });
-    const { data: subjectsData } = useGetSubjects(schoolId);
-    const { data: teachersData } = useGetTeachers(schoolId);
+    const { data: timetableData, isLoading: timetableLoading, isError: isTimetableError, refetch: refetchTimetable } = useGetClassTimetable(schoolId, userClass, userSection);
+    const { data: announcementData, isLoading: announcementsLoading, isError: isAnnouncementsError, refetch: refetchAnnouncements } = useGetAnnouncements(schoolId);
+    const { data: homeworkData, isLoading: homeworkLoading, refetch: refetchHomework } = useGetHomeworkByStudent(schoolId, studentId, { status: 'active' });
+    const { data: subjectsData, isError: isSubjectsError, refetch: refetchSubjects } = useGetSubjects(schoolId);
+    const { data: teachersData, isError: isTeachersError, refetch: refetchTeachers } = useGetTeachers(schoolId);
 
     // Helpers to resolve subject name and teacher name
     const getSubjectName = (item: any): string => {
@@ -98,6 +99,28 @@ const StudentDashboard: React.FC = () => {
 
     // ── Today's Timetable ──
     const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+    // Check if critical queries failed
+    const hasCriticalError = (isAttendanceError && isAnnouncementsError) || (isSubjectsError && isTeachersError && isTimetableError);
+    if (hasCriticalError) {
+        const handleRetryAll = () => {
+            refetchAttendance();
+            refetchTimetable();
+            refetchAnnouncements();
+            refetchHomework();
+            refetchSubjects();
+            refetchTeachers();
+        };
+
+        return (
+            <DashboardErrorState
+                title="Student Dashboard Unavailable"
+                message="We encountered an issue connecting to the server. Your requests may have been blocked or the backend service is currently unreachable."
+                error={attendanceError}
+                onRetry={handleRetryAll}
+            />
+        );
+    }
     const todayDayName = daysOfWeek[new Date().getDay()];
     const todayFormattedDate = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
 
