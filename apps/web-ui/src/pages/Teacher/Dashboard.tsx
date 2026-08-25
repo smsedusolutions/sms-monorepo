@@ -38,6 +38,7 @@ import { formatTimeDisplay } from '../../utils/timeUtils';
 import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
 import ExamPerformanceChart from '../../components/Dashboard/ExamPerformanceChart';
 import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidget';
+import DashboardErrorState from '../../components/shared/DashboardErrorState';
 import type { Class, Student } from '../../types';
 
 const TeacherDashboard: React.FC = () => {
@@ -48,12 +49,12 @@ const TeacherDashboard: React.FC = () => {
     const teacherId = user?.teacherId || user?.userId || '';
     const { timeFormat } = useTimeSettingsStore();
 
-    const { data, isLoading, error } = useGetTeacherDashboardStats(schoolId);
+    const { data, isLoading, error, isError, refetch: refetchStats } = useGetTeacherDashboardStats(schoolId);
     const stats = data?.data;
 
     // Fetch teacher profile, classes, and students for assigned class cards
-    const { data: teacherData, isLoading: isTeacherLoading } = useGetTeacherById(schoolId, teacherId);
-    const { data: classesData, isLoading: isClassesLoading } = useGetClasses(schoolId);
+    const { data: teacherData, isLoading: isTeacherLoading, isError: isTeacherError, refetch: refetchTeacher } = useGetTeacherById(schoolId, teacherId);
+    const { data: classesData, isLoading: isClassesLoading, isError: isClassesError, refetch: refetchClasses } = useGetClasses(schoolId);
     const { data: studentsData } = useGetStudents(schoolId, { limit: 1000 });
     const { data: examsData, isLoading: isExamsLoading } = useGetExams(schoolId);
 
@@ -166,6 +167,21 @@ const TeacherDashboard: React.FC = () => {
         { bg: '#fdf2f8', accent: '#ec4899', iconBg: '#fce7f3' },
         { bg: '#fffbeb', accent: '#f59e0b', iconBg: '#fef3c7' },
     ];
+
+    if (isError && isTeacherError && isClassesError) {
+        return (
+            <DashboardErrorState
+                title="Teacher Dashboard Unavailable"
+                message="Unable to connect to the school server to load teacher classes and stats. Please check your network connection or try signing in again."
+                error={error}
+                onRetry={() => {
+                    refetchStats();
+                    refetchTeacher();
+                    refetchClasses();
+                }}
+            />
+        );
+    }
 
     const assignedTotalStudents = useMemo(() => {
         return myClassCards.reduce((acc, c) => acc + c.studentCount, 0);

@@ -136,6 +136,8 @@ const getApiInstance = (service: ServiceType): AxiosInstance => {
  * useApi("GET", "/api/school/SCHL00001/teachers")   → user service
  * useApi("GET", "/api/admin/school")                → platform service
  */
+import { useGlobalErrorStore } from "../stores/globalErrorStore";
+
 const useApi = async <T>(
     method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH",
     path: string,
@@ -152,16 +154,22 @@ const useApi = async <T>(
             data,
             params,
         });
+
+        // Record successful API call to clear any error counts
+        useGlobalErrorStore.getState().recordSuccess();
+
         return response.data;
     } catch (error) {
         if (axios.isAxiosError(error)) {
             // Check for network/CORS errors (no response)
             if (!error.response) {
                 console.error("Network/CORS error:", error.message);
-                throw {
+                const networkError = {
                     message: "Unable to connect to server. Please check your network connection.",
                     status: 0
                 };
+                useGlobalErrorStore.getState().recordFailure(networkError, path);
+                throw networkError;
             }
             const responseData = error.response?.data || {};
             const apiError: ApiError = {
@@ -169,9 +177,12 @@ const useApi = async <T>(
                 message: responseData?.message || "An error occurred",
                 status: error.response?.status,
             };
+            useGlobalErrorStore.getState().recordFailure(apiError, path);
             throw apiError;
         }
-        throw { message: "An error occurred", status: 500 };
+        const genericError = { message: "An error occurred", status: 500 };
+        useGlobalErrorStore.getState().recordFailure(genericError, path);
+        throw genericError;
     }
 };
 

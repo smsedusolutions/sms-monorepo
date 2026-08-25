@@ -21,6 +21,7 @@ import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidge
 import { useGetSchoolDashboardStats } from '../../queries/SchoolDashboard';
 import { useGetLeaveStats } from '../../queries/Leave';
 import { useGetExams, useGetExamPublishStatus } from '../../queries/Exam';
+import DashboardErrorState from '../../components/shared/DashboardErrorState';
 import TokenService from '../../queries/token/tokenService';
 import { useNavigate } from 'react-router-dom';
 
@@ -150,10 +151,25 @@ const quickActions: QuickActionCard[] = [
 
 const SchoolAdminDashboard = () => {
     const schoolId = TokenService.getSchoolId() || '';
-    const { data, isLoading, error } = useGetSchoolDashboardStats(schoolId);
-    const { data: leaveData } = useGetLeaveStats(schoolId);
-    const { data: examsData, isLoading: isExamsLoading } = useGetExams(schoolId);
+    const { data, isLoading, error, isError, refetch: refetchStats } = useGetSchoolDashboardStats(schoolId);
+    const { data: leaveData, refetch: refetchLeaves } = useGetLeaveStats(schoolId);
+    const { data: examsData, isLoading: isExamsLoading, refetch: refetchExams } = useGetExams(schoolId);
     const navigate = useNavigate();
+
+    if (isError && !data) {
+        return (
+            <DashboardErrorState
+                title="School Admin Dashboard Unavailable"
+                message="Unable to connect to the platform and school user services. Please check your network or server status."
+                error={error}
+                onRetry={() => {
+                    refetchStats();
+                    refetchLeaves();
+                    refetchExams();
+                }}
+            />
+        );
+    }
 
     const stats = data?.data;
     const leaveStats = leaveData?.data;

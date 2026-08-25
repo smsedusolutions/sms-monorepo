@@ -7,11 +7,20 @@ import { AuthProvider } from "./context/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import GlobalNotification from "./components/GlobalNotification";
 import ConsentBanner from "./components/consent/ConsentBanner";
+import GlobalApiErrorModal from "./components/shared/GlobalApiErrorModal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      retry: (failureCount, error: any) => {
+        // Do not retry on authorization / authentication errors (401, 403)
+        if (error?.status === 401 || error?.status === 403) {
+          return false;
+        }
+        // Stop after 3 failed attempts
+        return failureCount < 3;
+      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 8000), // 1s, 2s, 4s max backoff
       refetchOnWindowFocus: false,
       staleTime: 2 * 60 * 1000, // 2 minutes default stale time
       gcTime: 10 * 60 * 1000, // 10 minutes garbage collection time
@@ -29,6 +38,7 @@ function App() {
           <GlobalNotification />
           <AuthProvider>
             <BrowserRouter>
+              <GlobalApiErrorModal />
               {/* DPDP Act 2023 — Consent banner for non-essential third-party services */}
               <ConsentBanner />
               <MainRouters />

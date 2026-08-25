@@ -30,19 +30,36 @@ const { matchOrigin } = require('@sms/shared/utils');
 
 const app = express();
 
-// CORS Configuration
-const allowedUrls = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',').map(url => url.trim())
-    : ['http://localhost:3000', 'http://localhost:5173', "https://sms-web-ui.vercel.app"];
+// Comprehensive CORS Configuration
+const defaultAllowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:*',
+    'https://sms-web-ui.vercel.app',
+    'https://*.vercel.app',
+];
+
+const envAllowed = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(url => url.trim()).filter(Boolean)
+    : [];
+
+const allowedOriginsList = Array.from(new Set([...defaultAllowedOrigins, ...envAllowed]));
 
 const corsOptions = {
     origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, Postman, etc.)
-        if (!origin || allowedUrls.some(url => matchOrigin(origin, url))) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
+        // Allow requests with no origin (mobile apps, Postman, curl, server-to-server)
+        if (!origin) {
+            return callback(null, true);
         }
+        
+        const isAllowed = allowedOriginsList.some(pattern => matchOrigin(origin, pattern));
+        if (isAllowed) {
+            return callback(null, true);
+        }
+        
+        console.warn(`[CORS] Request from unlisted origin: "${origin}"`);
+        // Return false without crashing the Express pipeline with an unhandled exception
+        callback(null, false);
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
