@@ -6,6 +6,7 @@ const {
   subscribe,
   unsubscribe,
   getSubscriptionStatus,
+  sendTestPush,
 } = require("../controllers/push.controller");
 
 // Public: Retrieve VAPID Public Key to create subscriptions in browser
@@ -19,5 +20,8 @@ router.delete("/unsubscribe", Authenticated, unsubscribe);
 
 // Authenticated: Get current subscription status
 router.get("/status", Authenticated, getSubscriptionStatus);
+
+// Authenticated: Send immediate test Web Push notification to caller's registered device(s)
+router.post("/test", Authenticated, sendTestPush);
 
 module.exports = router;

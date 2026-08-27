@@ -1,4 +1,5 @@
 const PushSubscription = require("../models/pushSubscription.model");
+const { sendPushToSubscriptions } = require("../utils/webPush");
 
 /**
  * GET /push/vapid-public-key
@@ -209,9 +210,76 @@ const getSubscriptionStatus = async (req, res) => {
   }
 };
 
+/**
+ * POST /push/test
+ * Sends an immediate test Web Push notification to all active devices of the caller
+ */
+const sendTestPush = async (req, res) => {
+  try {
+    const user = req.user || {};
+    const aliases = [
+      user.parentId,
+      user.teacherId,
+      user.studentId,
+      user.userId,
+      user.id,
+      user._id,
+      user.adminId,
+      user.email,
+    ]
+      .filter(Boolean)
+      .map((id) => id.toString());
+
+    if (aliases.length === 0) {
+      return res.status(401).json({ success: false, message: "Unauthorized: User ID missing" });
+    }
+
+    const subscriptions = await PushSubscription.find({
+      $or: [{ userId: { $in: aliases } }, { aliases: { $in: aliases } }],
+    }).lean();
+
+    if (subscriptions.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No registered push subscriptions found for this user in database.",
+        aliasesChecked: aliases,
+      });
+    }
+
+    const testPayload = {
+      title: "Test Notification 🔔",
+      body: `Web push is working on your Android device! (${new Date().toLocaleTimeString()})`,
+      message: `Web push is working on your Android device! (${new Date().toLocaleTimeString()})`,
+      notificationId: `TEST-${Date.now()}`,
+      type: "system_alert",
+      url: "/notifications",
+      icon: "/android-chrome-192x192.png",
+      badge: "/favicon-32x32.png",
+      timestamp: Date.now(),
+    };
+
+    const results = await sendPushToSubscriptions(subscriptions, testPayload);
+
+    return res.status(200).json({
+      success: true,
+      message: `Dispatched test push to ${subscriptions.length} device(s)`,
+      devicesCount: subscriptions.length,
+      results,
+    });
+  } catch (error) {
+    console.error("❌ Send Test Push Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to dispatch test push",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getVapidPublicKey,
   subscribe,
   unsubscribe,
   getSubscriptionStatus,
+  sendTestPush,
 };

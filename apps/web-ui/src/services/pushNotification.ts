@@ -200,3 +200,80 @@ export const getExistingSubscription = async (): Promise<PushSubscription | null
     return null;
   }
 };
+
+/**
+ * Triggers an immediate test push notification from the backend to the current user's registered devices
+ */
+export const sendTestPushNotification = async (): Promise<{ success: boolean; message: string; details?: any }> => {
+  const token = TokenService.getToken();
+  if (!token) {
+    return { success: false, message: "User is not authenticated" };
+  }
+
+  try {
+    const res = await fetch(`${getNotificationApiUrl()}/push/test`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const data = await res.json();
+    return {
+      success: res.ok && data.success,
+      message: data.message || (res.ok ? "Test notification dispatched" : "Failed to dispatch test notification"),
+      details: data,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      message: err?.message || "Network error while connecting to notification service",
+    };
+  }
+};
+
+/**
+ * Detailed push diagnostic report for on-screen inspection
+ */
+export const getPushDiagnosticInfo = async () => {
+  const isSupported = isPushSupported();
+  const permission = getPermissionState();
+  const token = TokenService.getToken();
+  const decoded = TokenService.decodeToken();
+  const apiUrl = getNotificationApiUrl();
+
+  let swActive = false;
+  let swScope = "";
+  let pushSubEndpoint = "";
+
+  if (isSupported && "serviceWorker" in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) {
+        swActive = !!reg.active;
+        swScope = reg.scope;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+          pushSubEndpoint = sub.endpoint;
+        }
+      }
+    } catch (_e) {
+      // ignore
+    }
+  }
+
+  return {
+    isSupported,
+    permission,
+    hasAuthToken: !!token,
+    userId: decoded?.userId || decoded?.parentId || decoded?.studentId || decoded?.adminId || "None",
+    userRole: decoded?.role || "unknown",
+    schoolId: decoded?.schoolId || "GLOBAL",
+    notificationApiUrl: apiUrl,
+    serviceWorkerActive: swActive,
+    serviceWorkerScope: swScope,
+    hasBrowserPushSubscription: !!pushSubEndpoint,
+    pushEndpointSnippet: pushSubEndpoint ? `${pushSubEndpoint.substring(0, 45)}...` : "None",
+  };
+};

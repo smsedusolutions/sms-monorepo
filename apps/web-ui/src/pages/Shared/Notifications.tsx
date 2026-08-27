@@ -29,6 +29,7 @@ import {
     Delete as DeleteIcon,
     MarkEmailRead as MarkReadIcon,
     Chat as ChatIcon,
+    BugReport as BugReportIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useGetMyNotifications, useMarkAsRead, useMarkAllAsRead, useDeleteNotification } from '../../queries/Notification';
@@ -37,6 +38,7 @@ import { useUrlTab } from '../../hooks/useUrlTab';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import MobileSegmentedTabs from '../../components/mobile/navigation/MobileSegmentedTabs';
 import PushNotificationBanner from '../../components/Notification/PushNotificationBanner';
+import PushDiagnosticsDialog from '../../components/Notification/PushDiagnosticsDialog';
 import type { Notification, NotificationType } from '../../types';
 
 const getNotificationIcon = (type: NotificationType) => {
@@ -70,6 +72,7 @@ const NotificationsPage: React.FC = () => {
 
     const [tabValue, setTabValue] = useUrlTab(0, ['all', 'read', 'unread']);
     const [page, setPage] = useState(1);
+    const [diagOpen, setDiagOpen] = useState(false);
     const limit = 20;
 
     const isReadFilter = tabValue === 1 ? true : tabValue === 2 ? false : undefined;
@@ -168,27 +171,51 @@ const NotificationsPage: React.FC = () => {
                         Stay updated with school activities
                     </Typography>
                 </Box>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={<MarkReadIcon />}
-                    onClick={() => markAllAsRead.mutate()}
-                    disabled={markAllAsRead.isPending}
-                    sx={{ 
-                        borderRadius: 2.5,
-                        height: 42,
-                        px: 2.5,
-                        fontWeight: 700,
-                        whiteSpace: 'nowrap',
-                        alignSelf: { xs: 'stretch', sm: 'auto' }
-                    }}
-                >
-                    Mark All Read
-                </Button>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <Button
+                        variant="outlined"
+                        color="secondary"
+                        startIcon={<BugReportIcon />}
+                        onClick={() => setDiagOpen(true)}
+                        sx={{ 
+                            borderRadius: 2.5,
+                            height: 42,
+                            px: 2,
+                            fontWeight: 700,
+                            fontSize: '0.825rem',
+                            whiteSpace: 'nowrap',
+                            textTransform: 'none',
+                            flex: { xs: 1, sm: 'none' }
+                        }}
+                    >
+                        Push Status & Test
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<MarkReadIcon />}
+                        onClick={() => markAllAsRead.mutate()}
+                        disabled={markAllAsRead.isPending}
+                        sx={{ 
+                            borderRadius: 2.5,
+                            height: 42,
+                            px: 2.5,
+                            fontWeight: 700,
+                            whiteSpace: 'nowrap',
+                            textTransform: 'none',
+                            flex: { xs: 1, sm: 'none' }
+                        }}
+                    >
+                        Mark All Read
+                    </Button>
+                </Box>
             </Box>
 
             {/* Push Notification Opt-in / Status Card */}
             <PushNotificationBanner />
+
+            {/* Push Diagnostics and Test Dialog */}
+            <PushDiagnosticsDialog open={diagOpen} onClose={() => setDiagOpen(false)} />
 
             {isMobile ? (
                 <Box sx={{ mb: 3 }}>
