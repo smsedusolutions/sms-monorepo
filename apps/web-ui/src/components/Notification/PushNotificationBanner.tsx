@@ -32,13 +32,6 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
     subscribe,
   } = usePushNotification();
 
-  // Auto-sync subscription if permission was granted in browser
-  React.useEffect(() => {
-    if (isSupported && permission === "granted" && !isSubscribed) {
-      subscribe().catch((err) => console.warn("Push auto-sync failed:", err));
-    }
-  }, [isSupported, permission, isSubscribed, subscribe]);
-
   const [dismissed, setDismissed] = useState<boolean>(() => {
     try {
       return (

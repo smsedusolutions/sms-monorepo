@@ -15,7 +15,12 @@ import {
  * 3. Real-time WebSocket connection to sm-notification-service
  */
 const NotificationInitializer: React.FC = () => {
+  const initializedRef = React.useRef(false);
+
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
     // 1. Register Service Worker on initial mount
     registerServiceWorker()
       .then(() => {

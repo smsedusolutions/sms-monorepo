@@ -19,7 +19,7 @@ const NotificationSchema = new Schema({
     },
     userRole: {
         type: String,
-        enum: ['student', 'teacher', 'parent', 'sch_admin'],
+        enum: ['student', 'teacher', 'parent', 'sch_admin', 'principal', 'driver', 'super_admin'],
         required: true
     },
     type: {
@@ -40,6 +40,7 @@ const NotificationSchema = new Schema({
             'transport_update',   // General transport update
             'chat_invite',        // Chat invitation alert
             'chat_accepted',      // Chat invitation accepted alert
+            'system_alert',       // System and broadcast alerts
         ],
         required: true
     },
@@ -56,7 +57,7 @@ const NotificationSchema = new Schema({
     },
     referenceType: {
         type: String,
-        enum: ['announcement', 'homework', 'leave', 'attendance', 'exam', 'result', 'transport', 'chat', null]
+        enum: ['announcement', 'homework', 'leave', 'attendance', 'exam', 'result', 'transport', 'chat', 'school_broadcast', 'system', null]
     },
     isRead: {
         type: Boolean,

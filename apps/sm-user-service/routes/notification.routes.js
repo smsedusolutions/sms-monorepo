@@ -8,7 +8,15 @@ const {
     markAllAsRead,
     deleteNotification,
     sendChatInviteNotification,
+    broadcastNotification,
 } = require('../controllers/notification.controller');
+
+// Broadcast notification to all school users & devices (Admin / Principal only)
+router.post(
+    '/broadcast',
+    Authenticated,
+    broadcastNotification
+);
 
 // Get my notifications (All authenticated users)
 router.get(

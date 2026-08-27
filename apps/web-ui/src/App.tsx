@@ -35,14 +35,14 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider theme={theme}>
-          <GlobalNotification />
-          <NotificationInitializer />
-          <AuthProvider>
-            <BrowserRouter>
+          <BrowserRouter>
+            <AuthProvider>
+              <GlobalNotification />
+              <NotificationInitializer />
               <GlobalApiErrorModal />
               <MainRouters />
-            </BrowserRouter>
-          </AuthProvider>
+            </AuthProvider>
+          </BrowserRouter>
         </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>

@@ -99,3 +99,25 @@ export const useDeleteNotification = (schoolId: string) => {
         },
     });
 };
+
+// Broadcast notification to all devices across school
+export const useBroadcastNotification = (schoolId: string) => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (payload: {
+            title: string;
+            message: string;
+            targetAudience?: "all" | "parents" | "teachers" | "students";
+            type?: string;
+        }) => useApi(
+            "POST",
+            `/api/school/${schoolId}/notifications/broadcast`,
+            payload
+        ),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: notificationKeys.unreadCount(schoolId) });
+        },
+    });
+};

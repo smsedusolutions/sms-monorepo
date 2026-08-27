@@ -1,4 +1,5 @@
-import { Box, Typography, Grid, Skeleton, Alert } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Typography, Grid, Skeleton, Alert, Button } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import SchoolIcon from '@mui/icons-material/School';
 import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom';
@@ -15,6 +16,7 @@ import HowToRegIcon from '@mui/icons-material/HowToReg';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import CampaignIcon from '@mui/icons-material/Campaign';
 import DashboardCard from '../../components/Dashboard/DashboardCard';
 import ExamPerformanceChart from '../../components/Dashboard/ExamPerformanceChart';
 import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidget';
@@ -23,6 +25,7 @@ import { useGetLeaveStats } from '../../queries/Leave';
 import { useGetExams, useGetExamPublishStatus } from '../../queries/Exam';
 import DashboardErrorState from '../../components/shared/DashboardErrorState';
 import DashboardRefreshButton from '../../components/shared/DashboardRefreshButton';
+import BroadcastNotificationDialog from '../../components/Dialogs/BroadcastNotificationDialog';
 import TokenService from '../../queries/token/tokenService';
 import { useNavigate } from 'react-router-dom';
 
@@ -155,6 +158,7 @@ const SchoolAdminDashboard = () => {
     const { data, isLoading, error, isError, refetch: refetchStats } = useGetSchoolDashboardStats(schoolId);
     const { data: leaveData, refetch: refetchLeaves } = useGetLeaveStats(schoolId);
     const { data: examsData, isLoading: isExamsLoading, refetch: refetchExams } = useGetExams(schoolId);
+    const [broadcastDialogOpen, setBroadcastDialogOpen] = useState(false);
     const navigate = useNavigate();
 
     if (isError && !data) {
@@ -216,7 +220,7 @@ const SchoolAdminDashboard = () => {
     return (
         <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
             {/* Header & Refresh Action */}
-            <Box sx={{ mb: { xs: 2, sm: 3 }, mt: 0.5, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
+            <Box sx={{ mb: { xs: 2, sm: 3 }, mt: 0.5, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography
                         variant="h4"
@@ -238,16 +242,42 @@ const SchoolAdminDashboard = () => {
                     </Typography>
                 </Box>
 
-                <DashboardRefreshButton
-                    onRefresh={async () => {
-                        await Promise.all([
-                            refetchStats(),
-                            refetchLeaves(),
-                            refetchExams(),
-                        ]);
-                    }}
-                />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        startIcon={<CampaignIcon />}
+                        onClick={() => setBroadcastDialogOpen(true)}
+                        sx={{
+                            borderRadius: 2.5,
+                            height: { xs: 36, sm: 40 },
+                            px: { xs: 1.5, sm: 2 },
+                            fontWeight: 800,
+                            fontSize: { xs: '0.78rem', sm: '0.85rem' },
+                            textTransform: 'none',
+                            boxShadow: '0 4px 12px rgba(37,99,235,0.25)',
+                            whiteSpace: 'nowrap',
+                        }}
+                    >
+                        Broadcast Alert
+                    </Button>
+                    <DashboardRefreshButton
+                        onRefresh={async () => {
+                            await Promise.all([
+                                refetchStats(),
+                                refetchLeaves(),
+                                refetchExams(),
+                            ]);
+                        }}
+                    />
+                </Box>
             </Box>
+
+            {/* Broadcast Notification Dialog */}
+            <BroadcastNotificationDialog
+                open={broadcastDialogOpen}
+                onClose={() => setBroadcastDialogOpen(false)}
+            />
 
             {error && (
                 <Alert severity="error" sx={{ mb: 2, borderRadius: 2.5 }}>

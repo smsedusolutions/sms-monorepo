@@ -1,7 +1,12 @@
 const axios = require("axios");
 const { getSchoolDbConnection } = require("../configs/db");
 const { getSchoolDbName } = require("../utils/schoolDbHelper");
-const { NotificationSchema: notificationSchema } = require("@sms/shared");
+const {
+    NotificationSchema: notificationSchema,
+    StudentSchema: studentSchema,
+    ParentSchema: parentSchema,
+    TeacherSchema: teacherSchema,
+} = require("@sms/shared");
 
 // Helper to get Notification model for a specific school
 const getNotificationModel = (schoolDbName) => {
@@ -379,6 +384,118 @@ const sendChatInviteNotification = async (req, res) => {
     }
 };
 
+/**
+ * POST /api/school/:schoolId/notifications/broadcast
+ * Broadcasts a push & in-app notification to all users/devices in the school
+ * Allowed roles: sch_admin, principal, super_admin, admin
+ */
+const broadcastNotification = async (req, res) => {
+    try {
+        const { schoolId } = req.params;
+        const { role, userId } = req.user;
+
+        // Permissions check
+        const allowedRoles = ["sch_admin", "principal", "super_admin", "admin"];
+        if (!allowedRoles.includes(role)) {
+            return res.status(403).json({
+                success: false,
+                message: "Forbidden: Only school administrators can broadcast notifications.",
+            });
+        }
+
+        const {
+            title = "📢 School Broadcast Alert",
+            message = "This is a broadcast notification sent to all registered devices.",
+            targetAudience = "all", // "all" | "parents" | "teachers" | "students"
+            type = "system_alert",
+            url,
+        } = req.body;
+
+        const schoolDbName = await getSchoolDbName(schoolId);
+        const schoolDb = getSchoolDbConnection(schoolDbName);
+
+        const Notification = schoolDb.models.Notification || schoolDb.model("Notification", notificationSchema);
+        const Student = schoolDb.models.Student || schoolDb.model("Student", studentSchema);
+        const Parent = schoolDb.models.Parent || schoolDb.model("Parent", parentSchema);
+        const Teacher = schoolDb.models.Teacher || schoolDb.model("Teacher", teacherSchema);
+
+        const targetUsers = [];
+
+        if (targetAudience === "all" || targetAudience === "parents") {
+            const parents = await Parent.find({ schoolId, status: "active" }, "parentId firstName lastName").lean();
+            parents.forEach((p) => targetUsers.push({ userId: p.parentId, userRole: "parent" }));
+        }
+
+        if (targetAudience === "all" || targetAudience === "teachers") {
+            const teachers = await Teacher.find({ schoolId, status: "active" }, "teacherId firstName lastName").lean();
+            teachers.forEach((t) => targetUsers.push({ userId: t.teacherId, userRole: "teacher" }));
+        }
+
+        if (targetAudience === "all" || targetAudience === "students") {
+            const students = await Student.find({ schoolId, status: "active" }, "studentId firstName lastName").lean();
+            students.forEach((s) => targetUsers.push({ userId: s.studentId, userRole: "student" }));
+        }
+
+        // Also notify the admin themselves
+        if (userId) {
+            const normalizedRole = role === "admin" ? "sch_admin" : role;
+            targetUsers.push({ userId, userRole: normalizedRole });
+        }
+
+        // Deduplicate target users by userId
+        const uniqueUsers = Array.from(new Map(targetUsers.map((u) => [u.userId, u])).values());
+
+        const validTypes = [
+            'absence_alert', 'leave_status', 'announcement', 'homework_assigned',
+            'homework_due', 'exam_scheduled', 'result_published', 'bus_departed',
+            'child_picked', 'child_dropped', 'bus_reached_school', 'bus_delayed',
+            'transport_update', 'chat_invite', 'chat_accepted', 'system_alert'
+        ];
+        const notifType = validTypes.includes(type) ? type : 'announcement';
+
+        const notifications = uniqueUsers.map((u) => ({
+            notificationId: generateNotificationId(),
+            schoolId,
+            userId: u.userId,
+            userRole: u.userRole === "admin" ? "sch_admin" : u.userRole,
+            type: notifType,
+            title,
+            message,
+            url: url || (u.userRole === "parent" ? "/parent/notifications" : u.userRole === "teacher" ? "/teacher/notifications" : "/student/notifications"),
+            referenceId: schoolId,
+            referenceType: "school_broadcast",
+            isRead: false,
+            metadata: {
+                broadcastedBy: userId,
+                broadcastTime: new Date().toISOString(),
+                targetAudience,
+            },
+        }));
+
+        if (notifications.length > 0) {
+            await Notification.insertMany(notifications);
+            // Dispatch Web Push + WebSocket to all devices
+            await dispatchRealtimePush(notifications);
+        }
+
+        console.log(`📢 [notification-controller] Broadcast sent to ${uniqueUsers.length} user(s) in school ${schoolId}`);
+
+        return res.status(200).json({
+            success: true,
+            message: `Notification broadcast dispatched to ${uniqueUsers.length} recipient(s) across all devices!`,
+            recipientsCount: uniqueUsers.length,
+            targetAudience,
+        });
+    } catch (error) {
+        console.error("❌ Broadcast Notification Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to broadcast notification",
+            error: error.message,
+        });
+    }
+};
+
 module.exports = {
     getMyNotifications,
     getUnreadCount,
@@ -390,4 +507,5 @@ module.exports = {
     dispatchRealtimePush,
     sendChatInviteNotification,
     generateNotificationId,
+    broadcastNotification,
 };
