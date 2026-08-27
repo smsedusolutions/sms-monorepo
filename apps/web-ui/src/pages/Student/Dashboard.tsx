@@ -98,28 +98,6 @@ const StudentDashboard: React.FC = () => {
 
     // ── Today's Timetable ──
     const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-
-    // Check if critical queries failed
-    const hasCriticalError = (isAttendanceError && isAnnouncementsError) || (isSubjectsError && isTeachersError && isTimetableError);
-    if (hasCriticalError) {
-        const handleRetryAll = () => {
-            refetchAttendance();
-            refetchTimetable();
-            refetchAnnouncements();
-            refetchHomework();
-            refetchSubjects();
-            refetchTeachers();
-        };
-
-        return (
-            <DashboardErrorState
-                title="Student Dashboard Unavailable"
-                message="We encountered an issue connecting to the server. Your requests may have been blocked or the backend service is currently unreachable."
-                error={attendanceError}
-                onRetry={handleRetryAll}
-            />
-        );
-    }
     const todayDayName = daysOfWeek[new Date().getDay()];
     const todayFormattedDate = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
 
@@ -153,6 +131,28 @@ const StudentDashboard: React.FC = () => {
     }, [homeworkData]);
 
     const isOverdue = (dueDate: string) => new Date(dueDate) < new Date();
+
+    // Check if critical queries failed
+    const hasCriticalError = (isAttendanceError && isAnnouncementsError) || (isSubjectsError && isTeachersError && isTimetableError);
+    if (hasCriticalError) {
+        const handleRetryAll = () => {
+            refetchAttendance();
+            refetchTimetable();
+            refetchAnnouncements();
+            refetchHomework();
+            refetchSubjects();
+            refetchTeachers();
+        };
+
+        return (
+            <DashboardErrorState
+                title="Student Dashboard Unavailable"
+                message="We encountered an issue connecting to the server. Your requests may have been blocked or the backend service is currently unreachable."
+                error={attendanceError}
+                onRetry={handleRetryAll}
+            />
+        );
+    }
 
     return (
         <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1300, mx: 'auto' }}>

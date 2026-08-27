@@ -997,6 +997,12 @@ export type NotificationType =
   | "result_published"
   | "chat_invite"
   | "chat_accepted"
+  | "bus_departed"
+  | "child_picked"
+  | "child_dropped"
+  | "bus_reached_school"
+  | "bus_delayed"
+  | "transport_update"
   | "general";
 
 export type NotificationReferenceType =
@@ -1007,6 +1013,7 @@ export type NotificationReferenceType =
   | "exam"
   | "result"
   | "chat"
+  | "transport"
   | null;
 
 export interface Notification {

@@ -49,7 +49,6 @@ export const useGetUnreadCount = (schoolId: string) => {
             `/api/school/${schoolId}/notifications/unread-count`
         ),
         enabled: !!schoolId,
-        refetchInterval: 300000, // Poll every 5 minutes
     });
 };
 

@@ -10,7 +10,7 @@ interface ApiError {
 }
 
 // Service types for different microservices
-type ServiceType = "auth" | "user" | "platform" | "academics" | "transport" | "payment" | "chat";
+type ServiceType = "auth" | "user" | "platform" | "academics" | "transport" | "payment" | "chat" | "notification";
 
 // Get base URL for each service from environment variables
 const getServiceUrl = (service: ServiceType): string => {
@@ -29,6 +29,8 @@ const getServiceUrl = (service: ServiceType): string => {
             return import.meta.env.VITE_PAYMENT_API_URL || "http://localhost:5005";
         case "chat":
             return import.meta.env.VITE_CHAT_API_URL || "http://localhost:5007";
+        case "notification":
+            return import.meta.env.VITE_NOTIF_API_URL || "http://localhost:5008";
         default:
             return import.meta.env.VITE_PLATFORM_API_URL || "http://localhost:5000";
     }
@@ -41,6 +43,7 @@ const getServiceUrl = (service: ServiceType): string => {
  * - /api/school/* → user service (teachers, students, parents)
  * - /api/admin/* → platform service (schools, school admins)
  * - /api/chat/* → chat service
+ * - /push/* or /api/push/* → notification service
  * - *contains /fees* → payment service
  */
 const detectServiceFromPath = (path: string): ServiceType => {
@@ -49,6 +52,9 @@ const detectServiceFromPath = (path: string): ServiceType => {
     }
     if (path.startsWith("/api/chat")) {
         return "chat";
+    }
+    if (path.startsWith("/api/push") || path.startsWith("/push")) {
+        return "notification";
     }
     if (path.startsWith("/api/auth")) {
         return "auth";

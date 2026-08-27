@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Badge,
     IconButton,
@@ -12,6 +12,9 @@ import {
     Button,
     Divider,
     Skeleton,
+    Alert,
+    CircularProgress,
+    Tooltip,
 } from '@mui/material';
 import {
     Notifications as NotificationsIcon,
@@ -22,10 +25,22 @@ import {
     Warning as WarningIcon,
     School as SchoolIcon,
     AccessTime as AccessTimeIcon,
+    NotificationsActive as NotificationsActiveIcon,
+    DirectionsBus as DirectionsBusIcon,
+    Chat as ChatIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useGetUnreadCount, useGetMyNotifications, useMarkAsRead, useMarkAllAsRead } from '../../queries/Notification';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+    useGetUnreadCount,
+    useGetMyNotifications,
+    useMarkAsRead,
+    useMarkAllAsRead,
+    notificationKeys,
+} from '../../queries/Notification';
 import TokenService from '../../queries/token/tokenService';
+import { notificationSocket } from '../../services/notificationSocket';
+import { usePushNotification } from '../../hooks/usePushNotification';
 import type { Notification, NotificationType } from '../../types';
 
 const getNotificationIcon = (type: NotificationType) => {
@@ -43,6 +58,16 @@ const getNotificationIcon = (type: NotificationType) => {
             return <EventNoteIcon color="info" />;
         case 'result_published':
             return <SchoolIcon color="success" />;
+        case 'chat_invite':
+        case 'chat_accepted':
+            return <ChatIcon color="primary" />;
+        case 'bus_departed':
+        case 'child_picked':
+        case 'child_dropped':
+        case 'bus_reached_school':
+        case 'bus_delayed':
+        case 'transport_update':
+            return <DirectionsBusIcon color="secondary" />;
         default:
             return <NotificationsIcon color="action" />;
     }
@@ -50,6 +75,7 @@ const getNotificationIcon = (type: NotificationType) => {
 
 const NotificationBell: React.FC = () => {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const schoolId = TokenService.getSchoolId() || '';
     const role = TokenService.getRole();
 
@@ -60,8 +86,23 @@ const NotificationBell: React.FC = () => {
     const markAsRead = useMarkAsRead(schoolId);
     const markAllAsRead = useMarkAllAsRead(schoolId);
 
+    const { isSupported, permission, isSubscribed, isLoading: pushLoading, subscribe } = usePushNotification();
+
     const unreadCount = unreadData?.data?.unreadCount || 0;
     const notifications = notificationsData?.data || [];
+
+    // Listen to real-time notification events from sm-notification-service
+    useEffect(() => {
+        const unsubscribeWs = notificationSocket.on('new_notification', () => {
+            // Invalidate queries to refresh unread count and notification list immediately
+            queryClient.invalidateQueries({ queryKey: notificationKeys.lists() });
+            queryClient.invalidateQueries({ queryKey: notificationKeys.unreadCount(schoolId) });
+        });
+
+        return () => {
+            unsubscribeWs();
+        };
+    }, [queryClient, schoolId]);
 
     const handleOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -101,6 +142,18 @@ const NotificationBell: React.FC = () => {
             case 'result_published':
                 path = role === 'parent' ? '/parent/exam/results' : '/student/exam/results';
                 break;
+            case 'chat_invite':
+            case 'chat_accepted':
+                path = '/chat';
+                break;
+            case 'bus_departed':
+            case 'child_picked':
+            case 'child_dropped':
+            case 'bus_reached_school':
+            case 'bus_delayed':
+            case 'transport_update':
+                path = role === 'parent' ? '/parent/transport' : `${prefix}/transport`;
+                break;
             default:
                 path = `${prefix}/notifications`;
         }
@@ -139,15 +192,18 @@ const NotificationBell: React.FC = () => {
 
     return (
         <>
-            <IconButton
-                color="inherit"
-                onClick={handleOpen}
-                sx={{ ml: 1 }}
-            >
-                <Badge badgeContent={unreadCount} color="error" max={99}>
-                    <NotificationsIcon />
-                </Badge>
-            </IconButton>
+            <Tooltip title="Notifications">
+                <IconButton
+                    color="inherit"
+                    onClick={handleOpen}
+                    sx={{ ml: 1 }}
+                    aria-label="notifications"
+                >
+                    <Badge badgeContent={unreadCount} color="error" max={99}>
+                        <NotificationsIcon />
+                    </Badge>
+                </IconButton>
+            </Tooltip>
 
             <Popover
                 open={open}
@@ -164,8 +220,10 @@ const NotificationBell: React.FC = () => {
                 PaperProps={{
                     sx: {
                         width: 360,
-                        maxHeight: 480,
-                    }
+                        maxHeight: 520,
+                        borderRadius: 2,
+                        boxShadow: '0 8px 30px rgba(0,0,0,0.12)',
+                    },
                 }}
             >
                 <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -182,6 +240,36 @@ const NotificationBell: React.FC = () => {
                         </Button>
                     )}
                 </Box>
+
+                {/* Push Notification Opt-in Prompt Banner */}
+                {isSupported && (!isSubscribed || permission !== 'granted') && permission !== 'denied' && (
+                    <Box sx={{ px: 2, pb: 1.5 }}>
+                        <Alert
+                            severity="info"
+                            icon={<NotificationsActiveIcon fontSize="small" />}
+                            sx={{
+                                py: 0.5,
+                                px: 1.5,
+                                fontSize: '0.8125rem',
+                                '& .MuiAlert-message': { width: '100%' },
+                            }}
+                            action={
+                                <Button
+                                    size="small"
+                                    variant="contained"
+                                    color="primary"
+                                    disabled={pushLoading}
+                                    onClick={subscribe}
+                                    sx={{ textTransform: 'none', py: 0.25, px: 1, minWidth: 'auto', fontSize: '0.75rem' }}
+                                >
+                                    {pushLoading ? <CircularProgress size={14} color="inherit" /> : 'Enable'}
+                                </Button>
+                            }
+                        >
+                            Enable push notifications for instant alerts
+                        </Alert>
+                    </Box>
+                )}
 
                 <Divider />
 
@@ -205,7 +293,7 @@ const NotificationBell: React.FC = () => {
                         </Typography>
                     </Box>
                 ) : (
-                    <List sx={{ p: 0 }}>
+                    <List sx={{ p: 0, maxHeight: 320, overflowY: 'auto' }}>
                         {notifications.map((notification: Notification) => (
                             <ListItem
                                 key={notification.notificationId}

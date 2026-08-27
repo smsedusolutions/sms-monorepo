@@ -1,3 +1,4 @@
+const axios = require("axios");
 const { getSchoolDbConnection } = require("../configs/db");
 const { getSchoolDbName } = require("../utils/schoolDbHelper");
 const { NotificationSchema: notificationSchema } = require("@sms/shared");
@@ -12,6 +13,34 @@ const getNotificationModel = (schoolDbName) => {
 // Generate notification ID
 const generateNotificationId = () => {
     return `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 5)}`;
+};
+
+/**
+ * Dispatches notification(s) to sm-notification-service for real-time WebSocket and Web Push delivery
+ * Non-blocking: failures are logged without interrupting the caller
+ */
+const dispatchRealtimePush = async (notifications) => {
+    try {
+        const notifServiceUrl = process.env.NOTIFICATION_SERVICE_URL || "http://localhost:5008";
+        const secret = process.env.INTERNAL_SECRET;
+
+        const payload = Array.isArray(notifications)
+            ? { notifications }
+            : { notifications: [notifications] };
+
+        await axios.post(`${notifServiceUrl}/internal/notify`, payload, {
+            headers: {
+                "Content-Type": "application/json",
+                "X-Internal-Secret": secret || "",
+            },
+            timeout: 4000,
+        });
+    } catch (err) {
+        console.warn(
+            "⚠️ [sm-user-service] Failed to dispatch real-time/push notification:",
+            err.response?.data?.message || err.message
+        );
+    }
 };
 
 // ==========================================
@@ -248,6 +277,10 @@ const createNotification = async (schoolDbName, notificationData) => {
             ...notificationData
         });
         await notification.save();
+
+        // Asynchronously dispatch real-time WebSocket and Web Push
+        dispatchRealtimePush(notification.toObject ? notification.toObject() : notification);
+
         return notification;
     } catch (error) {
         console.error("Create Notification Error:", error);
@@ -267,6 +300,10 @@ const createBulkNotifications = async (schoolDbName, notifications) => {
             ...n
         }));
         await Notification.insertMany(notificationsWithIds);
+
+        // Asynchronously dispatch real-time WebSocket and Web Push in bulk
+        dispatchRealtimePush(notificationsWithIds);
+
         return notificationsWithIds;
     } catch (error) {
         console.error("Create Bulk Notifications Error:", error);
@@ -317,6 +354,9 @@ const sendChatInviteNotification = async (req, res) => {
 
         await newNotification.save();
 
+        // Asynchronously dispatch real-time WebSocket and Web Push
+        dispatchRealtimePush(newNotification.toObject ? newNotification.toObject() : newNotification);
+
         console.log(`📩 [notification-controller] Chat invite notification sent to ${recipientId} by ${inviterName}`);
 
         return res.status(201).json({
@@ -342,6 +382,7 @@ module.exports = {
     deleteNotification,
     createNotification,
     createBulkNotifications,
+    dispatchRealtimePush,
     sendChatInviteNotification,
     generateNotificationId,
 };

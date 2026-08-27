@@ -1,0 +1,82 @@
+const mongoose = require("mongoose");
+
+let cachedConnection = null;
+let reconnecting = false;
+
+const connectDB = async () => {
+  if (cachedConnection && mongoose.connection.readyState === 1) {
+    console.log("✅ [sm-notification-service] Using cached MongoDB connection");
+    return cachedConnection;
+  }
+
+  if (reconnecting) {
+    console.log("⏳ [sm-notification-service] Reconnection already in progress...");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    return connectDB();
+  }
+
+  try {
+    reconnecting = true;
+
+    const options = {
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 90000,
+      maxPoolSize: 25,
+      minPoolSize: 5,
+      maxIdleTimeMS: 30000,
+      retryWrites: true,
+      retryReads: true,
+      autoCreate: true,
+      autoIndex: true,
+    };
+
+    const mongoUri = process.env.NOTIFICATION_MONGO_URI || process.env.MONGO_URI;
+    console.log("🔄 [sm-notification-service] Connecting to Notifications MongoDB...");
+    const connection = await mongoose.connect(mongoUri, options);
+
+    cachedConnection = connection;
+    reconnecting = false;
+    console.log("✅ [sm-notification-service] MongoDB Connected Successfully");
+
+    mongoose.connection.on("disconnected", () => {
+      console.log("⚠️ [sm-notification-service] MongoDB disconnected - will auto-reconnect on next request");
+      cachedConnection = null;
+    });
+
+    mongoose.connection.on("error", (err) => {
+      console.error("❌ [sm-notification-service] MongoDB connection error:", err.message);
+      cachedConnection = null;
+      reconnecting = false;
+    });
+
+    return connection;
+  } catch (error) {
+    console.error("❌ [sm-notification-service] MongoDB Connection Error:", error.message);
+    cachedConnection = null;
+    reconnecting = false;
+
+    if (error.code === "ENOTFOUND" || error.name === "MongoServerSelectionError") {
+      console.log("⏳ [sm-notification-service] Retrying Mongo connection in 3s...");
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      return connectDB();
+    }
+    throw error;
+  }
+};
+
+const ensureDbConnection = async (req, res, next) => {
+  try {
+    if (mongoose.connection.readyState !== 1) {
+      await connectDB();
+    }
+    next();
+  } catch (error) {
+    return res.status(503).json({
+      success: false,
+      message: "Database connection unavailable.",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { connectDB, ensureDbConnection };
