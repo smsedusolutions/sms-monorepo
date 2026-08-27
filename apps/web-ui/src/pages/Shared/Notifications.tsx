@@ -36,6 +36,7 @@ import TokenService from '../../queries/token/tokenService';
 import { useUrlTab } from '../../hooks/useUrlTab';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import MobileSegmentedTabs from '../../components/mobile/navigation/MobileSegmentedTabs';
+import PushNotificationBanner from '../../components/Notification/PushNotificationBanner';
 import type { Notification, NotificationType } from '../../types';
 
 const getNotificationIcon = (type: NotificationType) => {
@@ -185,6 +186,9 @@ const NotificationsPage: React.FC = () => {
                     Mark All Read
                 </Button>
             </Box>
+
+            {/* Push Notification Opt-in / Status Card */}
+            <PushNotificationBanner />
 
             {isMobile ? (
                 <Box sx={{ mb: 3 }}>
