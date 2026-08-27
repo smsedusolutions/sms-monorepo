@@ -1,0 +1,46 @@
+# Root Monorepo .dockerignore
+
+# Dependencies (will be installed freshly in Docker)
+node_modules
+apps/*/node_modules
+packages/*/node_modules
+
+# Git & Tooling
+.git
+.gitignore
+.github
+.turbo
+.kilo
+
+# Environment files
+.env
+.env.local
+.env.*.local
+apps/*/.env
+apps/*/.env.local
+apps/*/.env.*.local
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Editor & OS files
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Build Artifacts & Testing
+dist
+build
+.next
+coverage
+.nyc_output
+tmp
+
+# Documentation
+docs
+*.md
