@@ -38,12 +38,17 @@ const sendPushToSubscription = async (subscription, payload) => {
   };
 
   try {
+    const urgency = payload.urgency || "high";
     await webpush.sendNotification(
       pushSubscription,
       JSON.stringify(payload),
       {
         TTL: 60 * 60 * 24, // 24 hours TTL
-        urgency: payload.urgency || "normal",
+        urgency,
+        headers: {
+          Urgency: urgency,
+          Topic: payload.type || "school-alert",
+        },
       }
     );
     return { success: true, endpoint: subscription.endpoint };

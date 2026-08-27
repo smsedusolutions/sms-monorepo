@@ -44,8 +44,10 @@ const PushSubscriptionSchema = new Schema(
   { timestamps: true }
 );
 
-// Compound unique index on userId and endpoint to prevent duplicate device registrations
-PushSubscriptionSchema.index({ userId: 1, endpoint: 1 }, { unique: true });
+// Unique index on endpoint so each physical device/browser is stored exactly once
+PushSubscriptionSchema.index({ endpoint: 1 }, { unique: true });
+PushSubscriptionSchema.index({ userId: 1 });
+PushSubscriptionSchema.index({ aliases: 1 });
 PushSubscriptionSchema.index({ schoolId: 1, userId: 1 });
 
 const PushSubscription =

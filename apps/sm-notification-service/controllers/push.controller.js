@@ -81,9 +81,9 @@ const subscribe = async (req, res) => {
 
     const userAgent = req.headers["user-agent"] || "";
 
-    // Upsert subscription (update keys, aliases, and timestamps if endpoint already exists)
+    // Upsert subscription uniquely by device endpoint (updates user, aliases, and keys if already registered)
     const subscription = await PushSubscription.findOneAndUpdate(
-      { userId, endpoint },
+      { endpoint },
       {
         userId,
         aliases,
