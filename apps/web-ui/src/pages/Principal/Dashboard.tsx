@@ -14,6 +14,7 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import DashboardCard from '../../components/Dashboard/DashboardCard';
 import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidget';
+import DashboardRefreshButton from '../../components/shared/DashboardRefreshButton';
 import { useGetSchoolDashboardStats } from '../../queries/SchoolDashboard';
 import { useGetLeaveStats } from '../../queries/Leave';
 import { useGetTimetableSchedules } from '../../queries/Timetable';
@@ -36,10 +37,10 @@ const PrincipalDashboard = () => {
     const { user } = useUserStore();
     const schoolId = TokenService.getSchoolId() || user?.schoolId || TokenService.getUser()?.schoolId || '';
 
-    const { data, isLoading, error } = useGetSchoolDashboardStats(schoolId);
-    const { data: leaveData } = useGetLeaveStats(schoolId);
-    const { data: pendingTimetablesData } = useGetTimetableSchedules(schoolId, 'pending_approval');
-    const { data: examsData } = useGetExams(schoolId);
+    const { data, isLoading, error, refetch: refetchStats } = useGetSchoolDashboardStats(schoolId);
+    const { data: leaveData, refetch: refetchLeaves } = useGetLeaveStats(schoolId);
+    const { data: pendingTimetablesData, refetch: refetchTimetables } = useGetTimetableSchedules(schoolId, 'pending_approval');
+    const { data: examsData, refetch: refetchExams } = useGetExams(schoolId);
     const navigate = useNavigate();
 
     const isStatsLoading = Boolean(isLoading && schoolId && !data);
@@ -167,29 +168,44 @@ const PrincipalDashboard = () => {
                         pointerEvents: 'none',
                     }}
                 />
-                <Typography variant="h4" fontWeight={800} sx={{ fontSize: { xs: '1.35rem', sm: '1.75rem' }, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-                    Welcome back, {userName} 👋
-                </Typography>
-                <Typography variant="body2" sx={{ mt: 0.5, opacity: 0.85, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
-                    Here's what needs your attention today.
-                </Typography>
-                {(leaveStats?.teacherPending || 0) > 0 && (
-                    <Chip
-                        label={`${leaveStats?.teacherPending} leave request${(leaveStats?.teacherPending || 0) > 1 ? 's' : ''} pending`}
-                        size="small"
-                        sx={{
-                            mt: 1.25,
-                            bgcolor: 'rgba(251,191,36,0.25)',
-                            color: '#fde68a',
-                            border: '1px solid rgba(251,191,36,0.4)',
-                            fontWeight: 700,
-                            fontSize: '0.72rem',
-                            height: 24
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2, position: 'relative', zIndex: 1 }}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="h4" fontWeight={800} sx={{ fontSize: { xs: '1.35rem', sm: '1.75rem' }, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                            Welcome back, {userName} 👋
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 0.5, opacity: 0.85, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                            Here's what needs your attention today.
+                        </Typography>
+                        {(leaveStats?.teacherPending || 0) > 0 && (
+                            <Chip
+                                label={`${leaveStats?.teacherPending} leave request${(leaveStats?.teacherPending || 0) > 1 ? 's' : ''} pending`}
+                                size="small"
+                                sx={{
+                                    mt: 1.25,
+                                    bgcolor: 'rgba(251,191,36,0.25)',
+                                    color: '#fde68a',
+                                    border: '1px solid rgba(251,191,36,0.4)',
+                                    fontWeight: 700,
+                                    fontSize: '0.72rem',
+                                    height: 24
+                                }}
+                                icon={<EventNoteIcon sx={{ color: '#fde68a !important', fontSize: '14px !important' }} />}
+                                onClick={() => navigate('/principal/leave/teacher-requests')}
+                            />
+                        )}
+                    </Box>
+
+                    <DashboardRefreshButton
+                        onRefresh={async () => {
+                            await Promise.all([
+                                refetchStats(),
+                                refetchLeaves(),
+                                refetchTimetables(),
+                                refetchExams(),
+                            ]);
                         }}
-                        icon={<EventNoteIcon sx={{ color: '#fde68a !important', fontSize: '14px !important' }} />}
-                        onClick={() => navigate('/principal/leave/teacher-requests')}
                     />
-                )}
+                </Box>
             </Box>
 
             {error && (

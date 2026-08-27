@@ -14,6 +14,7 @@ import TokenService from '../../queries/token/tokenService';
 import { useUserStore } from '../../stores/userStore';
 import { useUpdateTripStatus } from '../../queries/transport';
 import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
+import DashboardRefreshButton from '../../components/shared/DashboardRefreshButton';
 
 const TRANSPORT_API = "http://localhost:5004/api/transport";
 const SOCKET_URL = "http://localhost:5004";
@@ -183,16 +184,33 @@ const DriverDashboard: React.FC = () => {
                                 </Box>
                             </Box>
                         </Box>
-                        <Button
-                            variant="outlined"
-                            color="primary"
-                            size="small"
-                            startIcon={<SupportIcon sx={{ fontSize: 18 }} />}
-                            onClick={() => setSupportDialogOpen(true)}
-                            sx={{ borderRadius: 2, fontWeight: 700, textTransform: 'none', fontSize: '0.8rem', py: 0.5, alignSelf: { xs: 'stretch', sm: 'auto' } }}
-                        >
-                            Open Support Ticket
-                        </Button>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, alignSelf: { xs: 'stretch', sm: 'auto' }, flexWrap: 'wrap' }}>
+                            <DashboardRefreshButton
+                                onRefresh={async () => {
+                                    if (schoolId) {
+                                        try {
+                                            const res = await axios.get(`${TRANSPORT_API}/school/${schoolId}/routes`);
+                                            const assigned = res.data.data.find((r: any) =>
+                                                userId && (r.driverId === userId || r.driver?.userId === userId || r.email === user?.email)
+                                            );
+                                            setCurrentRoute(assigned);
+                                        } catch (err) {
+                                            console.error("Failed to refresh assigned route:", err);
+                                        }
+                                    }
+                                }}
+                            />
+                            <Button
+                                variant="outlined"
+                                color="primary"
+                                size="small"
+                                startIcon={<SupportIcon sx={{ fontSize: 18 }} />}
+                                onClick={() => setSupportDialogOpen(true)}
+                                sx={{ borderRadius: 2, fontWeight: 700, textTransform: 'none', fontSize: '0.8rem', py: 0.5, flex: { xs: 1, sm: 'none' } }}
+                            >
+                                Support
+                            </Button>
+                        </Box>
                     </Paper>
                 </Grid>
 

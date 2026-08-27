@@ -83,10 +83,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used inside AuthProvider");
+  if (context) {
+    return context;
   }
-  return context;
+
+  // Safe fallback if called outside or during early render of AuthProvider
+  const decoded = TokenService.decodeToken();
+  const user =
+    decoded && !TokenService.isTokenExpired()
+      ? {
+          userId: decoded.userId || decoded.adminId || "",
+          email: decoded.email || decoded.username || "",
+          role: decoded.role,
+          schoolId: decoded.schoolId,
+        }
+      : null;
+
+  return {
+    user,
+    isAuthenticated: !!user,
+    login: (token: string) => {
+      TokenService.setToken(token);
+      useUserStore.getState().clearStore();
+      useUserStore.getState().fetchProfile(true);
+    },
+    logout: () => {
+      TokenService.removeToken();
+      useUserStore.getState().clearStore();
+    },
+    page: 1,
+    setPage: () => {},
+    limit: 10,
+    setLimit: () => {},
+  };
 };

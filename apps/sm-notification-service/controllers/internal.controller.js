@@ -74,17 +74,33 @@ const handleInternalNotify = async (req, res) => {
     // Group notifications by userId for batch processing
     const userIds = [...new Set(notifications.map((n) => n.userId.toString()))];
 
-    // Fetch all push subscriptions for target users in one query
+    // Fetch all push subscriptions for target users in one query (matching userId or aliases)
     const subscriptions = await PushSubscription.find({
-      userId: { $in: userIds },
+      $or: [
+        { userId: { $in: userIds } },
+        { aliases: { $in: userIds } },
+      ],
     }).lean();
 
     const subMap = new Map();
     subscriptions.forEach((sub) => {
+      // Map under primary userId
       if (!subMap.has(sub.userId)) {
         subMap.set(sub.userId, []);
       }
       subMap.get(sub.userId).push(sub);
+
+      // Also map under each alias
+      if (Array.isArray(sub.aliases)) {
+        sub.aliases.forEach((alias) => {
+          if (!subMap.has(alias)) {
+            subMap.set(alias, []);
+          }
+          if (!subMap.get(alias).some((s) => s.endpoint === sub.endpoint)) {
+            subMap.get(alias).push(sub);
+          }
+        });
+      }
     });
 
     // Dispatch each notification
@@ -117,7 +133,8 @@ const handleInternalNotify = async (req, res) => {
       const userSubs = subMap.get(userId) || [];
       if (userSubs.length > 0) {
         const pushPayload = {
-          title: notif.title,
+          title: notif.title || "SMS Edu Solutions",
+          body: notif.message,
           message: notif.message,
           notificationId: notif.notificationId,
           type: notif.type,

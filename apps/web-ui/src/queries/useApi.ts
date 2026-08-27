@@ -12,27 +12,36 @@ interface ApiError {
 // Service types for different microservices
 type ServiceType = "auth" | "user" | "platform" | "academics" | "transport" | "payment" | "chat" | "notification";
 
+// Helper to get hostname fallback for mobile/LAN testing
+const getHostFallback = (port: number): string => {
+    if (typeof window !== "undefined" && window.location.hostname && window.location.hostname !== "localhost") {
+        const protocol = window.location.protocol === "https:" ? "https:" : "http:";
+        return `${protocol}//${window.location.hostname}:${port}`;
+    }
+    return `http://localhost:${port}`;
+};
+
 // Get base URL for each service from environment variables
 const getServiceUrl = (service: ServiceType): string => {
     switch (service) {
         case "auth":
-            return import.meta.env.VITE_AUTH_API_URL || "http://localhost:5001";
+            return import.meta.env.VITE_AUTH_API_URL || getHostFallback(5001);
         case "user":
-            return import.meta.env.VITE_USER_API_URL || "http://localhost:5002";
+            return import.meta.env.VITE_USER_API_URL || getHostFallback(5002);
         case "platform":
-            return import.meta.env.VITE_PLATFORM_API_URL || "http://localhost:5000";
+            return import.meta.env.VITE_PLATFORM_API_URL || getHostFallback(5000);
         case "academics":
-            return import.meta.env.VITE_ACADEMICS_API_URL || "http://localhost:5003";
+            return import.meta.env.VITE_ACADEMICS_API_URL || getHostFallback(5003);
         case "transport":
-            return import.meta.env.VITE_TRANSPORT_API_URL || "http://localhost:5004";
+            return import.meta.env.VITE_TRANSPORT_API_URL || getHostFallback(5004);
         case "payment":
-            return import.meta.env.VITE_PAYMENT_API_URL || "http://localhost:5005";
+            return import.meta.env.VITE_PAYMENT_API_URL || getHostFallback(5005);
         case "chat":
-            return import.meta.env.VITE_CHAT_API_URL || "http://localhost:5007";
+            return import.meta.env.VITE_CHAT_API_URL || getHostFallback(5007);
         case "notification":
-            return import.meta.env.VITE_NOTIF_API_URL || "http://localhost:5008";
+            return import.meta.env.VITE_NOTIF_API_URL || getHostFallback(5008);
         default:
-            return import.meta.env.VITE_PLATFORM_API_URL || "http://localhost:5000";
+            return import.meta.env.VITE_PLATFORM_API_URL || getHostFallback(5000);
     }
 };
 

@@ -31,11 +31,12 @@ self.addEventListener("push", (event) => {
   }
 
   const title = data.title || "SMS Edu Solutions";
+  const body = data.body || data.message || "You have a new update in your school portal.";
   const options = {
-    body: data.message || "You have a new update in your school portal.",
+    body,
     icon: data.icon || "/android-chrome-192x192.png",
     badge: data.badge || "/favicon-32x32.png",
-    vibrate: [100, 50, 100],
+    vibrate: [200, 100, 200],
     data: {
       url: data.url || "/",
       notificationId: data.notificationId,

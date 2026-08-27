@@ -65,13 +65,27 @@ const subscribe = async (req, res) => {
       });
     }
 
+    const aliases = [
+      user.parentId,
+      user.teacherId,
+      user.studentId,
+      user.userId,
+      user.id,
+      user._id,
+      user.adminId,
+      user.email,
+    ]
+      .filter(Boolean)
+      .map((id) => id.toString());
+
     const userAgent = req.headers["user-agent"] || "";
 
-    // Upsert subscription (update keys and timestamps if endpoint already exists)
+    // Upsert subscription (update keys, aliases, and timestamps if endpoint already exists)
     const subscription = await PushSubscription.findOneAndUpdate(
       { userId, endpoint },
       {
         userId,
+        aliases,
         schoolId,
         userRole,
         endpoint,

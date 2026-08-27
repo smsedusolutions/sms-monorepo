@@ -39,6 +39,7 @@ import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
 import ExamPerformanceChart from '../../components/Dashboard/ExamPerformanceChart';
 import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidget';
 import DashboardErrorState from '../../components/shared/DashboardErrorState';
+import DashboardRefreshButton from '../../components/shared/DashboardRefreshButton';
 import type { Class, Student } from '../../types';
 
 const TeacherDashboard: React.FC = () => {
@@ -189,15 +190,15 @@ const TeacherDashboard: React.FC = () => {
 
     return (
         <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
-            {/* Professional Greeting */}
-            <Box sx={{ mb: { xs: 2, sm: 3 }, mt: 0.5 }}>
+            {/* Professional Greeting & Refresh Action */}
+            <Box sx={{ mb: { xs: 2, sm: 3 }, mt: 0.5, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
                 {isLoading ? (
-                    <>
+                    <Box sx={{ flex: 1 }}>
                         <Skeleton variant="text" width="60%" height={40} sx={{ borderRadius: 2 }} />
                         <Skeleton variant="text" width="40%" height={24} sx={{ mt: 0.5 }} />
-                    </>
+                    </Box>
                 ) : (
-                    <Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography
                             variant="h4"
                             fontWeight={800}
@@ -218,6 +219,16 @@ const TeacherDashboard: React.FC = () => {
                         </Typography>
                     </Box>
                 )}
+
+                <DashboardRefreshButton
+                    onRefresh={async () => {
+                        await Promise.all([
+                            refetchStats(),
+                            refetchTeacher(),
+                            refetchClasses(),
+                        ]);
+                    }}
+                />
             </Box>
 
             {error && (

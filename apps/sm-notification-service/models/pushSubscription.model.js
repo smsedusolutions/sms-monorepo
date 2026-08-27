@@ -8,6 +8,11 @@ const PushSubscriptionSchema = new Schema(
       required: true,
       index: true,
     },
+    aliases: {
+      type: [String],
+      default: [],
+      index: true,
+    },
     schoolId: {
       type: String,
       required: true,
