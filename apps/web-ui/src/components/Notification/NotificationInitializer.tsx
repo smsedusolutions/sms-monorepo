@@ -63,10 +63,27 @@ const NotificationInitializer: React.FC = () => {
       }
     };
 
+    // 4. Listen to window focus (e.g. user toggled permission in Android settings and switched back to app)
+    const handleWindowFocus = () => {
+      const token = TokenService.getToken();
+      if (
+        token &&
+        !TokenService.isTokenExpired() &&
+        isPushSupported() &&
+        getPermissionState() === "granted"
+      ) {
+        subscribeToPush().catch((err) => {
+          console.warn("⚠️ [NotificationInitializer] Focus push auto-sync failed:", err);
+        });
+      }
+    };
+
     window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("focus", handleWindowFocus);
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("focus", handleWindowFocus);
     };
   }, []);
 
