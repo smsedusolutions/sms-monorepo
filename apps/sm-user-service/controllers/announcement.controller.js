@@ -2,6 +2,7 @@ const { getSchoolDbConnection } = require("../configs/db");
 const { getSchoolDbName } = require("../utils/schoolDbHelper");
 const { AnnouncementSchema: announcementSchema, NotificationSchema: notificationSchema, StudentSchema: studentSchema, ParentSchema: parentSchema, TeacherSchema: teacherSchema } = require("@sms/shared");
 const { sendAnnouncementEmail } = require("../utils/mailService");
+const { dispatchRealtimePush } = require("./notification.controller");
 
 // Helper to get models for a specific school
 const getAnnouncementModels = (schoolDbName) => {
@@ -197,6 +198,8 @@ const createAnnouncementNotifications = async (Notification, Student, Parent, Te
 
         if (notifications.length > 0) {
             await Notification.insertMany(notifications);
+            // Asynchronously dispatch real-time WebSocket events and Web Push notifications
+            dispatchRealtimePush(notifications);
         }
 
         return recipients; // Return recipients for email sending
@@ -208,11 +211,16 @@ const createAnnouncementNotifications = async (Notification, Student, Parent, Te
 
 /**
  * Send announcement emails to recipients
- * Runs asynchronously and logs errors without throwing
+ * Runs asynchronously in small concurrency batches and stops immediately on authentication errors
  */
 const sendAnnouncementEmails = async (schoolId, announcement, recipients) => {
     try {
-        console.log(`Sending announcement emails to ${recipients.length} recipients...`);
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+            console.log("ℹ️ [MailService] EMAIL_USER / EMAIL_PASS not configured - skipping announcement emails");
+            return;
+        }
+
+        console.log(`Sending announcement emails to ${recipients.length} recipients in batches...`);
 
         const { sendEmail, resolvePlaceholders, getStyleTemplate } = require('@sms/shared/utils');
         const { EmailTemplateSchema, SchoolModel } = require('@sms/shared/models');
@@ -248,87 +256,103 @@ const sendAnnouncementEmails = async (schoolId, announcement, recipients) => {
             <p>Best regards,<br/>{{school.name}}</p>
         `;
 
-        // Send emails to each recipient with personalized data
-        const emailPromises = recipients.map(async (recipient) => {
-            try {
-                // Build recipient-specific data
-                const recipientData = {
-                    school: schoolDetails,
-                    announcement: {
-                        title: announcement.title,
-                        message: announcement.content,
-                        content: announcement.content,
-                        date: new Date(announcement.publishDate || announcement.createdAt).toLocaleDateString('en-IN'),
-                    },
-                };
+        // Format attachments for email (if any)
+        const emailAttachments = announcement.attachments?.map(att => ({
+            filename: att.fileName,
+            path: att.url
+        })) || [];
 
-                // Add role-specific data with both camelCase and snake_case for compatibility
-                const userRole = (recipient.role || '').toLowerCase();
-                if (userRole === 'student') {
-                    const [firstName, ...lastNameParts] = (recipient.name || '').split(' ');
-                    const lastName = lastNameParts.join(' ');
-                    recipientData.student = {
-                        firstName, first_name: firstName,
-                        lastName, last_name: lastName,
-                        fullName: recipient.name, full_name: recipient.name
+        let successCount = 0;
+        let failCount = 0;
+        let authFailureDetected = false;
+
+        // Process in chunks of 5 to avoid overwhelming the SMTP server
+        const CHUNK_SIZE = 5;
+        for (let i = 0; i < recipients.length; i += CHUNK_SIZE) {
+            if (authFailureDetected) break;
+
+            const chunk = recipients.slice(i, i + CHUNK_SIZE);
+            const chunkPromises = chunk.map(async (recipient) => {
+                try {
+                    const recipientData = {
+                        school: schoolDetails,
+                        announcement: {
+                            title: announcement.title,
+                            message: announcement.content,
+                            content: announcement.content,
+                            date: new Date(announcement.publishDate || announcement.createdAt).toLocaleDateString('en-IN'),
+                        },
                     };
-                } else if (userRole === 'parent') {
-                    recipientData.parent = {
-                        father: { name: recipient.name },
-                        mother: { name: recipient.name }, // Fallback
-                        guardian: { name: recipient.name } // Fallback
-                    };
-                } else if (userRole === 'teacher') {
-                    const [firstName, ...lastNameParts] = (recipient.name || '').split(' ');
-                    const lastName = lastNameParts.join(' ');
-                    recipientData.teacher = {
-                        firstName, first_name: firstName,
-                        lastName, last_name: lastName,
-                        fullName: recipient.name, full_name: recipient.name
-                    };
+
+                    const userRole = (recipient.role || '').toLowerCase();
+                    if (userRole === 'student') {
+                        const [firstName, ...lastNameParts] = (recipient.name || '').split(' ');
+                        const lastName = lastNameParts.join(' ');
+                        recipientData.student = {
+                            firstName, first_name: firstName,
+                            lastName, last_name: lastName,
+                            fullName: recipient.name, full_name: recipient.name
+                        };
+                    } else if (userRole === 'parent') {
+                        recipientData.parent = {
+                            father: { name: recipient.name },
+                            mother: { name: recipient.name },
+                            guardian: { name: recipient.name }
+                        };
+                    } else if (userRole === 'teacher') {
+                        const [firstName, ...lastNameParts] = (recipient.name || '').split(' ');
+                        const lastName = lastNameParts.join(' ');
+                        recipientData.teacher = {
+                            firstName, first_name: firstName,
+                            lastName, last_name: lastName,
+                            fullName: recipient.name, full_name: recipient.name
+                        };
+                    }
+
+                    const resolvedSubject = resolvePlaceholders(templateSubject, recipientData);
+                    const resolvedContent = resolvePlaceholders(templateContent, recipientData);
+
+                    const styledHTML = getStyleTemplate(styleTemplate, resolvedContent, {
+                        bannerImage: customTemplate?.bannerImage || recipientData.school.logo,
+                        schoolName: recipientData.school.name,
+                        schoolAddress: recipientData.school.address,
+                        schoolEmail: recipientData.school.email,
+                        schoolPhone: recipientData.school.phone,
+                    });
+
+                    await sendEmail({
+                        to: recipient.email,
+                        subject: resolvedSubject,
+                        html: styledHTML,
+                        from: recipientData.school.name,
+                        attachments: emailAttachments
+                    });
+
+                    return { success: true, email: recipient.email };
+                } catch (error) {
+                    if (error.code === 'EAUTH' || error.responseCode === 535 || error.message?.includes('BadCredentials')) {
+                        authFailureDetected = true;
+                    }
+                    return { success: false, email: recipient.email, error: error.message };
                 }
+            });
 
-                // Resolve placeholders
-                const resolvedSubject = resolvePlaceholders(templateSubject, recipientData);
-                const resolvedContent = resolvePlaceholders(templateContent, recipientData);
-
-                // Apply style template
-                const styledHTML = getStyleTemplate(styleTemplate, resolvedContent, {
-                    bannerImage: customTemplate?.bannerImage || recipientData.school.logo,
-                    schoolName: recipientData.school.name,
-                    schoolAddress: recipientData.school.address,
-                    schoolEmail: recipientData.school.email,
-                    schoolPhone: recipientData.school.phone,
-                });
-
-                // Format attachments for email (if any)
-                const emailAttachments = announcement.attachments?.map(att => ({
-                    filename: att.fileName,
-                    path: att.url  // ImageKit CDN URL - Nodemailer will fetch this
-                })) || [];
-
-                // Send email
-                await sendEmail({
-                    to: recipient.email,
-                    subject: resolvedSubject,
-                    html: styledHTML,
-                    from: recipientData.school.name,
-                    attachments: emailAttachments  // Include attachments
-                });
-
-                return { success: true, email: recipient.email };
-            } catch (error) {
-                console.error(`Failed to send announcement to ${recipient.email}:`, error.message);
-                return { success: false, email: recipient.email, error: error.message };
+            const chunkResults = await Promise.allSettled(chunkPromises);
+            for (const res of chunkResults) {
+                if (res.status === 'fulfilled' && res.value.success) {
+                    successCount++;
+                } else {
+                    failCount++;
+                }
             }
-        });
 
-        const results = await Promise.allSettled(emailPromises);
+            if (authFailureDetected) {
+                console.warn("⚠️ [MailService] SMTP authentication failed (BadCredentials / EAUTH). Aborting remaining emails.");
+                break;
+            }
+        }
 
-        const successCount = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
-        const failCount = results.length - successCount;
-
-        console.log(`Announcement emails sent: ${successCount} succeeded, ${failCount} failed`);
+        console.log(`Announcement emails finished: ${successCount} succeeded, ${failCount} failed.`);
     } catch (error) {
         console.error('Error in sendAnnouncementEmails:', error);
     }

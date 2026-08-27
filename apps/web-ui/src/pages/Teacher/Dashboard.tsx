@@ -168,6 +168,10 @@ const TeacherDashboard: React.FC = () => {
         { bg: '#fffbeb', accent: '#f59e0b', iconBg: '#fef3c7' },
     ];
 
+    const assignedTotalStudents = useMemo(() => {
+        return myClassCards.reduce((acc, c) => acc + c.studentCount, 0);
+    }, [myClassCards]);
+
     if (isError && isTeacherError && isClassesError) {
         return (
             <DashboardErrorState
@@ -182,10 +186,6 @@ const TeacherDashboard: React.FC = () => {
             />
         );
     }
-
-    const assignedTotalStudents = useMemo(() => {
-        return myClassCards.reduce((acc, c) => acc + c.studentCount, 0);
-    }, [myClassCards]);
 
     return (
         <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
