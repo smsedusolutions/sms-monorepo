@@ -4,11 +4,12 @@ import PeopleIcon from '@mui/icons-material/People';
 import DomainAddIcon from '@mui/icons-material/DomainAdd';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import DashboardCard from '../../components/Dashboard/DashboardCard';
+import DashboardRefreshButton from '../../components/shared/DashboardRefreshButton';
 import { useGetDashboardStats } from '../../queries/Dashboard';
 import { useNavigate } from 'react-router-dom';
 
 const SuperAdminDashboard = () => {
-    const { data, isLoading, error } = useGetDashboardStats();
+    const { data, isLoading, error, refetch } = useGetDashboardStats();
     const navigate = useNavigate();
 
     const stats = data?.data;
@@ -22,25 +23,33 @@ const SuperAdminDashboard = () => {
 
     return (
         <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
-            <Box sx={{ mb: { xs: 2, sm: 3 }, mt: 0.5 }}>
-                <Typography
-                    variant="h4"
-                    fontWeight={800}
-                    sx={{
-                        mb: 0.25,
-                        background: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
-                        letterSpacing: '-0.02em',
-                        lineHeight: 1.2
+            <Box sx={{ mb: { xs: 2, sm: 3 }, mt: 0.5, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                        variant="h4"
+                        fontWeight={800}
+                        sx={{
+                            mb: 0.25,
+                            background: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
+                            letterSpacing: '-0.02em',
+                            lineHeight: 1.2
+                        }}
+                    >
+                        Super Admin Dashboard
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                        Welcome to the Super Admin Dashboard. Manage schools and platform administrators.
+                    </Typography>
+                </Box>
+
+                <DashboardRefreshButton
+                    onRefresh={async () => {
+                        await refetch();
                     }}
-                >
-                    Super Admin Dashboard
-                </Typography>
-                <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
-                    Welcome to the Super Admin Dashboard. Manage schools and platform administrators.
-                </Typography>
+                />
             </Box>
 
             {error && (

@@ -1,7 +1,14 @@
 import TokenService from "../queries/token/tokenService";
 
 const getNotificationApiUrl = (): string => {
-  return import.meta.env.VITE_NOTIF_API_URL || "http://localhost:5008";
+  if (import.meta.env.VITE_NOTIF_API_URL) {
+    return import.meta.env.VITE_NOTIF_API_URL;
+  }
+  if (typeof window !== "undefined" && window.location.hostname && window.location.hostname !== "localhost") {
+    const protocol = window.location.protocol === "https:" ? "https:" : "http:";
+    return `${protocol}//${window.location.hostname}:5008`;
+  }
+  return "http://localhost:5008";
 };
 
 /**

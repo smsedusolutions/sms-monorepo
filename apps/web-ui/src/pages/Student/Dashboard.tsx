@@ -29,6 +29,7 @@ import { useGetSubjects } from '../../queries/Subject';
 import { useGetTeachers } from '../../queries/Teacher';
 import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidget';
 import DashboardErrorState from '../../components/shared/DashboardErrorState';
+import DashboardRefreshButton from '../../components/shared/DashboardRefreshButton';
 
 const StudentDashboard: React.FC = () => {
     const navigate = useNavigate();
@@ -156,26 +157,41 @@ const StudentDashboard: React.FC = () => {
 
     return (
         <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1300, mx: 'auto' }}>
-            {/* Welcome Header */}
-            <Box sx={{ mb: { xs: 2, sm: 3 }, mt: 0.5 }}>
-                <Typography
-                    variant="h4"
-                    fontWeight={800}
-                    sx={{
-                        mb: 0.25,
-                        background: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
-                        letterSpacing: '-0.02em',
-                        lineHeight: 1.2
+            {/* Welcome Header & Refresh Action */}
+            <Box sx={{ mb: { xs: 2, sm: 3 }, mt: 0.5, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                        variant="h4"
+                        fontWeight={800}
+                        sx={{
+                            mb: 0.25,
+                            background: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                            fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
+                            letterSpacing: '-0.02em',
+                            lineHeight: 1.2
+                        }}
+                    >
+                        Welcome back, {userName}!
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
+                        Here is your daily schedule, homework, and announcements for today.
+                    </Typography>
+                </Box>
+
+                <DashboardRefreshButton
+                    onRefresh={async () => {
+                        await Promise.all([
+                            refetchAttendance(),
+                            refetchTimetable(),
+                            refetchAnnouncements(),
+                            refetchHomework(),
+                            refetchSubjects(),
+                            refetchTeachers(),
+                        ]);
                     }}
-                >
-                    Welcome back, {userName}!
-                </Typography>
-                <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
-                    Here is your daily schedule, homework, and announcements for today.
-                </Typography>
+                />
             </Box>
 
             {attendanceError && (

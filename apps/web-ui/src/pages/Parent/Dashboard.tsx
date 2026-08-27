@@ -32,6 +32,7 @@ import { AppButton } from '../../components/shared/AppButton';
 import { AppSection } from '../../components/shared/AppSection';
 import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
 import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidget';
+import DashboardRefreshButton from '../../components/shared/DashboardRefreshButton';
 
 const ParentDashboard = () => {
     const navigate = useNavigate();
@@ -40,22 +41,22 @@ const ParentDashboard = () => {
     const schoolId = TokenService.getSchoolId() || '';
     const { selectedChild, setSelectedChild, children: contextChildren } = useChildSelector();
 
-    const { data: dashboardData, isLoading: loadingDashboard, error } = useGetParentDashboard(schoolId);
-    const { data: announcementsData, isLoading: loadingAnnouncements } = useGetAnnouncements(schoolId, { limit: 3 });
-    const { data: homeworkData, isLoading: loadingHomework } = useGetUpcomingHomework(
+    const { data: dashboardData, isLoading: loadingDashboard, error, refetch: refetchDashboard } = useGetParentDashboard(schoolId);
+    const { data: announcementsData, isLoading: loadingAnnouncements, refetch: refetchAnnouncements } = useGetAnnouncements(schoolId, { limit: 3 });
+    const { data: homeworkData, isLoading: loadingHomework, refetch: refetchHomework } = useGetUpcomingHomework(
         schoolId,
         selectedChild?.studentId || '',
         5
     );
 
     // Get attendance for selected child
-    const { data: attendanceData, isLoading: loadingAttendance } = useGetChildAttendance(
+    const { data: attendanceData, isLoading: loadingAttendance, refetch: refetchAttendance } = useGetChildAttendance(
         schoolId,
         selectedChild?.studentId || ''
     );
 
     // Get parent's children leave status
-    const { data: parentLeavesData } = useGetParentLeaves(schoolId);
+    const { data: parentLeavesData, refetch: refetchLeaves } = useGetParentLeaves(schoolId);
 
     const dashboard = dashboardData?.data;
     const announcements = announcementsData?.data || [];
@@ -103,15 +104,15 @@ const ParentDashboard = () => {
 
     return (
         <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
-            {/* Welcome Header */}
-            <Box sx={{ mb: { xs: 2, sm: 3 }, mt: 0.5 }}>
+            {/* Welcome Greeting & Refresh Action */}
+            <Box sx={{ mb: { xs: 2, sm: 3 }, mt: 0.5, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
                 {loadingDashboard ? (
-                    <>
-                        <Skeleton variant="text" width="55%" height={48} sx={{ borderRadius: 2 }} />
-                        <Skeleton variant="text" width="35%" height={22} sx={{ mt: 0.5 }} />
-                    </>
+                    <Box sx={{ flex: 1 }}>
+                        <Skeleton variant="text" width="55%" height={40} sx={{ borderRadius: 2 }} />
+                        <Skeleton variant="text" width="35%" height={24} sx={{ mt: 0.5 }} />
+                    </Box>
                 ) : (
-                    <>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography
                             variant="h4"
                             fontWeight={800}
@@ -130,8 +131,20 @@ const ParentDashboard = () => {
                         <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ opacity: 0.85, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                             Here is today's overview for your {childrenCount === 1 ? 'child' : 'children'}.
                         </Typography>
-                    </>
+                    </Box>
                 )}
+
+                <DashboardRefreshButton
+                    onRefresh={async () => {
+                        await Promise.all([
+                            refetchDashboard(),
+                            refetchAnnouncements(),
+                            refetchHomework(),
+                            refetchAttendance(),
+                            refetchLeaves(),
+                        ]);
+                    }}
+                />
             </Box>
 
             <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>

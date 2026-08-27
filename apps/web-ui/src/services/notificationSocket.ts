@@ -34,11 +34,18 @@ class NotificationSocketService {
     const token = TokenService.getToken();
     if (!token) return;
 
-    this.isConnecting = true;
+    const getWsFallback = (): string => {
+      if (typeof window !== "undefined" && window.location.hostname && window.location.hostname !== "localhost") {
+        const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        return `${wsProtocol}//${window.location.hostname}:5008`;
+      }
+      return "ws://localhost:5008";
+    };
+
     const rawWsUrl =
       import.meta.env.VITE_NOTIF_WS_URL ||
       import.meta.env.VITE_NOTIF_API_URL ||
-      "ws://localhost:5008";
+      getWsFallback();
     const baseWsUrl = normalizeWsUrl(rawWsUrl);
     const wsUrl = `${baseWsUrl}?token=${encodeURIComponent(token)}`;
 
