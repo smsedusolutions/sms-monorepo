@@ -211,7 +211,23 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
                     }}
                     aria-label="Notifications"
                   >
-                    <Badge color="error" variant="dot" invisible={unreadCount === 0}>
+                    <Badge
+                      badgeContent={unreadCount}
+                      max={99}
+                      color="error"
+                      invisible={unreadCount === 0}
+                      sx={{
+                        '& .MuiBadge-badge': {
+                          fontSize: '0.62rem',
+                          height: 16,
+                          minWidth: 16,
+                          px: 0.4,
+                          fontWeight: 800,
+                          borderRadius: '8px',
+                          boxShadow: '0 2px 4px rgba(239, 68, 68, 0.4)',
+                        },
+                      }}
+                    >
                       <NotificationsRoundedIcon sx={{ fontSize: 20 }} />
                     </Badge>
                   </IconButton>
