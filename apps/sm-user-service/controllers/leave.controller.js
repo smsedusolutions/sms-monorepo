@@ -5,8 +5,10 @@ const {
     ParentSchema: parentSchema,
     StudentSchema: studentSchema,
     LeaveRequestSchema: leaveRequestSchema,
+    NotificationSchema: notificationSchema,
 } = require("@sms/shared");
 const { logActivity } = require("@sms/shared/utils");
+const { dispatchRealtimePush } = require("./notification.controller");
 
 // Helper to get the model for a specific school
 const getLeaveModel = async (schoolId) => {
@@ -400,6 +402,32 @@ const processLeave = async (req, res) => {
             description: `${action === "approve" ? "Approved" : "Rejected"} leave request for ${leave.applicantName} (${leaveId})`,
             metadata: { leaveId, action, remarks }
         });
+
+        // Dispatch real-time notification to applicant
+        try {
+            const Notification = schoolDb.models.Notification || schoolDb.model("Notification", notificationSchema);
+            const notifId = `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 5)}`;
+            const startFormatted = leave.startDate ? new Date(leave.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
+            const endFormatted = leave.endDate ? new Date(leave.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
+            
+            const leaveNotif = new Notification({
+                notificationId: notifId,
+                schoolId,
+                userId: leave.applicantId,
+                userRole: leave.applicantType === 'teacher' ? 'teacher' : 'student',
+                type: 'leave_status',
+                title: `Leave Request ${action === "approve" ? "Approved" : "Rejected"}`,
+                message: `Your leave request from ${startFormatted} to ${endFormatted} has been ${leave.status}${remarks ? ` (${remarks})` : ''}.`,
+                referenceId: leave.leaveId,
+                referenceType: 'leave',
+                isRead: false,
+                metadata: { leaveId: leave.leaveId, status: leave.status, remarks }
+            });
+            await leaveNotif.save();
+            dispatchRealtimePush(leaveNotif.toObject ? leaveNotif.toObject() : leaveNotif);
+        } catch (notifErr) {
+            console.error("Error creating leave notification:", notifErr);
+        }
 
         return res.status(200).json({
             success: true,

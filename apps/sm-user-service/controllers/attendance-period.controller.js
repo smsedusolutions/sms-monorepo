@@ -3,6 +3,7 @@ const { getSchoolDbConnection } = require("../configs/db");
 const { getSchoolDbName } = require("../utils/schoolDbHelper");
 const { SchoolModel: School, AttendancePeriodSchema: attendancePeriodSchema, StudentSchema: studentSchema } = require("@sms/shared");
 const { logActivity } = require("@sms/shared/utils");
+const { sendAbsenceAlerts } = require("../utils/absenceAlertHelper");
 
 // Helper to get the model for a specific school
 const getAttendanceModel = async (schoolId) => {
@@ -108,6 +109,14 @@ const markPeriodAttendance = async (req, res) => {
         });
 
         const bulkResult = await AttendanceModel.bulkWrite(bulkOps, { ordered: false });
+
+        // Identify absent students and dispatch real-time absence alerts
+        const absentRecords = validRecords.filter((r) => r.status === "absent");
+        if (absentRecords.length > 0) {
+            sendAbsenceAlerts(schoolId, absentRecords, classId, attendanceDate, "period").catch((err) => {
+                console.error("Failed to send period absence alerts:", err);
+            });
+        }
 
         const response = res.status(200).json({
             success: true,
