@@ -42,6 +42,7 @@ import { useUrlTab } from "../../../hooks/useUrlTab";
 import { useIsMobile } from "../../../hooks/useIsMobile";
 import MobileSegmentedTabs from "../../../components/mobile/navigation/MobileSegmentedTabs";
 import ConfirmationDialog from "../../../components/Dialogs/ConfirmationDialog";
+import PushNotificationBanner from "../../../components/Notification/PushNotificationBanner";
 import type { Notification, NotificationType } from "../../../types";
 
 const getNotificationIcon = (type: NotificationType) => {
@@ -139,6 +140,9 @@ const NotificationsTab: React.FC = () => {
 
   return (
     <Box>
+      {/* Push Notification Opt-in / Status Card */}
+      <PushNotificationBanner />
+
       <Box sx={{
         display: "flex",
         flexDirection: { xs: "column", sm: "row" },
