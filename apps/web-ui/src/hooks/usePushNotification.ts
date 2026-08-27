@@ -44,7 +44,7 @@ export const usePushNotification = (): UsePushNotificationReturn => {
     refreshStatus();
   }, [refreshStatus]);
 
-  const handleSubscribe = async (): Promise<boolean> => {
+  const handleSubscribe = useCallback(async (): Promise<boolean> => {
     if (!isSupported) return false;
     setIsLoading(true);
     try {
@@ -58,9 +58,9 @@ export const usePushNotification = (): UsePushNotificationReturn => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isSupported, refreshStatus]);
 
-  const handleUnsubscribe = async (): Promise<boolean> => {
+  const handleUnsubscribe = useCallback(async (): Promise<boolean> => {
     if (!isSupported) return false;
     setIsLoading(true);
     try {
@@ -73,7 +73,7 @@ export const usePushNotification = (): UsePushNotificationReturn => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isSupported, refreshStatus]);
 
   return {
     isSupported,

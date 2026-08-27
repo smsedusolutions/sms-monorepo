@@ -48,7 +48,7 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
     dismissed ||
     !isSupported ||
     (isSubscribed && !showWhenSubscribed) ||
-    (permission === "granted" && !showWhenSubscribed)
+    (permission === "granted" && isSubscribed && !showWhenSubscribed)
   ) {
     return null;
   }

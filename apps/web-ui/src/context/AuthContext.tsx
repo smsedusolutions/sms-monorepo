@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import TokenService from "../queries/token/tokenService";
 import { useUserStore } from "../stores/userStore";
+import {
+  subscribeToPush,
+  isPushSupported,
+  getPermissionState,
+} from "../services/pushNotification";
 
 interface AuthUser {
   userId: string;
@@ -57,6 +62,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     // Clear stale user profile and fetch fresh profile for newly logged in user
     useUserStore.getState().clearStore();
     useUserStore.getState().fetchProfile(true);
+
+    // If browser already granted notification permission, ensure push subscription is registered for this user
+    if (isPushSupported() && getPermissionState() === "granted") {
+      subscribeToPush(decoded.schoolId).catch((err) => {
+        console.warn("⚠️ Push registration on login failed:", err);
+      });
+    }
   };
 
   const logout = () => {
