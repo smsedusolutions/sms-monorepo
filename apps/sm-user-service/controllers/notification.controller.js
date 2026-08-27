@@ -21,8 +21,13 @@ const generateNotificationId = () => {
  */
 const dispatchRealtimePush = async (notifications) => {
     try {
-        const notifServiceUrl = process.env.NOTIFICATION_SERVICE_URL || "http://localhost:5008";
+        const notifServiceUrl = process.env.NOTIFICATION_SERVICE_URL;
         const secret = process.env.INTERNAL_SECRET;
+
+        if (!notifServiceUrl || !secret) {
+            console.warn("⚠️ [sm-user-service] NOTIFICATION_SERVICE_URL or INTERNAL_SECRET not set in env - skipping push.");
+            return;
+        }
 
         const payload = Array.isArray(notifications)
             ? { notifications }
@@ -31,7 +36,7 @@ const dispatchRealtimePush = async (notifications) => {
         await axios.post(`${notifServiceUrl}/internal/notify`, payload, {
             headers: {
                 "Content-Type": "application/json",
-                "X-Internal-Secret": secret || "",
+                "X-Internal-Secret": secret,
             },
             timeout: 4000,
         });

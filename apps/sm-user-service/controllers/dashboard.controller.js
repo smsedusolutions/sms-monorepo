@@ -173,7 +173,7 @@ const getTeacherDashboardStats = async (req, res) => {
     const Student = schoolDb.models.Student || schoolDb.model("Student", studentSchema);
     const Subject = schoolDb.models.Subject || schoolDb.model("Subject", require("@sms/shared").SubjectSchema);
     const TimetableEntry = schoolDb.models.TimetableEntry || schoolDb.model("TimetableEntry", require("@sms/shared").TimetableEntrySchema);
-    const Attendance = schoolDb.models.Attendance || schoolDb.model("Attendance", require("@sms/shared").AttendanceSimpleSchema);
+    const Attendance = schoolDb.models.AttendanceSimple || schoolDb.model("AttendanceSimple", require("@sms/shared").AttendanceSimpleSchema);
     const Homework = schoolDb.models.Homework || schoolDb.model("Homework", require("@sms/shared").HomeworkSchema);
     const LeaveRequest = schoolDb.models.LeaveRequest || schoolDb.model("LeaveRequest", require("@sms/shared").LeaveRequestSchema);
     const Announcement = schoolDb.models.Announcement || schoolDb.model("Announcement", require("@sms/shared").AnnouncementSchema);
@@ -319,10 +319,12 @@ const getTeacherDashboardStats = async (req, res) => {
     const periodsToday = scheduleWithDetails.length;
 
     // 3-6: Run independent queries in parallel
-    const todayDate = new Date();
-    todayDate.setHours(0, 0, 0, 0);
+    const todayStart = new Date();
+    todayStart.setUTCHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setUTCHours(23, 59, 59, 999);
 
-    const attendanceQueryConditions = [];
+    const attendanceQueryConditions = [{ markedBy: teacherId }];
     allClassIds.forEach((clsId) => {
       const secSet = classAssignedMap[clsId];
       if (secSet && secSet.size > 0) {
@@ -338,14 +340,12 @@ const getTeacherDashboardStats = async (req, res) => {
       totalAnnouncements,
       pendingTasks
     ] = await Promise.all([
-      // Attendance
-      attendanceQueryConditions.length > 0
-        ? Attendance.find({
-            schoolId,
-            date: todayDate,
-            $or: attendanceQueryConditions,
-          })
-        : Promise.resolve([]),
+      // Attendance (records marked today by this teacher or for their assigned classes)
+      Attendance.find({
+        schoolId,
+        date: { $gte: todayStart, $lte: todayEnd },
+        $or: attendanceQueryConditions,
+      }).lean().catch(() => []),
       // Leave Requests
       LeaveRequest.countDocuments({
         status: "pending",

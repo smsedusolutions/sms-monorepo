@@ -192,6 +192,8 @@ const createHomeworkNotifications = async (Notification, Student, Parent, school
 
         if (notifications.length > 0) {
             await Notification.insertMany(notifications);
+            const { dispatchRealtimePush } = require("../utils/pushHelper");
+            dispatchRealtimePush(notifications);
         }
     } catch (error) {
         console.error("Error creating homework notifications:", error);

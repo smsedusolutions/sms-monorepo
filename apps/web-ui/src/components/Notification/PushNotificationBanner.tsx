@@ -174,28 +174,14 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
       sx={{
         p: { xs: 2, sm: 2.25 },
         mb: 2.5,
-        borderRadius: 2.5,
-        background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
-        color: "#ffffff",
-        boxShadow: "0 4px 20px rgba(37, 99, 235, 0.18)",
+        borderRadius: 3,
+        bgcolor: "#f0f7ff",
+        border: "1.5px solid #bfdbfe",
+        boxShadow: "0 4px 18px rgba(37, 99, 235, 0.08)",
         position: "relative",
         overflow: "hidden",
       }}
     >
-      {/* Background Decorative Glow */}
-      <Box
-        sx={{
-          position: "absolute",
-          top: -30,
-          right: -30,
-          width: 120,
-          height: 120,
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%)",
-          pointerEvents: "none",
-        }}
-      />
-
       <Box
         sx={{
           display: "flex",
@@ -213,27 +199,28 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
               width: 44,
               height: 44,
               borderRadius: "12px",
-              bgcolor: "rgba(255, 255, 255, 0.2)",
-              backdropFilter: "blur(8px)",
+              bgcolor: "#dbeafe",
+              border: "1px solid #bfdbfe",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
             }}
           >
-            <NotificationsActiveIcon sx={{ color: "#ffffff", fontSize: 24 }} />
+            <NotificationsActiveIcon sx={{ color: "#2563eb", fontSize: 24 }} />
           </Box>
           <Box>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.25 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.25, color: "#1e3a8a" }}>
               Enable Instant Push Notifications
             </Typography>
             <Typography
               variant="body2"
               sx={{
-                color: "rgba(255, 255, 255, 0.9)",
+                color: "#3b82f6",
                 fontSize: { xs: "0.8rem", sm: "0.85rem" },
                 mt: 0.5,
                 lineHeight: 1.4,
+                fontWeight: 500,
               }}
             >
               Receive instant alerts on this device for announcements, attendance status, homework deadlines, and live transport updates even when the app is closed.
@@ -245,7 +232,7 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 1,
+            gap: 1.25,
             width: { xs: "100%", sm: "auto" },
             justifyContent: { xs: "flex-end", sm: "flex-start" },
           }}
@@ -255,25 +242,26 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
             disabled={isLoading}
             onClick={handleSubscribe}
             sx={{
-              bgcolor: "#ffffff",
-              color: "#1e40af",
+              bgcolor: "#2563eb !important",
+              color: "#ffffff !important",
               fontWeight: 700,
-              fontSize: "0.85rem",
-              px: 2.5,
-              py: 0.9,
-              borderRadius: 2,
+              fontSize: "0.875rem",
+              px: 2.75,
+              py: 1,
+              borderRadius: 2.5,
               textTransform: "none",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+              boxShadow: "0 4px 14px rgba(37, 99, 235, 0.35)",
               "&:hover": {
-                bgcolor: "#f8fafc",
+                bgcolor: "#1d4ed8 !important",
+                boxShadow: "0 6px 18px rgba(37, 99, 235, 0.45)",
               },
               width: { xs: "100%", sm: "auto" },
             }}
           >
             {isLoading ? (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <CircularProgress size={16} sx={{ color: "#1e40af" }} />
-                <span>Enabling...</span>
+                <CircularProgress size={16} sx={{ color: "#ffffff !important" }} />
+                <span style={{ color: "#ffffff", fontWeight: 700 }}>Enabling...</span>
               </Box>
             ) : (
               "Enable Notifications"
@@ -284,11 +272,11 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
             size="small"
             onClick={handleDismiss}
             sx={{
-              color: "rgba(255, 255, 255, 0.8)",
+              color: "#64748b",
               position: { xs: "absolute", sm: "static" },
-              top: { xs: -8, sm: "auto" },
-              right: { xs: -8, sm: "auto" },
-              "&:hover": { color: "#ffffff", bgcolor: "rgba(255,255,255,0.15)" },
+              top: { xs: 0, sm: "auto" },
+              right: { xs: 0, sm: "auto" },
+              "&:hover": { color: "#1e293b", bgcolor: "#e2e8f0" },
             }}
           >
             <CloseIcon fontSize="small" />
@@ -300,3 +288,4 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
 };
 
 export default PushNotificationBanner;
+

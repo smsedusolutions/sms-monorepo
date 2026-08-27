@@ -81,6 +81,8 @@ const sendResultPublishedNotifications = async (models, schoolId, exam, schedule
 
         if (notifDocs.length > 0) {
             await Notification.insertMany(notifDocs);
+            const { dispatchRealtimePush } = require("../utils/pushHelper");
+            dispatchRealtimePush(notifDocs);
         }
     } catch (err) {
         console.error("Error sending result published notifications:", err);
@@ -895,6 +897,8 @@ const remindTeacherForMarksEntry = async (req, res) => {
 
         if (notifs.length > 0) {
             await Notification.insertMany(notifs);
+            const { dispatchRealtimePush } = require("../utils/pushHelper");
+            dispatchRealtimePush(notifs);
         }
 
         res.status(200).json({

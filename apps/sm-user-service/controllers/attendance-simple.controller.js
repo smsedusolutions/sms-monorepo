@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const { getSchoolDbConnection } = require("../configs/db");
 const { getSchoolDbName } = require("../utils/schoolDbHelper");
 const { SchoolModel: School, AttendanceSimpleSchema: attendanceSimpleSchema, StudentSchema: studentSchema } = require("@sms/shared");
+const { sendAbsenceAlerts } = require("../utils/absenceAlertHelper");
 
 // Helper to get the model for a specific school
 const getAttendanceModel = async (schoolId) => {
@@ -104,6 +105,14 @@ const markClassAttendance = async (req, res) => {
         });
 
         const bulkResult = await AttendanceModel.bulkWrite(bulkOps, { ordered: false });
+
+        // Identify absent students and dispatch real-time absence alerts to parents & students
+        const absentRecords = validRecords.filter((r) => r.status === "absent");
+        if (absentRecords.length > 0) {
+            sendAbsenceAlerts(schoolId, absentRecords, classId, attendanceDate, "daily").catch((err) => {
+                console.error("Failed to send absence alerts:", err);
+            });
+        }
 
         res.status(200).json({
             success: true,
