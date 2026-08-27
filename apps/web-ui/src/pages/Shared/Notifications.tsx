@@ -3,7 +3,6 @@ import {
     Box,
     Typography,
     Paper,
-    Chip,
     Alert,
     Skeleton,
     Tabs,
@@ -21,12 +20,11 @@ import {
     CheckCircle as CheckCircleIcon,
     Warning as WarningIcon,
     School as SchoolIcon,
-    Delete as DeleteIcon,
-    MarkEmailRead as MarkReadIcon,
+    DeleteOutline as DeleteIcon,
+    MarkEmailReadOutlined as MarkReadIcon,
     Chat as ChatIcon,
     BugReport as BugReportIcon,
     Campaign as CampaignIcon,
-    AccessTime as AccessTimeIcon,
     DirectionsBus as TransportIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -43,101 +41,61 @@ const getNotificationVisuals = (type: NotificationType | string) => {
     switch (type) {
         case 'absence_alert':
             return {
-                icon: <WarningIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />,
+                icon: <WarningIcon sx={{ fontSize: 20, color: '#dc2626' }} />,
                 bg: '#fef2f2',
-                color: '#dc2626',
-                border: '#fca5a5',
-                shadow: 'rgba(239, 68, 68, 0.25)',
                 label: 'Absence Alert',
-                chipBg: '#fee2e2',
-                chipColor: '#b91c1c',
-                chipBorder: '#f87171',
+                chipColor: '#dc2626',
             };
         case 'system_alert':
             return {
-                icon: <CampaignIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />,
+                icon: <CampaignIcon sx={{ fontSize: 20, color: '#9333ea' }} />,
                 bg: '#faf5ff',
-                color: '#9333ea',
-                border: '#d8b4fe',
-                shadow: 'rgba(147, 51, 234, 0.25)',
                 label: 'School Alert',
-                chipBg: '#f3e8ff',
-                chipColor: '#7e22ce',
-                chipBorder: '#c084fc',
+                chipColor: '#9333ea',
             };
         case 'announcement':
             return {
-                icon: <AnnouncementIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />,
+                icon: <AnnouncementIcon sx={{ fontSize: 20, color: '#2563eb' }} />,
                 bg: '#eff6ff',
-                color: '#2563eb',
-                border: '#bfdbfe',
-                shadow: 'rgba(37, 99, 235, 0.25)',
                 label: 'Announcement',
-                chipBg: '#dbeafe',
-                chipColor: '#1d4ed8',
-                chipBorder: '#93c5fd',
+                chipColor: '#2563eb',
             };
         case 'leave_status':
             return {
-                icon: <CheckCircleIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />,
+                icon: <CheckCircleIcon sx={{ fontSize: 20, color: '#16a34a' }} />,
                 bg: '#f0fdf4',
-                color: '#16a34a',
-                border: '#bbf7d0',
-                shadow: 'rgba(22, 163, 74, 0.25)',
                 label: 'Leave Update',
-                chipBg: '#dcfce7',
-                chipColor: '#15803d',
-                chipBorder: '#86efac',
+                chipColor: '#16a34a',
             };
         case 'homework_assigned':
         case 'homework_due':
             return {
-                icon: <AssignmentIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />,
+                icon: <AssignmentIcon sx={{ fontSize: 20, color: '#d97706' }} />,
                 bg: '#fffbeb',
-                color: '#d97706',
-                border: '#fde68a',
-                shadow: 'rgba(217, 119, 6, 0.25)',
                 label: 'Homework',
-                chipBg: '#fef3c7',
-                chipColor: '#b45309',
-                chipBorder: '#fcd34d',
+                chipColor: '#d97706',
             };
         case 'exam_scheduled':
             return {
-                icon: <EventNoteIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />,
+                icon: <EventNoteIcon sx={{ fontSize: 20, color: '#4f46e5' }} />,
                 bg: '#eef2ff',
-                color: '#4f46e5',
-                border: '#c7d2fe',
-                shadow: 'rgba(79, 70, 229, 0.25)',
                 label: 'Exam',
-                chipBg: '#e0e7ff',
-                chipColor: '#4338ca',
-                chipBorder: '#a5b4fc',
+                chipColor: '#4f46e5',
             };
         case 'result_published':
             return {
-                icon: <SchoolIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />,
+                icon: <SchoolIcon sx={{ fontSize: 20, color: '#0d9488' }} />,
                 bg: '#f0fdfa',
-                color: '#0d9488',
-                border: '#99f6e4',
-                shadow: 'rgba(13, 148, 136, 0.25)',
                 label: 'Result',
-                chipBg: '#ccfbf1',
-                chipColor: '#0f766e',
-                chipBorder: '#5eead4',
+                chipColor: '#0d9488',
             };
         case 'chat_invite':
         case 'chat_accepted':
             return {
-                icon: <ChatIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />,
+                icon: <ChatIcon sx={{ fontSize: 20, color: '#7c3aed' }} />,
                 bg: '#faf5ff',
-                color: '#7c3aed',
-                border: '#ddd6fe',
-                shadow: 'rgba(124, 58, 237, 0.25)',
                 label: 'Chat',
-                chipBg: '#ede9fe',
-                chipColor: '#6d28d9',
-                chipBorder: '#c4b5fd',
+                chipColor: '#7c3aed',
             };
         case 'bus_departed':
         case 'child_picked':
@@ -146,27 +104,17 @@ const getNotificationVisuals = (type: NotificationType | string) => {
         case 'bus_delayed':
         case 'transport_update':
             return {
-                icon: <TransportIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />,
+                icon: <TransportIcon sx={{ fontSize: 20, color: '#ea580c' }} />,
                 bg: '#fff7ed',
-                color: '#ea580c',
-                border: '#fed7aa',
-                shadow: 'rgba(234, 88, 12, 0.25)',
                 label: 'Transport',
-                chipBg: '#ffedd5',
-                chipColor: '#c2410c',
-                chipBorder: '#fdba74',
+                chipColor: '#ea580c',
             };
         default:
             return {
-                icon: <NotificationsIcon sx={{ fontSize: { xs: 20, sm: 22 } }} />,
+                icon: <NotificationsIcon sx={{ fontSize: 20, color: '#64748b' }} />,
                 bg: '#f8fafc',
-                color: '#475569',
-                border: '#cbd5e1',
-                shadow: 'rgba(71, 85, 105, 0.25)',
                 label: (type || 'Notice').replace(/_/g, ' '),
-                chipBg: '#f1f5f9',
-                chipColor: '#334155',
-                chipBorder: '#cbd5e1',
+                chipColor: '#64748b',
             };
     }
 };
@@ -258,8 +206,8 @@ const NotificationsPage: React.FC = () => {
     }
 
     return (
-        <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1000, mx: 'auto' }}>
-            {/* Header section */}
+        <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 900, mx: 'auto' }}>
+            {/* Header */}
             <Box sx={{ 
                 display: 'flex', 
                 flexDirection: { xs: 'column', sm: 'row' },
@@ -269,16 +217,14 @@ const NotificationsPage: React.FC = () => {
                 gap: 2
             }}>
                 <Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                        <Box sx={{ p: 0.8, borderRadius: 2, bgcolor: '#eff6ff', color: '#2563eb', display: 'flex' }}>
-                            <NotificationsIcon sx={{ fontSize: 24 }} />
-                        </Box>
-                        <Typography variant="h5" fontWeight={800} sx={{ fontSize: { xs: '1.35rem', sm: '1.75rem' }, letterSpacing: '-0.02em', color: '#0f172a' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <NotificationsIcon color="primary" sx={{ fontSize: 24 }} />
+                        <Typography variant="h5" fontWeight={700} sx={{ fontSize: { xs: '1.3rem', sm: '1.6rem' }, color: '#0f172a' }}>
                             Notifications
                         </Typography>
                     </Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, fontWeight: 500 }}>
-                        Stay updated with real-time school announcements and alerts
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+                        Stay updated with school activities and alerts
                     </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -288,18 +234,19 @@ const NotificationsPage: React.FC = () => {
                             color="secondary"
                             startIcon={<BugReportIcon />}
                             onClick={() => setDiagOpen(true)}
+                            size="small"
                             sx={{ 
-                                borderRadius: 2.5,
-                                height: 40,
-                                px: 2,
-                                fontWeight: 700,
-                                fontSize: '0.825rem',
+                                borderRadius: 2,
+                                height: 36,
+                                px: 1.5,
+                                fontWeight: 600,
+                                fontSize: '0.8rem',
                                 whiteSpace: 'nowrap',
                                 textTransform: 'none',
                                 flex: { xs: 1, sm: 'none' }
                             }}
                         >
-                            Push Status & Test
+                            Push Diagnostics
                         </Button>
                     )}
                     <Button
@@ -308,15 +255,15 @@ const NotificationsPage: React.FC = () => {
                         startIcon={<MarkReadIcon />}
                         onClick={() => markAllAsRead.mutate()}
                         disabled={markAllAsRead.isPending || notifications.length === 0}
+                        size="small"
                         sx={{ 
-                            borderRadius: 2.5,
-                            height: 40,
-                            px: 2.5,
-                            fontWeight: 800,
-                            fontSize: '0.84rem',
+                            borderRadius: 2,
+                            height: 36,
+                            px: 2,
+                            fontWeight: 600,
+                            fontSize: '0.825rem',
                             whiteSpace: 'nowrap',
                             textTransform: 'none',
-                            boxShadow: '0 4px 12px rgba(37,99,235,0.25)',
                             flex: { xs: 1, sm: 'none' }
                         }}
                     >
@@ -335,7 +282,7 @@ const NotificationsPage: React.FC = () => {
 
             {/* Filter Tabs */}
             {isMobile ? (
-                <Box sx={{ mb: 2.5 }}>
+                <Box sx={{ mb: 2 }}>
                     <MobileSegmentedTabs
                         options={[
                             { id: 'all', label: 'All' },
@@ -355,8 +302,9 @@ const NotificationsPage: React.FC = () => {
                     value={tabValue} 
                     onChange={(_, v) => { setTabValue(v); setPage(1); }} 
                     sx={{ 
-                        mb: 2.5,
-                        '& .MuiTab-root': { fontWeight: 700, textTransform: 'none', minWidth: 90, fontSize: '0.9rem' }
+                        mb: 2,
+                        minHeight: 40,
+                        '& .MuiTab-root': { fontWeight: 600, textTransform: 'none', minWidth: 80, fontSize: '0.875rem', minHeight: 40, py: 0.5 }
                     }}
                 >
                     <Tab label="All" />
@@ -366,30 +314,28 @@ const NotificationsPage: React.FC = () => {
             )}
 
             {/* Notification Cards List */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 {isLoading ? (
                     [1, 2, 3, 4, 5].map((i) => (
-                        <Paper key={i} elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid #e2e8f0' }}>
-                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                                <Skeleton variant="rounded" width={42} height={42} sx={{ borderRadius: 2 }} />
+                        <Paper key={i} elevation={0} sx={{ p: 1.75, borderRadius: 2, border: '1px solid #e2e8f0' }}>
+                            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+                                <Skeleton variant="rounded" width={36} height={36} sx={{ borderRadius: 1.5 }} />
                                 <Box sx={{ flex: 1 }}>
-                                    <Skeleton variant="text" width="40%" height={24} />
-                                    <Skeleton variant="text" width="85%" height={20} />
-                                    <Skeleton variant="text" width="25%" height={16} />
+                                    <Skeleton variant="text" width="40%" height={20} />
+                                    <Skeleton variant="text" width="80%" height={18} />
+                                    <Skeleton variant="text" width="20%" height={14} />
                                 </Box>
                             </Box>
                         </Paper>
                     ))
                 ) : notifications.length === 0 ? (
-                    <Paper elevation={0} sx={{ textAlign: 'center', py: 8, px: 2, borderRadius: 3, border: '1px solid #e2e8f0', bgcolor: '#ffffff' }}>
-                        <Box sx={{ p: 2, width: 72, height: 72, borderRadius: '50%', bgcolor: '#f1f5f9', color: '#94a3b8', mx: 'auto', mb: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <NotificationsIcon sx={{ fontSize: 36 }} />
-                        </Box>
-                        <Typography variant="h6" fontWeight={700} color="#1e293b" sx={{ mb: 0.5 }}>
+                    <Paper elevation={0} sx={{ textAlign: 'center', py: 6, px: 2, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#ffffff' }}>
+                        <NotificationsIcon sx={{ fontSize: 36, color: '#94a3b8', mb: 1 }} />
+                        <Typography variant="subtitle1" fontWeight={600} color="#1e293b">
                             No notifications found
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            You're all caught up! There are no {tabValue === 2 ? 'unread ' : tabValue === 1 ? 'read ' : ''}notifications.
+                            You're all caught up!
                         </Typography>
                     </Paper>
                 ) : (
@@ -403,43 +349,31 @@ const NotificationsPage: React.FC = () => {
                                 elevation={0}
                                 onClick={() => handleNotificationClick(notification)}
                                 sx={{
-                                    p: { xs: 1.75, sm: 2 },
-                                    borderRadius: 3,
-                                    position: 'relative',
+                                    p: { xs: 1.5, sm: 1.75 },
+                                    borderRadius: 2,
                                     cursor: 'pointer',
-                                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    // UNREAD: Bright, vibrant highlight with bold blue border & soft glowing tint
-                                    // READ: Clean, neutral crisp white
-                                    bgcolor: isUnread ? '#f0f7ff' : '#ffffff',
-                                    border: isUnread ? '1.5px solid #93c5fd' : '1px solid #e2e8f0',
-                                    borderLeft: isUnread ? '5px solid #2563eb' : '4.5px solid #cbd5e1',
-                                    boxShadow: isUnread
-                                        ? '0 4px 16px rgba(37,99,235,0.08), 0 1px 3px rgba(37,99,235,0.04)'
-                                        : '0 1px 3px rgba(0,0,0,0.03)',
+                                    bgcolor: isUnread ? '#f8faff' : '#ffffff',
+                                    border: '1px solid',
+                                    borderColor: isUnread ? '#bfdbfe' : '#e2e8f0',
+                                    transition: 'background-color 0.15s ease, border-color 0.15s ease',
                                     '&:hover': {
-                                        transform: 'translateY(-1px)',
-                                        bgcolor: isUnread ? '#e6f2ff' : '#f8fafc',
-                                        boxShadow: isUnread
-                                            ? '0 6px 20px rgba(37,99,235,0.14)'
-                                            : '0 4px 12px rgba(0,0,0,0.06)',
+                                        bgcolor: isUnread ? '#f1f5f9' : '#f8fafc',
+                                        borderColor: '#cbd5e1',
                                     },
                                 }}
                             >
-                                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: { xs: 1.5, sm: 2 } }}>
-                                    {/* Type Icon */}
+                                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                                    {/* Icon */}
                                     <Box
                                         sx={{
-                                            width: { xs: 40, sm: 44 },
-                                            height: { xs: 40, sm: 44 },
-                                            borderRadius: 2.5,
+                                            width: 36,
+                                            height: 36,
+                                            borderRadius: 1.5,
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             flexShrink: 0,
                                             bgcolor: visual.bg,
-                                            color: visual.color,
-                                            border: `1px solid ${visual.border}`,
-                                            boxShadow: isUnread ? `0 2px 8px ${visual.shadow}` : 'none',
                                         }}
                                     >
                                         {visual.icon}
@@ -447,62 +381,58 @@ const NotificationsPage: React.FC = () => {
 
                                     {/* Content Body */}
                                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                                        {/* Header Row: Title, NEW Badge, and Category Chip */}
-                                        <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1, mb: 0.5, flexWrap: 'wrap' }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
+                                        {/* Header Row: Title & Category */}
+                                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1, mb: 0.25 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, minWidth: 0, flex: 1 }}>
+                                                {isUnread && (
+                                                    <Box
+                                                        sx={{
+                                                            width: 6,
+                                                            height: 6,
+                                                            borderRadius: '50%',
+                                                            bgcolor: '#2563eb',
+                                                            flexShrink: 0,
+                                                        }}
+                                                    />
+                                                )}
                                                 <Typography
+                                                    noWrap
                                                     sx={{
-                                                        fontWeight: isUnread ? 800 : 600,
-                                                        fontSize: { xs: '0.94rem', sm: '1.02rem' },
-                                                        color: isUnread ? '#0f172a' : '#334155',
-                                                        lineHeight: 1.35,
+                                                        fontWeight: isUnread ? 700 : 500,
+                                                        fontSize: { xs: '0.88rem', sm: '0.94rem' },
+                                                        color: isUnread ? '#0f172a' : '#475569',
                                                     }}
                                                 >
                                                     {notification.title}
                                                 </Typography>
-
-                                                {isUnread && (
-                                                    <Chip
-                                                        label="NEW"
-                                                        size="small"
-                                                        sx={{
-                                                            height: 18,
-                                                            fontSize: '0.62rem',
-                                                            fontWeight: 900,
-                                                            letterSpacing: '0.04em',
-                                                            bgcolor: '#2563eb',
-                                                            color: '#ffffff',
-                                                            borderRadius: '6px',
-                                                            px: 0.25,
-                                                        }}
-                                                    />
-                                                )}
                                             </Box>
 
-                                            <Chip
-                                                label={visual.label}
-                                                size="small"
+                                            <Typography
+                                                variant="caption"
                                                 sx={{
-                                                    height: 22,
                                                     fontSize: '0.7rem',
-                                                    fontWeight: 700,
-                                                    bgcolor: visual.chipBg,
+                                                    fontWeight: 600,
                                                     color: visual.chipColor,
-                                                    border: `1px solid ${visual.chipBorder}`,
-                                                    borderRadius: '8px',
+                                                    bgcolor: visual.bg,
+                                                    px: 0.85,
+                                                    py: 0.2,
+                                                    borderRadius: 1,
+                                                    whiteSpace: 'nowrap',
+                                                    flexShrink: 0,
                                                 }}
-                                            />
+                                            >
+                                                {visual.label}
+                                            </Typography>
                                         </Box>
 
                                         {/* Message Description */}
                                         <Typography
                                             variant="body2"
                                             sx={{
-                                                color: isUnread ? '#1e293b' : '#64748b',
-                                                fontSize: { xs: '0.85rem', sm: '0.88rem' },
-                                                fontWeight: isUnread ? 500 : 400,
-                                                mb: 1.25,
-                                                lineHeight: 1.45,
+                                                color: isUnread ? '#334155' : '#64748b',
+                                                fontSize: '0.825rem',
+                                                lineHeight: 1.4,
+                                                mb: 0.75,
                                                 wordBreak: 'break-word',
                                             }}
                                         >
@@ -511,15 +441,12 @@ const NotificationsPage: React.FC = () => {
 
                                         {/* Footer Row: Timestamp & Actions */}
                                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                                <AccessTimeIcon sx={{ fontSize: 13, color: isUnread ? '#3b82f6' : '#94a3b8' }} />
-                                                <Typography variant="caption" sx={{ fontSize: '0.75rem', fontWeight: isUnread ? 600 : 500, color: isUnread ? '#3b82f6' : '#94a3b8' }}>
-                                                    {formatTime(notification.createdAt)}
-                                                </Typography>
-                                            </Box>
+                                            <Typography variant="caption" sx={{ fontSize: '0.725rem', color: '#94a3b8' }}>
+                                                {formatTime(notification.createdAt)}
+                                            </Typography>
 
                                             {/* Action Buttons */}
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
                                                 {isUnread && (
                                                     <Tooltip title="Mark as read">
                                                         <IconButton
@@ -529,22 +456,14 @@ const NotificationsPage: React.FC = () => {
                                                                 handleMarkRead(notification.notificationId);
                                                             }}
                                                             disabled={markAsRead.isPending}
-                                                            sx={{
-                                                                bgcolor: '#ffffff',
-                                                                border: '1px solid #bfdbfe',
-                                                                color: '#2563eb',
-                                                                p: 0.6,
-                                                                borderRadius: 2,
-                                                                boxShadow: '0 1px 3px rgba(37,99,235,0.1)',
-                                                                '&:hover': { bgcolor: '#eff6ff', color: '#1d4ed8' },
-                                                            }}
+                                                            sx={{ color: '#64748b', p: 0.5, '&:hover': { color: '#2563eb' } }}
                                                         >
                                                             <MarkReadIcon sx={{ fontSize: 17 }} />
                                                         </IconButton>
                                                     </Tooltip>
                                                 )}
 
-                                                <Tooltip title="Delete notification">
+                                                <Tooltip title="Delete">
                                                     <IconButton
                                                         size="small"
                                                         onClick={(e) => {
@@ -552,15 +471,7 @@ const NotificationsPage: React.FC = () => {
                                                             handleDelete(notification.notificationId);
                                                         }}
                                                         disabled={deleteNotification.isPending}
-                                                        sx={{
-                                                            bgcolor: '#ffffff',
-                                                            border: '1px solid #fee2e2',
-                                                            color: '#ef4444',
-                                                            p: 0.6,
-                                                            borderRadius: 2,
-                                                            boxShadow: '0 1px 3px rgba(239,68,68,0.1)',
-                                                            '&:hover': { bgcolor: '#fef2f2', color: '#dc2626' },
-                                                        }}
+                                                        sx={{ color: '#94a3b8', p: 0.5, '&:hover': { color: '#ef4444' } }}
                                                     >
                                                         <DeleteIcon sx={{ fontSize: 17 }} />
                                                     </IconButton>
@@ -577,7 +488,7 @@ const NotificationsPage: React.FC = () => {
 
             {/* Pagination Controls */}
             {pagination && pagination.pages > 1 && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', mt: 3, mb: 1, pb: { xs: 8, sm: 2 }, gap: 0.75 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', mt: 3, mb: 1, pb: { xs: 8, sm: 2 }, gap: 0.5 }}>
                     <Pagination
                         count={pagination.pages}
                         page={page}
@@ -593,16 +504,16 @@ const NotificationsPage: React.FC = () => {
                                 justifyContent: 'center',
                             },
                             '& .MuiPaginationItem-root': {
-                                minWidth: 30,
-                                height: 30,
-                                fontSize: '0.78rem',
+                                minWidth: 28,
+                                height: 28,
+                                fontSize: '0.75rem',
                                 fontWeight: 600,
                                 margin: '0 2px',
-                                borderRadius: '8px',
+                                borderRadius: '6px',
                             },
                         }}
                     />
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem', fontWeight: 500 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem' }}>
                         Page {page} of {pagination.pages} ({pagination.total || 0} total)
                     </Typography>
                 </Box>
