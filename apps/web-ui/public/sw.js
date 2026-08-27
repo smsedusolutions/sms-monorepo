@@ -36,16 +36,16 @@ self.addEventListener("push", (event) => {
     body,
     icon: data.icon || "/android-chrome-192x192.png",
     badge: data.badge || "/favicon-32x32.png",
-    vibrate: [200, 100, 200],
+    vibrate: [200, 100, 200, 100, 200],
     data: {
       url: data.url || "/",
       notificationId: data.notificationId,
       type: data.type,
       timestamp: data.timestamp || Date.now(),
     },
-    tag: data.notificationId || `sms-notif-${Date.now()}`,
+    tag: data.tag || data.notificationId || `sms-notif-${Date.now()}`,
     renotify: true,
-    requireInteraction: false,
+    requireInteraction: true,
   };
 
   event.waitUntil(self.registration.showNotification(title, options));

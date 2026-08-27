@@ -130,7 +130,10 @@ const handleInternalNotify = async (req, res) => {
       wsDeliveredCount += wsCount;
 
       // 2. Web Push delivery (native browser push for background / offline / inactive tabs)
-      const userSubs = subMap.get(userId) || [];
+      const rawSubs = subMap.get(userId) || [];
+      // Deduplicate subscriptions by endpoint so each physical device receives exactly ONE push
+      const userSubs = Array.from(new Map(rawSubs.map((s) => [s.endpoint, s])).values());
+
       if (userSubs.length > 0) {
         const pushPayload = {
           title: notif.title || "SMS Edu Solutions",

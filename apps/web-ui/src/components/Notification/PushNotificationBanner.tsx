@@ -12,9 +12,6 @@ import NotificationsOffIcon from "@mui/icons-material/NotificationsOff";
 import CloseIcon from "@mui/icons-material/Close";
 import { usePushNotification } from "../../hooks/usePushNotification";
 
-const DISMISSED_KEY = "sms_push_prompt_dismissed";
-const ENABLED_KEY = "sms_push_enabled";
-
 interface PushNotificationBannerProps {
   variant?: "banner" | "card" | "compact";
   showWhenSubscribed?: boolean;
@@ -30,58 +27,39 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
     isSubscribed,
     isLoading,
     subscribe,
+    refreshStatus,
   } = usePushNotification();
 
-  const [dismissed, setDismissed] = useState<boolean>(() => {
-    try {
-      return (
-        localStorage.getItem(DISMISSED_KEY) === "true" ||
-        localStorage.getItem(ENABLED_KEY) === "true"
-      );
-    } catch {
-      return false;
-    }
-  });
+  const [sessionDismissed, setSessionDismissed] = useState(false);
 
-  // If already subscribed, granted, dismissed, or unsupported, do not show at all
+  // If already subscribed and granted, or unsupported, or dismissed for this session, hide
   if (
-    dismissed ||
     !isSupported ||
-    (isSubscribed && !showWhenSubscribed) ||
+    sessionDismissed ||
     (permission === "granted" && isSubscribed && !showWhenSubscribed)
   ) {
     return null;
   }
 
   const handleDismiss = () => {
-    setDismissed(true);
-    try {
-      localStorage.setItem(DISMISSED_KEY, "true");
-    } catch (e) {
-      console.warn(e);
-    }
+    setSessionDismissed(true);
   };
 
   const handleSubscribe = async () => {
     const ok = await subscribe();
     if (ok) {
-      try {
-        localStorage.setItem(ENABLED_KEY, "true");
-      } catch (e) {
-        console.warn(e);
-      }
-      setDismissed(true);
+      setSessionDismissed(true);
     }
   };
 
-  // State 1: Permission Denied in browser
+  // State 1: Permission Denied in browser or Android App settings
   if (permission === "denied") {
     return (
       <Paper
         elevation={0}
         sx={{
           p: 2,
-          mb: 2.5,
+          mb: 2,
           borderRadius: 2.5,
           border: "1px solid #fecaca",
           bgcolor: "#fff1f2",
@@ -90,20 +68,48 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
           gap: 1.5,
         }}
       >
-        <NotificationsOffIcon sx={{ color: "#e11d48", mt: 0.25 }} />
+        <NotificationsOffIcon sx={{ color: "#e11d48", mt: 0.25, fontSize: 24 }} />
         <Box sx={{ flex: 1 }}>
           <Typography
             variant="subtitle2"
-            sx={{ fontWeight: 700, color: "#9f1239" }}
+            sx={{ fontWeight: 700, color: "#9f1239", fontSize: "0.9rem" }}
           >
-            Push Notifications Blocked
+            Push Notifications are Blocked
           </Typography>
           <Typography
             variant="body2"
-            sx={{ color: "#be123c", fontSize: "0.825rem", mt: 0.25 }}
+            sx={{ color: "#be123c", fontSize: "0.8rem", mt: 0.5, lineHeight: 1.5 }}
           >
-            Notifications are blocked in your browser settings. To receive alerts on this device, click the lock or site settings icon in your browser address bar and allow notifications.
+            To receive notifications on this device:
+            <br />
+            1. <b>In Chrome:</b> Tap the <b>🔒 icon</b> or <b>Site Settings</b> next to the URL bar ➔ <b>Notifications ➔ Allow</b>.
+            <br />
+            2. <b>In Installed App:</b> Long-press the App icon ➔ <b>App Info ➔ Notifications ➔ Turn On</b>.
           </Typography>
+
+          <Button
+            size="small"
+            variant="contained"
+            onClick={async () => {
+              await refreshStatus();
+              if (Notification.permission === "granted") {
+                await handleSubscribe();
+              }
+            }}
+            sx={{
+              mt: 1.25,
+              bgcolor: "#e11d48",
+              color: "#ffffff",
+              fontWeight: 700,
+              fontSize: "0.78rem",
+              textTransform: "none",
+              borderRadius: 2,
+              px: 2,
+              "&:hover": { bgcolor: "#be123c" },
+            }}
+          >
+            I've enabled it — Check Status
+          </Button>
         </Box>
         <IconButton
           size="small"
