@@ -16,6 +16,8 @@ const PrincipalSchema = new Schema(
       default: "active",
     },
     profileImage: { type: String },
+    gender: { type: String, enum: ["male", "female", "other"] },
+    dateOfBirth: { type: Date },
     role: { type: String, default: "principal", immutable: true },
   },
   { timestamps: true }

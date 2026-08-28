@@ -30,7 +30,7 @@ const getSchoolDbName = async (schoolId) => {
 exports.createDriver = async (req, res) => {
   try {
     const { schoolId } = req.params;
-    const { firstName, lastName, email, password, phone, licenseNumber, licenseExpiry, status, profileImage } = req.body;
+    const { firstName, lastName, email, password, phone, licenseNumber, licenseExpiry, status, profileImage, gender, dateOfBirth, dob } = req.body;
 
     if (!firstName || !lastName || !email || !password || !licenseNumber) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
@@ -50,7 +50,8 @@ exports.createDriver = async (req, res) => {
 
     const newDriver = new Driver({
       driverId, schoolId, firstName, lastName, email: normalizedEmail,
-      password: hashedPassword, phone, licenseNumber, licenseExpiry, status: status || "active", profileImage
+      password: hashedPassword, phone, licenseNumber, licenseExpiry, status: status || "active", profileImage,
+      gender, dateOfBirth: dateOfBirth || dob
     });
 
     const savedDriver = await newDriver.save();
@@ -98,6 +99,11 @@ exports.updateDriver = async (req, res) => {
 
     const currentDriver = await Driver.findOne({ driverId });
     if (!currentDriver) return res.status(404).json({ success: false, message: "Driver not found" });
+
+    if (updateData.dob && !updateData.dateOfBirth) {
+      updateData.dateOfBirth = updateData.dob;
+    }
+    delete updateData.dob;
 
     // SECURITY (GAP-001): If password is being updated, hash it before saving
     if (updateData.password) {

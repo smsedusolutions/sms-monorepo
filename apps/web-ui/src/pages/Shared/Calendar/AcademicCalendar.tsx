@@ -66,6 +66,7 @@ import {
     useUpdateCalendarEvent,
     useDeleteCalendarEvent,
 } from '../../../queries/Calendar';
+import ConfirmationDialog from '../../../components/Dialogs/ConfirmationDialog';
 import type {
     CalendarEvent,
     CalendarEventType,
@@ -185,6 +186,8 @@ export const AcademicCalendar: React.FC = () => {
     // Create / Edit modal state
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [eventToDelete, setEventToDelete] = useState<string | null>(null);
     const [form, setForm] = useState<{
         title: string;
         description: string;
@@ -325,9 +328,16 @@ export const AcademicCalendar: React.FC = () => {
         setDialogOpen(false);
     };
 
-    const handleDeleteEvent = async (eventId: string) => {
-        if (window.confirm('Are you sure you want to delete this event from the academic calendar?')) {
-            await deleteEventMutation.mutateAsync(eventId);
+    const handleDeleteEvent = (eventId: string) => {
+        setEventToDelete(eventId);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteEvent = async () => {
+        if (eventToDelete) {
+            await deleteEventMutation.mutateAsync(eventToDelete);
+            setDeleteConfirmOpen(false);
+            setEventToDelete(null);
         }
     };
 
@@ -1348,6 +1358,20 @@ export const AcademicCalendar: React.FC = () => {
                     </AppButton>
                 </DialogActions>
             </Dialog>
+
+            <ConfirmationDialog
+                open={deleteConfirmOpen}
+                onClose={() => {
+                    setDeleteConfirmOpen(false);
+                    setEventToDelete(null);
+                }}
+                onConfirm={confirmDeleteEvent}
+                title="Delete Calendar Event"
+                description="Are you sure you want to delete this event from the academic calendar? This action cannot be undone."
+                confirmLabel="Delete Event"
+                variant="danger"
+                isLoading={deleteEventMutation.isPending}
+            />
         </Box>
     );
 };

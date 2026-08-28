@@ -29,11 +29,16 @@ import {
   CalendarMonth as TimetableIcon,
   VerifiedUser as VerifiedIcon,
   ArrowForward as ArrowForwardIcon,
+  Wc as GenderIcon,
+  Cake as CakeIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useUserStore } from "../../stores/userStore";
 import { useNotification } from "../../hooks/useNotification";
 import { PhoneInput } from "../../components/shared/PhoneInput";
+import { AppSelect } from "../../components/shared/AppSelect";
+import { AppDatePicker } from "../../components/shared/AppDatePicker";
+import { format } from "date-fns";
 import TokenService from "../../queries/token/tokenService";
 import { useUpdateSchoolAdmin } from "../../queries/SchoolAdmin";
 
@@ -63,6 +68,8 @@ const SchoolAdminProfile: React.FC = () => {
 
   const userEmail = admin?.email || "";
   const userPhone = admin?.contactNumber || admin?.phone || admin?.phoneNumber || "";
+  const userGender = admin?.gender ? String(admin.gender).toUpperCase() : "Not Specified";
+  const userDob = admin?.dateOfBirth ? new Date(admin.dateOfBirth).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Not Specified";
   const userStatus = admin?.status || "active";
 
   const [formData, setFormData] = useState({
@@ -70,6 +77,8 @@ const SchoolAdminProfile: React.FC = () => {
     lastName: "",
     email: "",
     phone: "",
+    gender: "",
+    dateOfBirth: "",
   });
 
   useEffect(() => {
@@ -79,6 +88,8 @@ const SchoolAdminProfile: React.FC = () => {
         lastName: admin.lastName || "",
         email: admin.email || "",
         phone: admin.contactNumber || admin.phone || admin.phoneNumber || "",
+        gender: admin.gender || "",
+        dateOfBirth: admin.dateOfBirth ? (typeof admin.dateOfBirth === 'string' && admin.dateOfBirth.length >= 10 ? admin.dateOfBirth.slice(0, 10) : format(new Date(admin.dateOfBirth), 'yyyy-MM-dd')) : "",
       });
     }
   }, [admin]);
@@ -103,13 +114,15 @@ const SchoolAdminProfile: React.FC = () => {
           email: formData.email,
           contactNumber: formData.phone,
           phone: formData.phone,
+          gender: (formData.gender || undefined) as any,
+          dateOfBirth: formData.dateOfBirth || undefined,
         },
       });
 
       if (res && res.success !== false) {
         await fetchProfile(true);
         setIsEditing(false);
-        notify.success("Profile updated successfully!");
+        notify.success("Profile updated successfully");
       } else {
         notify.error(res?.message || "Failed to update profile");
       }
@@ -124,6 +137,8 @@ const SchoolAdminProfile: React.FC = () => {
       lastName: admin?.lastName || "",
       email: admin?.email || "",
       phone: admin?.contactNumber || admin?.phone || admin?.phoneNumber || "",
+      gender: admin?.gender || "",
+      dateOfBirth: admin?.dateOfBirth ? (typeof admin.dateOfBirth === 'string' && admin.dateOfBirth.length >= 10 ? admin.dateOfBirth.slice(0, 10) : format(new Date(admin.dateOfBirth), 'yyyy-MM-dd')) : "",
     });
     setIsEditing(false);
   };
@@ -348,6 +363,23 @@ const SchoolAdminProfile: React.FC = () => {
                   label="Contact Phone"
                   fullWidth
                 />
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+                  <AppSelect
+                    label="Gender"
+                    value={formData.gender || ""}
+                    options={[
+                      { value: "male", label: "Male" },
+                      { value: "female", label: "Female" },
+                      { value: "other", label: "Other" },
+                    ]}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, gender: e.target.value as string }))}
+                  />
+                  <AppDatePicker
+                    label="Date of Birth"
+                    value={formData.dateOfBirth ? new Date(formData.dateOfBirth) : null}
+                    onChange={(date) => setFormData((prev) => ({ ...prev, dateOfBirth: date ? format(date, "yyyy-MM-dd") : "" }))}
+                  />
+                </Box>
 
                 <Stack direction="row" spacing={1.5} sx={{ pt: 1 }}>
                   <Button
@@ -392,6 +424,30 @@ const SchoolAdminProfile: React.FC = () => {
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant="caption" color="text.secondary" fontWeight={600}>Contact Phone</Typography>
                     <Typography variant="body2" fontWeight={600}>{userPhone || "Not Provided"}</Typography>
+                  </Box>
+                </Box>
+
+                <Divider />
+
+                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
+                  <Avatar sx={{ width: 36, height: 36, bgcolor: "#fdf2f8", color: "#db2777" }}>
+                    <GenderIcon sx={{ fontSize: 18 }} />
+                  </Avatar>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600}>Gender</Typography>
+                    <Typography variant="body2" fontWeight={600}>{userGender}</Typography>
+                  </Box>
+                </Box>
+
+                <Divider />
+
+                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
+                  <Avatar sx={{ width: 36, height: 36, bgcolor: "#fef3c7", color: "#d97706" }}>
+                    <CakeIcon sx={{ fontSize: 18 }} />
+                  </Avatar>
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography variant="caption" color="text.secondary" fontWeight={600}>Date of Birth</Typography>
+                    <Typography variant="body2" fontWeight={600}>{userDob}</Typography>
                   </Box>
                 </Box>
 

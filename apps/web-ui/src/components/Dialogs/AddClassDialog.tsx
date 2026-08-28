@@ -20,6 +20,7 @@ import { useGetTeachers } from '../../queries/Teacher';
 import type { Class, CreateClassPayload, Teacher } from '../../types';
 import { AppInput } from '../shared/AppInput';
 import { AppButton } from '../shared/AppButton';
+import ConfirmationDialog from './ConfirmationDialog';
 
 interface ClassDialogProps {
     open: boolean;
@@ -49,6 +50,8 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
     const [newSectionName, setNewSectionName] = useState('');
     const [newSectionTeacher, setNewSectionTeacher] = useState<{ id: string; label: string } | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [sectionToDelete, setSectionToDelete] = useState<{ sectionId: string; name: string } | null>(null);
 
     const createMutation = useCreateClass(schoolId);
     const updateMutation = useUpdateClass(schoolId);
@@ -200,12 +203,29 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
         }
     };
 
+    const confirmDeleteSection = async () => {
+        if (!sectionToDelete || !editData) return;
+        try {
+            await removeSectionMutation.mutateAsync({
+                classId: editData.classId,
+                sectionId: sectionToDelete.sectionId,
+            });
+            notification.success(`Section ${sectionToDelete.name} removed`);
+            setDeleteConfirmOpen(false);
+            setSectionToDelete(null);
+        } catch {
+            notification.error("Failed to delete section");
+        }
+    };
+
     const handleClose = () => {
         setFormData({ name: '', description: '', sections: [] });
         setNewSections([]);
         setNewSectionName('');
         setNewSectionTeacher(null);
         setErrors({});
+        setDeleteConfirmOpen(false);
+        setSectionToDelete(null);
         createMutation.reset();
         updateMutation.reset();
         addSectionMutation.reset();
@@ -353,18 +373,12 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
                                             <IconButton
                                                 color="error"
                                                 size="small"
-                                                onClick={async () => {
-                                                    if (window.confirm(`Are you sure you want to delete Section ${section.name}?`)) {
-                                                        try {
-                                                            await removeSectionMutation.mutateAsync({
-                                                                classId: editData.classId,
-                                                                sectionId: section.sectionId,
-                                                            });
-                                                            notification.success(`Section ${section.name} removed`);
-                                                        } catch {
-                                                            notification.error("Failed to delete section");
-                                                        }
-                                                    }
+                                                onClick={() => {
+                                                    setSectionToDelete({
+                                                        sectionId: section.sectionId,
+                                                        name: section.name,
+                                                    });
+                                                    setDeleteConfirmOpen(true);
                                                 }}
                                             >
                                                 <DeleteIcon fontSize="small" />
@@ -459,6 +473,20 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
                     </AppButton>
                 </DialogActions>
             </form>
+
+            <ConfirmationDialog
+                open={deleteConfirmOpen}
+                onClose={() => {
+                    setDeleteConfirmOpen(false);
+                    setSectionToDelete(null);
+                }}
+                onConfirm={confirmDeleteSection}
+                title="Delete Section"
+                description={`Are you sure you want to delete Section ${sectionToDelete?.name || ''}?`}
+                confirmLabel="Delete Section"
+                variant="danger"
+                isLoading={removeSectionMutation.isPending}
+            />
         </Dialog>
     );
 };

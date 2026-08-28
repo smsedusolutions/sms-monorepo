@@ -24,7 +24,9 @@ import { IMAGEKIT_FOLDERS } from '../../utils/imagekit';
 import { AppInput } from '../shared/AppInput';
 import { AppSelect } from '../shared/AppSelect';
 import { AppButton } from '../shared/AppButton';
+import { AppDatePicker } from '../shared/AppDatePicker';
 import { PhoneInput } from '../shared/PhoneInput';
+import { format } from 'date-fns';
 
 interface ParentDialogProps {
     open: boolean;
@@ -54,6 +56,8 @@ const ParentDialog: React.FC<ParentDialogProps> = ({ open, onClose, schoolId, ed
         password: '',
         phone: '',
         relationship: 'father',
+        gender: undefined,
+        dateOfBirth: '',
         occupation: '',
         address: '',
         studentIds: [],
@@ -126,6 +130,8 @@ const ParentDialog: React.FC<ParentDialogProps> = ({ open, onClose, schoolId, ed
                 password: '',
                 phone: editData.phone || '',
                 relationship: editData.relationship || 'father',
+                gender: editData.gender || undefined,
+                dateOfBirth: editData.dateOfBirth ? (typeof editData.dateOfBirth === 'string' && editData.dateOfBirth.length >= 10 ? editData.dateOfBirth.slice(0, 10) : format(new Date(editData.dateOfBirth), 'yyyy-MM-dd')) : '',
                 occupation: editData.occupation || '',
                 address: editData.address || '',
                 studentIds: editData.studentIds || [],
@@ -145,6 +151,8 @@ const ParentDialog: React.FC<ParentDialogProps> = ({ open, onClose, schoolId, ed
                 password: '',
                 phone: '',
                 relationship: 'father',
+                gender: undefined,
+                dateOfBirth: '',
                 occupation: '',
                 address: '',
                 studentIds: [],
@@ -307,6 +315,24 @@ const ParentDialog: React.FC<ParentDialogProps> = ({ open, onClose, schoolId, ed
                             <PhoneInput name="phone" label="Contact Number" value={formData.phone}
                                 onChange={handleChange} error={!!errors.phone} helperText={errors.phone}
                                 required />
+                        </Box>
+
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                            <AppSelect
+                                label="Gender"
+                                value={formData.gender || ''}
+                                options={[
+                                    { value: 'male', label: 'Male' },
+                                    { value: 'female', label: 'Female' },
+                                    { value: 'other', label: 'Other' },
+                                ]}
+                                onChange={(e) => setFormData((prev) => ({ ...prev, gender: e.target.value as any }))}
+                            />
+                            <AppDatePicker
+                                label="Date of Birth"
+                                value={formData.dateOfBirth ? new Date(formData.dateOfBirth) : null}
+                                onChange={(date) => setFormData((prev) => ({ ...prev, dateOfBirth: date ? format(date, 'yyyy-MM-dd') : '' }))}
+                            />
                         </Box>
 
                         <AppInput name="email" label="Email Address" type="email" value={formData.email}

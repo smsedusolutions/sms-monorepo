@@ -54,6 +54,9 @@ const createTeacher = async (req, res) => {
       status,
       profileImage,
       signature,
+      gender,
+      dateOfBirth,
+      dob,
     } = req.body;
 
     // Validate required fields
@@ -107,6 +110,8 @@ const createTeacher = async (req, res) => {
       status: status || "active",
       profileImage,
       signature,
+      gender,
+      dateOfBirth: dateOfBirth || dob,
     });
 
     const savedTeacher = await newTeacher.save();
@@ -427,6 +432,11 @@ const updateTeacherById = async (req, res) => {
     delete updateData.teacherId;
     delete updateData.schoolId;
     delete updateData.role;
+
+    if (updateData.dob && !updateData.dateOfBirth) {
+      updateData.dateOfBirth = updateData.dob;
+    }
+    delete updateData.dob;
 
     // SECURITY (GAP-001): If password is being updated, hash it before saving
     if (updateData.password) {

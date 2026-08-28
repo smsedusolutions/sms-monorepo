@@ -5,6 +5,8 @@ export interface UserProfile {
   lastName: string;
   email?: string;
   phone?: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string;
   profileImage?: string;
   role: "student" | "teacher" | "sch_admin" | "parent" | "super_admin" | "driver" | "principal";
 

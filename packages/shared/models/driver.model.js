@@ -17,6 +17,8 @@ const DriverSchema = new Schema({
     
     status: { type: String, enum: ['active', 'inactive', 'on-leave'], default: 'active' },
     profileImage: { type: String },
+    gender: { type: String, enum: ['male', 'female', 'other'] },
+    dateOfBirth: { type: Date },
     role: { type: String, default: 'driver' },
     
     // Tracking current assignment

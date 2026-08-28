@@ -27,8 +27,10 @@ import { IMAGEKIT_FOLDERS } from "../../utils/imagekit";
 import { AppInput } from "../shared/AppInput";
 import { AppSelect } from "../shared/AppSelect";
 import { AppButton } from "../shared/AppButton";
+import { AppDatePicker } from "../shared/AppDatePicker";
 import { PhoneInput } from "../shared/PhoneInput";
 import { AppMultiSelect } from "../shared/AppMultiSelect";
+import { format } from "date-fns";
 
 interface TeacherDialogProps {
   open: boolean;
@@ -52,6 +54,8 @@ const TeacherDialog: React.FC<TeacherDialogProps> = ({
     email: "",
     password: "",
     phone: "",
+    gender: undefined,
+    dateOfBirth: "",
     subjects: [],
     classes: [],
     status: "active",
@@ -106,6 +110,8 @@ const TeacherDialog: React.FC<TeacherDialogProps> = ({
         email: editData.email || "",
         password: "",
         phone: editData.phone || "",
+        gender: editData.gender || undefined,
+        dateOfBirth: editData.dateOfBirth ? (typeof editData.dateOfBirth === 'string' && editData.dateOfBirth.length >= 10 ? editData.dateOfBirth.slice(0, 10) : format(new Date(editData.dateOfBirth), 'yyyy-MM-dd')) : "",
         subjects: editData.subjects || [],
         classes: editData.classes || [],
         status: editData.status || "active",
@@ -245,6 +251,24 @@ const TeacherDialog: React.FC<TeacherDialogProps> = ({
                 error={!!errors.lastName}
                 helperText={errors.lastName}
                 required
+              />
+            </Box>
+
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 2 }}>
+              <AppSelect
+                label="Gender"
+                value={formData.gender || ""}
+                options={[
+                  { value: "male", label: "Male" },
+                  { value: "female", label: "Female" },
+                  { value: "other", label: "Other" },
+                ]}
+                onChange={(e) => setFormData((prev) => ({ ...prev, gender: e.target.value as any }))}
+              />
+              <AppDatePicker
+                label="Date of Birth"
+                value={formData.dateOfBirth ? new Date(formData.dateOfBirth) : null}
+                onChange={(date) => setFormData((prev) => ({ ...prev, dateOfBirth: date ? format(date, "yyyy-MM-dd") : "" }))}
               />
             </Box>
 

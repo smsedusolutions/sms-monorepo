@@ -54,6 +54,13 @@ const teacherSchema = new mongoose.Schema(
     signature: {
       type: String,
     },
+    dateOfBirth: {
+      type: Date,
+    },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other"],
+    },
     classTeacherSectionId: {
       type: String,
       default: null,

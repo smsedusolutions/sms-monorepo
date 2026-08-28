@@ -20,8 +20,10 @@ import { ImageUpload } from '../ImageUpload';
 import { IMAGEKIT_FOLDERS } from '../../utils/imagekit';
 import { AppInput } from '../shared/AppInput';
 import { AppSelect } from '../shared/AppSelect';
+import { AppDatePicker } from '../shared/AppDatePicker';
 import { AppButton } from '../shared/AppButton';
 import { PhoneInput } from '../shared/PhoneInput';
+import { format } from 'date-fns';
 
 interface SchoolAdminDialogProps {
   open: boolean;
@@ -47,6 +49,8 @@ const SchoolAdminDialog: React.FC<SchoolAdminDialogProps> = ({
     password: "",
     schoolId: "",
     contactNumber: "",
+    gender: undefined,
+    dateOfBirth: "",
     profileImage: "",
   });
 
@@ -66,7 +70,9 @@ const SchoolAdminDialog: React.FC<SchoolAdminDialogProps> = ({
         email: editData.email || "",
         password: "",
         schoolId: editData.schoolId || "",
-        contactNumber: editData.contactNumber || "",
+        contactNumber: editData.contactNumber || editData.phone || "",
+        gender: editData.gender || undefined,
+        dateOfBirth: editData.dateOfBirth ? (typeof editData.dateOfBirth === 'string' && editData.dateOfBirth.length >= 10 ? editData.dateOfBirth.slice(0, 10) : format(new Date(editData.dateOfBirth), 'yyyy-MM-dd')) : "",
         profileImage: editData.profileImage || "",
       });
     } else {
@@ -76,6 +82,8 @@ const SchoolAdminDialog: React.FC<SchoolAdminDialogProps> = ({
         password: "",
         schoolId: "",
         contactNumber: "",
+        gender: undefined,
+        dateOfBirth: "",
         profileImage: "",
       });
     }
@@ -263,6 +271,24 @@ const SchoolAdminDialog: React.FC<SchoolAdminDialogProps> = ({
                   label="Contact Number"
                   value={formData.contactNumber}
                   onChange={handleChange}
+                />
+              </Box>
+
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                <AppSelect
+                  label="Gender"
+                  value={formData.gender || ''}
+                  options={[
+                    { value: 'male', label: 'Male' },
+                    { value: 'female', label: 'Female' },
+                    { value: 'other', label: 'Other' },
+                  ]}
+                  onChange={(e) => handleSelectChange('gender', e.target.value as string)}
+                />
+                <AppDatePicker
+                  label="Date of Birth"
+                  value={formData.dateOfBirth ? new Date(formData.dateOfBirth) : null}
+                  onChange={(date) => setFormData((prev) => ({ ...prev, dateOfBirth: date ? format(date, 'yyyy-MM-dd') : '' }))}
                 />
               </Box>
 

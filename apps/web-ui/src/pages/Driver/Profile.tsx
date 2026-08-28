@@ -26,6 +26,8 @@ import {
     Speed as VehicleIcon,
     ArrowForward as ArrowForwardIcon,
     Notifications as AlertsIcon,
+    Wc as GenderIcon,
+    Cake as CakeIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import RequestChangeDialog from '../../components/Dialogs/RequestChangeDialog';
@@ -50,6 +52,8 @@ const DriverProfile: React.FC = () => {
 
     const userEmail = driver?.email || '';
     const userPhone = driver?.phone || '';
+    const userGender = driver?.gender ? String(driver.gender).toUpperCase() : 'Not Specified';
+    const userDob = driver?.dateOfBirth ? new Date(driver.dateOfBirth).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not Specified';
     const licenseNumber = driver?.licenseNumber || 'Verified Commercial DL';
     const currentVehicle = driver?.currentVehicleNumber || driver?.currentVehicleId || 'Assigned Fleet Bus';
     const currentRoute = driver?.currentRouteName || driver?.currentRouteId || 'Main Campus Morning/Evening Route';
@@ -271,6 +275,30 @@ const DriverProfile: React.FC = () => {
                                         <EditIcon fontSize="small" sx={{ color: 'text.secondary', fontSize: 16 }} />
                                     </IconButton>
                                 </Tooltip>
+                            </Box>
+
+                            <Divider />
+
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#fdf2f8', color: '#db2777' }}>
+                                    <GenderIcon sx={{ fontSize: 18 }} />
+                                </Avatar>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography variant="caption" color="text.secondary" fontWeight={600}>Gender</Typography>
+                                    <Typography variant="body2" fontWeight={600}>{userGender}</Typography>
+                                </Box>
+                            </Box>
+
+                            <Divider />
+
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#fef3c7', color: '#d97706' }}>
+                                    <CakeIcon sx={{ fontSize: 18 }} />
+                                </Avatar>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography variant="caption" color="text.secondary" fontWeight={600}>Date of Birth</Typography>
+                                    <Typography variant="body2" fontWeight={600}>{userDob}</Typography>
+                                </Box>
                             </Box>
 
                             <Divider />

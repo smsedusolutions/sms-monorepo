@@ -78,6 +78,7 @@ const createStudent = async (req, res) => {
       rollNumber,
       parentId,
       dateOfBirth,
+      dob,
       gender,
       address,
       status,
@@ -138,7 +139,7 @@ const createStudent = async (req, res) => {
       section,
       rollNumber,
       parentId,
-      dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : undefined,
+      dateOfBirth: (dateOfBirth || dob) ? new Date(dateOfBirth || dob) : undefined,
       gender,
       address,
       status: status || "active",
@@ -534,6 +535,11 @@ const updateStudentById = async (req, res) => {
     delete updateData.studentId;
     delete updateData.schoolId;
     delete updateData.role;
+
+    if (updateData.dob && !updateData.dateOfBirth) {
+      updateData.dateOfBirth = updateData.dob;
+    }
+    delete updateData.dob;
 
     // SECURITY (GAP-001): If password is being updated, hash it before saving
     if (updateData.password) {

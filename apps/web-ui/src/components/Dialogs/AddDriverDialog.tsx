@@ -4,6 +4,7 @@ import {
     Button, Grid, MenuItem, Typography, Box, Divider
 } from '@mui/material';
 import { AppInput } from '../shared/AppInput';
+import { AppSelect } from '../shared/AppSelect';
 import { AppDatePicker } from '../shared/AppDatePicker';
 import { PhoneInput } from '../shared/PhoneInput';
 import { useNotification } from '../../hooks/useNotification';
@@ -27,6 +28,8 @@ const AddDriverDialog: React.FC<AddDriverDialogProps> = ({ open, onClose, school
         email: '',
         password: '',
         phone: '',
+        gender: '',
+        dateOfBirth: null,
         licenseNumber: '',
         licenseExpiry: null,
         status: 'active'
@@ -36,6 +39,8 @@ const AddDriverDialog: React.FC<AddDriverDialogProps> = ({ open, onClose, school
         if (editData) {
             setFormData({
                 ...editData,
+                gender: editData.gender || '',
+                dateOfBirth: editData.dateOfBirth ? new Date(editData.dateOfBirth) : null,
                 licenseExpiry: editData.licenseExpiry ? new Date(editData.licenseExpiry) : null,
                 password: '' // Don't show password on edit
             });
@@ -46,6 +51,8 @@ const AddDriverDialog: React.FC<AddDriverDialogProps> = ({ open, onClose, school
                 email: '',
                 password: '',
                 phone: '',
+                gender: '',
+                dateOfBirth: null,
                 licenseNumber: '',
                 licenseExpiry: null,
                 status: 'active'
@@ -63,6 +70,8 @@ const AddDriverDialog: React.FC<AddDriverDialogProps> = ({ open, onClose, school
 
             const payload = {
                 ...formData,
+                gender: formData.gender || undefined,
+                dateOfBirth: formData.dateOfBirth ? formData.dateOfBirth.toISOString() : undefined,
                 licenseExpiry: formData.licenseExpiry?.toISOString()
             };
 
@@ -137,6 +146,25 @@ const AddDriverDialog: React.FC<AddDriverDialogProps> = ({ open, onClose, school
                                 label="Phone Number" 
                                 value={formData.phone} 
                                 onChange={(e) => setFormData({...formData, phone: e.target.value})} 
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <AppSelect
+                                label="Gender"
+                                value={formData.gender || ''}
+                                options={[
+                                    { value: 'male', label: 'Male' },
+                                    { value: 'female', label: 'Female' },
+                                    { value: 'other', label: 'Other' },
+                                ]}
+                                onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <AppDatePicker
+                                label="Date of Birth"
+                                value={formData.dateOfBirth}
+                                onChange={(val) => setFormData({...formData, dateOfBirth: val})}
                             />
                         </Grid>
                     </Grid>

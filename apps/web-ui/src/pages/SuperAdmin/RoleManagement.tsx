@@ -39,6 +39,7 @@ import {
 } from "../../queries/Roles";
 import { useNotificationStore } from "../../stores/notificationStore";
 import { useRoleStore } from "../../stores/roleStore";
+import ConfirmationDialog from "../../components/Dialogs/ConfirmationDialog";
 
 const COLOR_OPTIONS: Role["colorTheme"][] = [
   "default",
@@ -67,6 +68,8 @@ const RoleManagement = () => {
   const createMutation = useCreateRole();
   const updateMutation = useUpdateRole();
   const deleteMutation = useDeleteRole();
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState<string | null>(null);
   const { showNotification } = useNotificationStore();
 
   const handleOpenDialog = (role?: Role) => {
@@ -93,9 +96,9 @@ const RoleManagement = () => {
     setEditingRole(null);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name as string]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleToggleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,15 +121,21 @@ const RoleManagement = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to deactivate this role?")) {
-      try {
-        await deleteMutation.mutateAsync({ id });
-        showNotification("Role deactivated successfully", "success");
-        refetch();
-      } catch (error: any) {
-        showNotification(error.message || "An error occurred", "error");
-      }
+  const handleDelete = (id: string) => {
+    setRoleToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDeleteRole = async () => {
+    if (!roleToDelete) return;
+    try {
+      await deleteMutation.mutateAsync({ id: roleToDelete });
+      showNotification("Role deactivated successfully", "success");
+      setDeleteConfirmOpen(false);
+      setRoleToDelete(null);
+      refetch();
+    } catch (error: any) {
+      showNotification(error.message || "An error occurred", "error");
     }
   };
 
@@ -311,6 +320,20 @@ const RoleManagement = () => {
           </AppButton>
         </DialogActions>
       </Dialog>
+
+      <ConfirmationDialog
+        open={deleteConfirmOpen}
+        onClose={() => {
+          setDeleteConfirmOpen(false);
+          setRoleToDelete(null);
+        }}
+        onConfirm={confirmDeleteRole}
+        title="Deactivate Role"
+        description="Are you sure you want to deactivate this role? Users with this role may lose their access permissions."
+        confirmLabel="Deactivate Role"
+        variant="danger"
+        isLoading={deleteMutation.isPending}
+      />
     </Box >
   );
 };

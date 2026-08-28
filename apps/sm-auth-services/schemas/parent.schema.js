@@ -56,6 +56,13 @@ const parentSchema = new mongoose.Schema(
             enum: ["active", "inactive"],
             default: "active",
         },
+        gender: {
+            type: String,
+            enum: ["male", "female", "other"],
+        },
+        dateOfBirth: {
+            type: Date,
+        },
     },
     {
         timestamps: true,

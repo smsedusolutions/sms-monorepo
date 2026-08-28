@@ -11,6 +11,8 @@ export interface Principal {
     lastName: string;
     email: string;
     phone?: string;
+    gender?: 'male' | 'female' | 'other';
+    dateOfBirth?: string;
     profileImage?: string;
     status: 'active' | 'inactive';
     createdAt?: string;
@@ -24,6 +26,8 @@ export interface CreatePrincipalPayload {
     email: string;
     password: string;
     phone?: string;
+    gender?: 'male' | 'female' | 'other';
+    dateOfBirth?: string;
     profileImage?: string;
     status?: 'active' | 'inactive';
 }
@@ -34,6 +38,8 @@ export interface UpdatePrincipalPayload {
     email?: string;
     password?: string;
     phone?: string;
+    gender?: 'male' | 'female' | 'other';
+    dateOfBirth?: string;
     profileImage?: string;
     status?: 'active' | 'inactive';
 }

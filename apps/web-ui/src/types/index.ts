@@ -154,6 +154,8 @@ export interface SchoolAdmin {
   phone?: string;
   phoneNumber?: string;
   contactNumber?: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string;
   profileImage?: string;
   status: "active" | "inactive";
   createdAt?: string;
@@ -165,7 +167,11 @@ export interface CreateSchoolAdminPayload {
   email: string;
   password: string;
   schoolId: string;
+  firstName?: string;
+  lastName?: string;
   contactNumber?: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string;
 }
 
 export interface UpdateSchoolAdminPayload {
@@ -176,6 +182,8 @@ export interface UpdateSchoolAdminPayload {
   password?: string;
   contactNumber?: string;
   phone?: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string;
   profileImage?: string;
   status?: "active" | "inactive";
 }
@@ -193,6 +201,8 @@ export interface Teacher {
   email: string;
   phone?: string;
   phoneNumber?: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string;
   subjects: string[];
   subjectNames?: string[];
   classes: string[];
@@ -215,6 +225,8 @@ export interface CreateTeacherPayload {
   email: string;
   password: string;
   phone?: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string;
   subjects?: string[];
   classes?: string[];       // stores classId#sectionId pairs
   status?: "active" | "inactive";
@@ -228,6 +240,8 @@ export interface UpdateTeacherPayload {
   email?: string;
   password?: string;
   phone?: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string;
   subjects?: string[];
   classes?: string[];       // stores classId#sectionId pairs
   status?: "active" | "inactive";
@@ -309,6 +323,8 @@ export interface Parent {
   relationship: "father" | "mother" | "guardian" | "other";
   occupation?: string;
   address?: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string;
   status: "active" | "inactive";
   profileImage?: string;
   signature?: string;
@@ -333,6 +349,8 @@ export interface CreateParentPayload {
   relationship: "father" | "mother" | "guardian" | "other";
   occupation?: string;
   address?: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string;
   status?: "active" | "inactive";
   profileImage?: string;
   signature?: string;
@@ -348,6 +366,8 @@ export interface UpdateParentPayload {
   relationship?: "father" | "mother" | "guardian" | "other";
   occupation?: string;
   address?: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string;
   status?: "active" | "inactive";
   profileImage?: string;
   signature?: string;
