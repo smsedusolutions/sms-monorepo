@@ -24,7 +24,6 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
   const {
     isSupported,
     permission,
-    isSubscribed,
     isLoading,
     subscribe,
     refreshStatus,
@@ -32,11 +31,11 @@ export const PushNotificationBanner: React.FC<PushNotificationBannerProps> = ({
 
   const [sessionDismissed, setSessionDismissed] = useState(false);
 
-  // If already subscribed and granted, or unsupported, or dismissed for this session, hide
+  // If already allowed (permission === "granted"), or unsupported, or dismissed for this session, hide banner
   if (
     !isSupported ||
     sessionDismissed ||
-    (permission === "granted" && isSubscribed && !showWhenSubscribed)
+    (permission === "granted" && !showWhenSubscribed)
   ) {
     return null;
   }

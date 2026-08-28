@@ -4,15 +4,18 @@ const {
     PeriodSwapSchema: periodSwapSchema,
     TimetableEntrySchema: timetableEntrySchema,
     TeacherSchema: teacherSchema,
+    NotificationSchema: notificationSchema,
 } = require("@sms/shared");
+const { dispatchRealtimePush } = require("../utils/pushHelper");
 
 // Get models for a specific school database
 const getModels = (schoolDbName) => {
     const schoolDb = getSchoolDbConnection(schoolDbName);
     return {
-        PeriodSwap: schoolDb.model("PeriodSwap", periodSwapSchema),
-        TimetableEntry: schoolDb.model("TimetableEntry", timetableEntrySchema),
-        Teacher: schoolDb.model("Teacher", teacherSchema),
+        PeriodSwap: schoolDb.models.PeriodSwap || schoolDb.model("PeriodSwap", periodSwapSchema),
+        TimetableEntry: schoolDb.models.TimetableEntry || schoolDb.model("TimetableEntry", timetableEntrySchema),
+        Teacher: schoolDb.models.Teacher || schoolDb.model("Teacher", teacherSchema),
+        Notification: schoolDb.models.Notification || schoolDb.model("Notification", notificationSchema),
     };
 };
 
@@ -163,7 +166,7 @@ const approveSwap = async (req, res) => {
 
         const schoolDbName = await getSchoolDbName(schoolId);
         const models = getModels(schoolDbName);
-        const { PeriodSwap } = models;
+        const { PeriodSwap, TimetableEntry, Teacher, Notification } = models;
 
         const swap = await PeriodSwap.findOneAndUpdate(
             { schoolId, swapId, status: "pending" },
@@ -180,6 +183,58 @@ const approveSwap = async (req, res) => {
                 success: false,
                 message: "Swap request not found or already processed",
             });
+        }
+
+        // Notify both teachers involved in the swap
+        try {
+            const entry1 = await TimetableEntry.findOne({ entryId: swap.entryId1 }).lean();
+            const entry2 = await TimetableEntry.findOne({ entryId: swap.entryId2 }).lean();
+
+            if (entry1 && entry2) {
+                const teacher1 = await Teacher.findOne({ teacherId: entry1.teacherId }).lean();
+                const teacher2 = await Teacher.findOne({ teacherId: entry2.teacherId }).lean();
+
+                const t1Name = teacher1 ? `${teacher1.firstName} ${teacher1.lastName}`.trim() : entry1.teacherId;
+                const t2Name = teacher2 ? `${teacher2.firstName} ${teacher2.lastName}`.trim() : entry2.teacherId;
+                const dateFormatted = new Date(swap.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+
+                const notifications = [
+                    {
+                        notificationId: `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 5)}`,
+                        schoolId,
+                        userId: entry1.teacherId,
+                        userRole: "teacher",
+                        type: "system_alert",
+                        title: "Period Swap Approved",
+                        message: `Your period swap with ${t2Name} for ${dateFormatted} (Period ${entry1.periodNumber} ⇄ Period ${entry2.periodNumber}) has been approved.`,
+                        referenceId: swap.swapId,
+                        referenceType: "timetable",
+                        url: "/teacher/timetable/my",
+                        isRead: false,
+                        metadata: { swapId: swap.swapId, date: swap.date },
+                    },
+                    {
+                        notificationId: `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 6)}`,
+                        schoolId,
+                        userId: entry2.teacherId,
+                        userRole: "teacher",
+                        type: "system_alert",
+                        title: "Period Swap Approved",
+                        message: `Your period swap with ${t1Name} for ${dateFormatted} (Period ${entry2.periodNumber} ⇄ Period ${entry1.periodNumber}) has been approved.`,
+                        referenceId: swap.swapId,
+                        referenceType: "timetable",
+                        url: "/teacher/timetable/my",
+                        isRead: false,
+                        metadata: { swapId: swap.swapId, date: swap.date },
+                    },
+                ];
+
+                await Notification.insertMany(notifications);
+                dispatchRealtimePush(notifications);
+                console.log(`🔔 [PeriodSwap] Dispatched swap approval notifications to teachers ${entry1.teacherId} and ${entry2.teacherId}`);
+            }
+        } catch (notifErr) {
+            console.error("❌ [PeriodSwap] Failed to dispatch swap notifications:", notifErr.message);
         }
 
         res.status(200).json({

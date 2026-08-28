@@ -63,10 +63,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     useUserStore.getState().clearStore();
     useUserStore.getState().fetchProfile(true);
 
-    // If browser already granted notification permission, ensure push subscription is registered for this user
-    if (isPushSupported() && getPermissionState() === "granted") {
+    // When user logs in, prompt for notification permission if not yet decided, or sync push subscription if granted
+    if (isPushSupported() && getPermissionState() !== "denied") {
       subscribeToPush(decoded.schoolId).catch((err) => {
-        console.warn("⚠️ Push registration on login failed:", err);
+        console.warn("⚠️ Push registration on login:", err);
       });
     }
   };
