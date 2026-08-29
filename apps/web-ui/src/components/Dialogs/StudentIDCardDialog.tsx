@@ -379,7 +379,7 @@ export const StudentIDCardDialog: React.FC<StudentIDCardDialogProps> = ({
             fullWidth
             fullScreen={isMobile}
             PaperProps={{
-                sx: { borderRadius: 2, overflow: 'hidden' },
+                sx: { overflow: 'hidden' },
             }}
         >
             <DialogTitle
