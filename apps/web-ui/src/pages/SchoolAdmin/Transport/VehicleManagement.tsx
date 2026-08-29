@@ -21,11 +21,14 @@ import { AppInput } from '../../../components/shared/AppInput';
 import { AppDatePicker } from '../../../components/shared/AppDatePicker';
 import DataTable, { type Column } from '../../../components/Table/DataTable';
 import { useNotification } from '../../../hooks/useNotification';
+import ConfirmationDialog from '../../../components/Dialogs/ConfirmationDialog';
 
 const VehicleManagement: React.FC = () => {
     const [open, setOpen] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [vehicleToDelete, setVehicleToDelete] = useState<string | null>(null);
     const [formData, setFormData] = useState<any>({
         name: '', plateNumber: '', model: '', make: '', 
         capacity: 40, insuranceExpiry: null, registrationExpiry: null, 
@@ -83,14 +86,20 @@ const VehicleManagement: React.FC = () => {
         }
     };
 
-    const handleDelete = async (id: string) => {
-        if (window.confirm("Are you sure you want to delete this vehicle?")) {
-            try {
-                await deleteMutation.mutateAsync(id);
-                notification.success("Vehicle deleted successfully");
-            } catch (err: any) {
-                notification.error(err?.message || "Failed to delete vehicle");
-            }
+    const handleDelete = (id: string) => {
+        setVehicleToDelete(id);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!vehicleToDelete) return;
+        try {
+            await deleteMutation.mutateAsync(vehicleToDelete);
+            notification.success("Vehicle deleted successfully");
+            setDeleteConfirmOpen(false);
+            setVehicleToDelete(null);
+        } catch (err: any) {
+            notification.error(err?.message || "Failed to delete vehicle");
         }
     };
 
@@ -288,6 +297,20 @@ const VehicleManagement: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <ConfirmationDialog
+                open={deleteConfirmOpen}
+                onClose={() => {
+                    setDeleteConfirmOpen(false);
+                    setVehicleToDelete(null);
+                }}
+                onConfirm={confirmDelete}
+                title="Delete Vehicle"
+                description="Are you sure you want to delete this vehicle? This action cannot be undone."
+                confirmLabel="Delete Vehicle"
+                variant="danger"
+                isLoading={deleteMutation.isPending}
+            />
         </Box>
     );
 };

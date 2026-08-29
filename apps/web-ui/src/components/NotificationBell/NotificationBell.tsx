@@ -134,7 +134,7 @@ const NotificationBell: React.FC = () => {
                 path = role === 'parent' ? '/parent/attendance' : '/student/attendance';
                 break;
             case 'leave_status':
-                path = role === 'parent' ? '/parent/leave/history' : `${prefix}/leave/history`;
+                path = role === 'parent' ? '/parent/leave/history' : `${prefix}/leave/my`;
                 break;
             case 'exam_scheduled':
                 path = role === 'parent' ? '/parent/exam/schedule' : '/student/exam/schedule';

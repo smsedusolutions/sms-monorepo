@@ -502,6 +502,8 @@ const ExamTermsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: bool
     const createTerm = useCreateExamTerm(schoolId);
     const updateTerm = useUpdateExamTerm(schoolId);
     const deleteTerm = useDeleteExamTerm(schoolId);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [termToDelete, setTermToDelete] = useState<string | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [formData, setFormData] = useState<CreateExamTermRequest>({
@@ -524,8 +526,18 @@ const ExamTermsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: bool
     };
 
     const handleDelete = (termId: string) => {
-        if (window.confirm('Are you sure you want to delete this term?')) {
-            deleteTerm.mutate(termId);
+        setTermToDelete(termId);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteTerm = () => {
+        if (termToDelete) {
+            deleteTerm.mutate(termToDelete, {
+                onSettled: () => {
+                    setDeleteConfirmOpen(false);
+                    setTermToDelete(null);
+                }
+            });
         }
     };
 
@@ -727,6 +739,20 @@ const ExamTermsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: bool
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <ConfirmationDialog
+                open={deleteConfirmOpen}
+                onClose={() => {
+                    setDeleteConfirmOpen(false);
+                    setTermToDelete(null);
+                }}
+                onConfirm={confirmDeleteTerm}
+                title="Delete Exam Term"
+                description="Are you sure you want to delete this term? This action cannot be undone."
+                confirmLabel="Delete Term"
+                variant="danger"
+                isLoading={deleteTerm.isPending}
+            />
         </Box>
     );
 };
@@ -741,6 +767,8 @@ const ExamTypesTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: bool
     const { data: terms } = useGetExamTerms(schoolId);
     const createType = useCreateExamType(schoolId);
     const deleteType = useDeleteExamType(schoolId);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [typeToDelete, setTypeToDelete] = useState<string | null>(null);
 
     const [formData, setFormData] = useState<CreateExamTypeRequest>({
         name: '',
@@ -750,8 +778,18 @@ const ExamTypesTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: bool
     });
 
     const handleDelete = (typeId: string) => {
-        if (window.confirm('Are you sure you want to delete this exam type?')) {
-            deleteType.mutate(typeId);
+        setTypeToDelete(typeId);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteType = () => {
+        if (typeToDelete) {
+            deleteType.mutate(typeToDelete, {
+                onSettled: () => {
+                    setDeleteConfirmOpen(false);
+                    setTypeToDelete(null);
+                }
+            });
         }
     };
 
@@ -884,6 +922,20 @@ const ExamTypesTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: bool
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <ConfirmationDialog
+                open={deleteConfirmOpen}
+                onClose={() => {
+                    setDeleteConfirmOpen(false);
+                    setTypeToDelete(null);
+                }}
+                onConfirm={confirmDeleteType}
+                title="Delete Exam Type"
+                description="Are you sure you want to delete this exam type? This action cannot be undone."
+                confirmLabel="Delete Type"
+                variant="danger"
+                isLoading={deleteType.isPending}
+            />
         </Box>
     );
 };
@@ -897,6 +949,8 @@ const GradingSystemsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile:
     const { data: systems, isLoading } = useGetGradingSystems(schoolId);
     const createSystem = useCreateGradingSystem(schoolId);
     const deleteSystem = useDeleteGradingSystem(schoolId);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [systemToDelete, setSystemToDelete] = useState<string | null>(null);
 
     const [name, setName] = useState('');
     const [grades, setGrades] = useState<GradeRange[]>([
@@ -919,8 +973,18 @@ const GradingSystemsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile:
     };
 
     const handleDelete = (systemId: string) => {
-        if (window.confirm('Are you sure you want to delete this grading system?')) {
-            deleteSystem.mutate(systemId);
+        setSystemToDelete(systemId);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteSystem = () => {
+        if (systemToDelete) {
+            deleteSystem.mutate(systemToDelete, {
+                onSettled: () => {
+                    setDeleteConfirmOpen(false);
+                    setSystemToDelete(null);
+                }
+            });
         }
     };
 
@@ -1067,6 +1131,20 @@ const GradingSystemsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile:
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <ConfirmationDialog
+                open={deleteConfirmOpen}
+                onClose={() => {
+                    setDeleteConfirmOpen(false);
+                    setSystemToDelete(null);
+                }}
+                onConfirm={confirmDeleteSystem}
+                title="Delete Grading System"
+                description="Are you sure you want to delete this grading system? This action cannot be undone."
+                confirmLabel="Delete System"
+                variant="danger"
+                isLoading={deleteSystem.isPending}
+            />
         </Box>
     );
 };
@@ -1093,6 +1171,8 @@ const RoomsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: boolean 
     const createRoom = useCreateRoom(schoolId);
     const updateRoom = useUpdateRoom(schoolId);
     const deleteRoom = useDeleteRoom(schoolId);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [roomToDelete, setRoomToDelete] = useState<string | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [formData, setFormData] = useState<CreateRoomRequest & { classRef?: string }>({
@@ -1132,8 +1212,18 @@ const RoomsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: boolean 
     };
 
     const handleDelete = (roomId: string) => {
-        if (window.confirm('Are you sure you want to delete this room?')) {
-            deleteRoom.mutate(roomId);
+        setRoomToDelete(roomId);
+        setDeleteConfirmOpen(true);
+    };
+
+    const confirmDeleteRoom = () => {
+        if (roomToDelete) {
+            deleteRoom.mutate(roomToDelete, {
+                onSettled: () => {
+                    setDeleteConfirmOpen(false);
+                    setRoomToDelete(null);
+                }
+            });
         }
     };
 
@@ -1449,6 +1539,20 @@ const RoomsTab = ({ schoolId, isMobile }: { schoolId: string; isMobile: boolean 
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            <ConfirmationDialog
+                open={deleteConfirmOpen}
+                onClose={() => {
+                    setDeleteConfirmOpen(false);
+                    setRoomToDelete(null);
+                }}
+                onConfirm={confirmDeleteRoom}
+                title="Delete Room"
+                description="Are you sure you want to delete this room? This action cannot be undone."
+                confirmLabel="Delete Room"
+                variant="danger"
+                isLoading={deleteRoom.isPending}
+            />
         </Box>
     );
 };

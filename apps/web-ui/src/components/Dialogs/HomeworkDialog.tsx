@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Dialog,
     DialogTitle,
@@ -10,6 +10,8 @@ import {
     Grid,
     Alert,
     Divider,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material';
 import {
     Close as CloseIcon,
@@ -26,6 +28,7 @@ import FileUpload from '../FileUpload/FileUpload';
 import { useCreateHomework, useUpdateHomework } from '../../queries/Homework';
 import { useGetClasses } from '../../queries/Class';
 import { useGetSubjects } from '../../queries/Subject';
+import { useUserStore } from '../../stores/userStore';
 import TokenService from '../../queries/token/tokenService';
 import type { Homework, CreateHomeworkPayload, AnnouncementAttachment } from '../../types';
 
@@ -38,6 +41,18 @@ interface HomeworkDialogProps {
 
 const HomeworkDialog: React.FC<HomeworkDialogProps> = ({ open, onClose, schoolId, editData }) => {
     const isEditMode = !!editData;
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
+    const { user: userProfile, fetchProfile } = useUserStore();
+    const role = TokenService.getRole();
+    const isTeacher = role === 'teacher' || userProfile?.role === 'teacher';
+
+    useEffect(() => {
+        if (!userProfile && open) {
+            fetchProfile();
+        }
+    }, [userProfile, open, fetchProfile]);
 
     const [formData, setFormData] = useState<Omit<CreateHomeworkPayload, 'dueDate'>>({
         classId: '',
@@ -58,10 +73,108 @@ const HomeworkDialog: React.FC<HomeworkDialogProps> = ({ open, onClose, schoolId
     const createMutation = useCreateHomework(schoolId);
     const updateMutation = useUpdateHomework(schoolId);
 
-    const classes = classesData?.data || [];
-    const subjects = subjectsData?.data || [];
-    const selectedClass = classes.find((c: any) => c.classId === formData.classId);
-    const sections = selectedClass?.sections || [];
+    const rawClasses = useMemo(() => classesData?.data || [], [classesData]);
+    const rawSubjects = useMemo(() => subjectsData?.data || [], [subjectsData]);
+
+    // 1. Filter subjects for teacher: only subjects assigned to the teacher
+    const availableSubjects = useMemo(() => {
+        if (!isTeacher) return rawSubjects;
+
+        const teacherSubjects: string[] = userProfile?.subjects || [];
+        const teacherSubjectNames: string[] = userProfile?.subjectNames || [];
+
+        if (teacherSubjects.length === 0 && teacherSubjectNames.length === 0) {
+            return rawSubjects;
+        }
+
+        const filtered = rawSubjects.filter((s: any) => {
+            const sId = s.subjectId?.toLowerCase();
+            const sName = s.name?.toLowerCase();
+            const matchId = teacherSubjects.some((ts) => {
+                const tsLower = ts.toLowerCase();
+                return tsLower === sId || tsLower === sName;
+            });
+            const matchName = teacherSubjectNames.some((tsn) => {
+                const tsnLower = tsn.toLowerCase();
+                return tsnLower === sName || tsnLower === sId;
+            });
+            return matchId || matchName;
+        });
+
+        return filtered.length > 0 ? filtered : rawSubjects;
+    }, [rawSubjects, isTeacher, userProfile]);
+
+    // 2. Filter classes: ONLY classes that have the selected subject (or teacher's assigned subjects) assigned in class.subjects
+    const availableClasses = useMemo(() => {
+        if (!isTeacher) return rawClasses;
+
+        // If a subject is specifically chosen in formData
+        if (formData.subjectId) {
+            const selectedSubj = rawSubjects.find(
+                (s: any) => s.subjectId?.toLowerCase() === formData.subjectId.toLowerCase() || s.name?.toLowerCase() === formData.subjectId.toLowerCase()
+            );
+            const targetIds = [formData.subjectId.toLowerCase().trim()];
+            const targetNames = selectedSubj?.name ? [selectedSubj.name.toLowerCase().trim()] : [];
+
+            const withSubject = rawClasses.filter((c: any) => {
+                if (!Array.isArray(c.subjects) || c.subjects.length === 0) return false;
+                return c.subjects.some((cs: any) => {
+                    if (!cs) return false;
+                    const csLower = String(cs).toLowerCase().trim();
+                    return targetIds.includes(csLower) || targetNames.includes(csLower);
+                });
+            });
+
+            // If classes have this subject configured, return only those classes
+            if (withSubject.length > 0) {
+                return withSubject;
+            }
+            return rawClasses;
+        }
+
+        // If no subject selected yet: filter classes offering ANY of the teacher's available subjects
+        const teacherSubjIds = availableSubjects.map((s: any) => s.subjectId?.toLowerCase().trim()).filter(Boolean);
+        const teacherSubjNames = availableSubjects.map((s: any) => s.name?.toLowerCase().trim()).filter(Boolean);
+
+        if (teacherSubjIds.length > 0 || teacherSubjNames.length > 0) {
+            const withAnySubject = rawClasses.filter((c: any) => {
+                if (!Array.isArray(c.subjects) || c.subjects.length === 0) return false;
+                return c.subjects.some((cs: any) => {
+                    if (!cs) return false;
+                    const csLower = String(cs).toLowerCase().trim();
+                    return teacherSubjIds.includes(csLower) || teacherSubjNames.includes(csLower);
+                });
+            });
+            if (withAnySubject.length > 0) {
+                return withAnySubject;
+            }
+        }
+
+        return rawClasses;
+    }, [rawClasses, isTeacher, formData.subjectId, availableSubjects, rawSubjects]);
+
+    // 3. Sections: all sections belonging to the selected class
+    const selectedClass = rawClasses.find((c: any) => c.classId === formData.classId);
+    const sections = useMemo(() => {
+        if (!selectedClass) return [];
+        return selectedClass.sections || [];
+    }, [selectedClass]);
+
+    // Auto-select single subject or class if teacher only has one option
+    useEffect(() => {
+        if (!editData && open) {
+            setFormData(prev => {
+                let updated = { ...prev };
+                if (!updated.subjectId && availableSubjects.length === 1) {
+                    updated.subjectId = availableSubjects[0].subjectId;
+                }
+                if (!updated.classId && availableClasses.length === 1) {
+                    updated.classId = availableClasses[0].classId;
+                }
+                return updated;
+            });
+        }
+    }, [editData, open, availableSubjects, availableClasses]);
 
     useEffect(() => {
         if (editData) {
@@ -101,6 +214,37 @@ const HomeworkDialog: React.FC<HomeworkDialogProps> = ({ open, onClose, schoolId
 
     const handleChange = (field: string, value: any) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+        if (error) setError('');
+    };
+
+    const handleSubjectChange = (subjectId: string) => {
+        setFormData(prev => {
+            const updated = { ...prev, subjectId };
+            // If the currently chosen class does not offer this subject, reset class & section
+            if (updated.classId) {
+                const cls = rawClasses.find((c: any) => c.classId === updated.classId);
+                const selectedSubj = rawSubjects.find((s: any) => s.subjectId === subjectId);
+                const subjName = selectedSubj?.name?.toLowerCase();
+                const subjIdLower = subjectId.toLowerCase();
+
+                if (cls && Array.isArray(cls.subjects) && cls.subjects.length > 0) {
+                    const hasSubj = cls.subjects.some((cs: string) => {
+                        const csLower = cs.toLowerCase();
+                        return csLower === subjIdLower || (subjName && csLower === subjName);
+                    });
+                    if (!hasSubj) {
+                        updated.classId = '';
+                        updated.sectionId = '';
+                    }
+                }
+            }
+            return updated;
+        });
+        if (error) setError('');
+    };
+
+    const handleClassChange = (classId: string) => {
+        setFormData(prev => ({ ...prev, classId, sectionId: '' }));
         if (error) setError('');
     };
 
@@ -167,13 +311,32 @@ const HomeworkDialog: React.FC<HomeworkDialogProps> = ({ open, onClose, schoolId
 
     return (
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 3 }}>
+            <Dialog 
+                open={open} 
+                onClose={handleClose} 
+                maxWidth="md" 
+                fullWidth
+                fullScreen={isMobile}
+                PaperProps={{
+                    sx: {
+                        borderRadius: isMobile ? 0 : { xs: 3, sm: 4 },
+                        m: isMobile ? 0 : { xs: 1.5, sm: 3 },
+                        maxHeight: isMobile ? '100%' : { xs: 'calc(100% - 32px)', sm: 'calc(100% - 64px)' },
+                    }
+                }}
+            >
+                <DialogTitle sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    p: { xs: 2, sm: 3 },
+                    pb: { xs: 1.5, sm: 2 }
+                }}>
                     <Box>
-                        <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: '-0.02em' }}>
+                        <Typography variant="h5" sx={{ fontWeight: 800, color: 'text.primary', letterSpacing: '-0.02em', fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                             {isEditMode ? 'Modify Assignment' : 'New Academic Assignment'}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                             {isEditMode ? 'Update homework details and materials' : 'Fill in the details to assign new work to students'}
                         </Typography>
                     </Box>
@@ -183,31 +346,43 @@ const HomeworkDialog: React.FC<HomeworkDialogProps> = ({ open, onClose, schoolId
                 </DialogTitle>
 
                 <form onSubmit={handleSubmit}>
-                    <DialogContent sx={{ p: 3, pt: 0 }}>
+                    <DialogContent sx={{ p: { xs: 2, sm: 3 }, pt: 0 }}>
                         {error && (
-                            <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                            <Alert severity="error" sx={{ mb: 2.5, borderRadius: 2 }}>
                                 {error}
                             </Alert>
                         )}
 
-                        <Grid container spacing={3}>
+                        <Grid container spacing={{ xs: 2, sm: 2.5 }}>
                             <Grid size={{ xs: 12 }}>
                                 <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
                                     Placement & Schedule
                                 </Typography>
                             </Grid>
 
-                            <Grid size={{ xs: 12, md: 6 }}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <AppSelect
-                                    label="Class"
-                                    value={formData.classId}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, classId: e.target.value as string, sectionId: '' }))}
-                                    options={classes.map((c: any) => ({ value: c.classId, label: c.name }))}
+                                    label="Subject"
+                                    value={formData.subjectId}
+                                    onChange={(e) => handleSubjectChange(e.target.value as string)}
+                                    options={availableSubjects.map((s: any) => ({ value: s.subjectId, label: s.name }))}
                                     required
+                                    helperText={availableSubjects.length === 0 ? "No assigned subjects found" : undefined}
                                 />
                             </Grid>
 
-                            <Grid size={{ xs: 12, md: 6 }}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                                <AppSelect
+                                    label="Class"
+                                    value={formData.classId}
+                                    onChange={(e) => handleClassChange(e.target.value as string)}
+                                    options={availableClasses.map((c: any) => ({ value: c.classId, label: c.name }))}
+                                    required
+                                    helperText={availableClasses.length === 0 ? "No classes assigned for this subject" : undefined}
+                                />
+                            </Grid>
+
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <AppSelect
                                     label="Section"
                                     value={formData.sectionId}
@@ -217,17 +392,7 @@ const HomeworkDialog: React.FC<HomeworkDialogProps> = ({ open, onClose, schoolId
                                 />
                             </Grid>
 
-                            <Grid size={{ xs: 12, md: 6 }}>
-                                <AppSelect
-                                    label="Subject"
-                                    value={formData.subjectId}
-                                    onChange={(e) => handleChange('subjectId', e.target.value)}
-                                    options={subjects.map((s: any) => ({ value: s.subjectId, label: s.name }))}
-                                    required
-                                />
-                            </Grid>
-
-                            <Grid size={{ xs: 12, md: 6 }}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <AppDatePicker
                                     label="Due Date"
                                     value={dueDate}
@@ -238,7 +403,7 @@ const HomeworkDialog: React.FC<HomeworkDialogProps> = ({ open, onClose, schoolId
                             </Grid>
 
                             <Grid size={{ xs: 12 }}>
-                                <Divider sx={{ my: 1 }} />
+                                <Divider sx={{ my: 0.5 }} />
                                 <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
                                     Assignment Details
                                 </Typography>
@@ -269,14 +434,14 @@ const HomeworkDialog: React.FC<HomeworkDialogProps> = ({ open, onClose, schoolId
                             </Grid>
 
                             <Grid size={{ xs: 12 }}>
-                                <Divider sx={{ my: 1 }} />
+                                <Divider sx={{ my: 0.5 }} />
                                 <Typography variant="overline" color="primary" sx={{ fontWeight: 700, letterSpacing: 1.2 }}>
                                     Resources & Materials
                                 </Typography>
                             </Grid>
 
                             <Grid size={{ xs: 12 }}>
-                                <Box sx={{ mb: 2 }}>
+                                <Box sx={{ mb: 1 }}>
                                     <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600, mb: 1 }}>
                                         Web Reference Links
                                     </Typography>
@@ -323,7 +488,7 @@ const HomeworkDialog: React.FC<HomeworkDialogProps> = ({ open, onClose, schoolId
                         </Grid>
                     </DialogContent>
 
-                    <DialogActions sx={{ p: 3, pt: 0 }}>
+                    <DialogActions sx={{ p: { xs: 2, sm: 3 }, pt: 0, gap: 1 }}>
                         <AppButton onClick={handleClose} variant="text" color="inherit">
                             Discard
                         </AppButton>
@@ -331,7 +496,7 @@ const HomeworkDialog: React.FC<HomeworkDialogProps> = ({ open, onClose, schoolId
                             type="submit"
                             variant="contained"
                             loading={isPending}
-                            sx={{ minWidth: 140, borderRadius: 2 }}
+                            sx={{ minWidth: { xs: 120, sm: 140 }, borderRadius: 2 }}
                         >
                             {isEditMode ? 'Apply Changes' : 'Assign Homework'}
                         </AppButton>

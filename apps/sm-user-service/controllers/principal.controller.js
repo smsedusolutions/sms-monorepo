@@ -31,7 +31,7 @@ const getSchoolDbName = async (schoolId) => {
 exports.createPrincipal = async (req, res) => {
   try {
     const { schoolId } = req.params;
-    const { firstName, lastName, email, password, phone, status, profileImage } = req.body;
+    const { firstName, lastName, email, password, phone, status, profileImage, gender, dateOfBirth, dob } = req.body;
 
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({ success: false, message: "firstName, lastName, email, and password are required" });
@@ -74,6 +74,8 @@ exports.createPrincipal = async (req, res) => {
       phone,
       status: status || "active",
       profileImage,
+      gender,
+      dateOfBirth: dateOfBirth || dob,
     });
 
     const savedPrincipal = await newPrincipal.save();
@@ -155,6 +157,11 @@ exports.updatePrincipal = async (req, res) => {
     if (!schoolDbName) {
       return res.status(404).json({ success: false, message: "School not found" });
     }
+
+    if (updateData.dob && !updateData.dateOfBirth) {
+      updateData.dateOfBirth = updateData.dob;
+    }
+    delete updateData.dob;
 
     // SECURITY (GAP-001): If password is being updated, hash it before saving
     if (updateData.password) {

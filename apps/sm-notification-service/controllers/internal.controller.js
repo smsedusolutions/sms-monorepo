@@ -27,7 +27,13 @@ const resolveNotificationUrl = (notif) => {
     case "absence_alert":
       return role === "parent" ? "/parent/attendance" : "/student/attendance";
     case "leave_status":
-      return role === "parent" ? "/parent/leave/history" : `${prefix}/leave/history`;
+      return role === "parent"
+        ? "/parent/leave/history"
+        : role === "student"
+        ? "/student/leave/my"
+        : role === "teacher"
+        ? "/teacher/leave/students"
+        : "/school-admin/leaverequest";
     case "exam_scheduled":
       return role === "parent" ? "/parent/exam/schedule" : "/student/exam/schedule";
     case "result_published":

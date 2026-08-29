@@ -57,7 +57,7 @@ const NotificationSchema = new Schema({
     },
     referenceType: {
         type: String,
-        enum: ['announcement', 'homework', 'leave', 'attendance', 'exam', 'result', 'transport', 'chat', 'school_broadcast', 'system', null]
+        enum: ['announcement', 'homework', 'leave', 'attendance', 'exam', 'result', 'transport', 'chat', 'school_broadcast', 'timetable', 'system', null]
     },
     isRead: {
         type: Boolean,

@@ -29,7 +29,9 @@ import { IMAGEKIT_FOLDERS } from '../../utils/imagekit';
 import { AppInput } from '../shared/AppInput';
 import { AppSelect } from '../shared/AppSelect';
 import { AppButton } from '../shared/AppButton';
+import { AppDatePicker } from '../shared/AppDatePicker';
 import { PhoneInput } from '../shared/PhoneInput';
+import { format } from 'date-fns';
 
 interface PrincipalDialogProps {
     open: boolean;
@@ -53,6 +55,8 @@ const PrincipalDialog: React.FC<PrincipalDialogProps> = ({
         email: '',
         password: '',
         phone: '',
+        gender: undefined,
+        dateOfBirth: '',
         profileImage: '',
         status: 'active',
     };
@@ -72,6 +76,8 @@ const PrincipalDialog: React.FC<PrincipalDialogProps> = ({
                 email: editData.email || '',
                 password: '',
                 phone: editData.phone || '',
+                gender: editData.gender || undefined,
+                dateOfBirth: editData.dateOfBirth ? (typeof editData.dateOfBirth === 'string' && editData.dateOfBirth.length >= 10 ? editData.dateOfBirth.slice(0, 10) : format(new Date(editData.dateOfBirth), 'yyyy-MM-dd')) : '',
                 profileImage: editData.profileImage || '',
                 status: editData.status || 'active',
             });
@@ -257,6 +263,35 @@ const PrincipalDialog: React.FC<PrincipalDialogProps> = ({
                                 error={!!errors.lastName}
                                 helperText={errors.lastName}
                                 required
+                            />
+                        </Box>
+
+                        {/* ── Gender + Date of Birth ── */}
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                            <AppSelect
+                                label="Gender"
+                                value={formData.gender || ''}
+                                options={[
+                                    { value: 'male', label: 'Male' },
+                                    { value: 'female', label: 'Female' },
+                                    { value: 'other', label: 'Other' },
+                                ]}
+                                onChange={(e) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        gender: e.target.value as 'male' | 'female' | 'other',
+                                    }))
+                                }
+                            />
+                            <AppDatePicker
+                                label="Date of Birth"
+                                value={formData.dateOfBirth ? new Date(formData.dateOfBirth) : null}
+                                onChange={(date) =>
+                                    setFormData((prev) => ({
+                                        ...prev,
+                                        dateOfBirth: date ? format(date, 'yyyy-MM-dd') : '',
+                                    }))
+                                }
                             />
                         </Box>
 

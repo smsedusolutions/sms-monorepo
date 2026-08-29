@@ -51,6 +51,16 @@ export const AppSelect: React.FC<AppSelectProps> = ({
       <FormControl fullWidth={fullWidth} error={error} size={size}>
         <Select
           displayEmpty
+          MenuProps={{
+            PaperProps: {
+              sx: {
+                maxHeight: 280,
+                borderRadius: 2,
+                boxShadow: '0 8px 24px rgba(0,0,0,0.12)',
+              },
+            },
+            ...props.MenuProps,
+          }}
           {...props}
           sx={{
             backgroundColor: 'background.paper',

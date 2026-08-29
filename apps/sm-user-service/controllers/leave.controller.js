@@ -6,6 +6,10 @@ const {
     StudentSchema: studentSchema,
     LeaveRequestSchema: leaveRequestSchema,
     NotificationSchema: notificationSchema,
+    TeacherSchema: teacherSchema,
+    ClassSchema: classSchema,
+    PrincipalSchema: principalSchema,
+    UserModel: User,
 } = require("@sms/shared");
 const { logActivity } = require("@sms/shared/utils");
 const { dispatchRealtimePush } = require("./notification.controller");
@@ -27,6 +31,199 @@ const generateLeaveId = () => {
     const timestamp = Date.now().toString(36);
     const random = Math.random().toString(36).substring(2, 6);
     return `LV${timestamp}${random}`.toUpperCase();
+};
+
+/**
+ * Helper to notify Class Teacher and School Admins when a student or parent applies for leave
+ */
+const notifyTeachersAndAdminsOnLeaveApply = async ({
+    schoolDb,
+    schoolId,
+    leave,
+    applicantRole,
+    applicantName,
+    studentName,
+    classId,
+    sectionId,
+    startFormatted,
+    endFormatted,
+    reason,
+    leaveType,
+}) => {
+    try {
+        let Notification;
+        try {
+            Notification = schoolDb.model("Notification");
+        } catch (e) {
+            Notification = schoolDb.model("Notification", notificationSchema);
+        }
+
+        let Teacher;
+        try {
+            Teacher = schoolDb.model("Teacher");
+        } catch (e) {
+            Teacher = schoolDb.model("Teacher", teacherSchema);
+        }
+
+        let ClassModel;
+        try {
+            ClassModel = schoolDb.model("Class");
+        } catch (e) {
+            ClassModel = schoolDb.model("Class", classSchema);
+        }
+
+        const teacherIds = new Set();
+
+        if (classId) {
+            const classDoc = await ClassModel.findOne({ classId }).lean();
+            if (classDoc && Array.isArray(classDoc.sections)) {
+                if (sectionId) {
+                    const sec = classDoc.sections.find((s) => s.sectionId === sectionId);
+                    if (sec?.classTeacherId) teacherIds.add(sec.classTeacherId);
+                } else {
+                    classDoc.sections.forEach((sec) => {
+                        if (sec?.classTeacherId) teacherIds.add(sec.classTeacherId);
+                    });
+                }
+            }
+        }
+
+        if (sectionId) {
+            const teachersWithSection = await Teacher.find({
+                schoolId,
+                status: "active",
+                classTeacherSectionId: sectionId,
+            }, "teacherId").lean();
+            teachersWithSection.forEach((t) => teacherIds.add(t.teacherId));
+        }
+
+        // Fallback to active teachers assigned to this class
+        if (teacherIds.size === 0 && classId) {
+            const classTeachers = await Teacher.find({
+                schoolId,
+                status: "active",
+                classes: classId,
+            }, "teacherId").lean();
+            classTeachers.forEach((t) => teacherIds.add(t.teacherId));
+        }
+
+        // Query School Admins from SuperAdmin database
+        const superAdminDb = mongoose.connection.useDb("SuperAdmin", { useCache: true });
+        let UserModel;
+        try {
+            UserModel = superAdminDb.model("User");
+        } catch (e) {
+            UserModel = superAdminDb.model("User", User.schema);
+        }
+
+        const admins = await UserModel.find({
+            schoolId,
+            role: "sch_admin",
+            status: "active",
+        }, "userId username email").lean();
+
+        // Query Principals if any in tenant DB
+        let Principal;
+        try {
+            Principal = schoolDb.model("Principal");
+        } catch (e) {
+            Principal = schoolDb.model("Principal", principalSchema);
+        }
+        const principals = await Principal.find({ schoolId, status: "active" }, "principalId").lean();
+
+        const notificationsToInsert = [];
+        const appliedByLabel = applicantRole === "parent" ? `Parent (${applicantName})` : applicantName;
+        const notifTitle = `Leave Application: ${studentName}`;
+        const notifMessage = `${appliedByLabel} applied for ${leaveType} leave for ${studentName} (${startFormatted} - ${endFormatted}). Reason: ${reason || 'N/A'}`;
+
+        // 1. Notify Teachers
+        teacherIds.forEach((tId) => {
+            notificationsToInsert.push({
+                notificationId: `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 5)}`,
+                schoolId,
+                userId: tId,
+                userRole: "teacher",
+                type: "leave_status",
+                title: notifTitle,
+                message: notifMessage,
+                url: "/teacher/leave/students",
+                referenceId: leave.leaveId,
+                referenceType: "leave",
+                isRead: false,
+                metadata: {
+                    leaveId: leave.leaveId,
+                    studentName,
+                    applicantRole,
+                    leaveType,
+                    startDate: leave.startDate,
+                    endDate: leave.endDate,
+                },
+            });
+        });
+
+        // 2. Notify School Admins
+        admins.forEach((admin) => {
+            const adminId = admin.userId || admin.username || admin.email;
+            if (adminId) {
+                notificationsToInsert.push({
+                    notificationId: `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 5)}`,
+                    schoolId,
+                    userId: adminId,
+                    userRole: "sch_admin",
+                    type: "leave_status",
+                    title: notifTitle,
+                    message: notifMessage,
+                    url: "/school-admin/leaverequest",
+                    referenceId: leave.leaveId,
+                    referenceType: "leave",
+                    isRead: false,
+                    metadata: {
+                        leaveId: leave.leaveId,
+                        studentName,
+                        applicantRole,
+                        leaveType,
+                        startDate: leave.startDate,
+                        endDate: leave.endDate,
+                    },
+                });
+            }
+        });
+
+        // 3. Notify Principals
+        principals.forEach((p) => {
+            if (p.principalId) {
+                notificationsToInsert.push({
+                    notificationId: `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 5)}`,
+                    schoolId,
+                    userId: p.principalId,
+                    userRole: "principal",
+                    type: "leave_status",
+                    title: notifTitle,
+                    message: notifMessage,
+                    url: "/principal/leave",
+                    referenceId: leave.leaveId,
+                    referenceType: "leave",
+                    isRead: false,
+                    metadata: {
+                        leaveId: leave.leaveId,
+                        studentName,
+                        applicantRole,
+                        leaveType,
+                        startDate: leave.startDate,
+                        endDate: leave.endDate,
+                    },
+                });
+            }
+        });
+
+        if (notificationsToInsert.length > 0) {
+            await Notification.insertMany(notificationsToInsert);
+            await dispatchRealtimePush(notificationsToInsert);
+            console.log(`🔔 [LeaveNotification] Dispatched leave apply alerts to ${notificationsToInsert.length} staff member(s) for leave ${leave.leaveId}`);
+        }
+    } catch (err) {
+        console.error("❌ [LeaveNotification] Failed to dispatch leave apply notifications:", err);
+    }
 };
 
 /**
@@ -93,6 +290,9 @@ const applyLeave = async (req, res) => {
             });
 
             const createdLeaves = [];
+            const startFormatted = start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+            const endFormatted = end.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+
             for (const sId of targetStudentIds) {
                 const sObj = studentMap[sId];
                 const sName = sObj ? `${sObj.firstName} ${sObj.lastName}` : sId;
@@ -128,6 +328,22 @@ const applyLeave = async (req, res) => {
                     description: `Parent ${applicantName} applied for ${leaveType} leave for ${sName} from ${start.toDateString()} to ${end.toDateString()}`,
                     metadata: { leaveId: newLeave.leaveId, leaveType, startDate: start, endDate: end, studentId: sId }
                 });
+
+                // Dispatch notification to Class Teacher and School Admins
+                notifyTeachersAndAdminsOnLeaveApply({
+                    schoolDb,
+                    schoolId,
+                    leave: newLeave,
+                    applicantRole: "parent",
+                    applicantName,
+                    studentName: sName,
+                    classId: sClass,
+                    sectionId: sSection,
+                    startFormatted,
+                    endFormatted,
+                    reason,
+                    leaveType,
+                }).catch((err) => console.error("Error in parent leave notification dispatch:", err));
             }
 
             return res.status(201).json({
@@ -170,6 +386,52 @@ const applyLeave = async (req, res) => {
             description: `${applicantName} applied for ${leaveType} leave from ${start.toDateString()} to ${end.toDateString()}`,
             metadata: { leaveId: newLeave.leaveId, leaveType, startDate: start, endDate: end }
         });
+
+        // Dispatch notification to Class Teacher and School Admins
+        const startFormatted = start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        const endFormatted = end.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+
+        if (applicantType === "student") {
+            let Student;
+            try {
+                Student = schoolDb.model("Student");
+            } catch (e) {
+                Student = schoolDb.model("Student", studentSchema);
+            }
+            const studentDoc = await Student.findOne({ studentId: applicantId }).lean();
+            const studentName = studentDoc ? `${studentDoc.firstName} ${studentDoc.lastName || ''}`.trim() : applicantName;
+
+            notifyTeachersAndAdminsOnLeaveApply({
+                schoolDb,
+                schoolId,
+                leave: newLeave,
+                applicantRole: "student",
+                applicantName: studentName,
+                studentName,
+                classId: resolvedClassId || studentDoc?.class,
+                sectionId: resolvedSectionId || studentDoc?.section,
+                startFormatted,
+                endFormatted,
+                reason,
+                leaveType,
+            }).catch((err) => console.error("Error in student leave notification dispatch:", err));
+        } else {
+            // Teacher self-apply -> Notify School Admins and Principal
+            notifyTeachersAndAdminsOnLeaveApply({
+                schoolDb,
+                schoolId,
+                leave: newLeave,
+                applicantRole: "teacher",
+                applicantName,
+                studentName: applicantName,
+                classId: null,
+                sectionId: null,
+                startFormatted,
+                endFormatted,
+                reason,
+                leaveType,
+            }).catch((err) => console.error("Error in teacher leave notification dispatch:", err));
+        }
 
         return res.status(201).json({
             success: true,
@@ -403,30 +665,105 @@ const processLeave = async (req, res) => {
             metadata: { leaveId, action, remarks }
         });
 
-        // Dispatch real-time notification to applicant
+        // Dispatch real-time notifications to BOTH student and parent
         try {
-            const Notification = schoolDb.models.Notification || schoolDb.model("Notification", notificationSchema);
-            const notifId = `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 5)}`;
+            let Notification;
+            try {
+                Notification = schoolDb.model("Notification");
+            } catch (e) {
+                Notification = schoolDb.model("Notification", notificationSchema);
+            }
+
             const startFormatted = leave.startDate ? new Date(leave.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
             const endFormatted = leave.endDate ? new Date(leave.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
-            
-            const leaveNotif = new Notification({
-                notificationId: notifId,
-                schoolId,
-                userId: leave.applicantId,
-                userRole: leave.applicantType === 'teacher' ? 'teacher' : 'student',
-                type: 'leave_status',
-                title: `Leave Request ${action === "approve" ? "Approved" : "Rejected"}`,
-                message: `Your leave request from ${startFormatted} to ${endFormatted} has been ${leave.status}${remarks ? ` (${remarks})` : ''}.`,
-                referenceId: leave.leaveId,
-                referenceType: 'leave',
-                isRead: false,
-                metadata: { leaveId: leave.leaveId, status: leave.status, remarks }
-            });
-            await leaveNotif.save();
-            dispatchRealtimePush(leaveNotif.toObject ? leaveNotif.toObject() : leaveNotif);
+            const statusCapitalized = leave.status === 'approved' ? 'Approved' : 'Rejected';
+            const actionVerb = leave.status === 'approved' ? 'approved' : 'rejected';
+
+            let Student;
+            try {
+                Student = schoolDb.model("Student");
+            } catch (e) {
+                Student = schoolDb.model("Student", studentSchema);
+            }
+
+            let Parent;
+            try {
+                Parent = schoolDb.model("Parent");
+            } catch (e) {
+                Parent = schoolDb.model("Parent", parentSchema);
+            }
+
+            const notificationsToInsert = [];
+
+            if (leave.applicantType === "student") {
+                const studentDoc = await Student.findOne({ studentId: leave.applicantId }).lean();
+                const studentName = studentDoc ? `${studentDoc.firstName} ${studentDoc.lastName || ''}`.trim() : leave.applicantName;
+
+                // 1. Notification for Student
+                notificationsToInsert.push({
+                    notificationId: `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 5)}`,
+                    schoolId,
+                    userId: leave.applicantId,
+                    userRole: "student",
+                    type: "leave_status",
+                    title: `Leave Request ${statusCapitalized}`,
+                    message: `Your ${leave.leaveType} leave request from ${startFormatted} to ${endFormatted} has been ${actionVerb}${remarks ? `. Remarks: ${remarks}` : ''}.`,
+                    referenceId: leave.leaveId,
+                    referenceType: "leave",
+                    url: "/student/leave/my",
+                    isRead: false,
+                    metadata: { leaveId: leave.leaveId, status: leave.status, remarks }
+                });
+
+                // 2. Notification for Parent
+                const parentQuery = [];
+                if (studentDoc?.parentId) parentQuery.push({ parentId: studentDoc.parentId });
+                parentQuery.push({ studentIds: leave.applicantId });
+                if (studentDoc?.parentEmail) parentQuery.push({ email: studentDoc.parentEmail });
+
+                const parentDoc = await Parent.findOne({ $or: parentQuery }).lean();
+                const parentTargetId = parentDoc?.parentId || parentDoc?.userId || studentDoc?.parentId;
+                if (parentTargetId) {
+                    notificationsToInsert.push({
+                        notificationId: `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 5)}`,
+                        schoolId,
+                        userId: parentTargetId,
+                        userRole: "parent",
+                        type: "leave_status",
+                        title: `Leave Request ${statusCapitalized}: ${studentName}`,
+                        message: `Leave request for ${studentName} (${startFormatted} to ${endFormatted}) has been ${actionVerb}${remarks ? `. Remarks: ${remarks}` : ''}.`,
+                        referenceId: leave.leaveId,
+                        referenceType: "leave",
+                        url: "/parent/leave/history",
+                        isRead: false,
+                        metadata: { leaveId: leave.leaveId, status: leave.status, remarks, studentId: leave.applicantId }
+                    });
+                }
+            } else if (leave.applicantType === "teacher") {
+                // If applicant was teacher, notify teacher
+                notificationsToInsert.push({
+                    notificationId: `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 5)}`,
+                    schoolId,
+                    userId: leave.applicantId,
+                    userRole: "teacher",
+                    type: "leave_status",
+                    title: `Leave Request ${statusCapitalized}`,
+                    message: `Your ${leave.leaveType} leave request from ${startFormatted} to ${endFormatted} has been ${actionVerb}${remarks ? `. Remarks: ${remarks}` : ''}.`,
+                    referenceId: leave.leaveId,
+                    referenceType: "leave",
+                    url: "/teacher/leave/my",
+                    isRead: false,
+                    metadata: { leaveId: leave.leaveId, status: leave.status, remarks }
+                });
+            }
+
+            if (notificationsToInsert.length > 0) {
+                await Notification.insertMany(notificationsToInsert);
+                await dispatchRealtimePush(notificationsToInsert);
+                console.log(`🔔 [LeaveNotification] Dispatched leave process result alerts to ${notificationsToInsert.length} recipient(s) for leave ${leave.leaveId}`);
+            }
         } catch (notifErr) {
-            console.error("Error creating leave notification:", notifErr);
+            console.error("❌ [LeaveNotification] Error dispatching leave process notifications:", notifErr);
         }
 
         return res.status(200).json({

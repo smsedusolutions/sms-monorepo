@@ -4,16 +4,21 @@ const {
     SubstituteAssignmentSchema: substituteAssignmentSchema,
     TimetableEntrySchema: timetableEntrySchema,
     TeacherSchema: teacherSchema,
+    NotificationSchema: notificationSchema,
+    SubjectSchema: subjectSchema,
 } = require("@sms/shared");
 const { logActivity } = require("@sms/shared/utils");
+const { dispatchRealtimePush } = require("../utils/pushHelper");
 
 // Get models for a specific school database
 const getModels = (schoolDbName) => {
     const schoolDb = getSchoolDbConnection(schoolDbName);
     return {
-        SubstituteAssignment: schoolDb.model("SubstituteAssignment", substituteAssignmentSchema),
-        TimetableEntry: schoolDb.model("TimetableEntry", timetableEntrySchema),
-        Teacher: schoolDb.model("Teacher", teacherSchema),
+        SubstituteAssignment: schoolDb.models.SubstituteAssignment || schoolDb.model("SubstituteAssignment", substituteAssignmentSchema),
+        TimetableEntry: schoolDb.models.TimetableEntry || schoolDb.model("TimetableEntry", timetableEntrySchema),
+        Teacher: schoolDb.models.Teacher || schoolDb.model("Teacher", teacherSchema),
+        Notification: schoolDb.models.Notification || schoolDb.model("Notification", notificationSchema),
+        Subject: schoolDb.models.Subject || schoolDb.model("Subject", subjectSchema),
     };
 };
 
@@ -134,17 +139,91 @@ const createSubstitute = async (req, res) => {
 
         await newSubstitute.save();
 
-        // Get teacher details for response
-        const originalTeacher = await Teacher.findOne({ teacherId: originalEntry.teacherId });
-        const substituteTeacher = await Teacher.findOne({ teacherId: substituteTeacherId });
+        // Get teacher details for response & notifications
+        const originalTeacher = await Teacher.findOne({ teacherId: originalEntry.teacherId }).lean();
+        const substituteTeacher = await Teacher.findOne({ teacherId: substituteTeacherId }).lean();
+
+        const origTeacherName = originalTeacher ? `${originalTeacher.firstName} ${originalTeacher.lastName}`.trim() : originalEntry.teacherId;
+        const subTeacherName = substituteTeacher ? `${substituteTeacher.firstName} ${substituteTeacher.lastName}`.trim() : substituteTeacherId;
+
+        // Try fetching Subject name
+        let subjectName = "";
+        if (originalEntry.subjectId) {
+            try {
+                const subj = await models.Subject.findOne({ subjectId: originalEntry.subjectId }).lean();
+                subjectName = subj?.name || originalEntry.subjectId;
+            } catch (_e) {}
+        }
+
+        const dateFormatted = new Date(date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        const classLabel = `${originalEntry.classId || ''} ${originalEntry.sectionId || ''}`.trim() || 'Class';
+        const periodLabel = `Period ${originalEntry.periodNumber}${subjectName ? ` (${subjectName})` : ''}`;
+
+        // Create notifications for BOTH teachers
+        const notifications = [
+            // 1. Notification to the Substitute Teacher
+            {
+                notificationId: `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 5)}`,
+                schoolId,
+                userId: substituteTeacherId,
+                userRole: "teacher",
+                type: "system_alert",
+                title: `Substitute Assignment: ${classLabel}`,
+                message: `You have been assigned to substitute for ${origTeacherName} on ${dateFormatted} for ${classLabel} (${periodLabel}).`,
+                referenceId: newSubstitute.substituteId,
+                referenceType: "timetable",
+                url: "/teacher/timetable/my",
+                isRead: false,
+                metadata: {
+                    substituteId: newSubstitute.substituteId,
+                    originalTeacherId: originalEntry.teacherId,
+                    originalTeacherName: origTeacherName,
+                    date,
+                    periodNumber: originalEntry.periodNumber,
+                    classId: originalEntry.classId,
+                    sectionId: originalEntry.sectionId,
+                },
+            },
+            // 2. Notification to the Original Teacher
+            {
+                notificationId: `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 6)}`,
+                schoolId,
+                userId: originalEntry.teacherId,
+                userRole: "teacher",
+                type: "system_alert",
+                title: `Substitute Assigned: ${classLabel}`,
+                message: `${subTeacherName} will cover your class on ${dateFormatted} for ${classLabel} (${periodLabel}).`,
+                referenceId: newSubstitute.substituteId,
+                referenceType: "timetable",
+                url: "/teacher/timetable/my",
+                isRead: false,
+                metadata: {
+                    substituteId: newSubstitute.substituteId,
+                    substituteTeacherId,
+                    substituteTeacherName: subTeacherName,
+                    date,
+                    periodNumber: originalEntry.periodNumber,
+                    classId: originalEntry.classId,
+                    sectionId: originalEntry.sectionId,
+                },
+            },
+        ];
+
+        try {
+            await models.Notification.insertMany(notifications);
+            dispatchRealtimePush(notifications);
+            console.log(`🔔 [SubstituteNotification] Dispatched timetable substitution alerts to both teachers: ${substituteTeacherId} and ${originalEntry.teacherId}`);
+        } catch (notifErr) {
+            console.error("❌ [SubstituteNotification] Failed to dispatch notifications:", notifErr.message);
+        }
 
         const response = res.status(201).json({
             success: true,
             message: "Substitute assignment created successfully",
             data: {
                 ...newSubstitute.toObject(),
-                originalTeacher: originalTeacher ? `${originalTeacher.firstName} ${originalTeacher.lastName}` : null,
-                substituteTeacher: substituteTeacher ? `${substituteTeacher.firstName} ${substituteTeacher.lastName}` : null,
+                originalTeacher: origTeacherName,
+                substituteTeacher: subTeacherName,
             },
         });
 
@@ -156,8 +235,8 @@ const createSubstitute = async (req, res) => {
             action: "CREATE",
             entity: "Substitute",
             entityId: newSubstitute.substituteId,
-            entityLabel: substituteTeacher ? `${substituteTeacher.firstName} ${substituteTeacher.lastName}` : substituteTeacherId,
-            description: `Assigned ${substituteTeacher ? `${substituteTeacher.firstName} ${substituteTeacher.lastName}` : substituteTeacherId} as substitute for ${originalTeacher ? `${originalTeacher.firstName} ${originalTeacher.lastName}` : originalEntry.teacherId} on ${date}`,
+            entityLabel: subTeacherName,
+            description: `Assigned ${subTeacherName} as substitute for ${origTeacherName} on ${date}`,
             metadata: { substituteId: newSubstitute.substituteId, date }
         });
 

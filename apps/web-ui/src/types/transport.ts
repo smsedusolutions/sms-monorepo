@@ -30,6 +30,8 @@ export interface TransportDriver {
   name: string;
   phone: string;
   licenseNumber: string;
+  gender?: "male" | "female" | "other";
+  dateOfBirth?: string;
   profileImage?: string;
 }
 

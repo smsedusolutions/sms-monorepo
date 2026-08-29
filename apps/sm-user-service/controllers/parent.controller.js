@@ -64,6 +64,9 @@ const createParent = async (req, res) => {
       occupation,
       address,
       status,
+      gender,
+      dateOfBirth,
+      dob,
       ...rest
     } = req.body;
 
@@ -141,6 +144,8 @@ const createParent = async (req, res) => {
       occupation,
       address,
       status: status || "active",
+      gender,
+      dateOfBirth: dateOfBirth || dob,
       ...rest,
     });
 
@@ -449,6 +454,11 @@ const updateParentById = async (req, res) => {
     delete updateData.parentId;
     delete updateData.schoolId;
     delete updateData.role;
+
+    if (updateData.dob && !updateData.dateOfBirth) {
+      updateData.dateOfBirth = updateData.dob;
+    }
+    delete updateData.dob;
 
     // SECURITY (GAP-001): If password is being updated, hash it before saving
     if (updateData.password) {

@@ -47,6 +47,13 @@ const userSchema = new mongoose.Schema(
         profileImage: {
             type: String,
         },
+        gender: {
+            type: String,
+            enum: ["male", "female", "other"],
+        },
+        dateOfBirth: {
+            type: Date,
+        },
     },
     {
         timestamps: true,

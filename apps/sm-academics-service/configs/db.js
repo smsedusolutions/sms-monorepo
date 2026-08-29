@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 let cachedConnection = null;
 let reconnecting = false;
 
-const connectDB = async () => {
+const connectDB = async (maxRetries = 5, delayMs = 1500) => {
     // Return cached connection if exists (CRITICAL for serverless)
     if (cachedConnection && mongoose.connection.readyState === 1) {
         console.log("✅ Using cached MongoDB connection");
@@ -14,59 +14,64 @@ const connectDB = async () => {
     // Prevent multiple simultaneous reconnection attempts
     if (reconnecting) {
         console.log("⏳ Reconnection already in progress...");
-        // Wait for ongoing reconnection
         await new Promise(resolve => setTimeout(resolve, 1000));
-        return connectDB();
+        return connectDB(maxRetries, delayMs);
     }
 
-    try {
-        reconnecting = true;
+    reconnecting = true;
 
-        // Serverless-optimized connection options with auto-reconnection
-        const options = {
-            serverSelectionTimeoutMS: 30000,
-            socketTimeoutMS: 90000,
-            maxPoolSize: 25,
-            minPoolSize: 5,
-            maxIdleTimeMS: 30000,
-            retryWrites: true,
-            retryReads: true,
-            autoCreate: true,
-            autoIndex: true,
-        };
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            // Serverless-optimized connection options with auto-reconnection
+            const options = {
+                serverSelectionTimeoutMS: 30000,
+                socketTimeoutMS: 90000,
+                maxPoolSize: 25,
+                minPoolSize: 5,
+                maxIdleTimeMS: 30000,
+                retryWrites: true,
+                retryReads: true,
+                autoCreate: true,
+                autoIndex: true,
+            };
 
-        console.log("🔄 Connecting to MongoDB...");
-        console.log("MONGO_URI exists:", !!process.env.MONGO_URI);
+            console.log(`🔄 Connecting to MongoDB (attempt ${attempt}/${maxRetries})...`);
+            const connection = await mongoose.connect(process.env.MONGO_URI, options);
 
-        const connection = await mongoose.connect(process.env.MONGO_URI, options);
-
-        cachedConnection = connection;
-        reconnecting = false;
-        console.log("✅ MongoDB Connected Successfully");
-
-        // Connection event listeners with auto-reconnection
-        mongoose.connection.on('disconnected', () => {
-            console.log('⚠️  MongoDB disconnected - will auto-reconnect on next request');
-            cachedConnection = null;
-        });
-
-        mongoose.connection.on('error', (err) => {
-            console.error('❌ MongoDB connection error:', err);
-            cachedConnection = null;
+            cachedConnection = connection;
             reconnecting = false;
-        });
+            console.log("✅ MongoDB Connected Successfully");
 
-        mongoose.connection.on('reconnected', () => {
-            console.log('✅ MongoDB reconnected successfully');
-            cachedConnection = mongoose.connection;
-        });
+            // Connection event listeners with auto-reconnection
+            mongoose.connection.on('disconnected', () => {
+                console.log('⚠️  MongoDB disconnected - will auto-reconnect on next request');
+                cachedConnection = null;
+            });
 
-        return connection;
-    } catch (error) {
-        console.error("❌ MongoDB Connection Error:", error.message);
-        cachedConnection = null;
-        reconnecting = false;
-        throw error;
+            mongoose.connection.on('error', (err) => {
+                console.error('❌ MongoDB connection error:', err);
+                cachedConnection = null;
+                reconnecting = false;
+            });
+
+            mongoose.connection.on('reconnected', () => {
+                console.log('✅ MongoDB reconnected successfully');
+                cachedConnection = mongoose.connection;
+            });
+
+            return connection;
+        } catch (error) {
+            console.error(`❌ MongoDB Connection Attempt ${attempt} Failed:`, error.message);
+            cachedConnection = null;
+
+            if (attempt === maxRetries) {
+                reconnecting = false;
+                throw error;
+            }
+
+            console.log(`⏳ Retrying MongoDB connection in ${delayMs / 1000}s...`);
+            await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
     }
 };
 

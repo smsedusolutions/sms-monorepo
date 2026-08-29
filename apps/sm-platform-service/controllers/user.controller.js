@@ -230,6 +230,11 @@ const updateUserById = async (req, res) => {
       updateData.contactNumber = updateData.phone;
     }
 
+    if (updateData.dob && !updateData.dateOfBirth) {
+      updateData.dateOfBirth = updateData.dob;
+    }
+    delete updateData.dob;
+
     const updatedUser = await User.findOneAndUpdate(
       { userId },
       updateData,
