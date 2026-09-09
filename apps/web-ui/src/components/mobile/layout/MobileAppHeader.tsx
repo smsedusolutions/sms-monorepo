@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box, Typography, IconButton, Avatar, Badge,
-  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions,
   Tooltip, Menu, MenuItem, Divider,
 } from '@mui/material';
 import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
@@ -20,7 +19,7 @@ import { useBreadcrumbs } from '../../../hooks/useBreadcrumbs';
 import { useGetUnreadCount } from '../../../queries/Notification';
 import { useTimeSettingsStore } from '../../../stores/timeSettingsStore';
 import TokenService from '../../../queries/token/tokenService';
-import { AppButton } from '../../shared/AppButton';
+import LogoutConfirmDialog from '../../../pages/Sidebar/LogoutConfirmDialog';
 
 interface MobileAppHeaderProps {
   onOpenMore?: () => void;
@@ -447,26 +446,11 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
       </Menu>
 
       {/* Logout Confirmation Dialog */}
-      <Dialog
+      <LogoutConfirmDialog
         open={logoutConfirmOpen}
         onClose={() => setLogoutConfirmOpen(false)}
-        PaperProps={{ sx: { borderRadius: 3, p: 1, maxWidth: 360 } }}
-      >
-        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Confirm Logout</DialogTitle>
-        <DialogContent>
-          <DialogContentText variant="body2" color="text.secondary">
-            Are you sure you want to sign out of your account?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ px: 2, pb: 1.5, gap: 1 }}>
-          <AppButton variant="outlined" color="inherit" onClick={() => setLogoutConfirmOpen(false)}>
-            Cancel
-          </AppButton>
-          <AppButton variant="contained" color="error" onClick={handleLogout}>
-            Logout
-          </AppButton>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleLogout}
+      />
     </>
   );
 };

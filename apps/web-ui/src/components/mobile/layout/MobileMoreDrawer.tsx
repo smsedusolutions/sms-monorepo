@@ -9,10 +9,12 @@ import {
   Divider,
   Button,
   Chip,
+  Collapse,
 } from '@mui/material';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import { useUserStore } from '../../../stores/userStore';
 import { useRoleStore } from '../../../stores/roleStore';
 import { useAuth } from '../../../context/AuthContext';
@@ -37,6 +39,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
   const { getBasePath, getRoleByCode } = useRoleStore();
   const { logout } = useAuth();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
   const activeItemRef = useRef<HTMLDivElement | null>(null);
 
@@ -65,6 +68,39 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
 
   const menuItems = transformMenuData(rawMenus || [], userRole);
 
+  const isPathActive = useCallback(
+    (targetPath?: string): boolean => {
+      if (!targetPath) return false;
+      if (location.pathname === targetPath) return true;
+      if (
+        targetPath !== '/' &&
+        (location.pathname.startsWith(`${targetPath}/`) || location.pathname.startsWith(targetPath))
+      ) {
+        return true;
+      }
+      return false;
+    },
+    [location.pathname]
+  );
+
+  // Auto-expand parent menu if any child subitem is currently active
+  useEffect(() => {
+    if (!menuItems || menuItems.length === 0) return;
+
+    setExpandedMenus((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      menuItems.forEach((item) => {
+        const hasActiveSub = Boolean(item.subItems?.some((sub) => isPathActive(sub.path)));
+        if (hasActiveSub && !next[item.name]) {
+          next[item.name] = true;
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [open, location.pathname, menuItems, isPathActive]);
+
   const scrollToActive = useCallback(() => {
     if (activeItemRef.current) {
       activeItemRef.current.scrollIntoView({
@@ -75,31 +111,38 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
     }
   }, []);
 
-  // Auto scroll to active item when drawer opens
+  // Auto scroll to active item only once when drawer opens
   useEffect(() => {
     if (open) {
-      const timer1 = setTimeout(scrollToActive, 120);
+      const timer1 = setTimeout(scrollToActive, 100);
       const timer2 = setTimeout(scrollToActive, 320);
       return () => {
         clearTimeout(timer1);
         clearTimeout(timer2);
       };
     }
-  }, [open, location.pathname, menuItems, scrollToActive]);
-
-  const isPathActive = (targetPath?: string): boolean => {
-    if (!targetPath) return false;
-    if (location.pathname === targetPath) return true;
-    if (targetPath !== '/' && (location.pathname.startsWith(`${targetPath}/`) || location.pathname.startsWith(targetPath))) {
-      return true;
-    }
-    return false;
-  };
+  }, [open, scrollToActive]);
 
   const handleNavigate = (path?: string) => {
     if (path) {
       navigate(path);
       onClose();
+    }
+  };
+
+  const handleToggleMenu = (menuName: string) => {
+    setExpandedMenus((prev) => ({
+      ...prev,
+      [menuName]: !prev[menuName],
+    }));
+  };
+
+  const handleMainMenuClick = (item: any) => {
+    const hasSubItems = Boolean(item.subItems && item.subItems.length > 0);
+    if (hasSubItems) {
+      handleToggleMenu(item.name);
+    } else {
+      handleNavigate(item.path);
     }
   };
 
@@ -174,8 +217,18 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
           </Box>
         </Box>
 
-        {/* Scrollable Content */}
-        <Box sx={{ flex: 1, overflowY: 'auto', px: 2, pb: 2 }}>
+        {/* Scrollable Content with Smooth Scrolling */}
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: 'auto',
+            px: 2,
+            pb: 2,
+            scrollBehavior: 'smooth',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehaviorY: 'contain',
+          }}
+        >
           {/* User Profile Card */}
           <Box
             onClick={() => handleNavigate(profilePath)}
@@ -191,6 +244,11 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
               border: '1px solid #e2e8f0',
               cursor: 'pointer',
+              transition: 'background-color 0.15s ease, border-color 0.15s ease',
+              '&:hover': {
+                bgcolor: '#fafafa',
+                borderColor: '#cbd5e1',
+              },
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -261,6 +319,8 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
             }}
           >
             {menuItems.map((item, index) => {
+              const hasSubItems = Boolean(item.subItems && item.subItems.length > 0);
+              const isExpanded = Boolean(expandedMenus[item.name]);
               const hasActiveChild = Boolean(item.subItems?.some((sub) => isPathActive(sub.path)));
               const isDirectActive = isPathActive(item.path);
               const isParentOfActive = hasActiveChild;
@@ -269,20 +329,28 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                 <React.Fragment key={item.name + index}>
                   <Box
                     ref={!hasActiveChild && isDirectActive ? activeItemRef : undefined}
-                    onClick={() => handleNavigate(item.path)}
+                    onClick={() => handleMainMenuClick(item)}
                     className="touch-active"
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       px: 2,
-                      py: 1.6,
+                      py: 1.5,
                       bgcolor: isDirectActive
                         ? 'rgba(99, 102, 241, 0.08)'
                         : isParentOfActive
-                          ? 'rgba(99, 102, 241, 0.03)'
-                          : 'transparent',
+                          ? 'rgba(99, 102, 241, 0.04)'
+                          : isExpanded
+                            ? 'rgba(248, 250, 252, 0.9)'
+                            : 'transparent',
                       cursor: 'pointer',
+                      transition: 'background-color 0.15s ease',
+                      '&:hover': {
+                        bgcolor: isDirectActive
+                          ? 'rgba(99, 102, 241, 0.12)'
+                          : 'rgba(99, 102, 241, 0.04)',
+                      },
                       '&:active': { bgcolor: '#f1f5f9' },
                     }}
                   >
@@ -297,6 +365,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                           justifyContent: 'center',
                           bgcolor: (isDirectActive || isParentOfActive) ? '#4f46e5' : 'rgba(241, 245, 249, 1)',
                           color: (isDirectActive || isParentOfActive) ? '#ffffff' : '#475569',
+                          transition: 'background-color 0.2s ease, color 0.2s ease',
                         }}
                       >
                         {item.icon}
@@ -306,51 +375,136 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                           fontWeight: (isDirectActive || isParentOfActive) ? 700 : 600,
                           fontSize: '0.92rem',
                           color: isDirectActive ? '#4f46e5' : '#1e293b',
+                          transition: 'color 0.2s ease',
                         }}
                       >
                         {item.name}
                       </Typography>
                     </Box>
-                    <ChevronRightRoundedIcon sx={{ color: (isDirectActive || isParentOfActive) ? '#4f46e5' : '#cbd5e1', fontSize: 20 }} />
+
+                    {/* Right-side Action / Submenu Indicator */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {hasSubItems && (
+                        <Box
+                          sx={{
+                            px: 0.8,
+                            py: 0.15,
+                            borderRadius: '6px',
+                            bgcolor: isExpanded || isParentOfActive ? 'rgba(99, 102, 241, 0.1)' : '#f1f5f9',
+                            color: isExpanded || isParentOfActive ? '#4f46e5' : '#64748b',
+                            fontSize: '0.7rem',
+                            fontWeight: 700,
+                            lineHeight: 1.2,
+                            letterSpacing: '0.02em',
+                          }}
+                        >
+                          {item.subItems?.length}
+                        </Box>
+                      )}
+
+                      {hasSubItems ? (
+                        <KeyboardArrowDownRoundedIcon
+                          sx={{
+                            color: isExpanded || isParentOfActive ? '#4f46e5' : '#94a3b8',
+                            fontSize: 22,
+                            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                            transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease',
+                          }}
+                        />
+                      ) : (
+                        <ChevronRightRoundedIcon
+                          sx={{
+                            color: isDirectActive ? '#4f46e5' : '#cbd5e1',
+                            fontSize: 20,
+                          }}
+                        />
+                      )}
+                    </Box>
                   </Box>
 
-                  {/* Render SubItems if any */}
-                  {item.subItems && item.subItems.length > 0 && (
-                    <Box sx={{ pl: 6, pr: 2, pb: 1, bgcolor: '#fafafa' }}>
-                      {item.subItems.map((subItem) => {
-                        const isSubSelected = isPathActive(subItem.path);
-                        return (
-                          <Box
-                            key={subItem.name}
-                            ref={isSubSelected ? activeItemRef : undefined}
-                            onClick={() => handleNavigate(subItem.path)}
-                            sx={{
-                              py: 1.1,
-                              px: 1,
-                              my: 0.25,
-                              borderRadius: '8px',
-                              bgcolor: isSubSelected ? 'rgba(99, 102, 241, 0.08)' : 'transparent',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              cursor: 'pointer',
-                              '&:active': { bgcolor: 'rgba(99, 102, 241, 0.14)' },
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontSize: '0.86rem',
-                                fontWeight: isSubSelected ? 700 : 500,
-                                color: isSubSelected ? '#4f46e5' : '#475569',
-                              }}
-                            >
-                              {subItem.name}
-                            </Typography>
-                            <ChevronRightRoundedIcon sx={{ color: isSubSelected ? '#4f46e5' : '#cbd5e1', fontSize: 16 }} />
-                          </Box>
-                        );
-                      })}
-                    </Box>
+                  {/* Collapsible SubItems with Visual Tree Hierarchy */}
+                  {hasSubItems && (
+                    <Collapse in={isExpanded} timeout={250} unmountOnExit={false}>
+                      <Box
+                        sx={{
+                          bgcolor: '#f8fafc',
+                          pt: 0.75,
+                          pb: 1.25,
+                          pr: 2,
+                          pl: 2.5,
+                          borderTop: '1px solid #f1f5f9',
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            borderLeft: '2px solid #e2e8f0',
+                            ml: 2.25,
+                            pl: 1.5,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 0.25,
+                          }}
+                        >
+                          {item.subItems?.map((subItem) => {
+                            const isSubSelected = isPathActive(subItem.path);
+                            return (
+                              <Box
+                                key={subItem.name}
+                                ref={isSubSelected ? activeItemRef : undefined}
+                                onClick={() => handleNavigate(subItem.path)}
+                                className="touch-active"
+                                sx={{
+                                  py: 1,
+                                  px: 1.25,
+                                  borderRadius: '8px',
+                                  bgcolor: isSubSelected ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  cursor: 'pointer',
+                                  transition: 'background-color 0.15s ease',
+                                  '&:hover': {
+                                    bgcolor: isSubSelected
+                                      ? 'rgba(99, 102, 241, 0.14)'
+                                      : 'rgba(99, 102, 241, 0.04)',
+                                  },
+                                  '&:active': { bgcolor: 'rgba(99, 102, 241, 0.18)' },
+                                }}
+                              >
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+                                  <Box
+                                    sx={{
+                                      width: 6,
+                                      height: 6,
+                                      borderRadius: '50%',
+                                      bgcolor: isSubSelected ? '#4f46e5' : '#94a3b8',
+                                      transition: 'background-color 0.15s ease',
+                                    }}
+                                  />
+                                  <Typography
+                                    sx={{
+                                      fontSize: '0.86rem',
+                                      fontWeight: isSubSelected ? 700 : 500,
+                                      color: isSubSelected ? '#4f46e5' : '#475569',
+                                      transition: 'color 0.15s ease',
+                                    }}
+                                  >
+                                    {subItem.name}
+                                  </Typography>
+                                </Box>
+                                <ChevronRightRoundedIcon
+                                  sx={{
+                                    color: isSubSelected ? '#4f46e5' : '#cbd5e1',
+                                    fontSize: 16,
+                                    transition: 'color 0.15s ease',
+                                  }}
+                                />
+                              </Box>
+                            );
+                          })}
+                        </Box>
+                      </Box>
+                    </Collapse>
                   )}
 
                   {index < menuItems.length - 1 && <Divider sx={{ borderColor: '#f1f5f9' }} />}
@@ -375,6 +529,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
               borderColor: '#fecdd3',
               bgcolor: '#fff1f2',
               color: '#e11d48',
+              transition: 'all 0.15s ease',
               '&:hover': { bgcolor: '#ffe4e6', borderColor: '#fda4af' },
             }}
           >

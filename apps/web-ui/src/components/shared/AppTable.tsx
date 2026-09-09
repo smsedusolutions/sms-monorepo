@@ -149,9 +149,47 @@ export const AppTable = <T extends Record<string, any>>({
               (c) => c !== selectCol && c !== actionCol && c !== statusCol
             );
 
-            const titleCol = contentCols[0] || columns[0];
-            const subtitleCol =
-              contentCols.length > 1 && !contentCols[0]?.cell ? contentCols[1] : undefined;
+            const isIdCol = (c: AppTableColumn<T>) => {
+              const nameStr = (c.name || '').toLowerCase().trim();
+              return (
+                nameStr === 'id' ||
+                nameStr === '_id' ||
+                nameStr.endsWith(' id') ||
+                nameStr.endsWith('id') ||
+                nameStr === 'code'
+              );
+            };
+
+            const isNameCol = (c: AppTableColumn<T>) => {
+              const nameStr = (c.name || '').toLowerCase().trim();
+              return (
+                nameStr === 'name' ||
+                nameStr === 'fullname' ||
+                nameStr === 'firstname' ||
+                nameStr === 'lastname' ||
+                nameStr === 'username' ||
+                nameStr === 'title' ||
+                nameStr.includes('name') ||
+                nameStr.includes('title') ||
+                nameStr === 'student' ||
+                nameStr === 'teacher' ||
+                nameStr === 'parent' ||
+                nameStr === 'driver' ||
+                nameStr === 'user'
+              );
+            };
+
+            const nameCol = contentCols.find(isNameCol);
+            const idCol = contentCols.find(isIdCol);
+            const otherCols = contentCols.filter((c) => c !== nameCol && c !== idCol);
+
+            // Prioritize Name column as big primary title over ID
+            const titleCol = nameCol || otherCols[0] || idCol || contentCols[0] || columns[0];
+            const subtitleCol = titleCol === nameCol
+              ? (idCol || otherCols[0])
+              : titleCol === otherCols[0]
+                ? (idCol || otherCols[1])
+                : otherCols[0];
 
             const cardTitle = titleCol?.cell
               ? titleCol.cell(row)

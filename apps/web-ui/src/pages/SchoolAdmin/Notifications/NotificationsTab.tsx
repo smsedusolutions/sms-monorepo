@@ -2,22 +2,14 @@ import React, { useState } from "react";
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Chip,
+  Paper,
   Skeleton,
   Tabs,
   Tab,
   Button,
-  Divider,
   IconButton,
   Pagination,
-  alpha,
-  useTheme,
+  Tooltip,
 } from "@mui/material";
 import {
   Notifications as NotificationsIcon,
@@ -27,15 +19,19 @@ import {
   CheckCircle as CheckCircleIcon,
   Warning as WarningIcon,
   School as SchoolIcon,
-  Delete as DeleteIcon,
-  MarkEmailRead as MarkReadIcon,
+  DeleteOutline as DeleteIcon,
+  MarkEmailReadOutlined as MarkReadIcon,
+  Chat as ChatIcon,
+  Campaign as CampaignIcon,
+  DirectionsBus as TransportIcon,
+  BugReport as BugReportIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import {
   useGetMyNotifications,
   useMarkAsRead,
   useMarkAllAsRead,
-  useDeleteNotification
+  useDeleteNotification,
 } from "../../../queries/Notification";
 import TokenService from "../../../queries/token/tokenService";
 import { useUrlTab } from "../../../hooks/useUrlTab";
@@ -43,38 +39,101 @@ import { useIsMobile } from "../../../hooks/useIsMobile";
 import MobileSegmentedTabs from "../../../components/mobile/navigation/MobileSegmentedTabs";
 import ConfirmationDialog from "../../../components/Dialogs/ConfirmationDialog";
 import PushNotificationBanner from "../../../components/Notification/PushNotificationBanner";
+import PushDiagnosticsDialog from "../../../components/Notification/PushDiagnosticsDialog";
 import type { Notification, NotificationType } from "../../../types";
 
-const getNotificationIcon = (type: NotificationType) => {
+const getNotificationVisuals = (type: NotificationType | string) => {
   switch (type) {
     case "absence_alert":
-      return <WarningIcon color="error" />;
-    case "leave_status":
-      return <CheckCircleIcon color="success" />;
+      return {
+        icon: <WarningIcon sx={{ fontSize: 20, color: "#dc2626" }} />,
+        bg: "#fef2f2",
+        label: "Absence Alert",
+        chipColor: "#dc2626",
+      };
+    case "system_alert":
+      return {
+        icon: <CampaignIcon sx={{ fontSize: 20, color: "#9333ea" }} />,
+        bg: "#faf5ff",
+        label: "School Alert",
+        chipColor: "#9333ea",
+      };
     case "announcement":
-      return <AnnouncementIcon color="primary" />;
+      return {
+        icon: <AnnouncementIcon sx={{ fontSize: 20, color: "#2563eb" }} />,
+        bg: "#eff6ff",
+        label: "Announcement",
+        chipColor: "#2563eb",
+      };
+    case "leave_status":
+      return {
+        icon: <CheckCircleIcon sx={{ fontSize: 20, color: "#16a34a" }} />,
+        bg: "#f0fdf4",
+        label: "Leave Update",
+        chipColor: "#16a34a",
+      };
     case "homework_assigned":
     case "homework_due":
-      return <AssignmentIcon color="warning" />;
+      return {
+        icon: <AssignmentIcon sx={{ fontSize: 20, color: "#d97706" }} />,
+        bg: "#fffbeb",
+        label: "Homework",
+        chipColor: "#d97706",
+      };
     case "exam_scheduled":
-      return <EventNoteIcon color="info" />;
+      return {
+        icon: <EventNoteIcon sx={{ fontSize: 20, color: "#4f46e5" }} />,
+        bg: "#eef2ff",
+        label: "Exam",
+        chipColor: "#4f46e5",
+      };
     case "result_published":
-      return <SchoolIcon color="success" />;
+      return {
+        icon: <SchoolIcon sx={{ fontSize: 20, color: "#0d9488" }} />,
+        bg: "#f0fdfa",
+        label: "Result",
+        chipColor: "#0d9488",
+      };
+    case "chat_invite":
+    case "chat_accepted":
+      return {
+        icon: <ChatIcon sx={{ fontSize: 20, color: "#7c3aed" }} />,
+        bg: "#faf5ff",
+        label: "Chat",
+        chipColor: "#7c3aed",
+      };
+    case "bus_departed":
+    case "child_picked":
+    case "child_dropped":
+    case "bus_reached_school":
+    case "bus_delayed":
+    case "transport_update":
+      return {
+        icon: <TransportIcon sx={{ fontSize: 20, color: "#ea580c" }} />,
+        bg: "#fff7ed",
+        label: "Transport",
+        chipColor: "#ea580c",
+      };
     default:
-      return <NotificationsIcon color="action" />;
+      return {
+        icon: <NotificationsIcon sx={{ fontSize: 20, color: "#64748b" }} />,
+        bg: "#f8fafc",
+        label: (type || "Notice").replace(/_/g, " "),
+        chipColor: "#64748b",
+      };
   }
 };
 
 const NotificationsTab: React.FC = () => {
-  const theme = useTheme();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const schoolId = TokenService.getSchoolId() || "";
 
-  const [tabValue, setTabValue] = useUrlTab(0, ['all', 'read', 'unread'], 'filter');
+  const [tabValue, setTabValue] = useUrlTab(0, ["all", "read", "unread"], "filter");
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const limit = 10;
+  const [diagOpen, setDiagOpen] = useState(false);
+  const limit = 20;
 
   const isReadFilter = tabValue === 1 ? true : tabValue === 2 ? false : undefined;
 
@@ -109,21 +168,25 @@ const NotificationsTab: React.FC = () => {
       markAsRead.mutate(notification.notificationId);
     }
 
-    let path = "";
     const prefix = "/school-admin";
 
     switch (notification.type) {
+      case "absence_alert":
+        navigate(`${prefix}/attendance`);
+        break;
       case "announcement":
-        path = `${prefix}/announcements`;
+        navigate(`${prefix}/announcements`);
         break;
       case "leave_status":
-        path = `${prefix}/leaverequest`;
+        navigate(`${prefix}/leaverequest`);
+        break;
+      case "chat_invite":
+      case "chat_accepted":
+        navigate(`${prefix}/chat`);
         break;
       default:
-        return;
+        break;
     }
-
-    if (path) navigate(path);
   };
 
   const formatTime = (dateString?: string) => {
@@ -143,188 +206,347 @@ const NotificationsTab: React.FC = () => {
       {/* Push Notification Opt-in / Status Card */}
       <PushNotificationBanner />
 
-      <Box sx={{
-        display: "flex",
-        flexDirection: { xs: "column", sm: "row" },
-        justifyContent: "space-between",
-        alignItems: { xs: "stretch", sm: "center" },
-        mb: 3,
-        gap: 2
-      }}>
+      {/* Push Diagnostics and Test Dialog */}
+      <PushDiagnosticsDialog open={diagOpen} onClose={() => setDiagOpen(false)} />
+
+      {/* Filter Tabs & Header Actions */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+          alignItems: { xs: "stretch", sm: "center" },
+          mb: 2.5,
+          gap: 2,
+        }}
+      >
         {isMobile ? (
-          <MobileSegmentedTabs
-            options={[
-              { id: 'all', label: 'All Alerts' },
-              { id: 'read', label: 'Read' },
-              { id: 'unread', label: 'Unread' },
-            ]}
-            activeId={tabValue === 0 ? 'all' : tabValue === 1 ? 'read' : 'unread'}
-            onChange={(id) => {
-              const idx = id === 'all' ? 0 : id === 'read' ? 1 : 2;
-              setTabValue(idx);
-              setPage(1);
-            }}
-          />
+          <Box sx={{ width: "100%" }}>
+            <MobileSegmentedTabs
+              options={[
+                { id: "all", label: "All" },
+                { id: "read", label: "Read" },
+                { id: "unread", label: "Unread" },
+              ]}
+              activeId={tabValue === 0 ? "all" : tabValue === 1 ? "read" : "unread"}
+              onChange={(id) => {
+                const idx = id === "all" ? 0 : id === "read" ? 1 : 2;
+                setTabValue(idx);
+                setPage(1);
+              }}
+            />
+          </Box>
         ) : (
           <Tabs
             value={tabValue}
-            onChange={(_, v) => { setTabValue(v); setPage(1); }}
+            onChange={(_, v) => {
+              setTabValue(v);
+              setPage(1);
+            }}
             sx={{
+              minHeight: 40,
               "& .MuiTab-root": {
                 fontWeight: 600,
                 textTransform: "none",
-                minWidth: 100,
-              }
+                minWidth: 80,
+                fontSize: "0.875rem",
+                minHeight: 40,
+                py: 0.5,
+              },
             }}
           >
-            <Tab label="All Alerts" />
+            <Tab label="All" />
             <Tab label="Read" />
             <Tab label="Unread" />
           </Tabs>
         )}
 
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<MarkReadIcon />}
-          onClick={() => markAllAsRead.mutate()}
-          disabled={markAllAsRead.isPending || notifications.length === 0}
-          sx={{
-            borderRadius: 2.5,
-            height: 42,
-            px: 2.5,
-            fontWeight: 700,
-            whiteSpace: "nowrap",
-            alignSelf: { xs: "stretch", sm: "auto" }
-          }}
-        >
-          Mark All Read
-        </Button>
+        <Box sx={{ display: "flex", gap: 1, alignItems: "center", flexWrap: "wrap" }}>
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<BugReportIcon />}
+            onClick={() => setDiagOpen(true)}
+            size="small"
+            sx={{
+              borderRadius: 2,
+              height: 36,
+              px: 1.5,
+              fontWeight: 600,
+              fontSize: "0.8rem",
+              whiteSpace: "nowrap",
+              textTransform: "none",
+              flex: { xs: 1, sm: "none" },
+            }}
+          >
+            Push Diagnostics
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<MarkReadIcon />}
+            onClick={() => markAllAsRead.mutate()}
+            disabled={markAllAsRead.isPending || notifications.length === 0}
+            size="small"
+            sx={{
+              borderRadius: 2,
+              height: 36,
+              px: 2,
+              fontWeight: 600,
+              fontSize: "0.825rem",
+              whiteSpace: "nowrap",
+              textTransform: "none",
+              flex: { xs: 1, sm: "none" },
+            }}
+          >
+            Mark All Read
+          </Button>
+        </Box>
       </Box>
 
-      <Card sx={{ borderRadius: 2, boxShadow: theme.shadows[1], overflow: "hidden" }}>
+      {/* Notification Cards List */}
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         {isLoading ? (
-          <CardContent>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Box key={i} sx={{ display: "flex", gap: 2, mb: 3 }}>
-                <Skeleton variant="circular" width={44} height={44} />
+          [1, 2, 3, 4, 5].map((i) => (
+            <Paper
+              key={i}
+              elevation={0}
+              sx={{ p: 1.75, borderRadius: 2, border: "1px solid #e2e8f0" }}
+            >
+              <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+                <Skeleton
+                  variant="rounded"
+                  width={36}
+                  height={36}
+                  sx={{ borderRadius: 1.5 }}
+                />
                 <Box sx={{ flex: 1 }}>
-                  <Skeleton variant="text" width="40%" height={24} />
-                  <Skeleton variant="text" width="70%" />
+                  <Skeleton variant="text" width="40%" height={20} />
+                  <Skeleton variant="text" width="80%" height={18} />
+                  <Skeleton variant="text" width="20%" height={14} />
                 </Box>
               </Box>
-            ))}
-          </CardContent>
+            </Paper>
+          ))
         ) : notifications.length === 0 ? (
-          <CardContent sx={{ textAlign: "center", py: 10 }}>
-            <Box sx={{
-              width: 80, height: 80, borderRadius: "50%",
-              bgcolor: alpha(theme.palette.primary.main, 0.05),
-              display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto", mb: 2
-            }}>
-              <NotificationsIcon sx={{ fontSize: 40, color: "text.disabled" }} />
-            </Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: "text.primary" }}>
-              All Caught Up!
+          <Paper
+            elevation={0}
+            sx={{
+              textAlign: "center",
+              py: 6,
+              px: 2,
+              borderRadius: 2,
+              border: "1px solid #e2e8f0",
+              bgcolor: "#ffffff",
+            }}
+          >
+            <NotificationsIcon sx={{ fontSize: 36, color: "#94a3b8", mb: 1 }} />
+            <Typography variant="subtitle1" fontWeight={600} color="#1e293b">
+              No notifications found
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              No system notifications to display at this time.
+              You're all caught up!
             </Typography>
-          </CardContent>
+          </Paper>
         ) : (
-          <List disablePadding>
-            {notifications.map((notification: Notification, index: number) => (
-              <React.Fragment key={notification.notificationId}>
-                <ListItem
-                  sx={{
-                    px: 3, py: 2.5,
-                    bgcolor: notification.isRead ? "transparent" : alpha(theme.palette.primary.main, 0.02),
-                    cursor: "pointer",
-                    transition: "all 0.2s",
-                    "&:hover": { bgcolor: alpha(theme.palette.action.hover, 0.4) },
-                    borderLeft: notification.isRead ? "4px solid transparent" : `4px solid ${theme.palette.primary.main}`,
-                  }}
-                  onClick={() => handleNotificationClick(notification)}
-                  secondaryAction={
-                    <Box sx={{ display: "flex", gap: 1 }}>
-                      {!notification.isRead && (
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleMarkRead(notification.notificationId);
-                          }}
-                          disabled={markAsRead.isPending}
-                        >
-                          <MarkReadIcon fontSize="small" />
-                        </IconButton>
-                      )}
-                      <IconButton
-                        size="small"
-                        color="error"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteId(notification.notificationId);
+          notifications.map((notification: Notification) => {
+            const visual = getNotificationVisuals(notification.type);
+            const isUnread = !notification.isRead;
+
+            return (
+              <Paper
+                key={notification.notificationId}
+                elevation={0}
+                onClick={() => handleNotificationClick(notification)}
+                sx={{
+                  p: { xs: 1.5, sm: 1.75 },
+                  borderRadius: 2,
+                  cursor: "pointer",
+                  bgcolor: isUnread ? "#f8faff" : "#ffffff",
+                  border: "1px solid",
+                  borderColor: isUnread ? "#bfdbfe" : "#e2e8f0",
+                  transition:
+                    "background-color 0.15s ease, border-color 0.15s ease",
+                  "&:hover": {
+                    bgcolor: isUnread ? "#f1f5f9" : "#f8fafc",
+                    borderColor: "#cbd5e1",
+                  },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
+                  {/* Icon */}
+                  <Box
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.5,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      bgcolor: visual.bg,
+                    }}
+                  >
+                    {visual.icon}
+                  </Box>
+
+                  {/* Content Body */}
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    {/* Header Row: Title & Category */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1,
+                        mb: 0.25,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.75,
+                          minWidth: 0,
+                          flex: 1,
                         }}
-                        disabled={deleteNotification.isPending}
                       >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  }
-                >
-                  <ListItemIcon sx={{ minWidth: 56 }}>
-                    <Box sx={{
-                      width: 44, height: 44, borderRadius: "12px",
-                      bgcolor: alpha(theme.palette.background.default, 0.8),
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.05)"
-                    }}>
-                      {getNotificationIcon(notification.type)}
-                    </Box>
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 0.5 }}>
-                        <Typography sx={{ fontWeight: notification.isRead ? 600 : 700, fontSize: "1rem" }}>
+                        {isUnread && (
+                          <Box
+                            sx={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: "50%",
+                              bgcolor: "#2563eb",
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
+                        <Typography
+                          noWrap
+                          sx={{
+                            fontWeight: isUnread ? 700 : 500,
+                            fontSize: { xs: "0.88rem", sm: "0.94rem" },
+                            color: isUnread ? "#0f172a" : "#475569",
+                          }}
+                        >
                           {notification.title}
                         </Typography>
-                        <Chip
-                          size="small"
-                          label={notification.type.replace("_", " ")}
-                          variant="outlined"
-                          sx={{
-                            height: 20, fontSize: "0.65rem", fontWeight: 800,
-                            textTransform: "uppercase",
-                            borderColor: alpha(theme.palette.divider, 0.1),
-                            bgcolor: alpha(theme.palette.background.paper, 0.5)
-                          }}
-                        />
                       </Box>
-                    }
-                    secondary={
-                      <Box>
-                        <Typography variant="body2" sx={{ color: "text.secondary", mb: 0.5, lineHeight: 1.5 }}>
-                          {notification.message}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: "text.disabled", fontWeight: 500 }}>
-                          {formatTime(notification.createdAt)}
-                        </Typography>
-                      </Box>
-                    }
-                  />
-                </ListItem>
-                {index < notifications.length - 1 && <Divider sx={{ mx: 3, opacity: 0.5 }} />}
-              </React.Fragment>
-            ))}
-          </List>
-        )}
-      </Card>
 
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          fontSize: "0.7rem",
+                          fontWeight: 600,
+                          color: visual.chipColor,
+                          bgcolor: visual.bg,
+                          px: 0.85,
+                          py: 0.2,
+                          borderRadius: 1,
+                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                        }}
+                      >
+                        {visual.label}
+                      </Typography>
+                    </Box>
+
+                    {/* Message Description */}
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: isUnread ? "#334155" : "#64748b",
+                        fontSize: "0.825rem",
+                        lineHeight: 1.4,
+                        mb: 0.75,
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {notification.message}
+                    </Typography>
+
+                    {/* Footer Row: Timestamp & Actions */}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1,
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        sx={{ fontSize: "0.725rem", color: "#94a3b8" }}
+                      >
+                        {formatTime(notification.createdAt)}
+                      </Typography>
+
+                      {/* Action Buttons */}
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 0.25 }}
+                      >
+                        {isUnread && (
+                          <Tooltip title="Mark as read">
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMarkRead(notification.notificationId);
+                              }}
+                              disabled={markAsRead.isPending}
+                              sx={{
+                                color: "#64748b",
+                                p: 0.5,
+                                "&:hover": { color: "#2563eb" },
+                              }}
+                            >
+                              <MarkReadIcon sx={{ fontSize: 17 }} />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+
+                        <Tooltip title="Delete">
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteId(notification.notificationId);
+                            }}
+                            disabled={deleteNotification.isPending}
+                            sx={{
+                              color: "#94a3b8",
+                              p: 0.5,
+                              "&:hover": { color: "#ef4444" },
+                            }}
+                          >
+                            <DeleteIcon sx={{ fontSize: 17 }} />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </Box>
+                  </Box>
+                </Box>
+              </Paper>
+            );
+          })
+        )}
+      </Box>
+
+      {/* Pagination Controls */}
       {pagination && ((pagination.pages || (pagination as any).totalPages || 1) > 1) && (
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", mt: 3, mb: 1, pb: { xs: 8, sm: 2 }, gap: 0.75 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            mt: 3,
+            mb: 1,
+            pb: { xs: 8, sm: 2 },
+            gap: 0.5,
+          }}
+        >
           <Pagination
             count={pagination.pages || (pagination as any).totalPages || 1}
             page={page}
@@ -340,17 +562,22 @@ const NotificationsTab: React.FC = () => {
                 justifyContent: "center",
               },
               "& .MuiPaginationItem-root": {
-                minWidth: 30,
-                height: 30,
-                fontSize: "0.78rem",
+                minWidth: 28,
+                height: 28,
+                fontSize: "0.75rem",
                 fontWeight: 600,
                 margin: "0 2px",
-                borderRadius: "8px",
-              }
+                borderRadius: "6px",
+              },
             }}
           />
-          <Typography variant="caption" color="text.secondary" sx={{ fontSize: "0.75rem", fontWeight: 500 }}>
-            Page {page} of {pagination.pages || (pagination as any).totalPages || 1} ({pagination.total || 0} total)
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ fontSize: "0.72rem" }}
+          >
+            Page {page} of {pagination.pages || (pagination as any).totalPages || 1} (
+            {pagination.total || 0} total)
           </Typography>
         </Box>
       )}
