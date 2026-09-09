@@ -958,6 +958,29 @@ export interface UpdateAnnouncementPayload {
 // ==========================================
 export type HomeworkStatus = "active" | "completed" | "cancelled";
 
+export type SubmissionStatus =
+  | "submitted"
+  | "late"
+  | "reviewed"
+  | "accepted"
+  | "changes_requested"
+  | "rejected"
+  | "not_submitted";
+
+export interface HomeworkSubmission {
+  studentId: string;
+  submittedAt: string;
+  content?: string;
+  attachmentUrl?: string;
+  attachmentFileName?: string;
+  status: SubmissionStatus;
+  teacherRemarks?: string;
+  marksAwarded?: number;
+  maxMarks?: number;
+  reviewedAt?: string;
+  reviewedBy?: string;
+}
+
 export interface Homework {
   homeworkId: string;
   schoolId: string;
@@ -973,6 +996,7 @@ export interface Homework {
   assignedDate: string;
   dueDate: string;
   status: HomeworkStatus;
+  submissions?: HomeworkSubmission[];
   // Enriched fields
   subjectName?: string;
   teacherName?: string;
@@ -980,6 +1004,30 @@ export interface Homework {
   isOverdue?: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface StudentSubmissionItem {
+  studentId: string;
+  studentName: string;
+  rollNumber?: string;
+  profilePhoto?: string;
+  submission: HomeworkSubmission | null;
+  submissionStatus: SubmissionStatus;
+}
+
+export interface HomeworkSubmissionsData {
+  homework: Homework;
+  submissions: StudentSubmissionItem[];
+  summary: {
+    total: number;
+    submitted: number;
+    late: number;
+    reviewed: number;
+    accepted: number;
+    changes_requested: number;
+    rejected: number;
+    notSubmitted: number;
+  };
 }
 
 export interface CreateHomeworkPayload {

@@ -57,11 +57,11 @@ router.get(
 // SUBMISSION ROUTES
 // ==========================================
 
-// Student submits homework
+// Student or Parent submits homework
 router.post(
     '/:homeworkId/submit',
     Authenticated,
-    authorizeRoles('student'),
+    authorizeRoles('student', 'parent'),
     submitHomework
 );
 

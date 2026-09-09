@@ -24,10 +24,15 @@ import {
     Warning as WarningIcon,
     Search as SearchIcon,
     CheckCircle as DoneIcon,
+    CheckCircle as CheckCircleIcon,
     Badge as BadgeIcon,
     Person as PersonIcon,
     School as SchoolIcon,
     ArrowForward as ArrowForwardIcon,
+    UploadFile as UploadFileIcon,
+    EditNote as ChangesIcon,
+    Cancel as CancelIcon,
+    RateReview as ReviewIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useChildSelector } from '../../context/ChildSelectorContext';
@@ -35,6 +40,7 @@ import { useGetHomeworkByStudent } from '../../queries/Homework';
 import TokenService from '../../queries/token/tokenService';
 import { useUrlTab } from '../../hooks/useUrlTab';
 import type { Homework } from '../../types';
+import SubmitHomework from '../Student/Homework/SubmitHomework';
 
 const ParentHomework: React.FC = () => {
     const navigate = useNavigate();
@@ -42,6 +48,7 @@ const ParentHomework: React.FC = () => {
     const { selectedChild, setSelectedChild, children: contextChildren, isLoading: loadingChild } = useChildSelector();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedTab, setSelectedTab] = useUrlTab(0, ['all', 'active', 'overdue']); // 0: All, 1: Pending, 2: Overdue
+    const [selectedHwForSubmit, setSelectedHwForSubmit] = useState<Homework | null>(null);
 
     const { data, isLoading, error } = useGetHomeworkByStudent(
         schoolId,
@@ -70,8 +77,9 @@ const ParentHomework: React.FC = () => {
     const filteredHomework = useMemo(() => {
         return homeworkList.filter(hw => {
             const overdue = isOverdue(hw.dueDate);
-            if (selectedTab === 1 && overdue) return false;
-            if (selectedTab === 2 && !overdue) return false;
+            const isCompleted = hw.status === 'completed';
+            if (selectedTab === 1 && (overdue || isCompleted)) return false;
+            if (selectedTab === 2 && (!overdue || isCompleted)) return false;
 
             if (searchQuery.trim()) {
                 const q = searchQuery.toLowerCase();
@@ -130,7 +138,7 @@ const ParentHomework: React.FC = () => {
                             Homework & Assignments
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            Track homework tasks for {selectedChild.firstName} {selectedChild.lastName} ({selectedChild.className ? `Grade ${selectedChild.className}-${selectedChild.sectionName}` : 'Class'})
+                            Track and submit homework tasks for {selectedChild.firstName} {selectedChild.lastName} ({selectedChild.className ? `Grade ${selectedChild.className}-${selectedChild.sectionName}` : 'Class'})
                         </Typography>
                     </Box>
                 </Box>
@@ -344,7 +352,13 @@ const ParentHomework: React.FC = () => {
             ) : (
                 <Grid container spacing={3}>
                     {filteredHomework.map((hw: Homework) => {
+                        const childSubmission = hw.submissions?.find((s) => s.studentId === selectedChild?.studentId);
+                        const isSubmitted = !!childSubmission;
                         const overdue = isOverdue(hw.dueDate);
+                        const isChangesRequested = childSubmission?.status === 'changes_requested';
+                        const isAccepted = childSubmission?.status === 'accepted';
+                        const isRejected = childSubmission?.status === 'rejected';
+
                         return (
                             <Grid size={{ xs: 12, md: 6 }} key={hw.homeworkId}>
                                 <Card
@@ -353,9 +367,17 @@ const ParentHomework: React.FC = () => {
                                         height: '100%',
                                         borderRadius: 4,
                                         border: '1px solid',
-                                        borderColor: overdue ? '#fca5a5' : '#e2e8f0',
+                                        borderColor: isChangesRequested
+                                            ? '#fdba74'
+                                            : isAccepted
+                                            ? '#86efac'
+                                            : overdue && !isSubmitted
+                                            ? '#fca5a5'
+                                            : '#e2e8f0',
                                         bgcolor: '#ffffff',
-                                        boxShadow: overdue
+                                        boxShadow: isChangesRequested
+                                            ? '0 6px 20px -6px rgba(249, 115, 22, 0.15)'
+                                            : overdue && !isSubmitted
                                             ? '0 6px 20px -6px rgba(239, 68, 68, 0.15)'
                                             : '0 4px 16px rgba(0,0,0,0.04)',
                                         transition: 'all 0.2s ease',
@@ -367,41 +389,64 @@ const ParentHomework: React.FC = () => {
                                             <Typography variant="h6" fontWeight={800} color="#1e293b">
                                                 {hw.title}
                                             </Typography>
-                                            {overdue ? (
+                                            <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                                {isAccepted ? (
+                                                    <Chip size="small" icon={<CheckCircleIcon sx={{ fontSize: '14px !important' }} />} label="Accepted" color="success" sx={{ fontWeight: 700, height: 24 }} />
+                                                ) : isChangesRequested ? (
+                                                    <Chip size="small" icon={<ChangesIcon sx={{ fontSize: '14px !important' }} />} label="Changes Needed" color="warning" sx={{ fontWeight: 700, height: 24 }} />
+                                                ) : isRejected ? (
+                                                    <Chip size="small" icon={<CancelIcon sx={{ fontSize: '14px !important' }} />} label="Rejected" color="error" sx={{ fontWeight: 700, height: 24 }} />
+                                                ) : isSubmitted ? (
+                                                    <Chip size="small" label={childSubmission?.status === 'late' ? 'Submitted Late' : 'Submitted'} color="info" sx={{ fontWeight: 700, height: 24 }} />
+                                                ) : hw.status === 'completed' ? (
+                                                    <Chip size="small" icon={<CheckCircleIcon sx={{ fontSize: '14px !important' }} />} label="Closed" color="default" sx={{ fontWeight: 700, height: 24 }} />
+                                                ) : overdue ? (
+                                                    <Chip
+                                                        size="small"
+                                                        icon={<WarningIcon sx={{ fontSize: '14px !important' }} />}
+                                                        label="Overdue"
+                                                        color="error"
+                                                        sx={{ fontWeight: 700, height: 24 }}
+                                                    />
+                                                ) : (
+                                                    <Chip
+                                                        size="small"
+                                                        label="Active"
+                                                        color="success"
+                                                        sx={{ fontWeight: 700, height: 24 }}
+                                                    />
+                                                )}
+                                            </Box>
+                                        </Box>
+
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                                            <Chip
+                                                size="small"
+                                                label={hw.subjectName || hw.subjectId}
+                                                sx={{
+                                                    fontWeight: 700,
+                                                    bgcolor: '#eff6ff',
+                                                    color: '#2563eb',
+                                                    border: '1px solid #bfdbfe'
+                                                }}
+                                            />
+                                            {childSubmission?.marksAwarded !== undefined && (
                                                 <Chip
                                                     size="small"
-                                                    icon={<WarningIcon sx={{ fontSize: '14px !important' }} />}
-                                                    label="Overdue"
-                                                    color="error"
-                                                    sx={{ fontWeight: 700, height: 24 }}
-                                                />
-                                            ) : (
-                                                <Chip
-                                                    size="small"
-                                                    label="Active"
-                                                    color="success"
+                                                    icon={<ReviewIcon sx={{ fontSize: '14px !important' }} />}
+                                                    label={`Score: ${childSubmission.marksAwarded}${childSubmission.maxMarks ? `/${childSubmission.maxMarks}` : ''}`}
+                                                    color={isAccepted ? 'success' : 'primary'}
+                                                    variant="outlined"
                                                     sx={{ fontWeight: 700, height: 24 }}
                                                 />
                                             )}
                                         </Box>
 
-                                        <Chip
-                                            size="small"
-                                            label={hw.subjectName || hw.subjectId}
-                                            sx={{
-                                                mb: 2,
-                                                fontWeight: 700,
-                                                bgcolor: '#eff6ff',
-                                                color: '#2563eb',
-                                                border: '1px solid #bfdbfe'
-                                            }}
-                                        />
-
                                         <Typography
                                             variant="body2"
                                             color="#475569"
                                             sx={{
-                                                mb: 2.5,
+                                                mb: 2,
                                                 lineHeight: 1.6,
                                                 display: '-webkit-box',
                                                 WebkitLineClamp: 3,
@@ -412,26 +457,73 @@ const ParentHomework: React.FC = () => {
                                             {hw.description}
                                         </Typography>
 
+                                        {/* Changes Requested Banner */}
+                                        {isChangesRequested && (
+                                            <Alert severity="warning" icon={<ChangesIcon fontSize="small" />} sx={{ mb: 2, py: 0.5, borderRadius: 2 }}>
+                                                <Typography variant="caption" fontWeight={700} display="block">
+                                                    Teacher Requested Changes:
+                                                </Typography>
+                                                <Typography variant="caption" sx={{ color: '#9a3412' }}>
+                                                    {childSubmission?.teacherRemarks || 'Please update the submission as requested by the teacher.'}
+                                                </Typography>
+                                            </Alert>
+                                        )}
+
+                                        {/* Teacher Remarks */}
+                                        {childSubmission?.teacherRemarks && !isChangesRequested && (
+                                            <Box sx={{ p: 1.25, bgcolor: '#f8fafc', borderRadius: 1.5, border: '1px solid #e2e8f0', mb: 2 }}>
+                                                <Typography variant="caption" color="text.secondary" fontWeight={700} display="block">
+                                                    Teacher Feedback:
+                                                </Typography>
+                                                <Typography variant="caption" color="#334155">
+                                                    {childSubmission.teacherRemarks}
+                                                </Typography>
+                                            </Box>
+                                        )}
+
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1, pt: 1.5, borderTop: '1px solid #f1f5f9' }}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <CalendarIcon fontSize="small" sx={{ color: overdue ? '#ef4444' : '#64748b' }} />
-                                                <Typography variant="caption" fontWeight={700} color={overdue ? 'error.main' : 'text.secondary'}>
+                                                <CalendarIcon fontSize="small" sx={{ color: overdue && !isSubmitted ? '#ef4444' : '#64748b' }} />
+                                                <Typography variant="caption" fontWeight={700} color={overdue && !isSubmitted ? 'error.main' : 'text.secondary'}>
                                                     Due: {formatDate(hw.dueDate)}
                                                 </Typography>
                                             </Box>
 
-                                            {hw.attachmentUrl && (
+                                            <Stack direction="row" spacing={1} alignItems="center">
+                                                {hw.attachmentUrl && (
+                                                    <Button
+                                                        size="small"
+                                                        variant="outlined"
+                                                        startIcon={<AttachFileIcon />}
+                                                        href={hw.attachmentUrl}
+                                                        target="_blank"
+                                                        sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700, fontSize: '0.8rem' }}
+                                                    >
+                                                        Attachment
+                                                    </Button>
+                                                )}
+
                                                 <Button
                                                     size="small"
-                                                    variant="outlined"
-                                                    startIcon={<AttachFileIcon />}
-                                                    href={hw.attachmentUrl}
-                                                    target="_blank"
-                                                    sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 700 }}
+                                                    variant={isChangesRequested ? 'contained' : isSubmitted ? 'outlined' : 'contained'}
+                                                    color={isChangesRequested ? 'warning' : 'primary'}
+                                                    startIcon={isSubmitted ? <CheckCircleIcon /> : <UploadFileIcon />}
+                                                    onClick={() => setSelectedHwForSubmit(hw)}
+                                                    sx={{
+                                                        borderRadius: 2,
+                                                        textTransform: 'none',
+                                                        fontWeight: 700,
+                                                        fontSize: '0.8rem',
+                                                        px: 1.5,
+                                                    }}
                                                 >
-                                                    Attachment
+                                                    {isChangesRequested
+                                                        ? 'Resubmit for Child'
+                                                        : isSubmitted
+                                                        ? 'View Submission'
+                                                        : 'Submit Homework'}
                                                 </Button>
-                                            )}
+                                            </Stack>
                                         </Box>
 
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
@@ -449,8 +541,19 @@ const ParentHomework: React.FC = () => {
                     })}
                 </Grid>
             )}
+
+            {/* Submit Homework Dialog for Selected Child */}
+            {selectedHwForSubmit && selectedChild && (
+                <SubmitHomework
+                    homework={selectedHwForSubmit}
+                    studentId={selectedChild.studentId}
+                    studentName={`${selectedChild.firstName} ${selectedChild.lastName}`}
+                    onClose={() => setSelectedHwForSubmit(null)}
+                />
+            )}
         </Box>
     );
 };
 
 export default ParentHomework;
+

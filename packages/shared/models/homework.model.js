@@ -70,7 +70,7 @@ const HomeworkSchema = new Schema({
         attachmentFileName: { type: String },
         status: {
             type: String,
-            enum: ['submitted', 'late', 'reviewed'],
+            enum: ['submitted', 'late', 'reviewed', 'accepted', 'changes_requested', 'rejected'],
             default: 'submitted'
         },
         teacherRemarks: { type: String },

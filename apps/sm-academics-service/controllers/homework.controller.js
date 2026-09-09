@@ -639,17 +639,21 @@ const deleteHomework = async (req, res) => {
 };
 
 // ==========================================
-// SUBMIT HOMEWORK (Student)
+// SUBMIT HOMEWORK (Student or Parent)
 // POST /api/academics/school/:schoolId/homework/:homeworkId/submit
 // ==========================================
 const submitHomework = async (req, res) => {
     try {
         const { schoolId, homeworkId } = req.params;
-        const { content, attachmentUrl, attachmentFileName } = req.body;
-        const studentId = req.user?.studentId || req.user?.userId;
+        const { content, attachmentUrl, attachmentFileName, studentId: requestedStudentId } = req.body;
+        
+        let studentId = requestedStudentId;
+        if (!studentId) {
+            studentId = req.user?.studentId || req.user?.userId;
+        }
 
         if (!studentId) {
-            return res.status(401).json({ success: false, message: 'Student identity required' });
+            return res.status(400).json({ success: false, message: 'Student ID is required' });
         }
 
         const schoolDbName = await getSchoolDbName(schoolId);
@@ -661,29 +665,32 @@ const submitHomework = async (req, res) => {
             return res.status(400).json({ success: false, message: 'This homework has been cancelled' });
         }
 
+        const isLate = new Date() > new Date(homework.dueDate);
+        const newStatus = isLate ? 'late' : 'submitted';
+
         // Check if already submitted
         const existing = homework.submissions.find(s => s.studentId === studentId);
         if (existing) {
             // Update existing submission
-            existing.content = content || existing.content;
-            existing.attachmentUrl = attachmentUrl || existing.attachmentUrl;
-            existing.attachmentFileName = attachmentFileName || existing.attachmentFileName;
+            existing.content = content !== undefined ? content : existing.content;
+            existing.attachmentUrl = attachmentUrl !== undefined ? attachmentUrl : existing.attachmentUrl;
+            existing.attachmentFileName = attachmentFileName !== undefined ? attachmentFileName : existing.attachmentFileName;
             existing.submittedAt = new Date();
-            existing.status = new Date() > new Date(homework.dueDate) ? 'late' : 'submitted';
+            existing.status = newStatus;
         } else {
-            const isLate = new Date() > new Date(homework.dueDate);
             homework.submissions.push({
                 studentId,
                 content,
                 attachmentUrl,
                 attachmentFileName,
-                status: isLate ? 'late' : 'submitted',
+                status: newStatus,
                 submittedAt: new Date()
             });
         }
 
         await homework.save();
-        res.status(200).json({ success: true, message: 'Homework submitted successfully', data: homework.submissions.find(s => s.studentId === studentId) });
+        const updatedSubmission = homework.submissions.find(s => s.studentId === studentId);
+        res.status(200).json({ success: true, message: 'Homework submitted successfully', data: updatedSubmission });
     } catch (error) {
         console.error('Submit Homework Error:', error);
         res.status(500).json({ success: false, message: error.message });
@@ -704,33 +711,105 @@ const getHomeworkSubmissions = async (req, res) => {
         const homework = await Homework.findOne({ schoolId, homeworkId }).lean();
         if (!homework) return res.status(404).json({ success: false, message: 'Homework not found' });
 
-        // Get all students in this class to build full submission status (not just submitted ones)
-        const students = await Student.find({
+        // Query students belonging to this class/section
+        const classFilter = {
             schoolId,
-            classId: homework.classId,
-            ...(homework.sectionId ? { sectionId: homework.sectionId } : {}),
-            status: 'active'
-        }, 'studentId firstName lastName rollNumber profilePhoto').lean();
+            status: 'active',
+            $or: [
+                { class: homework.classId },
+                { classId: homework.classId }
+            ]
+        };
+
+        if (homework.sectionId) {
+            classFilter.$and = [
+                {
+                    $or: [
+                        { section: homework.sectionId },
+                        { sectionId: homework.sectionId },
+                        { section: null },
+                        { section: '' }
+                    ]
+                }
+            ];
+        }
+
+        let students = await Student.find(classFilter, 'studentId firstName lastName rollNumber profilePhoto').lean();
+
+        // Ensure all students who actually submitted are included even if class/section filtering differed
+        const foundStudentIds = new Set(students.map(s => s.studentId));
+        const submissionStudentIds = (homework.submissions || [])
+            .map(s => s.studentId)
+            .filter(id => id && !foundStudentIds.has(id));
+
+        if (submissionStudentIds.length > 0) {
+            const extraStudents = await Student.find({
+                schoolId,
+                studentId: { $in: submissionStudentIds }
+            }, 'studentId firstName lastName rollNumber profilePhoto').lean();
+
+            students = [...students, ...extraStudents];
+            extraStudents.forEach(s => foundStudentIds.add(s.studentId));
+
+            // Fallback for any submitted studentId not found in Student collection
+            (homework.submissions || []).forEach(s => {
+                if (!foundStudentIds.has(s.studentId)) {
+                    students.push({
+                        studentId: s.studentId,
+                        firstName: s.studentId,
+                        lastName: '',
+                        rollNumber: '',
+                        profilePhoto: ''
+                    });
+                    foundStudentIds.add(s.studentId);
+                }
+            });
+        }
 
         const submissionsMap = new Map();
         (homework.submissions || []).forEach(s => submissionsMap.set(s.studentId, s));
 
-        const fullList = students.map(student => ({
-            studentId: student.studentId,
-            studentName: `${student.firstName} ${student.lastName}`,
-            rollNumber: student.rollNumber,
-            profilePhoto: student.profilePhoto,
-            submission: submissionsMap.get(student.studentId) || null,
-            submissionStatus: submissionsMap.has(student.studentId)
-                ? submissionsMap.get(student.studentId).status
-                : 'not_submitted'
-        }));
+        const fullList = students.map(student => {
+            const sub = submissionsMap.get(student.studentId) || null;
+            return {
+                studentId: student.studentId,
+                firstName: student.firstName || '',
+                lastName: student.lastName || '',
+                studentName: `${student.firstName || ''} ${student.lastName || ''}`.trim() || student.studentId,
+                rollNumber: student.rollNumber || '',
+                profilePhoto: student.profilePhoto || '',
+                submission: sub,
+                submissionStatus: sub ? sub.status : 'not_submitted'
+            };
+        });
+
+        // Sort: who submitted first should be on top (earliest submittedAt first), then non-submitted by roll/name
+        fullList.sort((a, b) => {
+            const timeA = a.submission?.submittedAt ? new Date(a.submission.submittedAt).getTime() : null;
+            const timeB = b.submission?.submittedAt ? new Date(b.submission.submittedAt).getTime() : null;
+
+            if (timeA !== null && timeB !== null) {
+                return timeA - timeB; // Earliest first
+            }
+            if (timeA !== null) return -1;
+            if (timeB !== null) return 1;
+
+            const rollA = a.rollNumber || '';
+            const rollB = b.rollNumber || '';
+            if (rollA && rollB) {
+                return rollA.localeCompare(rollB, undefined, { numeric: true });
+            }
+            return (a.studentName || '').localeCompare(b.studentName || '');
+        });
 
         const summary = {
-            total: students.length,
+            total: fullList.length,
             submitted: fullList.filter(s => s.submissionStatus === 'submitted').length,
             late: fullList.filter(s => s.submissionStatus === 'late').length,
             reviewed: fullList.filter(s => s.submissionStatus === 'reviewed').length,
+            accepted: fullList.filter(s => s.submissionStatus === 'accepted').length,
+            changes_requested: fullList.filter(s => s.submissionStatus === 'changes_requested').length,
+            rejected: fullList.filter(s => s.submissionStatus === 'rejected').length,
             notSubmitted: fullList.filter(s => s.submissionStatus === 'not_submitted').length,
         };
 
@@ -748,11 +827,11 @@ const getHomeworkSubmissions = async (req, res) => {
 const reviewSubmission = async (req, res) => {
     try {
         const { schoolId, homeworkId, studentId } = req.params;
-        const { teacherRemarks, marksAwarded, maxMarks } = req.body;
+        const { teacherRemarks, marksAwarded, maxMarks, status } = req.body;
         const reviewedBy = req.user?.teacherId || req.user?.userId;
 
         const schoolDbName = await getSchoolDbName(schoolId);
-        const { Homework } = getModels(schoolDbName);
+        const { Homework, Notification, Student } = getModels(schoolDbName);
 
         const homework = await Homework.findOne({ schoolId, homeworkId });
         if (!homework) return res.status(404).json({ success: false, message: 'Homework not found' });
@@ -760,14 +839,62 @@ const reviewSubmission = async (req, res) => {
         const submission = homework.submissions.find(s => s.studentId === studentId);
         if (!submission) return res.status(404).json({ success: false, message: 'Submission not found for this student' });
 
-        submission.status = 'reviewed';
-        submission.teacherRemarks = teacherRemarks;
-        submission.marksAwarded = marksAwarded;
-        submission.maxMarks = maxMarks;
+        const validStatuses = ['reviewed', 'accepted', 'changes_requested', 'rejected'];
+        submission.status = validStatuses.includes(status) ? status : 'reviewed';
+        submission.teacherRemarks = teacherRemarks !== undefined ? teacherRemarks : submission.teacherRemarks;
+        submission.marksAwarded = marksAwarded !== undefined ? marksAwarded : submission.marksAwarded;
+        submission.maxMarks = maxMarks !== undefined ? maxMarks : submission.maxMarks;
         submission.reviewedAt = new Date();
         submission.reviewedBy = reviewedBy;
 
         await homework.save();
+
+        // Send notification to student and parent about review result
+        try {
+            const student = await Student.findOne({ schoolId, studentId }, 'studentId firstName parentId');
+            if (student) {
+                const statusLabel = submission.status === 'accepted' ? 'Accepted' :
+                    submission.status === 'changes_requested' ? 'Changes Requested' :
+                    submission.status === 'rejected' ? 'Rejected' : 'Reviewed';
+
+                const notifs = [{
+                    notificationId: `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 5)}`,
+                    schoolId,
+                    userId: student.studentId,
+                    userRole: 'student',
+                    type: 'homework_assigned',
+                    title: `Homework ${statusLabel}: ${homework.title}`,
+                    message: `Your homework submission for "${homework.title}" was ${statusLabel.toLowerCase()}.${teacherRemarks ? ` Note: ${teacherRemarks}` : ''}`,
+                    referenceId: homework.homeworkId,
+                    referenceType: 'homework',
+                    isRead: false,
+                    metadata: { homeworkId: homework.homeworkId, status: submission.status }
+                }];
+
+                if (student.parentId) {
+                    notifs.push({
+                        notificationId: `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 6)}`,
+                        schoolId,
+                        userId: student.parentId,
+                        userRole: 'parent',
+                        type: 'homework_assigned',
+                        title: `Homework ${statusLabel} for ${student.firstName}`,
+                        message: `${student.firstName}'s submission for "${homework.title}" was ${statusLabel.toLowerCase()}.${teacherRemarks ? ` Note: ${teacherRemarks}` : ''}`,
+                        referenceId: homework.homeworkId,
+                        referenceType: 'homework',
+                        isRead: false,
+                        metadata: { homeworkId: homework.homeworkId, studentId: student.studentId, status: submission.status }
+                    });
+                }
+
+                await Notification.insertMany(notifs);
+                const { dispatchRealtimePush } = require("../utils/pushHelper");
+                dispatchRealtimePush(notifs);
+            }
+        } catch (notifErr) {
+            console.error('Error creating review notification:', notifErr);
+        }
+
         res.status(200).json({ success: true, message: 'Submission reviewed successfully', data: submission });
     } catch (error) {
         console.error('Review Submission Error:', error);
