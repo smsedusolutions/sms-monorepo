@@ -158,11 +158,61 @@ function DataTable<T>({
           itemCount={displayedData.length}
         >
           {displayedData.map((row: any, index: number) => {
-            // Pick title from the first non-id column or first column
-            const titleCol = columns.find((c) => c.id !== 'id' && c.id !== 'actions') || columns[0];
-            const subtitleCol = columns.find((c) => c !== titleCol && c.id !== 'actions' && c.id !== 'status');
-            const statusCol = columns.find((c) => c.id === 'status');
-            const actionCol = columns.find((c) => c.id === 'actions');
+            const isIdCol = (c: Column<T>) => {
+              const idStr = String(c.id || '').toLowerCase().trim();
+              const labelStr = String(c.label || '').toLowerCase().trim();
+              return (
+                idStr === 'id' ||
+                idStr === '_id' ||
+                idStr.endsWith('id') ||
+                labelStr === 'id' ||
+                labelStr.endsWith(' id') ||
+                labelStr === 'code'
+              );
+            };
+
+            const isNameCol = (c: Column<T>) => {
+              const idStr = String(c.id || '').toLowerCase().trim();
+              const labelStr = String(c.label || '').toLowerCase().trim();
+              return (
+                idStr === 'name' ||
+                idStr === 'fullname' ||
+                idStr === 'firstname' ||
+                idStr === 'lastname' ||
+                idStr === 'username' ||
+                idStr === 'title' ||
+                idStr === 'label' ||
+                idStr.endsWith('name') ||
+                idStr.endsWith('title') ||
+                labelStr === 'name' ||
+                labelStr.includes('name') ||
+                labelStr === 'title' ||
+                labelStr.includes('title') ||
+                labelStr === 'student' ||
+                labelStr === 'teacher' ||
+                labelStr === 'parent' ||
+                labelStr === 'driver' ||
+                labelStr === 'user'
+              );
+            };
+
+            const statusCol = columns.find((c) => c.id === 'status' || c.label?.toLowerCase() === 'status');
+            const actionCol = columns.find((c) => c.id === 'actions' || c.label?.toLowerCase() === 'actions');
+
+            const nonSpecialCols = columns.filter((c) => c !== statusCol && c !== actionCol);
+            const nameCol = nonSpecialCols.find(isNameCol);
+            const idCol = nonSpecialCols.find(isIdCol);
+            const otherCols = nonSpecialCols.filter((c) => c !== nameCol && c !== idCol);
+
+            // Prioritize Name column as big primary title over ID
+            const titleCol = nameCol || otherCols[0] || idCol || nonSpecialCols[0] || columns[0];
+
+            // Subtitle: ID or secondary info
+            const subtitleCol = titleCol === nameCol
+              ? (idCol || otherCols[0])
+              : titleCol === otherCols[0]
+                ? (idCol || otherCols[1])
+                : otherCols[0];
 
             const cardTitle = titleCol?.format
               ? titleCol.format(row[titleCol.id], row)
@@ -184,16 +234,10 @@ function DataTable<T>({
               ? actionCol.format(row[actionCol.id], row)
               : undefined;
 
-            // Extract metadata from other columns
+            // Extract metadata from remaining columns
             const metaItems: MobileCardMeta[] = [];
-            columns.forEach((col) => {
-              if (
-                col !== titleCol &&
-                col !== subtitleCol &&
-                col !== statusCol &&
-                col !== actionCol &&
-                col.id !== 'id'
-              ) {
+            nonSpecialCols.forEach((col) => {
+              if (col !== titleCol && col !== subtitleCol) {
                 const val = col.format ? col.format(row[col.id], row) : row[col.id as string];
                 if (val !== undefined && val !== null && val !== '') {
                   metaItems.push({

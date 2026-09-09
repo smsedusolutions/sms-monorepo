@@ -1,7 +1,7 @@
 import React from 'react';
 import { useIsMobile } from '../../../hooks/useIsMobile';
 import { AppTable } from '../../shared/AppTable';
-import type { AppTableProps } from '../../shared/AppTable';
+import type { AppTableProps, AppTableColumn } from '../../shared/AppTable';
 import MobileCardList from './MobileCardList';
 import MobileCardItem from './MobileCardItem';
 import type { MobileCardMeta } from './MobileCardItem';
@@ -105,15 +105,66 @@ export const MobileAdaptiveTable = <T extends Record<string, any>>({
             );
           }
 
+          const isIdCol = (c: AppTableColumn<T>) => {
+            const nameStr = (c.name || '').toLowerCase().trim();
+            return (
+              nameStr === 'id' ||
+              nameStr === '_id' ||
+              nameStr.endsWith(' id') ||
+              nameStr.endsWith('id') ||
+              nameStr === 'code'
+            );
+          };
+
+          const isNameCol = (c: AppTableColumn<T>) => {
+            const nameStr = (c.name || '').toLowerCase().trim();
+            return (
+              nameStr === 'name' ||
+              nameStr === 'fullname' ||
+              nameStr === 'firstname' ||
+              nameStr === 'lastname' ||
+              nameStr === 'username' ||
+              nameStr === 'title' ||
+              nameStr.includes('name') ||
+              nameStr.includes('title') ||
+              nameStr === 'student' ||
+              nameStr === 'teacher' ||
+              nameStr === 'parent' ||
+              nameStr === 'driver' ||
+              nameStr === 'user'
+            );
+          };
+
+          const contentCols = columns.filter(
+            (c) =>
+              c.name &&
+              !['action', 'actions', 'select', 'checkbox', 'status', 'operations'].includes(
+                c.name.toLowerCase().trim()
+              )
+          );
+          const nameCol = contentCols.find(isNameCol);
+          const idCol = contentCols.find(isIdCol);
+          const otherCols = contentCols.filter((c) => c !== nameCol && c !== idCol);
+
+          const defaultTitleCol = nameCol || otherCols[0] || idCol || contentCols[0] || columns[0];
+          const defaultSubtitleCol = defaultTitleCol === nameCol
+            ? (idCol || otherCols[0])
+            : defaultTitleCol === otherCols[0]
+              ? (idCol || otherCols[1])
+              : otherCols[0];
+
           // Extract title
           let cardTitle: React.ReactNode = '';
           if (typeof mobileTitleKey === 'function') {
             cardTitle = mobileTitleKey(row);
           } else if (mobileTitleKey) {
             cardTitle = String(row[mobileTitleKey] || '');
-          } else if (columns.length > 0) {
-            const firstCol = columns[0];
-            cardTitle = firstCol.cell ? firstCol.cell(row) : firstCol.selector ? String(firstCol.selector(row) || '') : '';
+          } else if (defaultTitleCol) {
+            cardTitle = defaultTitleCol.cell
+              ? defaultTitleCol.cell(row)
+              : defaultTitleCol.selector
+                ? String(defaultTitleCol.selector(row) || '')
+                : '';
           }
 
           // Extract subtitle
@@ -122,9 +173,12 @@ export const MobileAdaptiveTable = <T extends Record<string, any>>({
             cardSubtitle = mobileSubtitleKey(row);
           } else if (mobileSubtitleKey) {
             cardSubtitle = String(row[mobileSubtitleKey] || '');
-          } else if (columns.length > 1) {
-            const secondCol = columns[1];
-            cardSubtitle = secondCol.cell ? secondCol.cell(row) : secondCol.selector ? String(secondCol.selector(row) || '') : '';
+          } else if (defaultSubtitleCol) {
+            cardSubtitle = defaultSubtitleCol.cell
+              ? defaultSubtitleCol.cell(row)
+              : defaultSubtitleCol.selector
+                ? String(defaultSubtitleCol.selector(row) || '')
+                : '';
           }
 
           // Extract avatar

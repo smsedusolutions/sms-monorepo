@@ -110,10 +110,11 @@ export const MobileCardItem: React.FC<MobileCardItemProps> = ({
               noWrap
               sx={{
                 fontWeight: 700,
-                fontSize: '0.96rem',
+                fontSize: '1.02rem',
                 color: '#0f172a',
-                lineHeight: 1.25,
+                lineHeight: 1.3,
                 fontFamily: '"Outfit", sans-serif',
+                letterSpacing: '-0.01em',
               }}
             >
               {title}
@@ -123,10 +124,11 @@ export const MobileCardItem: React.FC<MobileCardItemProps> = ({
               <Typography
                 noWrap
                 sx={{
-                  fontSize: '0.78rem',
+                  fontSize: '0.8rem',
                   color: '#64748b',
                   mt: 0.3,
                   fontWeight: 500,
+                  fontFamily: '"Outfit", sans-serif',
                 }}
               >
                 {subtitle}
