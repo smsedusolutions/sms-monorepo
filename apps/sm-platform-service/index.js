@@ -26,7 +26,7 @@ app.use(commonRateLimiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// MongoDB auto-reconnection middleware - ensures DB is connected before processing requests
+// MongoDB auto-reconnection middleware -ensures DB is connected before processing requests
 app.use(ensureDbConnection);
 
 app.use('/api/admin/school', schoolRoutes);
