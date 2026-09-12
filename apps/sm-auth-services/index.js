@@ -13,7 +13,7 @@ const { getCorsOptions } = require('@sms/shared/utils');
 
 const app = express();
 
-// Trust proxy for Vercel / serverless / reverse proxies to resolve client IPs accurately
+// Trust proxy for Vercel / serverless/ reverse proxies to resolve client IPs accurately
 app.set('trust proxy', 1);
 
 // Unified dynamic CORS configuration
