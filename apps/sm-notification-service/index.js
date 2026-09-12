@@ -47,6 +47,7 @@ app.get("/", (_req, res) => {
   res.send("🚀 Notification & Web Push Service is running Securely");
 });
 
+
 // Mount Routes
 app.use("/api/push", pushRoutes);
 app.use("/push", pushRoutes);

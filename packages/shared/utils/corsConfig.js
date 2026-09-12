@@ -24,7 +24,10 @@ const DEFAULT_ALLOWED_ORIGINS = [
 function getAllowedOrigins(customOrigins = []) {
     const envOrigins = process.env.ALLOWED_ORIGINS || process.env.CORS_ORIGINS || '';
     const parsedEnv = envOrigins
-        ? envOrigins.split(',').map(url => url.trim()).filter(Boolean)
+        ? envOrigins
+            .split(',')
+            .map(url => url.trim().replace(/^["']|["']$/g, ''))
+            .filter(Boolean)
         : [];
     const extra = Array.isArray(customOrigins) ? customOrigins : (customOrigins ? [customOrigins] : []);
     const merged = [...DEFAULT_ALLOWED_ORIGINS, ...parsedEnv, ...extra];
