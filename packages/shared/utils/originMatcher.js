@@ -14,6 +14,7 @@ function normalizeOrigin(url) {
         .toLowerCase();
 }
 
+
 function matchOrigin(origin, allowedPattern) {
     if (!origin || !allowedPattern) return false;
 

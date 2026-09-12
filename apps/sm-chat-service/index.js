@@ -42,6 +42,7 @@ app.use("/api/chat/keys", keyRoutes);
 app.use("/api/chat/rooms", roomRoutes);
 app.use("/api/chat/attachments", attachmentRoutes);
 
+
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error("❌ [sm-chat-service] Global Error:", err);

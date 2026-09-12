@@ -19,6 +19,7 @@ const app = express();
 // Trust proxy for Vercel / serverless / reverse proxies to resolve client IPs accurately
 app.set('trust proxy', 1);
 
+
 // Unified dynamic CORS Configuration
 const corsOptions = getCorsOptions();
 app.use(cors(corsOptions));
