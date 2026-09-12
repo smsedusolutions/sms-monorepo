@@ -11,6 +11,9 @@ const DEFAULT_ALLOWED_ORIGINS = [
     'https://sms-web-ui.vercel.app',
     'https://*.vercel.app',
     'https://*vercel.app',
+    'https://smsedusolutions.in',
+    'https://*.smsedusolutions.in',
+    'https://*smsedusolutions.in',
 ];
 
 /**
