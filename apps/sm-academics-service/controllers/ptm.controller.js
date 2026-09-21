@@ -56,6 +56,45 @@ const generateSlots = (startTime, endTime, durationMinutes, breakStartTime, brea
     return slots;
 };
 
+// Compute real-time status of a PTM session based on date and time
+const computePTMStatus = (ptm) => {
+    if (ptm.status === 'cancelled') return 'cancelled';
+
+    const now = new Date();
+    const ptmDate = new Date(ptm.date);
+
+    let endDateTime = new Date(ptmDate);
+    if (ptm.endTime && typeof ptm.endTime === 'string' && ptm.endTime.includes(':')) {
+        const [eh, em] = ptm.endTime.split(':').map(Number);
+        endDateTime.setHours(eh || 0, em || 0, 0, 0);
+        if (ptm.startTime && typeof ptm.startTime === 'string' && ptm.startTime.includes(':')) {
+            const [sh, sm] = ptm.startTime.split(':').map(Number);
+            const startDateTime = new Date(ptmDate);
+            startDateTime.setHours(sh || 0, sm || 0, 0, 0);
+            if (endDateTime < startDateTime) {
+                endDateTime.setDate(endDateTime.getDate() + 1);
+            }
+        }
+    } else {
+        endDateTime.setHours(23, 59, 59, 999);
+    }
+
+    if (now > endDateTime) {
+        return 'completed';
+    }
+
+    if (ptm.startTime && typeof ptm.startTime === 'string' && ptm.startTime.includes(':')) {
+        const [sh, sm] = ptm.startTime.split(':').map(Number);
+        const startDateTime = new Date(ptmDate);
+        startDateTime.setHours(sh || 0, sm || 0, 0, 0);
+        if (now >= startDateTime && now <= endDateTime) {
+            return 'ongoing';
+        }
+    }
+
+    return 'scheduled';
+};
+
 // ==========================================
 // 1. CREATE PTM SESSION (Single or Multiple Classes)
 // POST /api/academics/school/:schoolId/ptm
@@ -156,11 +195,20 @@ const getAllPTMSessions = async (req, res) => {
         const dbName = await getSchoolDbName(schoolId);
         const { PTM } = getModels(dbName);
 
-        const sessions = await PTM.find({ schoolId }).sort({ date: 1 }).lean();
+        const sessions = await PTM.find({ schoolId }).sort({ date: -1, createdAt: -1 }).lean();
         const enriched = sessions.map(s => ({
             ...s,
+            status: computePTMStatus(s),
             bookingsCount: (s.bookings || []).length,
         }));
+
+        // In background: sync completed status for past sessions to DB
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        PTM.updateMany(
+            { schoolId, status: 'scheduled', date: { $lt: todayStart } },
+            { $set: { status: 'completed' } }
+        ).catch(() => {});
 
         res.status(200).json({ success: true, data: enriched });
     } catch (error) {
@@ -179,7 +227,7 @@ const getPTMForParent = async (req, res) => {
         const dbName = await getSchoolDbName(schoolId);
         const { PTM } = getModels(dbName);
 
-        const sessions = await PTM.find({ schoolId, status: { $ne: 'cancelled' } }).sort({ date: 1 }).lean();
+        const sessions = await PTM.find({ schoolId, status: { $ne: 'cancelled' } }).sort({ date: -1, createdAt: -1 }).lean();
         const myBookings = [];
 
         sessions.forEach(s => {
@@ -188,7 +236,13 @@ const getPTMForParent = async (req, res) => {
             }
         });
 
-        res.status(200).json({ success: true, data: sessions, myBookings });
+        const enriched = sessions.map(s => ({
+            ...s,
+            status: computePTMStatus(s),
+            bookingsCount: (s.bookings || []).length,
+        }));
+
+        res.status(200).json({ success: true, data: enriched, myBookings });
     } catch (error) {
         console.error('Get Parent PTM Error:', error);
         res.status(500).json({ success: false, message: error.message });
@@ -295,11 +349,107 @@ const getPTMForTeacher = async (req, res) => {
         const sessions = await PTM.find({
             schoolId,
             $or: [{ teacherId }, { teacherId: null }],
-        }).sort({ date: 1 }).lean();
+        }).sort({ date: -1, createdAt: -1 }).lean();
 
-        res.status(200).json({ success: true, data: sessions });
+        const enriched = sessions.map(s => ({
+            ...s,
+            status: computePTMStatus(s),
+            bookingsCount: (s.bookings || []).length,
+        }));
+
+        res.status(200).json({ success: true, data: enriched });
     } catch (error) {
         console.error('Get Teacher PTM Error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ==========================================
+// 7. UPDATE PTM SESSION (Admin)
+// PATCH /api/academics/school/:schoolId/ptm/:sessionId
+// ==========================================
+const updatePTMSession = async (req, res) => {
+    try {
+        const { schoolId, sessionId } = req.params;
+        const dbName = await getSchoolDbName(schoolId);
+        const { PTM } = getModels(dbName);
+
+        const ptm = await PTM.findOne({ schoolId, _id: sessionId });
+        if (!ptm) {
+            return res.status(404).json({ success: false, message: 'PTM session not found' });
+        }
+
+        const {
+            title,
+            date,
+            startTime,
+            endTime,
+            breakStartTime,
+            breakEndTime,
+            slotDurationMinutes,
+            classId,
+            className,
+            sectionId,
+            sectionName,
+            teacherId,
+            teacherName,
+            venue,
+            notes,
+            status,
+        } = req.body;
+
+        if (title !== undefined) ptm.title = title;
+        if (date !== undefined) ptm.date = new Date(date);
+        if (startTime !== undefined) ptm.startTime = startTime;
+        if (endTime !== undefined) ptm.endTime = endTime;
+        if (breakStartTime !== undefined) ptm.breakStartTime = breakStartTime || null;
+        if (breakEndTime !== undefined) ptm.breakEndTime = breakEndTime || null;
+        if (slotDurationMinutes !== undefined) ptm.slotDurationMinutes = slotDurationMinutes;
+        if (classId !== undefined) ptm.classId = classId || null;
+        if (className !== undefined) ptm.className = className || null;
+        if (sectionId !== undefined) ptm.sectionId = sectionId || null;
+        if (sectionName !== undefined) ptm.sectionName = sectionName || null;
+        if (teacherId !== undefined) ptm.teacherId = teacherId || null;
+        if (teacherName !== undefined) ptm.teacherName = teacherName || null;
+        if (venue !== undefined) ptm.venue = venue || null;
+        if (notes !== undefined) ptm.notes = notes || null;
+        if (status !== undefined) ptm.status = status;
+
+        await ptm.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'PTM session updated successfully',
+            data: ptm,
+        });
+    } catch (error) {
+        console.error('Update PTM Error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// ==========================================
+// 8. DELETE PTM SESSION (Admin)
+// DELETE /api/academics/school/:schoolId/ptm/:sessionId
+// ==========================================
+const deletePTMSession = async (req, res) => {
+    try {
+        const { schoolId, sessionId } = req.params;
+        const dbName = await getSchoolDbName(schoolId);
+        const { PTM } = getModels(dbName);
+
+        const deleted = await PTM.findOneAndDelete({ schoolId, _id: sessionId });
+        if (!deleted) {
+            return res.status(404).json({ success: false, message: 'PTM session not found' });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'PTM session deleted successfully',
+            data: deleted,
+        });
+    } catch (error) {
+        console.error('Delete PTM Error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -311,4 +461,7 @@ module.exports = {
     getPTMSlots,
     bookPTMSlot,
     getPTMForTeacher,
+    updatePTMSession,
+    deletePTMSession,
 };
+

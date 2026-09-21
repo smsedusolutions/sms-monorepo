@@ -333,7 +333,7 @@ const getChildClassTeacher = async (req, res) => {
             });
         }
 
-        const teacher = await Teacher.findOne({ teacherId: section.classTeacherId });
+        const teacher = await Teacher.findOne({ teacherId: section.classTeacherId, status: { $ne: 'inactive' } });
         if (!teacher) {
             return res.status(404).json({
                 success: false,
@@ -411,7 +411,7 @@ const getChildTeachers = async (req, res) => {
         const subjectIds = [...new Set(timetableEntries.map(e => e.subjectId))];
 
         const [teachers, subjects] = await Promise.all([
-            Teacher.find({ teacherId: { $in: teacherIds } }),
+            Teacher.find({ teacherId: { $in: teacherIds }, status: { $ne: 'inactive' } }),
             Subject.find({ subjectId: { $in: subjectIds } }, 'subjectId name')
         ]);
 

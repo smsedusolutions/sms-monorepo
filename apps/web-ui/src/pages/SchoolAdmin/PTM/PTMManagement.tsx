@@ -17,7 +17,10 @@ import {
     Coffee as CoffeeIcon,
     AccessTime as TimeIcon,
     LocationOn as LocationIcon,
+    EditOutlined as EditIcon,
+    DeleteOutline as DeleteIcon,
 } from '@mui/icons-material';
+import ConfirmationDialog from '../../../components/Dialogs/ConfirmationDialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useApi from '../../../queries/useApi';
 import TokenService from '../../../queries/token/tokenService';
@@ -25,6 +28,7 @@ import { useIsMobile } from '../../../hooks/useIsMobile';
 import { MobileCardItem, MobileCardList } from '../../../components/mobile';
 import { useGetClasses } from '../../../queries/Class';
 import { useGetTeachers } from '../../../queries/Teacher';
+import { useGetStudents } from '../../../queries/Student';
 import { AppInput } from '../../../components/shared/AppInput';
 import { AppDatePicker } from '../../../components/shared/AppDatePicker';
 import { AppButton } from '../../../components/shared/AppButton';
@@ -55,6 +59,10 @@ export const PTMManagement: React.FC = () => {
     const queryClient = useQueryClient();
     const [createOpen, setCreateOpen] = useState(false);
     const [toast, setToast] = useState('');
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+    const [editingSession, setEditingSession] = useState<any | null>(null);
+    const [durationInput, setDurationInput] = useState<string>('10');
 
     const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
     const [assignmentMode, setAssignmentMode] = useState<'class_teacher' | 'single_teacher'>('class_teacher');
@@ -74,9 +82,31 @@ export const PTMManagement: React.FC = () => {
     });
 
     const { data: classesData } = useGetClasses(schoolId);
-    const { data: teachersData } = useGetTeachers(schoolId, { limit: 500 });
+    const { data: teachersData } = useGetTeachers(schoolId, { limit: 500, status: 'active' });
+    const { data: studentsData } = useGetStudents(schoolId, { limit: 2000, status: 'active' });
     const classes: any[] = classesData?.data || [];
     const teachers: any[] = teachersData?.data || [];
+    const allStudents: any[] = studentsData?.data || [];
+
+    // Build a map of classId::sectionId -> number of students that have a parent registered
+    const parentCountMap = useMemo<Record<string, number>>(() => {
+        const map: Record<string, number> = {};
+        allStudents.forEach(s => {
+            if (!s.class) return;
+            // Count all students (each student = 1 potential parent slot regardless of parentId)
+            const secKey = s.section ? `${s.class}::${s.section}` : `${s.class}::all`;
+            const classKey = `${s.class}::all`;
+            map[secKey] = (map[secKey] || 0) + 1;
+            // Also accumulate class-level total
+            if (s.section) map[classKey] = (map[classKey] || 0) + 1;
+        });
+        return map;
+    }, [allStudents]);
+
+    // Helper: get parent count for a sectionOption key
+    const getParentCount = (key: string) => {
+        return parentCountMap[key] || 0;
+    };
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['ptm-sessions', schoolId],
@@ -117,23 +147,10 @@ export const PTMManagement: React.FC = () => {
 
     // Helper: Find class teacher for a section or class
     const findTeacherForSection = (classId: string, section: any) => {
-        if (section?.classTeacherName) {
-            const secTeacherId = section?.classTeacherId || section?.classTeacher || section?.teacherId;
-            const fullTeacher = teachers.find(
-                (t: any) => t.teacherId === secTeacherId || t._id === secTeacherId || t.userId === secTeacherId
-            );
-            return {
-                teacherId: fullTeacher?.teacherId || fullTeacher?._id || secTeacherId || null,
-                teacherName: section.classTeacherName,
-                firstName: fullTeacher?.firstName || section.classTeacherName.split(' ')[0] || section.classTeacherName,
-                lastName: fullTeacher?.lastName || section.classTeacherName.split(' ').slice(1).join(' ') || '',
-            };
-        }
-
-        const secTeacherId = section?.classTeacherId || section?.teacherId || section?.classTeacher;
+        const secTeacherId = section?.classTeacherId || section?.classTeacher || section?.teacherId;
         if (secTeacherId) {
             const match = teachers.find(
-                (t: any) => t.teacherId === secTeacherId || t._id === secTeacherId || t.userId === secTeacherId
+                (t: any) => (t.teacherId === secTeacherId || t._id === secTeacherId || t.userId === secTeacherId) && t.status !== 'inactive'
             );
             if (match) {
                 return {
@@ -142,12 +159,37 @@ export const PTMManagement: React.FC = () => {
                     teacherName: `${match.firstName} ${match.lastName}`.trim(),
                 };
             }
+            if (teachers.length > 0) {
+                return null;
+            }
+        }
+
+        if (section?.classTeacherName) {
+            const match = teachers.find(
+                (t: any) => `${t.firstName} ${t.lastName}`.trim().toLowerCase() === section.classTeacherName.trim().toLowerCase() && t.status !== 'inactive'
+            );
+            if (match) {
+                return {
+                    ...match,
+                    teacherId: match.teacherId || match._id,
+                    teacherName: `${match.firstName} ${match.lastName}`.trim(),
+                };
+            }
+            if (teachers.length > 0) {
+                return null;
+            }
+            return {
+                teacherId: null,
+                teacherName: section.classTeacherName,
+                firstName: section.classTeacherName.split(' ')[0] || section.classTeacherName,
+                lastName: section.classTeacherName.split(' ').slice(1).join(' ') || '',
+            };
         }
 
         if (section?.sectionId) {
             const fullSecKey = `${classId}#${section.sectionId}`;
             const match = teachers.find(
-                (t: any) => t.classTeacherSectionId === fullSecKey || (t.classTeacherSectionId && t.classTeacherSectionId.startsWith(classId))
+                (t: any) => (t.classTeacherSectionId === fullSecKey || (t.classTeacherSectionId && t.classTeacherSectionId.startsWith(classId))) && t.status !== 'inactive'
             );
             if (match) {
                 return {
@@ -158,7 +200,7 @@ export const PTMManagement: React.FC = () => {
             }
         }
 
-        const matchByClass = teachers.find((t: any) => t.classTeacherSectionId && t.classTeacherSectionId.startsWith(classId));
+        const matchByClass = teachers.find((t: any) => t.classTeacherSectionId && t.classTeacherSectionId.startsWith(classId) && t.status !== 'inactive');
         if (matchByClass) {
             return {
                 ...matchByClass,
@@ -237,9 +279,11 @@ export const PTMManagement: React.FC = () => {
             queryClient.invalidateQueries({ queryKey: ['ptm-sessions', schoolId] });
             queryClient.invalidateQueries({ queryKey: ['school-calendar'] });
             setCreateOpen(false);
+            setEditingSession(null);
             setToast(res?.message || 'PTM session(s) created and synced to calendar!');
             setSelectedKeys([]);
             setOverrideTeacherId('');
+            setDurationInput('10');
             setForm({
                 title: '',
                 date: new Date(),
@@ -254,6 +298,91 @@ export const PTMManagement: React.FC = () => {
         },
     });
 
+    const updatePTM = useMutation({
+        mutationFn: ({ id, body }: { id: string; body: any }) =>
+            useApi<any>('PATCH', `/api/academics/school/${schoolId}/ptm/${id}`, body),
+        onSuccess: (res) => {
+            queryClient.invalidateQueries({ queryKey: ['ptm-sessions', schoolId] });
+            queryClient.invalidateQueries({ queryKey: ['school-calendar'] });
+            setCreateOpen(false);
+            setEditingSession(null);
+            setSelectedKeys([]);
+            setOverrideTeacherId('');
+            setToast(res?.message || 'PTM session updated successfully!');
+            setDurationInput('10');
+            setForm({
+                title: '',
+                date: new Date(),
+                startTime: '09:00',
+                endTime: '13:00',
+                breakStartTime: '11:00',
+                breakEndTime: '11:30',
+                slotDurationMinutes: 10,
+                venue: '',
+                notes: '',
+            });
+        },
+    });
+
+    const deletePTM = useMutation({
+        mutationFn: (id: string) => useApi<any>('DELETE', `/api/academics/school/${schoolId}/ptm/${id}`),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['ptm-sessions', schoolId] });
+            queryClient.invalidateQueries({ queryKey: ['school-calendar'] });
+            setDeleteConfirmOpen(false);
+            setSessionToDelete(null);
+            setToast('PTM session deleted successfully!');
+        },
+    });
+
+    const handleOpenEdit = (session: any) => {
+        setEditingSession(session);
+        const sessionDate = session.date ? new Date(session.date) : new Date();
+        const dur = session.slotDurationMinutes || 10;
+        setDurationInput(String(dur));
+
+        // Restore class/section selection
+        if (session.classId) {
+            const sectionId = session.sectionId || 'all';
+            setSelectedKeys([`${session.classId}::${sectionId}`]);
+        } else {
+            setSelectedKeys([]);
+        }
+
+        // Restore assigned teacher
+        if (session.teacherId) {
+            setOverrideTeacherId(session.teacherId);
+        } else {
+            setOverrideTeacherId('');
+        }
+
+        setForm({
+            title: session.title || '',
+            date: sessionDate,
+            startTime: session.startTime || '09:00',
+            endTime: session.endTime || '13:00',
+            breakStartTime: session.breakStartTime || '11:00',
+            breakEndTime: session.breakEndTime || '11:30',
+            slotDurationMinutes: dur,
+            venue: session.venue || '',
+            notes: session.notes || '',
+        });
+        setHasBreakTime(!!(session.breakStartTime && session.breakEndTime));
+        setCreateOpen(true);
+    };
+
+    const handleDeleteSession = (id: string) => {
+        setSessionToDelete(id);
+        setDeleteConfirmOpen(true);
+    };
+
+    const handleCloseDialog = () => {
+        setCreateOpen(false);
+        setEditingSession(null);
+        setSelectedKeys([]);
+        setOverrideTeacherId('');
+    };
+
     const handleSubmit = () => {
         const formattedDate = format(form.date, 'yyyy-MM-dd');
         const payloadBase = {
@@ -262,6 +391,52 @@ export const PTMManagement: React.FC = () => {
             breakStartTime: hasBreakTime ? form.breakStartTime : null,
             breakEndTime: hasBreakTime ? form.breakEndTime : null,
         };
+
+        // Edit mode: patch the existing session
+        if (editingSession) {
+            let classId = editingSession.classId || null;
+            let className = editingSession.className || null;
+            let sectionId = editingSession.sectionId || null;
+            let sectionName = editingSession.sectionName || null;
+            let teacherId = editingSession.teacherId || null;
+            let teacherName = editingSession.teacherName || null;
+
+            if (selectedKeys.length > 0) {
+                const opt = sectionOptions.find(o => o.key === selectedKeys[0]);
+                if (opt) {
+                    classId = opt.classId || null;
+                    className = opt.className || null;
+                    sectionId = opt.sectionId || null;
+                    sectionName = opt.sectionName || null;
+                    if (!overrideTeacherId && opt.classTeacher) {
+                        teacherId = opt.classTeacher.teacherId || opt.classTeacher._id;
+                        teacherName = `${opt.classTeacher.firstName} ${opt.classTeacher.lastName}`;
+                    }
+                }
+            }
+
+            if (overrideTeacherId) {
+                const singleTeacher = teachers.find(t => (t.teacherId || t._id) === overrideTeacherId);
+                if (singleTeacher) {
+                    teacherId = singleTeacher.teacherId || singleTeacher._id;
+                    teacherName = `${singleTeacher.firstName} ${singleTeacher.lastName}`;
+                }
+            }
+
+            updatePTM.mutate({
+                id: editingSession._id,
+                body: {
+                    ...payloadBase,
+                    classId,
+                    className,
+                    sectionId,
+                    sectionName,
+                    teacherId,
+                    teacherName,
+                },
+            });
+            return;
+        }
 
         // Case 1: Multiple sections/classes selected
         if (selectedKeys.length > 1) {
@@ -326,14 +501,46 @@ export const PTMManagement: React.FC = () => {
         });
     };
 
-    const sessions: any[] = data?.data || [];
+    const sessions: any[] = (data?.data || []).slice().sort(
+        (a: any, b: any) => new Date(b.createdAt || b.date).getTime() - new Date(a.createdAt || a.date).getTime()
+    );
+
+    // Real status helper
+    const getSessionRealStatus = (session: any): 'scheduled' | 'ongoing' | 'completed' | 'cancelled' => {
+        if (session.status === 'cancelled') return 'cancelled';
+        if (session.status === 'completed') return 'completed';
+        if (!session.date) return (session.status as any) || 'scheduled';
+        const now = new Date();
+        const d = new Date(session.date);
+        if (session.endTime && typeof session.endTime === 'string' && session.endTime.includes(':')) {
+            const [eh, em] = session.endTime.split(':').map(Number);
+            d.setHours(eh || 0, em || 0, 0, 0);
+            if (session.startTime && typeof session.startTime === 'string' && session.startTime.includes(':')) {
+                const [sh, sm] = session.startTime.split(':').map(Number);
+                const startD = new Date(session.date);
+                startD.setHours(sh || 0, sm || 0, 0, 0);
+                if (d < startD) d.setDate(d.getDate() + 1);
+            }
+        } else {
+            d.setHours(23, 59, 59, 999);
+        }
+        if (now > d) return 'completed';
+        return (session.status as any) || 'scheduled';
+    };
+
+    // A session is editable/deletable only if it's 'scheduled' AND its date is today or future
+    const isPTMUpcoming = (session: any): boolean => {
+        return getSessionRealStatus(session) === 'scheduled';
+    };
 
     const teacherOptions = useMemo(() => {
-        return teachers.map((t: any) => ({
-            id: t.teacherId || t._id,
-            label: `${t.firstName} ${t.lastName}`,
-            department: t.department || '',
-        }));
+        return teachers
+            .filter((t: any) => t.status !== 'inactive')
+            .map((t: any) => ({
+                id: t.teacherId || t._id,
+                label: `${t.firstName} ${t.lastName}`,
+                department: t.department || '',
+            }));
     }, [teachers]);
 
     return (
@@ -358,8 +565,8 @@ export const PTMManagement: React.FC = () => {
             <Grid container spacing={2} sx={{ mb: 3 }}>
                 {[
                     { label: 'Total Sessions', value: sessions.length, color: 'primary.main' },
-                    { label: 'Upcoming', value: sessions.filter(s => s.status === 'scheduled').length, color: 'info.main' },
-                    { label: 'Completed', value: sessions.filter(s => s.status === 'completed').length, color: 'success.main' },
+                    { label: 'Upcoming', value: sessions.filter(s => getSessionRealStatus(s) === 'scheduled').length, color: 'info.main' },
+                    { label: 'Completed', value: sessions.filter(s => getSessionRealStatus(s) === 'completed').length, color: 'success.main' },
                     { label: 'Total Bookings', value: sessions.reduce((a, s) => a + (s.bookingsCount || 0), 0), color: 'warning.main' },
                 ].map(stat => (
                     <Grid size={{ xs: 6, sm: 3 }} key={stat.label}>
@@ -388,7 +595,10 @@ export const PTMManagement: React.FC = () => {
                             key={s._id}
                             title={s.title}
                             subtitle={`${new Date(s.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} • ${s.startTime} - ${s.endTime}`}
-                            badge={<Chip label={s.status || 'Scheduled'} color={statusColor[s.status] || 'info'} size="small" />}
+                            badge={(() => {
+                                const st = getSessionRealStatus(s);
+                                return <Chip label={st.charAt(0).toUpperCase() + st.slice(1)} color={statusColor[st] || 'info'} size="small" />;
+                            })()}
                             metaItems={[
                                 { label: 'Teacher', value: s.teacherName || '—' },
                                 { label: 'Venue', value: s.venue || 'Classroom' },
@@ -411,6 +621,7 @@ export const PTMManagement: React.FC = () => {
                                     <TableCell sx={{ fontWeight: 700 }}>Duration / Parent</TableCell>
                                     <TableCell align="center" sx={{ fontWeight: 700 }}>Bookings</TableCell>
                                     <TableCell align="center" sx={{ fontWeight: 700 }}>Status</TableCell>
+                                    <TableCell align="center" sx={{ fontWeight: 700 }}>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
@@ -461,7 +672,32 @@ export const PTMManagement: React.FC = () => {
                                             <Chip label={s.bookingsCount || 0} size="small" color="primary" variant="outlined" />
                                         </TableCell>
                                         <TableCell align="center">
-                                            <Chip label={s.status || 'Scheduled'} color={statusColor[s.status] || 'info'} size="small" />
+                                            {(() => {
+                                                const st = getSessionRealStatus(s);
+                                                return <Chip label={st.charAt(0).toUpperCase() + st.slice(1)} color={statusColor[st] || 'info'} size="small" />;
+                                            })()}
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            {isPTMUpcoming(s) ? (
+                                                <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleOpenEdit(s)}
+                                                        sx={{ color: '#3b82f6', border: '1px solid', borderColor: 'divider' }}
+                                                    >
+                                                        <EditIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => handleDeleteSession(s._id)}
+                                                        sx={{ color: '#ef4444', border: '1px solid', borderColor: 'divider' }}
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Box>
+                                            ) : (
+                                                <Typography variant="caption" color="text.disabled" sx={{ fontSize: '0.7rem' }}>—</Typography>
+                                            )}
                                         </TableCell>
                                     </TableRow>
                                 ))}
@@ -472,13 +708,13 @@ export const PTMManagement: React.FC = () => {
             )}
 
             {/* Schedule PTM Dialog */}
-            <Dialog open={createOpen} onClose={() => setCreateOpen(false)} fullWidth maxWidth="sm" fullScreen={isMobile} PaperProps={{ sx: { borderRadius: 2 } }}>
+            <Dialog open={createOpen} onClose={handleCloseDialog} fullWidth maxWidth="sm" fullScreen={isMobile} PaperProps={{ sx: { borderRadius: 2 } }}>
                 <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
                     <Box>
-                        <Typography fontWeight={700} variant="h6">Schedule Parent-Teacher Meeting</Typography>
-                        <Typography variant="caption" color="text.secondary">Create 1-on-1 parent conversation slots for sections</Typography>
+                        <Typography fontWeight={700} variant="h6">{editingSession ? 'Edit PTM Session' : 'Schedule Parent-Teacher Meeting'}</Typography>
+                        <Typography variant="caption" color="text.secondary">{editingSession ? 'Update the PTM session details' : 'Create 1-on-1 parent conversation slots for sections'}</Typography>
                     </Box>
-                    <IconButton onClick={() => setCreateOpen(false)} size="small"><CloseIcon /></IconButton>
+                    <IconButton onClick={handleCloseDialog} size="small"><CloseIcon /></IconButton>
                 </DialogTitle>
                 <DialogContent sx={{ pt: 2 }}>
                     <AppInput
@@ -533,6 +769,9 @@ export const PTMManagement: React.FC = () => {
                                         const opt = sectionOptions.find(o => o.key === k);
                                         const ct = opt?.classTeacher;
                                         const secVenue = form.venue?.trim() || opt?.defaultVenue || 'Section Classroom';
+                                        const pCount = getParentCount(k);
+                                        const slotsFit = form.slotDurationMinutes > 0 ? Math.floor(effectiveMinutes / form.slotDurationMinutes) : 0;
+                                        const hasEnoughSlots = slotsFit >= pCount;
                                         return (
                                             <Box key={k} sx={{ p: 0.75, borderRadius: 1, bgcolor: '#ffffff', border: '1px solid #dcfce7' }}>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -541,11 +780,29 @@ export const PTMManagement: React.FC = () => {
                                                         {ct ? `👨‍🏫 ${ct.firstName} ${ct.lastName}` : '⚠️ No Class Teacher'}
                                                     </Typography>
                                                 </Box>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.25 }}>
-                                                    <LocationIcon sx={{ color: 'text.secondary', fontSize: 13 }} />
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        Venue: {secVenue}
-                                                    </Typography>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.5 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                        <LocationIcon sx={{ color: 'text.secondary', fontSize: 13 }} />
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {secVenue}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                        <Typography
+                                                            variant="caption"
+                                                            fontWeight={700}
+                                                            sx={{
+                                                                px: 0.8,
+                                                                py: 0.2,
+                                                                borderRadius: 1,
+                                                                bgcolor: pCount === 0 ? '#f3f4f6' : hasEnoughSlots ? '#dcfce7' : '#fef3c7',
+                                                                color: pCount === 0 ? '#6b7280' : hasEnoughSlots ? '#16a34a' : '#d97706',
+                                                                fontSize: '0.68rem',
+                                                            }}
+                                                        >
+                                                            👪 {pCount} {pCount === 1 ? 'parent' : 'parents'}
+                                                        </Typography>
+                                                    </Box>
                                                 </Box>
                                             </Box>
                                         );
@@ -585,11 +842,29 @@ export const PTMManagement: React.FC = () => {
                             />
                             {selectedKeys.length === 1 && (() => {
                                 const target = sectionOptions.find(o => o.key === selectedKeys[0]);
-                                return target?.classTeacher ? (
-                                    <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 600, display: 'block', mt: 0.5 }}>
-                                        ✓ Auto-detected Section Class Teacher: {target.classTeacher.firstName} {target.classTeacher.lastName}
-                                    </Typography>
-                                ) : null;
+                                const pCount = target ? getParentCount(target.key) : 0;
+                                return (
+                                    <Box sx={{ mt: 0.5, display: 'flex', flexWrap: 'wrap', gap: 1.5, alignItems: 'center' }}>
+                                        {target?.classTeacher && (
+                                            <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 600 }}>
+                                                ✓ Class Teacher: {target.classTeacher.firstName} {target.classTeacher.lastName}
+                                            </Typography>
+                                        )}
+                                        <Typography
+                                            variant="caption"
+                                            fontWeight={700}
+                                            sx={{
+                                                px: 1,
+                                                py: 0.3,
+                                                borderRadius: 1.5,
+                                                bgcolor: pCount === 0 ? '#f3f4f6' : '#dbeafe',
+                                                color: pCount === 0 ? '#6b7280' : '#1d4ed8',
+                                            }}
+                                        >
+                                            👪 {pCount} {pCount === 1 ? 'parent' : 'parents'} registered in this section
+                                        </Typography>
+                                    </Box>
+                                );
                             })()}
                         </Box>
                     )}
@@ -675,10 +950,18 @@ export const PTMManagement: React.FC = () => {
                         <Box sx={{ mb: 1.5 }}>
                             <AppInput
                                 label="Conversation Duration per Parent (Minutes)"
-                                type="number"
+                                type="text"
+                                inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
                                 required
-                                value={form.slotDurationMinutes}
-                                onChange={e => setForm(f => ({ ...f, slotDurationMinutes: Math.max(1, Number(e.target.value)) }))}
+                                value={durationInput}
+                                onChange={e => {
+                                    const raw = e.target.value.replace(/[^0-9]/g, '');
+                                    setDurationInput(raw);
+                                    const num = parseInt(raw, 10);
+                                    if (!isNaN(num) && num >= 1) {
+                                        setForm(f => ({ ...f, slotDurationMinutes: num }));
+                                    }
+                                }}
                                 helperText="Minutes the teacher spends with each parent (e.g. 10 or 15 mins)"
                                 sx={{ mb: 1 }}
                             />
@@ -702,7 +985,10 @@ export const PTMManagement: React.FC = () => {
                                             clickable
                                             color={form.slotDurationMinutes === mins ? 'primary' : 'default'}
                                             variant={form.slotDurationMinutes === mins ? 'filled' : 'outlined'}
-                                            onClick={() => setForm(f => ({ ...f, slotDurationMinutes: mins }))}
+                                            onClick={() => {
+                                                setDurationInput(String(mins));
+                                                setForm(f => ({ ...f, slotDurationMinutes: mins }));
+                                            }}
                                             sx={{ height: 24, fontSize: '0.7rem', fontWeight: 600 }}
                                         />
                                     ))}
@@ -728,6 +1014,40 @@ export const PTMManagement: React.FC = () => {
                                             <Typography variant="caption" color="text.secondary" display="block">Total Parent Slots</Typography>
                                             <Typography variant="body2" fontWeight={800} color="success.main">🎯 {totalSlots} Parents</Typography>
                                         </Grid>
+                                        {selectedKeys.length > 0 && (() => {
+                                            const totalAvailable = selectedKeys.reduce((sum, k) => sum + getParentCount(k), 0);
+                                            const slotsOk = totalSlots >= totalAvailable;
+                                            return totalAvailable > 0 ? (
+                                                <Grid size={{ xs: 12 }}>
+                                                    <Box sx={{
+                                                        mt: 0.5,
+                                                        px: 1.5,
+                                                        py: 0.75,
+                                                        borderRadius: 1.5,
+                                                        bgcolor: slotsOk ? '#f0fdf4' : '#fef3c7',
+                                                        border: `1px solid ${slotsOk ? '#bbf7d0' : '#fde68a'}`,
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: 1,
+                                                        flexWrap: 'wrap',
+                                                    }}>
+                                                        <Typography variant="caption" fontWeight={700} sx={{ color: slotsOk ? '#15803d' : '#b45309' }}>
+                                                            👪 {totalAvailable} parents available across selected section{selectedKeys.length > 1 ? 's' : ''}
+                                                        </Typography>
+                                                        {!slotsOk && (
+                                                            <Typography variant="caption" sx={{ color: '#b45309', fontWeight: 600 }}>
+                                                                ⚠️ Only {totalSlots} slots available — increase meeting window or reduce duration
+                                                            </Typography>
+                                                        )}
+                                                        {slotsOk && (
+                                                            <Typography variant="caption" sx={{ color: '#15803d', fontWeight: 600 }}>
+                                                                ✓ Enough slots for all parents
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                </Grid>
+                                            ) : null;
+                                        })()}
                                     </Grid>
                                 </Paper>
                             </>
@@ -744,21 +1064,38 @@ export const PTMManagement: React.FC = () => {
                     />
                 </DialogContent>
                 <DialogActions sx={{ p: 2.5, gap: 1 }}>
-                    <AppButton onClick={() => setCreateOpen(false)} variant="outlined" color="inherit">
+                    <AppButton onClick={handleCloseDialog} variant="outlined" color="inherit">
                         Cancel
                     </AppButton>
                     <AppButton
                         variant="contained"
                         onClick={handleSubmit}
-                        disabled={createPTM.isPending || !form.title || !form.date || !form.startTime || !form.endTime}
-                        startIcon={createPTM.isPending ? <CircularProgress size={14} color="inherit" /> : <DoneIcon />}
+                        disabled={createPTM.isPending || updatePTM.isPending || !form.title || !form.date || !form.startTime || !form.endTime || !form.slotDurationMinutes}
+                        startIcon={(createPTM.isPending || updatePTM.isPending) ? <CircularProgress size={14} color="inherit" /> : <DoneIcon />}
                     >
-                        {createPTM.isPending ? 'Scheduling...' : selectedKeys.length > 1 ? `Schedule for ${selectedKeys.length} Sections (${totalSlots} slots each)` : `Schedule PTM (${totalSlots} Parent Slots)`}
+                        {createPTM.isPending || updatePTM.isPending
+                            ? (editingSession ? 'Updating...' : 'Scheduling...')
+                            : editingSession
+                            ? 'Update PTM Session'
+                            : selectedKeys.length > 1
+                            ? `Schedule for ${selectedKeys.length} Sections (${totalSlots} slots each)`
+                            : `Schedule PTM (${totalSlots} Parent Slots)`}
                     </AppButton>
                 </DialogActions>
             </Dialog>
 
             <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast('')} message={toast} />
+
+            <ConfirmationDialog
+                open={deleteConfirmOpen}
+                onClose={() => { setDeleteConfirmOpen(false); setSessionToDelete(null); }}
+                onConfirm={() => sessionToDelete && deletePTM.mutate(sessionToDelete)}
+                title="Delete PTM Session"
+                description="Are you sure you want to delete this PTM session? All bookings associated with this session will also be removed. This action cannot be undone."
+                confirmLabel="Delete Session"
+                variant="danger"
+                isLoading={deletePTM.isPending}
+            />
         </Box>
     );
 };

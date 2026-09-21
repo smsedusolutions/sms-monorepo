@@ -390,7 +390,11 @@ const getAllStudents = async (req, res) => {
       }
     }
     
-    if (status) query.status = status;
+    if (status && status !== "all") {
+      query.status = status;
+    } else if (!status) {
+      query.status = { $ne: "inactive" };
+    }
     if (parentId) query.parentId = parentId;
 
     // Search filter (firstName, lastName, studentId, email, or parentName)
