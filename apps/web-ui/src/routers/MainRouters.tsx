@@ -7,6 +7,7 @@ import { useRoleStore } from "../stores/roleStore";
 import TokenService from "../queries/token/tokenService";
 
 // Public Pages
+const LandingPage = lazy(() => import("../pages/LandingPage"));
 const LoginPage = lazy(() => import("../pages/LoginPage"));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
 const UnauthorizedPage = lazy(() => import("../pages/UnauthorizedPage"));
@@ -161,7 +162,7 @@ const MainRouters = () => {
           path="/"
           element={
             (() => {
-              if (!userRole) return <Navigate to="/login" replace />;
+              if (!userRole) return <LandingPage />;
 
               const basePath = getBasePath(userRole);
               if (basePath) {
@@ -172,6 +173,8 @@ const MainRouters = () => {
               const standardPaths: Record<string, string> = {
                 'super_admin': '/super-admin',
                 'sch_admin': '/school-admin',
+                'school_admin': '/school-admin',
+                'admin': '/school-admin',
                 'teacher': '/teacher',
                 'student': '/student',
                 'parent': '/parent',
@@ -179,7 +182,7 @@ const MainRouters = () => {
                 'principal': '/principal',
               };
 
-              const fallback = standardPaths[userRole];
+              const fallback = standardPaths[userRole.toLowerCase()];
               if (fallback) {
                 return <Navigate to={`${fallback}/dashboard`} replace />;
               }
@@ -189,6 +192,8 @@ const MainRouters = () => {
             })()
           }
         />
+        <Route path="/landing" element={<LandingPage />} />
+        <Route path="/home" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/secret-setup-super-admin" element={<CreateSuperAdminSecret />} />

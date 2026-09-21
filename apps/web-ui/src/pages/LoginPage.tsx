@@ -3,6 +3,7 @@ import {
   Box,
   Typography,
   IconButton,
+  Button,
   InputAdornment,
   Alert,
   Fade,
@@ -15,12 +16,14 @@ import {
   Email,
   Lock,
   School as SchoolIcon,
+  Home as HomeIcon,
   ArrowForward,
   VerifiedUser,
   LocationOn,
   Phone,
   Language,
 } from '@mui/icons-material';
+import smsLogoImg from '../assets/logo/smslogo.png';
 import { useLogin, useRecordConsent } from '../queries/Auth';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -89,12 +92,15 @@ const LoginPage: React.FC = () => {
   };
 
   const getRedirectPath = (role: string) => {
-    if (!role) return '/';
+    if (!role) return '/school-admin/dashboard';
     const base = useRoleStore.getState().getBasePath(role);
     if (base) return `${base}/dashboard`;
     const map: Record<string, string> = {
       super_admin: '/super-admin',
+      
       sch_admin: '/school-admin',
+      
+     
       teacher: '/teacher',
       student: '/student',
       parent: '/parent',
@@ -260,6 +266,7 @@ const LoginPage: React.FC = () => {
           sx={{
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'space-between',
             position: 'relative',
             zIndex: 1,
           }}
@@ -284,20 +291,21 @@ const LoginPage: React.FC = () => {
               />
             ) : (
               <Box
+                component="img"
+                src={smsLogoImg}
+                alt="SMS Edu Solution"
                 sx={{
                   width: 48,
                   height: 48,
                   borderRadius: '14px',
-                  background: `linear-gradient(135deg, ${primary}, ${accent})`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: `0 6px 20px ${primary}50`,
+                  objectFit: 'contain',
+                  p: '3px',
+                  bgcolor: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  boxShadow: `0 6px 20px ${primary}40`,
                   flexShrink: 0,
                 }}
-              >
-                <SchoolIcon sx={{ color: 'white', fontSize: 24 }} />
-              </Box>
+              />
             )}
             <Box>
               <Typography
@@ -400,6 +408,33 @@ const LoginPage: React.FC = () => {
               </Box>
             </>
           )}
+
+          {/* Home button to navigate to landing page */}
+          <Button
+            onClick={() => navigate('/landing')}
+            startIcon={<HomeIcon sx={{ fontSize: 18 }} />}
+            sx={{
+              color: '#FFFFFF',
+              bgcolor: 'rgba(255, 255, 255, 0.08)',
+              border: '1px solid rgba(255, 255, 255, 0.16)',
+              backdropFilter: 'blur(10px)',
+              borderRadius: '50px',
+              px: 2.2,
+              py: 0.7,
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              textTransform: 'none',
+              transition: 'all 0.25s ease',
+              '&:hover': {
+                bgcolor: 'rgba(255, 255, 255, 0.18)',
+                borderColor: 'rgba(255, 255, 255, 0.35)',
+                transform: 'translateY(-2px)',
+                boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
+              },
+            }}
+          >
+            Home
+          </Button>
         </Box>
 
         {/* ── Hero section ── */}
@@ -738,37 +773,65 @@ const LoginPage: React.FC = () => {
               position: 'relative',
             }}
           >
-            {/* Secure Login badge */}
+            {/* Top Bar with Home Button & Secure Login badge */}
             <Box
               sx={{
-                position: 'absolute',
-                top: 24,
-                right: 28,
                 display: 'flex',
                 alignItems: 'center',
-                gap: 0.5,
-                px: 1,
-                py: 0.4,
-                bgcolor: '#F0FDF4',
-                border: '1px solid #BBF7D0',
-                borderRadius: '8px',
+                justifyContent: 'space-between',
+                mb: 2.5,
               }}
             >
-              <VerifiedUser sx={{ fontSize: 11, color: '#16A34A' }} />
-              <Typography
+              <Button
+                size="small"
+                onClick={() => navigate('/landing')}
+                startIcon={<HomeIcon sx={{ fontSize: 16 }} />}
                 sx={{
-                  fontSize: '0.62rem',
+                  color: '#475569',
+                  bgcolor: '#F8FAFC',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: '20px',
+                  px: 1.6,
+                  py: 0.4,
+                  fontSize: '0.78rem',
                   fontWeight: 700,
-                  color: '#16A34A',
-                  letterSpacing: '0.04em',
+                  textTransform: 'none',
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    bgcolor: '#F1F5F9',
+                    color: '#0F172A',
+                    borderColor: '#CBD5E1',
+                  },
                 }}
               >
-                Secure Login
-              </Typography>
-            </Box>
+                Home
+              </Button>
 
-            {/* Top spacer for the badge */}
-            <Box sx={{ height: 8 }} />
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.5,
+                  px: 1,
+                  py: 0.4,
+                  bgcolor: '#F0FDF4',
+                  border: '1px solid #BBF7D0',
+                  borderRadius: '8px',
+                }}
+              >
+                <VerifiedUser sx={{ fontSize: 11, color: '#16A34A' }} />
+                <Typography
+                  sx={{
+                    fontSize: '0.62rem',
+                    fontWeight: 700,
+                    color: '#16A34A',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  Secure Login
+                </Typography>
+              </Box>
+            </Box>
 
             {/* Heading */}
             <Box sx={{ mb: 4 }}>
