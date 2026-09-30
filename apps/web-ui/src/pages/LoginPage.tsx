@@ -1057,7 +1057,7 @@ const LoginPage: React.FC = () => {
                 Don't have an account?{' '}
                 <Typography
                   component="a"
-                  href="mailto:smsystem.2000@gmail.com"
+                  href="mailto:support@smsedusolutions.in"
                   sx={{
                     fontWeight: 700,
                     color: primary,
