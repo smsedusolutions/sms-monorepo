@@ -69,7 +69,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '24px',
+          borderRadius: '12px',
           p: { xs: 1.5, sm: 2.5 },
           bgcolor: '#FFFFFF',
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
@@ -120,7 +120,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
                   bgcolor: '#25D366',
                   color: 'white',
                   fontWeight: 700,
-                  borderRadius: '50px',
+                  borderRadius: '6px',
                   px: 3,
                   py: 1,
                   textTransform: 'none',
@@ -132,7 +132,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
               <Button
                 variant="outlined"
                 onClick={handleReset}
-                sx={{ borderRadius: '50px', px: 3, textTransform: 'none', fontWeight: 700 }}
+                sx={{ borderRadius: '6px', px: 3, textTransform: 'none', fontWeight: 700 }}
               >
                 Close
               </Button>
@@ -232,7 +232,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
                 sx={{
                   fontSize: '0.85rem',
                   fontWeight: 800,
-                  color: '#4F46E5',
+                  color: '#0284C7',
                   textDecoration: 'none',
                   '&:hover': { textDecoration: 'underline' },
                 }}
@@ -247,14 +247,18 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
               size="large"
               endIcon={<Send />}
               sx={{
-                background: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)',
+                bgcolor: '#0F172A',
+                color: '#FFFFFF',
                 fontWeight: 800,
-                borderRadius: '50px',
+                borderRadius: '6px',
                 py: 1.3,
                 fontSize: '1rem',
                 textTransform: 'none',
-                boxShadow: '0 8px 20px -4px rgba(79, 70, 229, 0.4)',
+                boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)',
                 mt: 1,
+                '&:hover': {
+                  bgcolor: '#1E293B',
+                },
               }}
             >
               Confirm Live Demo

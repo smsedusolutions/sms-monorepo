@@ -26,12 +26,8 @@ export const SmsEduLogo: React.FC<SmsLogoProps> = ({
           width: 'auto',
           maxHeight: size,
           objectFit: 'contain',
-          filter: 'drop-shadow(0 4px 12px rgba(99, 102, 241, 0.35))',
+          filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.08))',
           flexShrink: 0,
-          transition: 'transform 0.25s ease',
-          '&:hover': {
-            transform: 'scale(1.05)',
-          },
         }}
       />
 
@@ -44,11 +40,7 @@ export const SmsEduLogo: React.FC<SmsLogoProps> = ({
                 fontWeight: 900,
                 fontSize: size > 40 ? '1.45rem' : '1.2rem',
                 letterSpacing: '-0.03em',
-                background: variant === 'dark'
-                  ? 'linear-gradient(135deg, #FFFFFF 0%, #BAE6FD 100%)'
-                  : 'linear-gradient(135deg, #1E1B4B 0%, #4338CA 50%, #0284C7 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
+                color: variant === 'dark' ? '#FFFFFF' : '#0F172A',
                 lineHeight: 1,
               }}
             >

@@ -38,15 +38,18 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
   }, []);
 
   const navLinks = [
-    { label: 'Features', href: '#features' },
-    { label: '3D Preview', href: '#preview' },
-    { label: 'Parents Portal', href: '#parents-portal' },
-    { label: 'About 3v TechWorks', href: '#managed-by-3v' },
+    { label: 'Modules', href: '#features' },
+    { label: 'Parent Portal', href: '#parents-portal' },
+    { label: 'Infrastructure', href: '#managed-by-3v' },
     { label: 'Contact', href: '#contact' },
   ];
 
   const handleNavClick = (href: string) => {
     setMobileOpen(false);
+    if (href.startsWith('/')) {
+      navigate(href);
+      return;
+    }
     const element = document.querySelector(href);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -62,18 +65,15 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
         left: 0,
         right: 0,
         zIndex: 1100,
-        transition: 'all 0.35s ease-in-out',
-        background: isScrolled
-          ? 'rgba(255, 255, 255, 0.88)'
-          : 'rgba(255, 255, 255, 0.65)',
-        backdropFilter: 'blur(16px)',
-        borderBottom: isScrolled
-          ? '1px solid rgba(226, 232, 240, 0.8)'
-          : '1px solid rgba(255, 255, 255, 0.3)',
+        transition: 'all 0.25s ease-in-out',
+        bgcolor: isScrolled
+          ? 'rgba(255, 255, 255, 0.96)'
+          : 'rgba(255, 255, 255, 0.92)',
+        borderBottom: '1px solid #E2E8F0',
         boxShadow: isScrolled
-          ? '0 10px 30px -10px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)'
+          ? '0 2px 10px rgba(0, 0, 0, 0.05)'
           : 'none',
-        py: isScrolled ? 1.2 : 1.8,
+        py: isScrolled ? 1.2 : 1.6,
       }}
     >
       <Container maxWidth="xl">
@@ -112,12 +112,12 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
                 sx={{
                   color: '#334155',
                   fontWeight: 600,
-                  fontSize: '0.95rem',
+                  fontSize: '0.92rem',
                   textDecoration: 'none',
                   position: 'relative',
                   transition: 'color 0.2s ease',
                   '&:hover': {
-                    color: '#4F46E5',
+                    color: '#0284C7',
                   },
                   '&::after': {
                     content: '""',
@@ -126,9 +126,8 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
                     height: '2px',
                     bottom: -4,
                     left: 0,
-                    background: 'linear-gradient(90deg, #4F46E5, #06B6D4)',
-                    transition: 'width 0.25s ease',
-                    borderRadius: '2px',
+                    bgcolor: '#0284C7',
+                    transition: 'width 0.2s ease',
                   },
                   '&:hover::after': {
                     width: '100%',
@@ -152,13 +151,14 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
                 color: '#0F172A',
                 fontWeight: 600,
                 fontSize: '0.85rem',
-                borderRadius: '50px',
+                borderRadius: '6px',
                 px: 2,
                 py: 0.8,
-                bgcolor: 'rgba(2, 132, 199, 0.08)',
-                border: '1px solid rgba(2, 132, 199, 0.2)',
+                bgcolor: '#F8FAFC',
+                border: '1px solid #CBD5E1',
+                textTransform: 'none',
                 '&:hover': {
-                  bgcolor: 'rgba(2, 132, 199, 0.15)',
+                  bgcolor: '#F1F5F9',
                 },
               }}
             >
@@ -171,17 +171,17 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
               onClick={onOpenDemo}
               sx={{
                 display: { xs: 'none', sm: 'inline-flex' },
-                borderColor: '#4F46E5',
-                color: '#4F46E5',
+                borderColor: '#CBD5E1',
+                color: '#0F172A',
                 fontWeight: 700,
-                borderRadius: '50px',
+                borderRadius: '6px',
                 px: 2.2,
-                py: 0.9,
+                py: 0.85,
                 fontSize: '0.88rem',
                 textTransform: 'none',
                 '&:hover': {
-                  borderColor: '#4338CA',
-                  bgcolor: 'rgba(79, 70, 229, 0.06)',
+                  borderColor: '#94A3B8',
+                  bgcolor: '#F8FAFC',
                 },
               }}
             >
@@ -194,20 +194,22 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
               onClick={() => navigate('/login')}
               endIcon={<ArrowForward sx={{ fontSize: 18 }} />}
               sx={{
-                background: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)',
-                color: '#FFFFFF',
+                background: '#0F172A !important',
+                bgcolor: '#0F172A !important',
+                color: '#FFFFFF !important',
                 fontWeight: 700,
-                borderRadius: '50px',
+                borderRadius: '6px',
                 px: { xs: 2, sm: 2.8 },
-                py: 0.9,
-                fontSize: { xs: '0.85rem', sm: '0.92rem' },
+                py: 0.85,
+                fontSize: { xs: '0.85rem', sm: '0.9rem' },
                 textTransform: 'none',
-                boxShadow: '0 8px 20px -4px rgba(79, 70, 229, 0.45)',
-                transition: 'all 0.3s ease',
+                boxShadow: 'none',
+                border: '1px solid #0F172A',
                 '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 12px 26px -4px rgba(79, 70, 229, 0.6)',
-                  background: 'linear-gradient(135deg, #4338CA 0%, #0284C7 100%)',
+                  background: '#1E293B !important',
+                  bgcolor: '#1E293B !important',
+                  borderColor: '#1E293B',
+                  boxShadow: 'none',
                 },
               }}
             >
@@ -220,7 +222,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
               sx={{
                 display: { xs: 'inline-flex', md: 'none' },
                 color: '#1E293B',
-                bgcolor: 'rgba(0,0,0,0.04)',
+                bgcolor: '#F1F5F9',
               }}
             >
               <MenuIcon />
@@ -237,8 +239,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
         PaperProps={{
           sx: {
             width: 290,
-            background: 'rgba(255, 255, 255, 0.97)',
-            backdropFilter: 'blur(20px)',
+            bgcolor: '#FFFFFF',
             p: 3,
             display: 'flex',
             flexDirection: 'column',
@@ -260,12 +261,12 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
                 <ListItemButton
                   onClick={() => handleNavClick(link.href)}
                   sx={{
-                    borderRadius: '10px',
+                    borderRadius: '6px',
                     fontWeight: 600,
                     color: '#334155',
                     '&:hover': {
-                      bgcolor: 'rgba(99, 102, 241, 0.08)',
-                      color: '#4F46E5',
+                      bgcolor: '#F8FAFC',
+                      color: '#0284C7',
                     },
                   }}
                 >
@@ -285,10 +286,12 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
             }}
             fullWidth
             sx={{
-              borderRadius: '12px',
+              borderRadius: '6px',
               py: 1.1,
               fontWeight: 700,
               textTransform: 'none',
+              borderColor: '#CBD5E1',
+              color: '#0F172A',
             }}
           >
             Book Live Demo
@@ -303,12 +306,17 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
             fullWidth
             startIcon={<LoginIcon />}
             sx={{
-              background: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)',
-              borderRadius: '12px',
+              bgcolor: '#0F172A',
+              color: '#FFFFFF',
+              borderRadius: '6px',
               py: 1.1,
               fontWeight: 700,
               textTransform: 'none',
-              boxShadow: '0 8px 20px -4px rgba(79, 70, 229, 0.45)',
+              boxShadow: 'none',
+              '&:hover': {
+                bgcolor: '#1E293B',
+                boxShadow: 'none',
+              },
             }}
           >
             Go to Login

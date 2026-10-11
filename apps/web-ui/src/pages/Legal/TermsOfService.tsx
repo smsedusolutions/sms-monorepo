@@ -1,5 +1,5 @@
 /**
- * Terms of Service — SMS Edu Solutions
+ * Terms of Service: SMS Edu Solutions
  *
  * Plain-language terms with dedicated DPDP Act, 2023 (India) data protection provisions.
  * Designed for easy reading by school administrators, staff, parents, and students.
@@ -176,7 +176,7 @@ const TermsOfService: React.FC = () => {
               <Box
                 component="span"
                 onClick={() => navigate('/data-rights')}
-                sx={{ color: '#4f46e5', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                sx={{ color: '#0284c7', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
               >
                 DPDP Act Data Rights Request Page
               </Box>
@@ -217,7 +217,7 @@ const TermsOfService: React.FC = () => {
                 DPDP Act Grievance Contact:
               </Typography>
               <Typography sx={{ fontSize: '0.85rem', color: '#334155', mb: 0.5 }}>
-                • <strong>Email:</strong> <a href="mailto:grievance@smsedusolutions.com" style={{ color: '#4f46e5', textDecoration: 'none', fontWeight: 600 }}>grievance@smsedusolutions.com</a>
+                • <strong>Email:</strong> <a href="mailto:grievance@smsedusolutions.com" style={{ color: '#0284c7', textDecoration: 'none', fontWeight: 600 }}>grievance@smsedusolutions.com</a>
               </Typography>
               <Typography sx={{ fontSize: '0.85rem', color: '#334155', mb: 0.5 }}>
                 • <strong>Response SLA:</strong> Resolved within 30 days under DPDP Act requirements.

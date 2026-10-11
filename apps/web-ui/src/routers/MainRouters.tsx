@@ -192,15 +192,18 @@ const MainRouters = () => {
             })()
           }
         />
-        <Route path="/landing" element={<LandingPage />} />
-        <Route path="/home" element={<LandingPage />} />
+        <Route path="/landing" element={<Navigate to="/" replace />} />
+        <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/secret-setup-super-admin" element={<CreateSuperAdminSecret />} />
 
-        {/* Legal / DPDP Compliance Routes — public, no authentication required */}
+        {/* Legal / DPDP Compliance Routes - public, no authentication required */}
         <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
+        <Route path="/terms-and-conditions" element={<TermsOfService />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/data-rights" element={<DataRightsRequest />} />
         <Route path="/dataright" element={<DataRightsRequest />} />
         <Route path="/datarights" element={<DataRightsRequest />} />

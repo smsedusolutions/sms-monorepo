@@ -411,14 +411,14 @@ const LoginPage: React.FC = () => {
 
           {/* Home button to navigate to landing page */}
           <Button
-            onClick={() => navigate('/landing')}
+            onClick={() => navigate('/')}
             startIcon={<HomeIcon sx={{ fontSize: 18 }} />}
             sx={{
               color: '#FFFFFF',
               bgcolor: 'rgba(255, 255, 255, 0.08)',
               border: '1px solid rgba(255, 255, 255, 0.16)',
               backdropFilter: 'blur(10px)',
-              borderRadius: '50px',
+              borderRadius: '6px',
               px: 2.2,
               py: 0.7,
               fontSize: '0.85rem',
@@ -784,13 +784,13 @@ const LoginPage: React.FC = () => {
             >
               <Button
                 size="small"
-                onClick={() => navigate('/landing')}
+                onClick={() => navigate('/')}
                 startIcon={<HomeIcon sx={{ fontSize: 16 }} />}
                 sx={{
                   color: '#475569',
                   bgcolor: '#F8FAFC',
                   border: '1px solid #E2E8F0',
-                  borderRadius: '20px',
+                  borderRadius: '6px',
                   px: 1.6,
                   py: 0.4,
                   fontSize: '0.78rem',

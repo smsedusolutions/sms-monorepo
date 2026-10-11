@@ -31,37 +31,36 @@ export const LandingFooter: React.FC = () => {
       }}
     >
       <Container maxWidth="xl">
-        {/* ── HIGHLIGHT CONTACT BAR (from Image 1) ── */}
+        {/* ── HIGHLIGHT CONTACT BAR ── */}
         <Box
           sx={{
-            borderRadius: '24px',
-            background: 'linear-gradient(135deg, #1E1B4B 0%, #0F172A 100%)',
-            border: '1px solid rgba(99, 102, 241, 0.3)',
-            p: { xs: 3, md: 4 },
-            mb: 8,
-            boxShadow: '0 15px 35px -10px rgba(0, 0, 0, 0.5)',
+            borderRadius: '8px',
+            bgcolor: '#111827',
+            border: '1px solid #1F2937',
+            p: { xs: 3, md: 3.5 },
+            mb: 7,
             display: 'grid',
             gridTemplateColumns: { xs: '1fr', md: '1.2fr 1fr 1fr 1.2fr' },
             gap: 3,
             alignItems: 'center',
           }}
         >
-          {/* Phone Numbers from Image 1 */}
+          {/* Phone Numbers */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box
               sx={{
-                width: 46,
-                height: 46,
-                borderRadius: '12px',
-                bgcolor: 'rgba(99, 102, 241, 0.15)',
-                color: '#818CF8',
+                width: 44,
+                height: 44,
+                borderRadius: '6px',
+                bgcolor: 'rgba(2, 132, 199, 0.15)',
+                color: '#38BDF8',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
               }}
             >
-              <Phone sx={{ fontSize: 24 }} />
+              <Phone sx={{ fontSize: 22 }} />
             </Box>
             <Box>
               <Typography sx={{ fontSize: '0.72rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: 700 }}>
@@ -71,14 +70,14 @@ export const LandingFooter: React.FC = () => {
                 <Typography
                   component="a"
                   href="tel:+916361888927"
-                  sx={{ color: '#FFFFFF', fontWeight: 800, fontSize: '0.98rem', textDecoration: 'none', '&:hover': { color: '#38BDF8' } }}
+                  sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.95rem', textDecoration: 'none', '&:hover': { color: '#38BDF8' } }}
                 >
                   6361888927
                 </Typography>
                 <Typography
                   component="a"
                   href="tel:+917259237030"
-                  sx={{ color: '#FFFFFF', fontWeight: 800, fontSize: '0.98rem', textDecoration: 'none', '&:hover': { color: '#38BDF8' } }}
+                  sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.95rem', textDecoration: 'none', '&:hover': { color: '#38BDF8' } }}
                 >
                   72592 37030
                 </Typography>
@@ -86,13 +85,13 @@ export const LandingFooter: React.FC = () => {
             </Box>
           </Box>
 
-          {/* Support Email from Image 1 */}
+          {/* Support Email */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box
               sx={{
-                width: 46,
-                height: 46,
-                borderRadius: '12px',
+                width: 44,
+                height: 44,
+                borderRadius: '6px',
                 bgcolor: 'rgba(14, 165, 233, 0.15)',
                 color: '#38BDF8',
                 display: 'flex',
@@ -101,7 +100,7 @@ export const LandingFooter: React.FC = () => {
                 flexShrink: 0,
               }}
             >
-              <Email sx={{ fontSize: 24 }} />
+              <Email sx={{ fontSize: 22 }} />
             </Box>
             <Box>
               <Typography sx={{ fontSize: '0.72rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: 700 }}>
@@ -110,20 +109,20 @@ export const LandingFooter: React.FC = () => {
               <Typography
                 component="a"
                 href="mailto:support@smsedusolutions.in"
-                sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.92rem', textDecoration: 'none', wordBreak: 'break-all', '&:hover': { color: '#38BDF8' } }}
+                sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none', wordBreak: 'break-all', '&:hover': { color: '#38BDF8' } }}
               >
                 support@smsedusolutions.in
               </Typography>
             </Box>
           </Box>
 
-          {/* Website from Image 1 */}
+          {/* Website */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Box
               sx={{
-                width: 46,
-                height: 46,
-                borderRadius: '12px',
+                width: 44,
+                height: 44,
+                borderRadius: '6px',
                 bgcolor: 'rgba(16, 185, 129, 0.15)',
                 color: '#34D399',
                 display: 'flex',
@@ -132,7 +131,7 @@ export const LandingFooter: React.FC = () => {
                 flexShrink: 0,
               }}
             >
-              <Language sx={{ fontSize: 24 }} />
+              <Language sx={{ fontSize: 22 }} />
             </Box>
             <Box>
               <Typography sx={{ fontSize: '0.72rem', color: '#94A3B8', textTransform: 'uppercase', fontWeight: 700 }}>
@@ -143,27 +142,26 @@ export const LandingFooter: React.FC = () => {
                 href="https://www.smsedusolutions.in"
                 target="_blank"
                 rel="noreferrer"
-                sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.92rem', textDecoration: 'none', '&:hover': { color: '#38BDF8' } }}
+                sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none', '&:hover': { color: '#38BDF8' } }}
               >
                 www.smsedusolutions.in
               </Typography>
             </Box>
           </Box>
 
-          {/* Slogan Right from Image 1: Technology for Tomorrow's Learners */}
+          {/* Slogan */}
           <Box sx={{ textAlign: { xs: 'left', md: 'right' } }}>
             <Typography
               sx={{
-                fontSize: '1rem',
+                fontSize: '0.95rem',
                 fontWeight: 800,
                 color: '#38BDF8',
-                letterSpacing: '-0.01em',
               }}
             >
               Technology for Tomorrow's Learners
             </Typography>
             <Typography sx={{ fontSize: '0.75rem', color: '#64748B' }}>
-              Transforming campuses with AI & Cloud
+              Cloud Management Platform for Educational Institutions
             </Typography>
           </Box>
         </Box>
@@ -178,7 +176,7 @@ export const LandingFooter: React.FC = () => {
               md: '2fr 1fr 1fr 1.5fr',
             },
             gap: 5,
-            mb: 8,
+            mb: 7,
           }}
         >
           {/* Brand Info */}
@@ -192,17 +190,17 @@ export const LandingFooter: React.FC = () => {
             </Typography>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <ThreeVLogo height={32} />
+              <ThreeVLogo height={30} />
             </Box>
           </Box>
 
           {/* Quick Links */}
           <Box>
-            <Typography sx={{ color: '#FFFFFF', fontWeight: 800, fontSize: '0.95rem', mb: 2.2 }}>
+            <Typography sx={{ color: '#FFFFFF', fontWeight: 800, fontSize: '0.95rem', mb: 2 }}>
               Modules
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
-              {['Student Lifecycle', 'Attendance & Biometrics', 'Examinations & Grades', 'Fee Management', 'GPS Bus Tracking', 'Parents Portal'].map((item) => (
+              {['Student Lifecycle', 'Attendance & Biometrics', 'Examinations & Grades', 'Fee Management', 'GPS Bus Tracking', 'Parent Portal'].map((item) => (
                 <Typography
                   key={item}
                   component="a"
@@ -223,15 +221,15 @@ export const LandingFooter: React.FC = () => {
 
           {/* Legal & Compliance */}
           <Box>
-            <Typography sx={{ color: '#FFFFFF', fontWeight: 800, fontSize: '0.95rem', mb: 2.2 }}>
-              Compliance
+            <Typography sx={{ color: '#FFFFFF', fontWeight: 800, fontSize: '0.95rem', mb: 2 }}>
+              Legal & Compliance
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.2 }}>
               {[
-                { label: 'Privacy Policy', path: '/privacy' },
-                { label: 'Terms of Service', path: '/terms' },
-                { label: 'Data Rights (DPDP)', path: '/data-rights' },
-                { label: 'Security Overview', path: '#managed-by-3v' },
+                { label: 'Privacy Policy', path: '/privacy-policy' },
+                { label: 'Terms & Conditions', path: '/terms-and-conditions' },
+                { label: 'Data Rights (DPDP Act)', path: '/data-rights' },
+                { label: 'Infrastructure & Security', path: '#managed-by-3v' },
               ].map((item) => (
                 <Typography
                   key={item.label}
@@ -260,21 +258,21 @@ export const LandingFooter: React.FC = () => {
           {/* Direct Login Card */}
           <Box
             sx={{
-              bgcolor: 'rgba(255, 255, 255, 0.03)',
-              borderRadius: '20px',
+              bgcolor: '#111827',
+              borderRadius: '8px',
               p: 3,
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              border: '1px solid #1F2937',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
             }}
           >
             <Box>
-              <Typography sx={{ color: 'white', fontWeight: 800, fontSize: '1rem', mb: 0.8 }}>
+              <Typography sx={{ color: 'white', fontWeight: 800, fontSize: '0.98rem', mb: 0.8 }}>
                 School Portal Access
               </Typography>
               <Typography sx={{ color: '#94A3B8', fontSize: '0.82rem', lineHeight: 1.5, mb: 2 }}>
-                Already an affiliated school or registered parent? Sign in to access your dashboard.
+                Affiliated school administrators, teachers, and parents can sign in below.
               </Typography>
             </Box>
 
@@ -282,14 +280,20 @@ export const LandingFooter: React.FC = () => {
               variant="contained"
               onClick={() => navigate('/login')}
               sx={{
-                background: 'linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%)',
-                color: 'white',
-                fontWeight: 800,
-                borderRadius: '50px',
+                background: '#0284C7 !important',
+                bgcolor: '#0284C7 !important',
+                color: 'white !important',
+                fontWeight: 700,
+                borderRadius: '6px',
                 py: 1.1,
                 fontSize: '0.9rem',
                 textTransform: 'none',
-                boxShadow: '0 8px 20px -4px rgba(79, 70, 229, 0.4)',
+                boxShadow: 'none',
+                '&:hover': {
+                  background: '#0369A1 !important',
+                  bgcolor: '#0369A1 !important',
+                  boxShadow: 'none',
+                },
               }}
             >
               Sign In to Portal

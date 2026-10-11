@@ -1,5 +1,5 @@
 /**
- * Privacy Policy — SMS Edu Solutions
+ * Privacy Policy: SMS Edu Solutions
  *
  * Compliant with India's Digital Personal Data Protection Act, 2023 (DPDP Act).
  * Written in clear, simple language so parents, students, teachers, and staff can easily understand.
@@ -258,13 +258,13 @@ const PrivacyPolicy: React.FC = () => {
                 Your DPDP Act Consent Status for Optional Charts:
               </Typography>
               <Typography sx={{ fontSize: '0.85rem', color: '#475569', mb: 1.5 }}>
-                Status: <strong>{consent.analytics ? 'Accepted (Google Charts active)' : 'Declined (Necessary only — charts hidden)'}</strong>
+                Status: <strong>{consent.analytics ? 'Accepted (Google Charts active)' : 'Declined (Necessary only: charts hidden)'}</strong>
               </Typography>
               <Button
                 variant="outlined"
                 size="small"
                 onClick={resetConsent}
-                sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.8rem', color: '#4338ca', borderColor: '#cbd5e1' }}
+                sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.8rem', color: '#0284c7', borderColor: '#cbd5e1' }}
               >
                 Reset DPDP Consent Preference
               </Button>
@@ -307,14 +307,14 @@ const PrivacyPolicy: React.FC = () => {
                 variant="contained"
                 onClick={() => navigate('/data-rights')}
                 sx={{
-                  bgcolor: '#4f46e5',
+                  bgcolor: '#0284c7',
                   textTransform: 'none',
                   fontWeight: 600,
                   fontSize: '0.88rem',
                   py: 1,
                   px: 2.5,
                   borderRadius: '6px',
-                  '&:hover': { bgcolor: '#4338ca' },
+                  '&:hover': { bgcolor: '#0369a1' },
                 }}
               >
                 Submit a DPDP Act Data Rights Request
@@ -338,7 +338,7 @@ const PrivacyPolicy: React.FC = () => {
                 DPDP Act Grievance Contact:
               </Typography>
               <Typography sx={{ fontSize: '0.85rem', color: '#334155', mb: 0.5 }}>
-                • <strong>Email:</strong> <a href="mailto:grievance@smsedusolutions.com" style={{ color: '#4f46e5', textDecoration: 'none', fontWeight: 600 }}>grievance@smsedusolutions.com</a>
+                • <strong>Email:</strong> <a href="mailto:grievance@smsedusolutions.com" style={{ color: '#0284c7', textDecoration: 'none', fontWeight: 600 }}>grievance@smsedusolutions.com</a>
               </Typography>
               <Typography sx={{ fontSize: '0.85rem', color: '#334155', mb: 0.5 }}>
                 • <strong>Response Time:</strong> Within 30 days as mandated by the DPDP Act (India).

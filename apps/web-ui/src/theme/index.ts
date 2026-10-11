@@ -1,7 +1,7 @@
 import { createTheme, alpha } from '@mui/material/styles';
 
-const primaryMain = '#6366f1'; // Indigo
-const secondaryMain = '#a855f7'; // Violet
+const primaryMain = '#0284c7'; // Sky / Corporate Blue
+const secondaryMain = '#0f172a'; // Slate 900
 const backgroundDefault = '#f8fafc'; // Slate 50
 
 export const theme = createTheme({
@@ -9,13 +9,13 @@ export const theme = createTheme({
     primary: {
       main: primaryMain,
       light: alpha(primaryMain, 0.1),
-      dark: '#4f46e5',
+      dark: '#0369a1',
       contrastText: '#ffffff',
     },
     secondary: {
       main: secondaryMain,
       light: alpha(secondaryMain, 0.1),
-      dark: '#9333ea',
+      dark: '#020617',
       contrastText: '#ffffff',
     },
     background: {
@@ -43,21 +43,25 @@ export const theme = createTheme({
     button: { textTransform: 'none', fontWeight: 600 },
   },
   shape: {
-    borderRadius: 10,
+    borderRadius: 6,
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 10,
+          borderRadius: 6,
           padding: '8px 20px',
           boxShadow: 'none',
           '&:hover': {
-            boxShadow: `0 4px 12px ${alpha(primaryMain, 0.25)}`,
+            boxShadow: 'none',
           },
         },
         containedPrimary: {
-          background: `linear-gradient(135deg, ${primaryMain} 0%, #4f46e5 100%)`,
+          backgroundColor: primaryMain,
+          color: '#ffffff',
+          '&:hover': {
+            backgroundColor: '#0369a1',
+          },
         },
       },
     },
