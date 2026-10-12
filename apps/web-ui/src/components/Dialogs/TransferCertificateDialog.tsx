@@ -234,7 +234,7 @@ export const TransferCertificateDialog: React.FC<TransferCertificateDialogProps>
                         {/* Meta & Issue Block */}
                         <Paper elevation={0} sx={{ p: 2, borderRadius: '2px', border: '1px solid #e2e8f0' }}>
                             <Typography variant="subtitle2" fontWeight={700} color="primary.main" sx={{ mb: 1.5 }}>
-                                📄 Certificate Number & Issue Details
+                                Certificate Number & Issue Details
                             </Typography>
                             <Grid container spacing={2}>
                                 <Grid size={{ xs: 12, sm: 4 }}>
@@ -270,7 +270,7 @@ export const TransferCertificateDialog: React.FC<TransferCertificateDialogProps>
                         {/* Student Information Block */}
                         <Paper elevation={0} sx={{ p: 2, borderRadius: '2px', border: '1px solid #e2e8f0' }}>
                             <Typography variant="subtitle2" fontWeight={700} color="primary.main" sx={{ mb: 1.5 }}>
-                                👤 Student & Family Information
+                                Student & Family Information
                             </Typography>
                             <Grid container spacing={2}>
                                 <Grid size={{ xs: 12, sm: 6 }}>
@@ -342,7 +342,7 @@ export const TransferCertificateDialog: React.FC<TransferCertificateDialogProps>
                         {/* Academic & Exit Details Block */}
                         <Paper elevation={0} sx={{ p: 2, borderRadius: '2px', border: '1px solid #e2e8f0' }}>
                             <Typography variant="subtitle2" fontWeight={700} color="primary.main" sx={{ mb: 1.5 }}>
-                                🎓 Academic & Leaving Details
+                                Academic & Leaving Details
                             </Typography>
                             <Grid container spacing={2}>
                                 <Grid size={{ xs: 12, sm: 4 }}>

@@ -335,7 +335,7 @@ const AITimetableGenerateDialog = ({
 
         setSuggestedSubjectIds(newSuggested);
         setTierLabels(newTierLabels);
-        showNotification(`✨ Auto-suggested values for ${Object.keys(suggested).length} subjects`, 'success');
+        showNotification(`Auto-suggested values for ${Object.keys(suggested).length} subjects`, 'success');
       }
     } catch (err: any) {
       showNotification(err?.message || 'Failed to generate suggestions', 'error');
@@ -626,10 +626,10 @@ const AITimetableGenerateDialog = ({
                         <SuggestIcon sx={{ color: 'warning.main', fontSize: 22, flexShrink: 0 }} />
                         <Box sx={{ minWidth: 0 }}>
                           <Typography variant="subtitle2" fontWeight={700} color="warning.dark" sx={{ fontSize: { xs: '0.875rem', sm: '0.95rem' } }}>
-                            🏆 Subject Priority Order
+                            Subject Priority Order
                           </Typography>
                           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: { xs: '0.75rem', sm: '0.8rem' } }}>
-                            Rank subjects by importance — top = Core, bottom = Minor
+                            Rank subjects by importance (top = Core, bottom = Minor)
                           </Typography>
                         </Box>
                       </Box>
@@ -785,7 +785,7 @@ const AITimetableGenerateDialog = ({
                       <Box sx={{ px: 2, pb: 1.5 }}>
                         <Alert severity="success" icon={<MagicIcon fontSize="small" />} sx={{ py: 0.5 }}>
                           <Typography variant="caption">
-                            ✨ {suggestedSubjectIds.size} subjects have auto-suggested values. Manually editing a row removes the highlight.
+                            {suggestedSubjectIds.size} subjects have auto-suggested values. Manually editing a row removes the highlight.
                           </Typography>
                         </Alert>
                       </Box>
@@ -859,7 +859,7 @@ const AITimetableGenerateDialog = ({
                             color="primary.main"
                             sx={{ fontWeight: 800, letterSpacing: 1.2, fontSize: '0.75rem' }}
                           >
-                            📂 {group.groupName}
+                            {group.groupName}
                           </Typography>
                           <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
                         </Box>
@@ -919,10 +919,10 @@ const AITimetableGenerateDialog = ({
                                   </Box>
 
                                   {isSuggested && (
-                                    <Tooltip title={`Auto-suggested${tier ? ` (${tier} priority)` : ''} — modify to customize`}>
+                                    <Tooltip title={`Auto-suggested${tier ? ` (${tier} priority)` : ''}: modify to customize`}>
                                       <Chip
                                         icon={<MagicIcon sx={{ fontSize: '14px !important' }} />}
-                                        label={tier ? `✨ ${tier}` : "✨ Auto"}
+                                        label={tier ? tier : "Auto"}
                                         size="small"
                                         color="success"
                                         variant="filled"
@@ -1151,7 +1151,7 @@ const AITimetableGenerateDialog = ({
             <Accordion elevation={0} defaultExpanded sx={{ border: '1px solid #e0e0e0', '&:before': { display: 'none' }, borderRadius: '8px !important' }}>
               <AccordionSummary expandIcon={<ExpandMoreIcon fontSize="small" />}>
                 <Typography variant="subtitle2" color="primary.main" fontWeight={600}>
-                  📅 P/Week (Periods Per Week)
+                  P/Week (Periods Per Week)
                 </Typography>
               </AccordionSummary>
               <AccordionDetails sx={{ pt: 0 }}>
@@ -1166,7 +1166,7 @@ const AITimetableGenerateDialog = ({
             <Accordion elevation={0} defaultExpanded sx={{ border: '1px solid #e0e0e0', '&:before': { display: 'none' }, borderRadius: '8px !important' }}>
               <AccordionSummary expandIcon={<ExpandMoreIcon fontSize="small" />}>
                 <Typography variant="subtitle2" color="primary.main" fontWeight={600}>
-                  📊 Max/Day (Maximum Periods Per Day)
+                  Max/Day (Maximum Periods Per Day)
                 </Typography>
               </AccordionSummary>
               <AccordionDetails sx={{ pt: 0 }}>
@@ -1181,7 +1181,7 @@ const AITimetableGenerateDialog = ({
             <Accordion elevation={0} defaultExpanded sx={{ border: '1px solid #e0e0e0', '&:before': { display: 'none' }, borderRadius: '8px !important' }}>
               <AccordionSummary expandIcon={<ExpandMoreIcon fontSize="small" />}>
                 <Typography variant="subtitle2" color="primary.main" fontWeight={600}>
-                  🌅 Morning Priority
+                  Morning Priority
                 </Typography>
               </AccordionSummary>
               <AccordionDetails sx={{ pt: 0 }}>
@@ -1196,7 +1196,7 @@ const AITimetableGenerateDialog = ({
             <Accordion elevation={0} defaultExpanded sx={{ border: '1px solid #e0e0e0', '&:before': { display: 'none' }, borderRadius: '8px !important' }}>
               <AccordionSummary expandIcon={<ExpandMoreIcon fontSize="small" />}>
                 <Typography variant="subtitle2" color="primary.main" fontWeight={600}>
-                  📌 Half-Day Saturday
+                  Half-Day Saturday
                 </Typography>
               </AccordionSummary>
               <AccordionDetails sx={{ pt: 0 }}>

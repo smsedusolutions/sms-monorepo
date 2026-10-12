@@ -38,7 +38,7 @@ export const MobileCardItem: React.FC<MobileCardItemProps> = ({
   subtitle,
   avatar,
   avatarText,
-  avatarBg = '#4f46e5',
+  avatarBg = '#0284c7',
   badge,
   badges,
   metaItems,
@@ -57,7 +57,7 @@ export const MobileCardItem: React.FC<MobileCardItemProps> = ({
       className={`touch-card-active ${className}`}
       sx={{
         bgcolor: '#ffffff',
-        borderRadius: '16px',
+        borderRadius: '8px',
         p: 2,
         mb: 1.5,
         border: '1px solid #e2e8f0',

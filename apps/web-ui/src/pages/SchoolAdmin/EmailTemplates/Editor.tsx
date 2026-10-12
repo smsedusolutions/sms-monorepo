@@ -320,11 +320,11 @@ const EmailTemplateEditor: React.FC = () => {
                                                     styleTemplate: e.target.value as 'modern' | 'classic' | 'professional' | 'vibrant' | 'minimal'
                                                 }))}
                                             >
-                                                <MenuItem value="modern">✨ Modern (Purple Gradient)</MenuItem>
-                                                <MenuItem value="classic">🎓 Classic (Navy & Gold)</MenuItem>
-                                                <MenuItem value="professional">💼 Professional (Clean Minimal)</MenuItem>
-                                                <MenuItem value="vibrant">🎨 Vibrant (Colorful)</MenuItem>
-                                                <MenuItem value="minimal">📝 Minimal (Black & White)</MenuItem>
+                                                <MenuItem value="modern">Modern (Corporate Blue)</MenuItem>
+                                                <MenuItem value="classic">Classic (Navy & Gold)</MenuItem>
+                                                <MenuItem value="professional">Professional (Clean Minimal)</MenuItem>
+                                                <MenuItem value="vibrant">Vibrant (Teal & Amber)</MenuItem>
+                                                <MenuItem value="minimal">Minimal (Monochrome)</MenuItem>
                                             </Select>
                                         </FormControl>
                                         <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>

@@ -92,13 +92,13 @@ export const MobileCardList: React.FC<MobileCardListProps> = ({
             <IconButton
               onClick={onFilterClick}
               sx={{
-                bgcolor: filterActiveCount > 0 ? '#4f46e5' : '#ffffff',
+                bgcolor: filterActiveCount > 0 ? '#0284c7' : '#ffffff',
                 color: filterActiveCount > 0 ? '#ffffff' : '#64748b',
-                borderRadius: '12px',
+                borderRadius: '6px',
                 border: '1px solid',
-                borderColor: filterActiveCount > 0 ? '#4f46e5' : '#e2e8f0',
+                borderColor: filterActiveCount > 0 ? '#0284c7' : '#e2e8f0',
                 p: 1.1,
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                boxShadow: 'none',
                 '&:active': { transform: 'scale(0.92)' },
               }}
             >

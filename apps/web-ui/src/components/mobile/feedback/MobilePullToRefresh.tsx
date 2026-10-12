@@ -81,7 +81,7 @@ export const MobilePullToRefresh: React.FC<MobilePullToRefreshProps> = ({
         }}
       >
         {isRefreshing ? (
-          <CircularProgress size={22} sx={{ color: '#4f46e5' }} />
+          <CircularProgress size={22} sx={{ color: '#0284c7' }} />
         ) : pullDistance > 10 ? (
           <Box
             sx={{
@@ -93,7 +93,7 @@ export const MobilePullToRefresh: React.FC<MobilePullToRefreshProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#4f46e5',
+              color: '#0284c7',
               transform: `rotate(${progress * 180}deg)`,
               transition: 'transform 0.1s ease',
             }}

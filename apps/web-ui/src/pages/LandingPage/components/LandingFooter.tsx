@@ -327,7 +327,20 @@ export const LandingFooter: React.FC = () => {
             .
           </Typography>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+            <Link
+              onClick={() => navigate('/privacy-policy')}
+              sx={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'none', '&:hover': { color: '#38BDF8' } }}
+            >
+              Privacy Policy
+            </Link>
+            <Typography sx={{ color: '#475569', fontSize: '0.75rem' }}>•</Typography>
+            <Link
+              onClick={() => navigate('/terms-and-conditions')}
+              sx={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'none', '&:hover': { color: '#38BDF8' } }}
+            >
+              Terms & Conditions
+            </Link>
             <Button
               onClick={scrollToTop}
               size="small"

@@ -127,9 +127,9 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
                 sx={{
                   width: 36,
                   height: 36,
-                  borderRadius: '10px',
-                  bgcolor: 'rgba(99, 102, 241, 0.08)',
-                  color: '#4f46e5',
+                  borderRadius: '6px',
+                  bgcolor: 'rgba(2, 132, 199, 0.08)',
+                  color: '#0284c7',
                   '&:active': { transform: 'scale(0.92)' },
                 }}
                 aria-label="Go Back"
@@ -143,10 +143,10 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
                 sx={{
                   width: 34,
                   height: 34,
-                  bgcolor: '#4f46e5',
+                  bgcolor: '#0284c7',
                   fontSize: 14,
                   fontWeight: 700,
-                  boxShadow: '0 2px 8px rgba(79, 70, 229, 0.25)',
+                  boxShadow: 'none',
                 }}
               >
                 {(school?.schoolName || 'S').charAt(0).toUpperCase()}
@@ -240,9 +240,9 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
                     sx={{
                       width: 32,
                       height: 32,
-                      color: settingsAnchorEl ? '#6366f1' : '#475569',
-                      bgcolor: settingsAnchorEl ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
-                      borderRadius: '8px',
+                      color: settingsAnchorEl ? '#0284c7' : '#475569',
+                      bgcolor: settingsAnchorEl ? 'rgba(2, 132, 199, 0.1)' : 'transparent',
+                      borderRadius: '6px',
                       '&:active': { transform: 'scale(0.92)' },
                     }}
                     aria-label="Settings"
@@ -260,7 +260,7 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
                       width: 32,
                       height: 32,
                       color: '#ef4444',
-                      borderRadius: '8px',
+                      borderRadius: '6px',
                       '&:hover': { bgcolor: 'rgba(239, 68, 68, 0.08)' },
                       '&:active': { transform: 'scale(0.92)' },
                     }}
@@ -287,11 +287,11 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
                     sx={{
                       width: 30,
                       height: 30,
-                      bgcolor: '#6366f1',
+                      bgcolor: '#0284c7',
                       fontSize: 12,
                       fontWeight: 600,
                       border: '2px solid #ffffff',
-                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.1)',
+                      boxShadow: 'none',
                     }}
                   >
                     {(user?.firstName || 'U').charAt(0).toUpperCase()}

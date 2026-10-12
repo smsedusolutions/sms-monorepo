@@ -66,7 +66,7 @@ export const MobileFormField: React.FC<MobileFormFieldProps> = ({
             InputProps?.endAdornment
           ),
           sx: {
-            borderRadius: '14px',
+            borderRadius: '8px',
             bgcolor: '#ffffff',
             fontSize: '1rem',
             '& fieldset': {
@@ -77,7 +77,7 @@ export const MobileFormField: React.FC<MobileFormFieldProps> = ({
               borderColor: error ? '#ef4444' : '#cbd5e1',
             },
             '&.Mui-focused fieldset': {
-              borderColor: error ? '#ef4444' : '#4f46e5',
+              borderColor: error ? '#ef4444' : '#0284c7',
               borderWidth: '2px',
             },
             ...InputProps?.sx,

@@ -21,6 +21,8 @@ export interface SchoolBranding {
   loginTheme?: SchoolLoginTheme;
 }
 
+export type SubdomainSchool = SchoolBranding;
+
 interface UseSubdomainSchoolReturn {
   school: SchoolBranding | null;
   isLoading: boolean;

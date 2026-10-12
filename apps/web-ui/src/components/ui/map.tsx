@@ -17,7 +17,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import { X, Minus, Plus, Locate, Maximize, Loader2 } from "lucide-react";
+import { X, Minus, Plus, Locate, Maximize, Loader2, Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { AppInput } from "../shared/AppInput";
@@ -1730,8 +1730,8 @@ function MapSearch({
               ))}
             </div>
           ) : (
-            <div className="p-8 text-center">
-              <span className="block text-2xl mb-2">🔍</span>
+            <div className="p-8 text-center flex flex-col items-center">
+              <Search className="w-6 h-6 mb-2 text-slate-400" />
               <Typography variant="body2" fontWeight={600} color="#fff">
                 No results found
               </Typography>

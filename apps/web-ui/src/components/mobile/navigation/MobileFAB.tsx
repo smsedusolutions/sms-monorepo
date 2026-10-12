@@ -42,9 +42,9 @@ export const MobileFAB: React.FC<MobileFABProps> = ({
           right: '16px',
           zIndex: 35,
           '& .MuiFab-primary': {
-            bgcolor: '#4f46e5',
-            boxShadow: '0 8px 24px rgba(79, 70, 229, 0.4)',
-            '&:hover, &:active': { bgcolor: '#4338ca' },
+            bgcolor: '#0284c7',
+            boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)',
+            '&:hover, &:active': { bgcolor: '#0369a1' },
           },
         }}
         icon={<SpeedDialIcon icon={icon || <AddRoundedIcon />} openIcon={<CloseRoundedIcon />} />}
@@ -65,7 +65,7 @@ export const MobileFAB: React.FC<MobileFABProps> = ({
             FabProps={{
               sx: {
                 bgcolor: '#ffffff',
-                color: '#4f46e5',
+                color: '#0284c7',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                 '&:hover': { bgcolor: '#f8fafc' },
               },
@@ -88,9 +88,9 @@ export const MobileFAB: React.FC<MobileFABProps> = ({
           bottom: 'calc(var(--mobile-bottom-nav-height) + var(--safe-area-bottom) + 16px)',
           right: '16px',
           zIndex: 35,
-          bgcolor: '#4f46e5',
-          boxShadow: '0 8px 24px rgba(79, 70, 229, 0.4)',
-          '&:hover, &:active': { bgcolor: '#4338ca', transform: 'scale(1.05)' },
+          bgcolor: '#0284c7',
+          boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)',
+          '&:hover, &:active': { bgcolor: '#0369a1' },
           transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >

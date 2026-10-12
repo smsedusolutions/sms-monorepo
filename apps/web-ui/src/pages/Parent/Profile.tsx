@@ -107,7 +107,7 @@ const ParentProfile: React.FC = () => {
             >
                 <Box
                     sx={{
-                        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%)',
+                        bgcolor: '#0F172A',
                         px: { xs: 2.5, sm: 4 },
                         py: { xs: 3, sm: 3.5 },
                         color: '#ffffff',
@@ -129,7 +129,7 @@ const ParentProfile: React.FC = () => {
                                 height: { xs: 76, sm: 92 },
                                 fontSize: { xs: '1.75rem', sm: '2.2rem' },
                                 fontWeight: 800,
-                                bgcolor: '#6366f1',
+                                bgcolor: '#0284C7',
                                 color: '#ffffff',
                                 border: '3px solid rgba(255, 255, 255, 0.9)',
                                 boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
@@ -191,14 +191,14 @@ const ParentProfile: React.FC = () => {
                             onClick={() => openRequestDialog("general", "")}
                             sx={{
                                 bgcolor: '#ffffff',
-                                color: '#312e81',
+                                color: '#0F172A',
                                 fontWeight: 700,
-                                borderRadius: 2,
+                                borderRadius: '6px',
                                 textTransform: 'none',
                                 px: 2.5,
                                 py: 1,
                                 fontSize: '0.85rem',
-                                boxShadow: '0 4px 14px rgba(0,0,0,0.1)',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
                                 '&:hover': { bgcolor: '#f1f5f9' },
                                 alignSelf: { xs: 'flex-start', sm: 'center' },
                             }}
@@ -216,7 +216,7 @@ const ParentProfile: React.FC = () => {
                     </Grid>
                     <Grid size={{ xs: 6, sm: 3 }} sx={{ p: 2, textAlign: 'center', borderRight: { sm: '1px solid #e2e8f0' }, borderBottom: { xs: '1px solid #e2e8f0', sm: 'none' } }}>
                         <Typography variant="caption" color="text.secondary" fontWeight={600}>RELATIONSHIP</Typography>
-                        <Typography variant="h6" fontWeight={800} sx={{ mt: 0.25, color: '#4f46e5', textTransform: 'capitalize' }}>{parentRelationship}</Typography>
+                        <Typography variant="h6" fontWeight={800} sx={{ mt: 0.25, color: '#0284C7', textTransform: 'capitalize' }}>{parentRelationship}</Typography>
                     </Grid>
                     <Grid size={{ xs: 6, sm: 3 }} sx={{ p: 2, textAlign: 'center', borderRight: { xs: '1px solid #e2e8f0', sm: '1px solid #e2e8f0' } }}>
                         <Typography variant="caption" color="text.secondary" fontWeight={600}>OCCUPATION</Typography>
@@ -238,7 +238,7 @@ const ParentProfile: React.FC = () => {
                         elevation={0}
                         sx={{
                             p: { xs: 2, sm: 2.5 },
-                            borderRadius: 3,
+                            borderRadius: '8px',
                             border: '1px solid',
                             borderColor: 'divider',
                             bgcolor: '#ffffff',
@@ -250,7 +250,7 @@ const ParentProfile: React.FC = () => {
 
                         <Stack spacing={2}>
                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#eef2ff', color: '#4f46e5' }}>
+                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#f0f9ff', color: '#0284C7' }}>
                                     <EmailIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -332,7 +332,7 @@ const ParentProfile: React.FC = () => {
                             <Divider />
 
                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#f5f3ff', color: '#8b5cf6' }}>
+                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#f0f9ff', color: '#0284C7' }}>
                                     <SchoolIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -351,7 +351,7 @@ const ParentProfile: React.FC = () => {
                         elevation={0}
                         sx={{
                             p: { xs: 2, sm: 2.5 },
-                            borderRadius: 3,
+                            borderRadius: '8px',
                             border: '1px solid',
                             borderColor: 'divider',
                             bgcolor: '#ffffff',
@@ -359,7 +359,7 @@ const ParentProfile: React.FC = () => {
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2.5 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                                <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#eef2ff', color: '#4f46e5' }}>
+                                <Box sx={{ p: 0.75, borderRadius: '6px', bgcolor: '#f0f9ff', color: '#0284C7' }}>
                                     <FamilyIcon sx={{ fontSize: 22 }} />
                                 </Box>
                                 <Box>
@@ -385,7 +385,7 @@ const ParentProfile: React.FC = () => {
                                         elevation={0}
                                         sx={{
                                             p: 2,
-                                            borderRadius: 2.5,
+                                            borderRadius: '8px',
                                             border: '1px solid #e2e8f0',
                                             bgcolor: '#f8fafc',
                                             transition: 'all 0.18s ease-in-out',
@@ -403,7 +403,7 @@ const ParentProfile: React.FC = () => {
                                                     sx={{
                                                         width: 50,
                                                         height: 50,
-                                                        bgcolor: '#4f46e5',
+                                                        bgcolor: '#0284C7',
                                                         fontWeight: 700,
                                                         fontSize: '1.15rem',
                                                     }}
@@ -430,7 +430,7 @@ const ParentProfile: React.FC = () => {
                                                         setSelectedChild(child);
                                                         navigate('/parent/attendance');
                                                     }}
-                                                    sx={{ textTransform: 'none', borderRadius: 2, fontSize: '0.75rem', fontWeight: 600 }}
+                                                    sx={{ textTransform: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600 }}
                                                 >
                                                     Attendance
                                                 </Button>
@@ -442,7 +442,7 @@ const ParentProfile: React.FC = () => {
                                                         setSelectedChild(child);
                                                         navigate('/parent/fees/statement');
                                                     }}
-                                                    sx={{ textTransform: 'none', borderRadius: 2, fontSize: '0.75rem', fontWeight: 600 }}
+                                                    sx={{ textTransform: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600 }}
                                                 >
                                                     Fees
                                                 </Button>
@@ -454,7 +454,7 @@ const ParentProfile: React.FC = () => {
                                                         setSelectedChild(child);
                                                         navigate(`/parent/children/${child.studentId}`);
                                                     }}
-                                                    sx={{ textTransform: 'none', borderRadius: 2, fontSize: '0.75rem', fontWeight: 600, bgcolor: '#4f46e5', '&:hover': { bgcolor: '#4338ca' } }}
+                                                    sx={{ textTransform: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, bgcolor: '#0284C7', '&:hover': { bgcolor: '#0369A1' } }}
                                                 >
                                                     Profile
                                                 </Button>

@@ -15,8 +15,8 @@ const SuperAdminDashboard = () => {
     const stats = data?.data;
 
     const quickActions = [
-        { label: 'All Schools', icon: <SchoolIcon />, path: '/super-admin/schools', color: '#3b82f6', gradient: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' },
-        { label: 'Administrators', icon: <PeopleIcon />, path: '/super-admin/users', color: '#8b5cf6', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)' },
+        { label: 'All Schools', icon: <SchoolIcon />, path: '/super-admin/schools', color: '#0284C7', gradient: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)' },
+        { label: 'Administrators', icon: <PeopleIcon />, path: '/super-admin/users', color: '#0F172A', gradient: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)' },
         { label: 'Add School', icon: <DomainAddIcon />, path: '/super-admin/schools', color: '#10b981', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
         { label: 'Add Admin', icon: <PersonAddIcon />, path: '/super-admin/users', color: '#f59e0b', gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
     ];
@@ -30,9 +30,7 @@ const SuperAdminDashboard = () => {
                         fontWeight={800}
                         sx={{
                             mb: 0.25,
-                            background: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
+                            color: '#0F172A',
                             fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
                             letterSpacing: '-0.02em',
                             lineHeight: 1.2

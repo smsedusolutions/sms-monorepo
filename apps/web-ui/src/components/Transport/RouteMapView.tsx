@@ -54,7 +54,7 @@ export const RouteMapView: React.FC<RouteMapViewProps> = ({
                 <Box sx={{ p: 1.5, bgcolor: 'grey.50', borderRadius: 2, mb: 3, display: 'flex', alignItems: 'center', gap: 1 }}>
                     <PersonIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
                     <Typography variant="body2" color="text.secondary">
-                        Driver: <strong>{driverName || 'Assigned Driver'}</strong> {driverPhone ? `• 📞 ${driverPhone}` : ''}
+                        Driver: <strong>{driverName || 'Assigned Driver'}</strong> {driverPhone ? `• Phone: ${driverPhone}` : ''}
                     </Typography>
                 </Box>
             )}

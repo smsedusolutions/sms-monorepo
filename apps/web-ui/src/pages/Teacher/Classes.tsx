@@ -123,15 +123,15 @@ const TeacherClasses = () => {
             {/* Header Area */}
             <Box
                 sx={{
-                    mb: 5,
+                    mb: 4,
                     p: 4,
-                    borderRadius: 6,
-                    background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)',
-                    boxShadow: '0 10px 30px rgba(99, 102, 241, 0.2)',
+                    borderRadius: '8px',
+                    bgcolor: '#0F172A',
+                    boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)',
                     color: 'white'
                 }}
             >
-                <Typography variant="h4" fontWeight={900} sx={{ letterSpacing: '-0.02em', mb: 1 }}>
+                <Typography variant="h4" fontWeight={800} sx={{ letterSpacing: '-0.02em', mb: 1 }}>
                     My Classes
                 </Typography>
                 <Typography variant="body1" sx={{ opacity: 0.9, fontWeight: 500, maxWidth: '600px' }}>
@@ -140,7 +140,7 @@ const TeacherClasses = () => {
             </Box>
 
             {/* Main Assignment Container */}
-            <Card elevation={0} sx={{ borderRadius: 6, border: '1px solid #e2e8f0', bgcolor: 'white', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+            <Card elevation={0} sx={{ borderRadius: '8px', border: '1px solid #e2e8f0', bgcolor: 'white', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 {isLoading ? (
                     <Box sx={{ p: 4 }}>
                         {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} height={60} sx={{ mb: 1, borderRadius: 2 }} />)}

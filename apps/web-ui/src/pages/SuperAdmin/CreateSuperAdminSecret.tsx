@@ -142,9 +142,9 @@ const CreateSuperAdminSecret: React.FC = () => {
       },
       "&.Mui-focused": {
         backgroundColor: "rgba(15, 23, 42, 0.7)",
-        boxShadow: "0 0 0 3px rgba(99, 102, 241, 0.25)",
+        boxShadow: "0 0 0 3px rgba(2, 132, 199, 0.25)",
         "& fieldset": {
-          borderColor: "#6366f1",
+          borderColor: "#0284C7",
         },
       },
     },
@@ -167,29 +167,9 @@ const CreateSuperAdminSecret: React.FC = () => {
         alignItems: "center",
         justifyContent: "center",
         position: "relative",
-        background: "radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%)",
+        bgcolor: "#0F172A",
         overflow: "hidden",
         p: 2,
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          width: "300px",
-          height: "300px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%)",
-          top: "10%",
-          left: "15%",
-        },
-        "&::after": {
-          content: '""',
-          position: "absolute",
-          width: "400px",
-          height: "400px",
-          borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%)",
-          bottom: "10%",
-          right: "10%",
-        },
       }}
     >
       <Paper
@@ -197,10 +177,10 @@ const CreateSuperAdminSecret: React.FC = () => {
         sx={{
           width: "100%",
           maxWidth: 450,
-          background: "rgba(15, 23, 42, 0.4)",
+          background: "rgba(30, 41, 59, 0.7)",
           backdropFilter: "blur(20px)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-          borderRadius: 4,
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          borderRadius: '8px',
           p: { xs: 3, md: 5 },
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
           zIndex: 1,
@@ -236,7 +216,7 @@ const CreateSuperAdminSecret: React.FC = () => {
               The Super Admin account has been registered successfully.
               You will be redirected to the login page shortly...
             </Typography>
-            <CircularProgress size={24} sx={{ color: "#6366f1" }} />
+            <CircularProgress size={24} sx={{ color: "#0284C7" }} />
           </Box>
         ) : (
           <>
@@ -404,10 +384,10 @@ const CreateSuperAdminSecret: React.FC = () => {
                     py: 1.5,
                     fontSize: "1rem",
                     fontWeight: 600,
-                    borderRadius: 2.5,
-                    background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                    borderRadius: '6px',
+                    bgcolor: "#0284C7",
                     "&:hover": {
-                      background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                      bgcolor: "#0369A1",
                     },
                   }}
                 >
@@ -461,7 +441,7 @@ const CreateSuperAdminSecret: React.FC = () => {
                       py: 1.5,
                       borderColor: "rgba(255, 255, 255, 0.15)",
                       color: "#cbd5e1",
-                      borderRadius: 2.5,
+                      borderRadius: '6px',
                       "&:hover": {
                         borderColor: "rgba(255, 255, 255, 0.3)",
                         background: "rgba(255, 255, 255, 0.05)",
@@ -481,10 +461,10 @@ const CreateSuperAdminSecret: React.FC = () => {
                       py: 1.5,
                       fontSize: "1rem",
                       fontWeight: 600,
-                      borderRadius: 2.5,
-                      background: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+                      borderRadius: '6px',
+                      bgcolor: "#059669",
                       "&:hover": {
-                        background: "linear-gradient(135deg, #059669 0%, #047857 100%)",
+                        bgcolor: "#047857",
                       },
                     }}
                   >

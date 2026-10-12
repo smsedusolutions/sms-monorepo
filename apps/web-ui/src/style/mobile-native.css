@@ -10,8 +10,8 @@
   --safe-area-right: env(safe-area-inset-right, 0px);
   --mobile-header-height: 56px;
   --mobile-bottom-nav-height: 64px;
-  --app-primary: #4f46e5;
-  --app-primary-light: #6366f1;
+  --app-primary: #0284c7;
+  --app-primary-light: #38bdf8;
   --app-bg: #f8fafc;
   --app-card-bg: #ffffff;
 }

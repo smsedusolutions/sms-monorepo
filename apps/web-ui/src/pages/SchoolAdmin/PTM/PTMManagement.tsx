@@ -777,7 +777,7 @@ export const PTMManagement: React.FC = () => {
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <Typography variant="caption" fontWeight={800} color="primary.main">{opt?.label}</Typography>
                                                     <Typography variant="caption" color={ct ? 'text.primary' : 'warning.dark'} fontWeight={ct ? 600 : 500}>
-                                                        {ct ? `👨‍🏫 ${ct.firstName} ${ct.lastName}` : '⚠️ No Class Teacher'}
+                                                        {ct ? `${ct.firstName} ${ct.lastName}` : 'No Class Teacher'}
                                                     </Typography>
                                                 </Box>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 0.5 }}>
@@ -800,7 +800,7 @@ export const PTMManagement: React.FC = () => {
                                                                 fontSize: '0.68rem',
                                                             }}
                                                         >
-                                                            👪 {pCount} {pCount === 1 ? 'parent' : 'parents'}
+                                                            {pCount} {pCount === 1 ? 'parent' : 'parents'}
                                                         </Typography>
                                                     </Box>
                                                 </Box>
@@ -861,7 +861,7 @@ export const PTMManagement: React.FC = () => {
                                                 color: pCount === 0 ? '#6b7280' : '#1d4ed8',
                                             }}
                                         >
-                                            👪 {pCount} {pCount === 1 ? 'parent' : 'parents'} registered in this section
+                                            {pCount} {pCount === 1 ? 'parent' : 'parents'} registered in this section
                                         </Typography>
                                     </Box>
                                 );
@@ -1012,7 +1012,7 @@ export const PTMManagement: React.FC = () => {
                                         </Grid>
                                         <Grid size={{ xs: 6, sm: 3 }}>
                                             <Typography variant="caption" color="text.secondary" display="block">Total Parent Slots</Typography>
-                                            <Typography variant="body2" fontWeight={800} color="success.main">🎯 {totalSlots} Parents</Typography>
+                                            <Typography variant="body2" fontWeight={800} color="success.main">{totalSlots} Parents</Typography>
                                         </Grid>
                                         {selectedKeys.length > 0 && (() => {
                                             const totalAvailable = selectedKeys.reduce((sum, k) => sum + getParentCount(k), 0);
@@ -1032,11 +1032,11 @@ export const PTMManagement: React.FC = () => {
                                                         flexWrap: 'wrap',
                                                     }}>
                                                         <Typography variant="caption" fontWeight={700} sx={{ color: slotsOk ? '#15803d' : '#b45309' }}>
-                                                            👪 {totalAvailable} parents available across selected section{selectedKeys.length > 1 ? 's' : ''}
+                                                            {totalAvailable} parents available across selected section{selectedKeys.length > 1 ? 's' : ''}
                                                         </Typography>
                                                         {!slotsOk && (
                                                             <Typography variant="caption" sx={{ color: '#b45309', fontWeight: 600 }}>
-                                                                ⚠️ Only {totalSlots} slots available — increase meeting window or reduce duration
+                                                                Only {totalSlots} slots available: increase meeting window or reduce duration
                                                             </Typography>
                                                         )}
                                                         {slotsOk && (
