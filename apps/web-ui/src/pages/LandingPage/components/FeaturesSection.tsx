@@ -133,7 +133,9 @@ const FEATURES_DATA: ServiceFeature[] = [
   },
 ];
 
-const FeatureCard: React.FC<{ feature: ServiceFeature }> = ({ feature }) => {
+import { useLandingTheme } from '../context/LandingThemeContext';
+
+const FeatureCard: React.FC<{ feature: ServiceFeature; isDark: boolean }> = ({ feature, isDark }) => {
   const renderIcon = () => {
     switch (feature.iconName) {
       case 'School':
@@ -165,17 +167,17 @@ const FeatureCard: React.FC<{ feature: ServiceFeature }> = ({ feature }) => {
     <Box
       sx={{
         borderRadius: '8px',
-        bgcolor: '#FFFFFF',
+        bgcolor: isDark ? '#111827' : '#FFFFFF',
         p: { xs: 2.8, sm: 3 },
-        border: '1px solid #E2E8F0',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+        border: isDark ? '1px solid #1F2937' : '1px solid #E2E8F0',
+        boxShadow: isDark ? '0 4px 12px rgba(0, 0, 0, 0.25)' : '0 1px 3px rgba(0, 0, 0, 0.04)',
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
+        transition: 'border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.25s ease',
         '&:hover': {
           borderColor: feature.accentColor,
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+          boxShadow: isDark ? '0 8px 24px rgba(0, 0, 0, 0.45)' : '0 4px 16px rgba(0, 0, 0, 0.08)',
         },
       }}
     >
@@ -202,9 +204,9 @@ const FeatureCard: React.FC<{ feature: ServiceFeature }> = ({ feature }) => {
             fontSize: '0.65rem',
             letterSpacing: '0.04em',
             borderRadius: '4px',
-            bgcolor: '#F1F5F9',
-            color: '#334155',
-            border: '1px solid #CBD5E1',
+            bgcolor: isDark ? '#1E293B' : '#F1F5F9',
+            color: isDark ? '#94A3B8' : '#334155',
+            border: isDark ? '1px solid #334155' : '1px solid #CBD5E1',
           }}
         />
       </Box>
@@ -215,7 +217,7 @@ const FeatureCard: React.FC<{ feature: ServiceFeature }> = ({ feature }) => {
         sx={{
           fontSize: '1.18rem',
           fontWeight: 800,
-          color: '#0F172A',
+          color: isDark ? '#F8FAFC' : '#0F172A',
           mb: 0.8,
           lineHeight: 1.25,
         }}
@@ -227,7 +229,7 @@ const FeatureCard: React.FC<{ feature: ServiceFeature }> = ({ feature }) => {
       <Typography
         sx={{
           fontSize: '0.88rem',
-          color: '#64748B',
+          color: isDark ? '#94A3B8' : '#64748B',
           lineHeight: 1.55,
           mb: 2.5,
           flex: 1,
@@ -237,11 +239,11 @@ const FeatureCard: React.FC<{ feature: ServiceFeature }> = ({ feature }) => {
       </Typography>
 
       {/* Highlights Checkmark List */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, pt: 1.5, borderTop: '1px solid #F1F5F9' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, pt: 1.5, borderTop: isDark ? '1px solid #1E293B' : '1px solid #F1F5F9' }}>
         {feature.highlights.map((item) => (
           <Box key={item} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CheckCircle sx={{ fontSize: 16, color: feature.accentColor }} />
-            <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
+            <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: isDark ? '#CBD5E1' : '#334155' }}>
               {item}
             </Typography>
           </Box>
@@ -252,6 +254,7 @@ const FeatureCard: React.FC<{ feature: ServiceFeature }> = ({ feature }) => {
 };
 
 export const FeaturesSection: React.FC = () => {
+  const { isDark } = useLandingTheme();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const categories = [
@@ -271,8 +274,9 @@ export const FeaturesSection: React.FC = () => {
       id="features"
       sx={{
         py: { xs: 8, md: 12 },
-        bgcolor: '#FFFFFF',
-        borderBottom: '1px solid #E2E8F0',
+        bgcolor: isDark ? '#0B0F19' : '#FFFFFF',
+        borderBottom: isDark ? '1px solid #1E293B' : '1px solid #E2E8F0',
+        transition: 'background-color 0.25s ease, border-color 0.25s ease',
       }}
     >
       <Container maxWidth="xl">
@@ -286,8 +290,8 @@ export const FeaturesSection: React.FC = () => {
               px: 1.6,
               py: 0.6,
               borderRadius: '6px',
-              bgcolor: '#F1F5F9',
-              border: '1px solid #CBD5E1',
+              bgcolor: isDark ? 'rgba(56, 189, 248, 0.1)' : '#F1F5F9',
+              border: isDark ? '1px solid rgba(56, 189, 248, 0.25)' : '1px solid #CBD5E1',
               mb: 2,
             }}
           >
@@ -295,7 +299,7 @@ export const FeaturesSection: React.FC = () => {
               sx={{
                 fontSize: '0.75rem',
                 fontWeight: 700,
-                color: '#0F172A',
+                color: isDark ? '#38BDF8' : '#0F172A',
                 letterSpacing: '0.06em',
                 textTransform: 'uppercase',
               }}
@@ -309,7 +313,7 @@ export const FeaturesSection: React.FC = () => {
             sx={{
               fontSize: { xs: '1.9rem', sm: '2.5rem', md: '2.8rem' },
               fontWeight: 900,
-              color: '#0F172A',
+              color: isDark ? '#F8FAFC' : '#0F172A',
               letterSpacing: '-0.025em',
               mb: 1.5,
             }}
@@ -317,7 +321,7 @@ export const FeaturesSection: React.FC = () => {
             Core Institutional Modules
           </Typography>
 
-          <Typography sx={{ fontSize: { xs: '0.98rem', sm: '1.05rem' }, color: '#64748B', lineHeight: 1.6 }}>
+          <Typography sx={{ fontSize: { xs: '0.98rem', sm: '1.05rem' }, color: isDark ? '#94A3B8' : '#64748B', lineHeight: 1.6 }}>
             Ten deeply integrated software modules designed to manage campus operations, records, and communication.
           </Typography>
 
@@ -343,12 +347,20 @@ export const FeaturesSection: React.FC = () => {
                   fontWeight: 700,
                   fontSize: '0.82rem',
                   cursor: 'pointer',
-                  bgcolor: selectedCategory === cat.id ? '#0F172A' : '#FFFFFF',
-                  color: selectedCategory === cat.id ? '#FFFFFF' : '#334155',
-                  border: selectedCategory === cat.id ? '1px solid #0F172A' : '1px solid #CBD5E1',
+                  bgcolor: selectedCategory === cat.id
+                    ? isDark ? '#0284C7' : '#0F172A'
+                    : isDark ? '#111827' : '#FFFFFF',
+                  color: selectedCategory === cat.id
+                    ? '#FFFFFF'
+                    : isDark ? '#94A3B8' : '#334155',
+                  border: selectedCategory === cat.id
+                    ? isDark ? '1px solid #0284C7' : '1px solid #0F172A'
+                    : isDark ? '1px solid #1F2937' : '1px solid #CBD5E1',
                   transition: 'background-color 0.2s ease, border-color 0.2s ease',
                   '&:hover': {
-                    bgcolor: selectedCategory === cat.id ? '#1E293B' : '#F8FAFC',
+                    bgcolor: selectedCategory === cat.id
+                      ? isDark ? '#0369A1' : '#1E293B'
+                      : isDark ? '#1E293B' : '#F8FAFC',
                   },
                 }}
               />
@@ -370,7 +382,7 @@ export const FeaturesSection: React.FC = () => {
         >
           {filteredFeatures.map((feature) => (
             <Box key={feature.id}>
-              <FeatureCard feature={feature} />
+              <FeatureCard feature={feature} isDark={isDark} />
             </Box>
           ))}
         </Box>

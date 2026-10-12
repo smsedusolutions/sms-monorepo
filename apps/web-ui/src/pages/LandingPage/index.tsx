@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Box } from '@mui/material';
+import { LandingThemeProvider, useLandingTheme } from './context/LandingThemeContext';
 import { LandingNavbar } from './components/LandingNavbar';
 import { HeroSection } from './components/HeroSection';
 import { TrustBadges } from './components/TrustBadges';
@@ -9,8 +10,9 @@ import { ManagedBy3vSection } from './components/ManagedBy3vSection';
 import { LandingFooter } from './components/LandingFooter';
 import { QuickDemoModal } from './components/QuickDemoModal';
 
-const LandingPage: React.FC = () => {
+const LandingPageContent: React.FC = () => {
   const [demoOpen, setDemoOpen] = useState(false);
+  const { isDark } = useLandingTheme();
 
   useEffect(() => {
     document.title = 'SMS Edu Solutions | School Management System';
@@ -21,9 +23,10 @@ const LandingPage: React.FC = () => {
       sx={{
         position: 'relative',
         minHeight: '100vh',
-        bgcolor: '#FFFFFF',
-        color: '#0F172A',
+        bgcolor: isDark ? '#0B0F19' : '#FFFFFF',
+        color: isDark ? '#F8FAFC' : '#0F172A',
         overflowX: 'hidden',
+        transition: 'background-color 0.25s ease, color 0.25s ease',
       }}
     >
       {/* Navigation Header */}
@@ -53,6 +56,14 @@ const LandingPage: React.FC = () => {
       {/* Live Demo Booking Modal */}
       <QuickDemoModal open={demoOpen} onClose={() => setDemoOpen(false)} />
     </Box>
+  );
+};
+
+const LandingPage: React.FC = () => {
+  return (
+    <LandingThemeProvider>
+      <LandingPageContent />
+    </LandingThemeProvider>
   );
 };
 

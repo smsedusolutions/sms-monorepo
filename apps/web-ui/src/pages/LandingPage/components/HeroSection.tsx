@@ -10,6 +10,7 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { Interactive3DMockup } from './Interactive3DMockup';
+import { useLandingTheme } from '../context/LandingThemeContext';
 
 interface HeroSectionProps {
   onOpenDemo: () => void;
@@ -17,6 +18,7 @@ interface HeroSectionProps {
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
   const navigate = useNavigate();
+  const { isDark } = useLandingTheme();
 
   return (
     <Box
@@ -24,8 +26,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
         position: 'relative',
         pt: { xs: 14, md: 17 },
         pb: { xs: 8, md: 12 },
-        bgcolor: '#FFFFFF',
-        borderBottom: '1px solid #E2E8F0',
+        bgcolor: isDark ? '#0B0F19' : '#FFFFFF',
+        borderBottom: isDark ? '1px solid #1E293B' : '1px solid #E2E8F0',
+        transition: 'background-color 0.25s ease, border-color 0.25s ease',
       }}
     >
       <Container maxWidth="xl">
@@ -48,17 +51,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
                 px: 1.6,
                 py: 0.6,
                 borderRadius: '6px',
-                bgcolor: '#F1F5F9',
-                border: '1px solid #CBD5E1',
+                bgcolor: isDark ? 'rgba(2, 132, 199, 0.12)' : '#F1F5F9',
+                border: isDark ? '1px solid rgba(56, 189, 248, 0.25)' : '1px solid #CBD5E1',
                 mb: 2.5,
               }}
             >
-              <School sx={{ color: '#0284C7', fontSize: 16 }} />
+              <School sx={{ color: isDark ? '#38BDF8' : '#0284C7', fontSize: 16 }} />
               <Typography
                 sx={{
                   fontSize: '0.8rem',
                   fontWeight: 700,
-                  color: '#0F172A',
+                  color: isDark ? '#38BDF8' : '#0F172A',
                   letterSpacing: '0.03em',
                   textTransform: 'uppercase',
                 }}
@@ -75,7 +78,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
                 fontWeight: 900,
                 lineHeight: 1.1,
                 letterSpacing: '-0.03em',
-                color: '#0F172A',
+                color: isDark ? '#F8FAFC' : '#0F172A',
                 mb: 2.5,
               }}
             >
@@ -86,7 +89,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
             <Typography
               sx={{
                 fontSize: { xs: '1rem', sm: '1.12rem' },
-                color: '#475569',
+                color: isDark ? '#94A3B8' : '#475569',
                 lineHeight: 1.65,
                 maxWidth: 580,
                 mb: 4,
@@ -110,8 +113,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
                 onClick={() => navigate('/login')}
                 endIcon={<ArrowForward />}
                 sx={{
-                  background: '#0F172A !important',
-                  bgcolor: '#0F172A !important',
+                  background: isDark ? '#0284C7 !important' : '#0F172A !important',
+                  bgcolor: isDark ? '#0284C7 !important' : '#0F172A !important',
                   color: '#FFFFFF !important',
                   fontWeight: 700,
                   fontSize: '0.98rem',
@@ -120,12 +123,12 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
                   py: 1.3,
                   textTransform: 'none',
                   boxShadow: 'none',
-                  border: '1px solid #0F172A',
+                  border: isDark ? '1px solid #0284C7' : '1px solid #0F172A',
                   transition: 'background-color 0.2s ease, border-color 0.2s ease',
                   '&:hover': {
-                    background: '#1E293B !important',
-                    bgcolor: '#1E293B !important',
-                    borderColor: '#1E293B',
+                    background: isDark ? '#0369A1 !important' : '#1E293B !important',
+                    bgcolor: isDark ? '#0369A1 !important' : '#1E293B !important',
+                    borderColor: isDark ? '#0369A1' : '#1E293B',
                     boxShadow: 'none',
                   },
                 }}
@@ -139,9 +142,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
                 onClick={onOpenDemo}
                 startIcon={<PlayCircleOutline />}
                 sx={{
-                  borderColor: '#CBD5E1',
-                  bgcolor: '#FFFFFF',
-                  color: '#0F172A',
+                  borderColor: isDark ? '#334155' : '#CBD5E1',
+                  bgcolor: isDark ? '#111827' : '#FFFFFF',
+                  color: isDark ? '#F8FAFC' : '#0F172A',
                   fontWeight: 700,
                   fontSize: '0.98rem',
                   borderRadius: '6px',
@@ -149,8 +152,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
                   py: 1.3,
                   textTransform: 'none',
                   '&:hover': {
-                    borderColor: '#94A3B8',
-                    bgcolor: '#F8FAFC',
+                    borderColor: isDark ? '#64748B' : '#94A3B8',
+                    bgcolor: isDark ? '#1E293B' : '#F8FAFC',
                   },
                 }}
               >
@@ -165,17 +168,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
                 flexWrap: 'wrap',
                 gap: { xs: 2, sm: 3 },
                 pt: 2.5,
-                borderTop: '1px solid #E2E8F0',
+                borderTop: isDark ? '1px solid #1E293B' : '1px solid #E2E8F0',
               }}
             >
               {[
-                { icon: <CloudDone sx={{ color: '#0284C7', fontSize: 18 }} />, label: 'Cloud Hosted (Zero Hardware)' },
-                { icon: <VerifiedUser sx={{ color: '#059669', fontSize: 18 }} />, label: 'DPDP Act, 2023 Compliant' },
-                { icon: <Security sx={{ color: '#334155', fontSize: 18 }} />, label: 'Role-Based Access Control' },
+                { icon: <CloudDone sx={{ color: isDark ? '#38BDF8' : '#0284C7', fontSize: 18 }} />, label: 'Cloud Hosted (Zero Hardware)' },
+                { icon: <VerifiedUser sx={{ color: '#10B981', fontSize: 18 }} />, label: 'DPDP Act, 2023 Compliant' },
+                { icon: <Security sx={{ color: isDark ? '#94A3B8' : '#334155', fontSize: 18 }} />, label: 'Role-Based Access Control' },
               ].map((item) => (
                 <Box key={item.label} sx={{ display: 'flex', alignItems: 'center', gap: 0.8 }}>
                   {item.icon}
-                  <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: '#475569' }}>
+                  <Typography sx={{ fontSize: '0.82rem', fontWeight: 600, color: isDark ? '#94A3B8' : '#475569' }}>
                     {item.label}
                   </Typography>
                 </Box>

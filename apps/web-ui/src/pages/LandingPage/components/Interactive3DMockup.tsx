@@ -19,8 +19,10 @@ import {
 } from '@mui/icons-material';
 import { use3DTilt } from '../hooks/use3DTilt';
 import { SmsEduLogo } from './BrandLogos';
+import { useLandingTheme } from '../context/LandingThemeContext';
 
 export const Interactive3DMockup: React.FC = () => {
+  const { isDark } = useLandingTheme();
   const [activeTab, setActiveTab] = useState<'overview' | 'fees' | 'attendance'>('overview');
   const [activeParentTab, setActiveParentTab] = useState('Child');
 
@@ -45,7 +47,9 @@ export const Interactive3DMockup: React.FC = () => {
           p: { xs: 1.5, sm: 2 },
           pb: { xs: 2.5, sm: 3 },
           borderRadius: '12px',
-          boxShadow: '0 20px 45px -15px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(255,255,255,0.08)',
+          boxShadow: isDark
+            ? '0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255,255,255,0.1)'
+            : '0 20px 45px -15px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(255,255,255,0.08)',
           position: 'relative',
           background: 'linear-gradient(145deg, #334155 0%, #1E293B 100%)',
         }}
@@ -65,14 +69,15 @@ export const Interactive3DMockup: React.FC = () => {
         {/* Laptop Screen */}
         <Box
           sx={{
-            bgcolor: '#F8FAFC',
+            bgcolor: isDark ? '#0B0F19' : '#F8FAFC',
             borderRadius: '8px',
             overflow: 'hidden',
-            border: '1px solid #E2E8F0',
+            border: isDark ? '1px solid #1E293B' : '1px solid #E2E8F0',
             boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.06)',
             display: 'flex',
             flexDirection: 'column',
             minHeight: { xs: 320, sm: 400 },
+            transition: 'background-color 0.25s ease, border-color 0.25s ease',
           }}
         >
           {/* Laptop Topbar */}
@@ -83,12 +88,12 @@ export const Interactive3DMockup: React.FC = () => {
               justifyContent: 'space-between',
               px: 2,
               py: 1,
-              bgcolor: '#FFFFFF',
-              borderBottom: '1px solid #F1F5F9',
+              bgcolor: isDark ? '#111827' : '#FFFFFF',
+              borderBottom: isDark ? '1px solid #1F2937' : '1px solid #F1F5F9',
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <SmsEduLogo size={26} showText={true} />
+              <SmsEduLogo size={26} showText={true} variant={isDark ? 'dark' : 'light'} />
             </Box>
 
             {/* Live Tabs */}
@@ -104,10 +109,15 @@ export const Interactive3DMockup: React.FC = () => {
                     fontSize: '0.62rem',
                     borderRadius: '4px',
                     cursor: 'pointer',
-                    bgcolor: activeTab === tab ? '#0F172A' : 'rgba(0,0,0,0.04)',
-                    color: activeTab === tab ? 'white' : '#64748B',
+                    bgcolor: activeTab === tab
+                      ? (isDark ? '#0284C7' : '#0F172A')
+                      : (isDark ? '#1E293B' : 'rgba(0,0,0,0.04)'),
+                    color: activeTab === tab ? 'white' : (isDark ? '#94A3B8' : '#64748B'),
+                    border: isDark ? '1px solid #334155' : 'none',
                     '&:hover': {
-                      bgcolor: activeTab === tab ? '#1E293B' : 'rgba(0,0,0,0.08)',
+                      bgcolor: activeTab === tab
+                        ? (isDark ? '#0369A1' : '#1E293B')
+                        : (isDark ? '#334155' : 'rgba(0,0,0,0.08)'),
                     },
                   }}
                 />
@@ -127,6 +137,7 @@ export const Interactive3DMockup: React.FC = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 gap: 0.8,
+                borderRight: isDark ? '1px solid #1E293B' : 'none',
               }}
             >
               {[
@@ -173,20 +184,28 @@ export const Interactive3DMockup: React.FC = () => {
             </Box>
 
             {/* Dashboard Content Area */}
-            <Box sx={{ flex: 1, p: { xs: 1.5, sm: 2 }, bgcolor: '#F8FAFC' }}>
+            <Box sx={{ flex: 1, p: { xs: 1.5, sm: 2 }, bgcolor: isDark ? '#0B0F19' : '#F8FAFC' }}>
               <Box sx={{ mb: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Box>
-                  <Typography sx={{ fontSize: { xs: '0.9rem', sm: '1.05rem' }, fontWeight: 800, color: '#0F172A' }}>
+                  <Typography sx={{ fontSize: { xs: '0.9rem', sm: '1.05rem' }, fontWeight: 800, color: isDark ? '#F8FAFC' : '#0F172A' }}>
                     Welcome Back, Principal
                   </Typography>
-                  <Typography sx={{ fontSize: '0.65rem', color: '#64748B' }}>
+                  <Typography sx={{ fontSize: '0.65rem', color: isDark ? '#94A3B8' : '#64748B' }}>
                     Academic Session 2026-27 • Campus Administration
                   </Typography>
                 </Box>
                 <Chip
                   size="small"
                   label="Campus Portal"
-                  sx={{ fontSize: '0.6rem', height: 20, fontWeight: 700, borderRadius: '4px', bgcolor: '#E0F2FE', color: '#0369A1' }}
+                  sx={{
+                    fontSize: '0.6rem',
+                    height: 20,
+                    fontWeight: 700,
+                    borderRadius: '4px',
+                    bgcolor: isDark ? 'rgba(56, 189, 248, 0.15)' : '#E0F2FE',
+                    color: isDark ? '#38BDF8' : '#0369A1',
+                    border: isDark ? '1px solid rgba(56, 189, 248, 0.3)' : 'none',
+                  }}
                 />
               </Box>
 
@@ -201,27 +220,27 @@ export const Interactive3DMockup: React.FC = () => {
               >
                 {[
                   { label: 'Students', value: '1,248', color: '#0284C7', icon: <People sx={{ fontSize: 16 }} /> },
-                  { label: 'Teachers', value: '82', color: '#334155', icon: <School sx={{ fontSize: 16 }} /> },
+                  { label: 'Teachers', value: '82', color: isDark ? '#94A3B8' : '#334155', icon: <School sx={{ fontSize: 16 }} /> },
                   { label: 'Classes', value: '48', color: '#D97706', icon: <Class sx={{ fontSize: 16 }} /> },
                   { label: 'Fees Paid', value: '92%', color: '#059669', icon: <AccountBalanceWallet sx={{ fontSize: 16 }} /> },
                 ].map((stat) => (
                   <Box
                     key={stat.label}
                     sx={{
-                      bgcolor: 'white',
+                      bgcolor: isDark ? '#111827' : 'white',
                       p: 1,
                       borderRadius: '6px',
-                      border: '1px solid #E2E8F0',
+                      border: isDark ? '1px solid #1F2937' : '1px solid #E2E8F0',
                       boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                     }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.5 }}>
-                      <Typography sx={{ fontSize: '0.62rem', color: '#64748B', fontWeight: 600 }}>
+                      <Typography sx={{ fontSize: '0.62rem', color: isDark ? '#94A3B8' : '#64748B', fontWeight: 600 }}>
                         {stat.label}
                       </Typography>
                       <Box sx={{ color: stat.color }}>{stat.icon}</Box>
                     </Box>
-                    <Typography sx={{ fontSize: { xs: '0.85rem', sm: '1.05rem' }, fontWeight: 800, color: '#0F172A' }}>
+                    <Typography sx={{ fontSize: { xs: '0.85rem', sm: '1.05rem' }, fontWeight: 800, color: isDark ? '#F8FAFC' : '#0F172A' }}>
                       {stat.value}
                     </Typography>
                   </Box>
@@ -233,14 +252,14 @@ export const Interactive3DMockup: React.FC = () => {
                 {/* Attendance Chart */}
                 <Box
                   sx={{
-                    bgcolor: 'white',
+                    bgcolor: isDark ? '#111827' : 'white',
                     p: 1.2,
                     borderRadius: '6px',
-                    border: '1px solid #E2E8F0',
+                    border: isDark ? '1px solid #1F2937' : '1px solid #E2E8F0',
                   }}
                 >
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                    <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: '#1E293B' }}>
+                    <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: isDark ? '#F8FAFC' : '#1E293B' }}>
                       Attendance Overview
                     </Typography>
                     <Typography sx={{ fontSize: '0.62rem', color: '#059669', fontWeight: 700 }}>
@@ -265,7 +284,7 @@ export const Interactive3DMockup: React.FC = () => {
                             borderRadius: '2px 2px 0 0',
                           }}
                         />
-                        <Typography sx={{ fontSize: '0.58rem', color: '#94A3B8', mt: 0.5, fontWeight: 600 }}>
+                        <Typography sx={{ fontSize: '0.58rem', color: isDark ? '#64748B' : '#94A3B8', mt: 0.5, fontWeight: 600 }}>
                           {bar.day}
                         </Typography>
                       </Box>
@@ -276,16 +295,16 @@ export const Interactive3DMockup: React.FC = () => {
                 {/* Fee Donut Representation */}
                 <Box
                   sx={{
-                    bgcolor: 'white',
+                    bgcolor: isDark ? '#111827' : 'white',
                     p: 1.2,
                     borderRadius: '6px',
-                    border: '1px solid #E2E8F0',
+                    border: isDark ? '1px solid #1F2937' : '1px solid #E2E8F0',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
                   }}
                 >
-                  <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: '#1E293B', mb: 1 }}>
+                  <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: isDark ? '#F8FAFC' : '#1E293B', mb: 1 }}>
                     Fee Collection Status
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -306,7 +325,8 @@ export const Interactive3DMockup: React.FC = () => {
                           width: 38,
                           height: 38,
                           borderRadius: '50%',
-                          bgcolor: 'white',
+                          bgcolor: isDark ? '#111827' : 'white',
+                          color: isDark ? '#F8FAFC' : '#0F172A',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -320,15 +340,15 @@ export const Interactive3DMockup: React.FC = () => {
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#0284C7' }} />
-                        <Typography sx={{ fontSize: '0.6rem', color: '#475569' }}>Paid (75%)</Typography>
+                        <Typography sx={{ fontSize: '0.6rem', color: isDark ? '#94A3B8' : '#475569' }}>Paid (75%)</Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#D97706' }} />
-                        <Typography sx={{ fontSize: '0.6rem', color: '#475569' }}>Pending (15%)</Typography>
+                        <Typography sx={{ fontSize: '0.6rem', color: isDark ? '#94A3B8' : '#475569' }}>Pending (15%)</Typography>
                       </Box>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: '#DC2626' }} />
-                        <Typography sx={{ fontSize: '0.6rem', color: '#475569' }}>Overdue (10%)</Typography>
+                        <Typography sx={{ fontSize: '0.6rem', color: isDark ? '#94A3B8' : '#475569' }}>Overdue (10%)</Typography>
                       </Box>
                     </Box>
                   </Box>
@@ -354,8 +374,8 @@ export const Interactive3DMockup: React.FC = () => {
             bgcolor: '#0F172A',
             p: 0.9,
             borderRadius: '16px',
-            border: '2px solid #334155',
-            boxShadow: '0 20px 45px -10px rgba(0,0,0,0.3)',
+            border: isDark ? '2px solid #38BDF8' : '2px solid #334155',
+            boxShadow: '0 20px 45px -10px rgba(0,0,0,0.5)',
           }}
         >
           {/* Speaker dot */}
@@ -373,21 +393,22 @@ export const Interactive3DMockup: React.FC = () => {
           {/* Phone Screen */}
           <Box
             sx={{
-              bgcolor: '#FFFFFF',
+              bgcolor: isDark ? '#111827' : '#FFFFFF',
               borderRadius: '12px',
               p: 1.2,
               display: 'flex',
               flexDirection: 'column',
               minHeight: 265,
+              border: isDark ? '1px solid #1F2937' : 'none',
             }}
           >
             {/* Parent Portal Header */}
             <Box sx={{ textAlign: 'center', mb: 1 }}>
-              <SmsEduLogo size={22} showText={false} />
-              <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, color: '#0F172A', mt: 0.2 }}>
+              <SmsEduLogo size={22} showText={false} variant={isDark ? 'dark' : 'light'} />
+              <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, color: isDark ? '#F8FAFC' : '#0F172A', mt: 0.2 }}>
                 Parent Portal
               </Typography>
-              <Typography sx={{ fontSize: '0.58rem', color: '#64748B' }}>
+              <Typography sx={{ fontSize: '0.58rem', color: isDark ? '#94A3B8' : '#64748B' }}>
                 Campus Telemetry & Updates
               </Typography>
             </Box>
@@ -406,15 +427,19 @@ export const Interactive3DMockup: React.FC = () => {
                 { label: 'Attendance', icon: <AssignmentTurnedIn sx={{ fontSize: 16 }} />, color: '#059669' },
                 { label: 'Academic Progress', icon: <BarChart sx={{ fontSize: 16 }} />, color: '#0284C7' },
                 { label: 'Fees Paid', icon: <AccountBalanceWallet sx={{ fontSize: 16 }} />, color: '#D97706' },
-                { label: 'Timetable', icon: <DateRange sx={{ fontSize: 16 }} />, color: '#0F172A' },
+                { label: 'Timetable', icon: <DateRange sx={{ fontSize: 16 }} />, color: isDark ? '#38BDF8' : '#0F172A' },
                 { label: 'Notifications', icon: <NotificationsActive sx={{ fontSize: 16 }} />, color: '#D97706' },
               ].map((tile) => (
                 <Box
                   key={tile.label}
                   onClick={() => setActiveParentTab(tile.label)}
                   sx={{
-                    bgcolor: activeParentTab === tile.label ? 'rgba(2, 132, 199, 0.08)' : '#F8FAFC',
-                    border: activeParentTab === tile.label ? '1px solid #0284C7' : '1px solid #E2E8F0',
+                    bgcolor: activeParentTab === tile.label
+                      ? 'rgba(2, 132, 199, 0.15)'
+                      : (isDark ? '#1E293B' : '#F8FAFC'),
+                    border: activeParentTab === tile.label
+                      ? '1px solid #38BDF8'
+                      : (isDark ? '1px solid #334155' : '1px solid #E2E8F0'),
                     borderRadius: '6px',
                     p: 0.7,
                     display: 'flex',
@@ -424,12 +449,12 @@ export const Interactive3DMockup: React.FC = () => {
                     cursor: 'pointer',
                     transition: 'border-color 0.2s',
                     '&:hover': {
-                      borderColor: '#0284C7',
+                      borderColor: '#38BDF8',
                     },
                   }}
                 >
                   <Box sx={{ color: tile.color, mb: 0.3 }}>{tile.icon}</Box>
-                  <Typography sx={{ fontSize: '0.55rem', fontWeight: 700, color: '#1E293B', textAlign: 'center', lineHeight: 1.1 }}>
+                  <Typography sx={{ fontSize: '0.55rem', fontWeight: 700, color: isDark ? '#F8FAFC' : '#1E293B', textAlign: 'center', lineHeight: 1.1 }}>
                     {tile.label}
                   </Typography>
                 </Box>
@@ -441,7 +466,7 @@ export const Interactive3DMockup: React.FC = () => {
               sx={{
                 width: 45,
                 height: 3,
-                bgcolor: '#CBD5E1',
+                bgcolor: isDark ? '#475569' : '#CBD5E1',
                 borderRadius: '4px',
                 mx: 'auto',
                 mt: 1,

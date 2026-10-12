@@ -11,9 +11,11 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { use3DTilt } from '../hooks/use3DTilt';
+import { useLandingTheme } from '../context/LandingThemeContext';
 
 export const ParentPortalSpotlight: React.FC<{ onOpenDemo: () => void }> = ({ onOpenDemo }) => {
   const navigate = useNavigate();
+  const { isDark } = useLandingTheme();
   const { ref, style, glareStyle } = use3DTilt<HTMLDivElement>({
     maxRotation: 8,
     perspective: 1200,
@@ -27,6 +29,9 @@ export const ParentPortalSpotlight: React.FC<{ onOpenDemo: () => void }> = ({ on
         py: { xs: 8, md: 12 },
         position: 'relative',
         zIndex: 5,
+        bgcolor: isDark ? '#0F172A' : '#F8FAFC',
+        borderBottom: isDark ? '1px solid #1E293B' : '1px solid #E2E8F0',
+        transition: 'background-color 0.25s ease, border-color 0.25s ease',
       }}
     >
       <Container maxWidth="xl">
@@ -35,8 +40,8 @@ export const ParentPortalSpotlight: React.FC<{ onOpenDemo: () => void }> = ({ on
             position: 'relative',
             borderRadius: '12px',
             p: { xs: 3.5, sm: 5, md: 6 },
-            bgcolor: '#0F172A',
-            border: '1px solid #334155',
+            bgcolor: isDark ? '#111827' : '#0F172A',
+            border: isDark ? '1px solid #1F2937' : '1px solid #334155',
             boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.4)',
             overflow: 'hidden',
           }}
