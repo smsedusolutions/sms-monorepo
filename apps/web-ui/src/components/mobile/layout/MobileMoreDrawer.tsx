@@ -258,10 +258,10 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                 sx={{
                   width: 48,
                   height: 48,
-                  bgcolor: '#4f46e5',
+                  bgcolor: '#0284c7',
                   fontSize: 18,
                   fontWeight: 700,
-                  boxShadow: '0 4px 10px rgba(79, 70, 229, 0.25)',
+                  boxShadow: 'none',
                 }}
               >
                 {userName.charAt(0).toUpperCase()}
@@ -278,8 +278,9 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                       height: 20,
                       fontSize: '0.68rem',
                       fontWeight: 600,
-                      bgcolor: 'rgba(99, 102, 241, 0.1)',
-                      color: '#4f46e5',
+                      bgcolor: 'rgba(2, 132, 199, 0.1)',
+                      color: '#0284c7',
+                      borderRadius: '4px',
                     }}
                   />
                   {school?.schoolName && (
@@ -338,9 +339,9 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                       px: 2,
                       py: 1.5,
                       bgcolor: isDirectActive
-                        ? 'rgba(99, 102, 241, 0.08)'
+                        ? 'rgba(2, 132, 199, 0.08)'
                         : isParentOfActive
-                          ? 'rgba(99, 102, 241, 0.04)'
+                          ? 'rgba(2, 132, 199, 0.04)'
                           : isExpanded
                             ? 'rgba(248, 250, 252, 0.9)'
                             : 'transparent',
@@ -348,8 +349,8 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                       transition: 'background-color 0.15s ease',
                       '&:hover': {
                         bgcolor: isDirectActive
-                          ? 'rgba(99, 102, 241, 0.12)'
-                          : 'rgba(99, 102, 241, 0.04)',
+                          ? 'rgba(2, 132, 199, 0.12)'
+                          : 'rgba(2, 132, 199, 0.04)',
                       },
                       '&:active': { bgcolor: '#f1f5f9' },
                     }}
@@ -359,11 +360,11 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                         sx={{
                           width: 36,
                           height: 36,
-                          borderRadius: '10px',
+                          borderRadius: '8px',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          bgcolor: (isDirectActive || isParentOfActive) ? '#4f46e5' : 'rgba(241, 245, 249, 1)',
+                          bgcolor: (isDirectActive || isParentOfActive) ? '#0284c7' : 'rgba(241, 245, 249, 1)',
                           color: (isDirectActive || isParentOfActive) ? '#ffffff' : '#475569',
                           transition: 'background-color 0.2s ease, color 0.2s ease',
                         }}
@@ -374,7 +375,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                         sx={{
                           fontWeight: (isDirectActive || isParentOfActive) ? 700 : 600,
                           fontSize: '0.92rem',
-                          color: isDirectActive ? '#4f46e5' : '#1e293b',
+                          color: isDirectActive ? '#0284c7' : '#1e293b',
                           transition: 'color 0.2s ease',
                         }}
                       >
@@ -389,9 +390,9 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                           sx={{
                             px: 0.8,
                             py: 0.15,
-                            borderRadius: '6px',
-                            bgcolor: isExpanded || isParentOfActive ? 'rgba(99, 102, 241, 0.1)' : '#f1f5f9',
-                            color: isExpanded || isParentOfActive ? '#4f46e5' : '#64748b',
+                            borderRadius: '4px',
+                            bgcolor: isExpanded || isParentOfActive ? 'rgba(2, 132, 199, 0.1)' : '#f1f5f9',
+                            color: isExpanded || isParentOfActive ? '#0284c7' : '#64748b',
                             fontSize: '0.7rem',
                             fontWeight: 700,
                             lineHeight: 1.2,
@@ -405,7 +406,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                       {hasSubItems ? (
                         <KeyboardArrowDownRoundedIcon
                           sx={{
-                            color: isExpanded || isParentOfActive ? '#4f46e5' : '#94a3b8',
+                            color: isExpanded || isParentOfActive ? '#0284c7' : '#94a3b8',
                             fontSize: 22,
                             transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                             transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease',
@@ -414,7 +415,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                       ) : (
                         <ChevronRightRoundedIcon
                           sx={{
-                            color: isDirectActive ? '#4f46e5' : '#cbd5e1',
+                            color: isDirectActive ? '#0284c7' : '#cbd5e1',
                             fontSize: 20,
                           }}
                         />
@@ -457,7 +458,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                                   py: 1,
                                   px: 1.25,
                                   borderRadius: '8px',
-                                  bgcolor: isSubSelected ? 'rgba(99, 102, 241, 0.1)' : 'transparent',
+                                  bgcolor: isSubSelected ? 'rgba(2, 132, 199, 0.1)' : 'transparent',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'space-between',
@@ -465,10 +466,10 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                                   transition: 'background-color 0.15s ease',
                                   '&:hover': {
                                     bgcolor: isSubSelected
-                                      ? 'rgba(99, 102, 241, 0.14)'
-                                      : 'rgba(99, 102, 241, 0.04)',
+                                      ? 'rgba(2, 132, 199, 0.14)'
+                                      : 'rgba(2, 132, 199, 0.04)',
                                   },
-                                  '&:active': { bgcolor: 'rgba(99, 102, 241, 0.18)' },
+                                  '&:active': { bgcolor: 'rgba(2, 132, 199, 0.12)' },
                                 }}
                               >
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
@@ -477,7 +478,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                                       width: 6,
                                       height: 6,
                                       borderRadius: '50%',
-                                      bgcolor: isSubSelected ? '#4f46e5' : '#94a3b8',
+                                      bgcolor: isSubSelected ? '#0284c7' : '#94a3b8',
                                       transition: 'background-color 0.15s ease',
                                     }}
                                   />
@@ -485,7 +486,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                                     sx={{
                                       fontSize: '0.86rem',
                                       fontWeight: isSubSelected ? 700 : 500,
-                                      color: isSubSelected ? '#4f46e5' : '#475569',
+                                      color: isSubSelected ? '#0284c7' : '#475569',
                                       transition: 'color 0.15s ease',
                                     }}
                                   >
@@ -494,7 +495,7 @@ export const MobileMoreDrawer: React.FC<MobileMoreDrawerProps> = ({ open, onClos
                                 </Box>
                                 <ChevronRightRoundedIcon
                                   sx={{
-                                    color: isSubSelected ? '#4f46e5' : '#cbd5e1',
+                                    color: isSubSelected ? '#0284c7' : '#cbd5e1',
                                     fontSize: 16,
                                     transition: 'color 0.15s ease',
                                   }}

@@ -1206,8 +1206,8 @@ export const ChatPage: React.FC = () => {
                 Chats
               </Typography>
               <Stack direction="row" alignItems="center" spacing={0.5} sx={{ mt: 0.25 }}>
-                <LockIcon sx={{ fontSize: 11, color: "#4f46e5" }} />
-                <Typography variant="caption" fontWeight={700} color="#4f46e5" sx={{ fontSize: "10px", tracking: "0.05em" }}>
+                <LockIcon sx={{ fontSize: 11, color: "#0284C7" }} />
+                <Typography variant="caption" fontWeight={700} color="#0284C7" sx={{ fontSize: "10px", tracking: "0.05em" }}>
                   E2E ENCRYPTED
                 </Typography>
               </Stack>
@@ -1217,9 +1217,9 @@ export const ChatPage: React.FC = () => {
               sx={{
                 width: 36,
                 height: 36,
-                bgcolor: "#4f46e5",
+                bgcolor: "#0284C7",
                 color: "#ffffff",
-                boxShadow: "0 4px 10px rgba(79, 70, 229, 0.3)",
+                boxShadow: "0 4px 10px rgba(2, 132, 199, 0.3)",
               }}
             >
               <PersonIcon sx={{ fontSize: 20 }} />
@@ -1273,11 +1273,11 @@ export const ChatPage: React.FC = () => {
                 textTransform: "none",
                 transition: "all 0.2s ease",
                 bgcolor: activeTab === 0 ? "#ffffff" : "transparent",
-                color: activeTab === 0 ? "#4f46e5" : "#64748b",
+                color: activeTab === 0 ? "#0284C7" : "#64748b",
                 boxShadow: activeTab === 0 ? "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)" : "none",
                 "&:hover": {
                   bgcolor: activeTab === 0 ? "#ffffff" : "transparent",
-                  color: activeTab === 0 ? "#4f46e5" : "#334155",
+                  color: activeTab === 0 ? "#0284C7" : "#334155",
                 },
               }}
             >
@@ -1294,11 +1294,11 @@ export const ChatPage: React.FC = () => {
                 textTransform: "none",
                 transition: "all 0.2s ease",
                 bgcolor: activeTab === 1 ? "#ffffff" : "transparent",
-                color: activeTab === 1 ? "#4f46e5" : "#64748b",
+                color: activeTab === 1 ? "#0284C7" : "#64748b",
                 boxShadow: activeTab === 1 ? "0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)" : "none",
                 "&:hover": {
                   bgcolor: activeTab === 1 ? "#ffffff" : "transparent",
-                  color: activeTab === 1 ? "#4f46e5" : "#334155",
+                  color: activeTab === 1 ? "#0284C7" : "#334155",
                 },
               }}
             >
@@ -1311,7 +1311,7 @@ export const ChatPage: React.FC = () => {
             {activeTab === 0 && (
               isLoadingRooms ? (
                 <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                  <CircularProgress size={28} sx={{ color: "#4f46e5" }} />
+                  <CircularProgress size={28} sx={{ color: "#0284C7" }} />
                 </Box>
               ) : filteredRooms.length === 0 ? (
                 <Box sx={{ py: 6, textAlign: "center", color: "#64748b" }}>
@@ -1322,7 +1322,7 @@ export const ChatPage: React.FC = () => {
                     variant="text"
                     size="small"
                     onClick={() => setActiveTab(1)}
-                    sx={{ color: "#4f46e5", textTransform: "none", fontWeight: 700 }}
+                    sx={{ color: "#0284C7", textTransform: "none", fontWeight: 700 }}
                   >
                     Open Directory
                   </Button>
@@ -1370,7 +1370,7 @@ export const ChatPage: React.FC = () => {
                                 width: 48,
                                 height: 48,
                                 borderRadius: "16px",
-                                bgcolor: "#4f46e5",
+                                bgcolor: "#0284C7",
                                 fontWeight: 700,
                                 fontSize: "1.125rem",
                               }}
@@ -1419,7 +1419,7 @@ export const ChatPage: React.FC = () => {
 
                           <Stack direction="row" alignItems="center" spacing={0.75}>
                             {room.lastMessageAt && (
-                              <Typography variant="caption" color="#4f46e5" fontWeight={700} sx={{ fontSize: "10px" }}>
+                              <Typography variant="caption" color="#0284C7" fontWeight={700} sx={{ fontSize: "10px" }}>
                                 {formatSingleTime(room.lastMessageAt, timeFormat)}
                               </Typography>
                             )}
@@ -1430,7 +1430,7 @@ export const ChatPage: React.FC = () => {
                                   width: 18,
                                   height: 18,
                                   borderRadius: "50%",
-                                  bgcolor: "#4f46e5",
+                                  bgcolor: "#0284C7",
                                   color: "#ffffff",
                                   fontSize: "10px",
                                   fontWeight: 800,
@@ -1453,7 +1453,7 @@ export const ChatPage: React.FC = () => {
                                 sx={{
                                   color: "#94a3b8",
                                   p: 0.25,
-                                  "&:hover": { color: "#4f46e5" },
+                                  "&:hover": { color: "#0284C7" },
                                 }}
                               >
                                 <InfoIcon sx={{ fontSize: 16 }} />
@@ -1537,7 +1537,7 @@ export const ChatPage: React.FC = () => {
                   {isTeacher ? (
                     isLoadingParents ? (
                       <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                        <CircularProgress size={28} sx={{ color: "#4f46e5" }} />
+                        <CircularProgress size={28} sx={{ color: "#0284C7" }} />
                       </Box>
                     ) : parentDirectory.length === 0 ? (
                       <Typography variant="body2" color="#64748b" textAlign="center" sx={{ py: 3 }}>
@@ -1545,10 +1545,10 @@ export const ChatPage: React.FC = () => {
                       </Typography>
                     ) : (
                       parentDirectory.map((parent) => (
-                        <Card key={parent.parentId} variant="outlined" sx={{ borderRadius: "16px", "&:hover": { borderColor: "#4f46e5" } }}>
+                        <Card key={parent.parentId} variant="outlined" sx={{ borderRadius: "16px", "&:hover": { borderColor: "#0284C7" } }}>
                           <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
                             <Stack direction="row" alignItems="center" spacing={1.5}>
-                              <Avatar src={parent.profileImage || undefined} sx={{ width: 40, height: 40, bgcolor: "#4f46e5", fontWeight: 700 }}>
+                              <Avatar src={parent.profileImage || undefined} sx={{ width: 40, height: 40, bgcolor: "#0284C7", fontWeight: 700 }}>
                                 {parent.firstName?.charAt(0) || "P"}
                               </Avatar>
                               <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -1563,7 +1563,7 @@ export const ChatPage: React.FC = () => {
                                 variant="contained"
                                 size="small"
                                 onClick={() => handleStartChatWithPartner(parent.parentId)}
-                                sx={{ borderRadius: "12px", textTransform: "none", fontWeight: 700, bgcolor: "#4f46e5" }}
+                                sx={{ borderRadius: "12px", textTransform: "none", fontWeight: 700, bgcolor: "#0284C7" }}
                               >
                                 Chat
                               </Button>
@@ -1575,7 +1575,7 @@ export const ChatPage: React.FC = () => {
                   ) : (
                     isLoadingTeachers ? (
                       <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                        <CircularProgress size={28} sx={{ color: "#4f46e5" }} />
+                        <CircularProgress size={28} sx={{ color: "#0284C7" }} />
                       </Box>
                     ) : filteredTeacherDirectory.length === 0 ? (
                       <Typography variant="body2" color="#64748b" textAlign="center" sx={{ py: 3 }}>
@@ -1583,10 +1583,10 @@ export const ChatPage: React.FC = () => {
                       </Typography>
                     ) : (
                       filteredTeacherDirectory.map((teacher) => (
-                        <Card key={teacher.teacherId} variant="outlined" sx={{ borderRadius: "16px", "&:hover": { borderColor: "#4f46e5" } }}>
+                        <Card key={teacher.teacherId} variant="outlined" sx={{ borderRadius: "16px", "&:hover": { borderColor: "#0284C7" } }}>
                           <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
                             <Stack direction="row" alignItems="center" spacing={1.5}>
-                              <Avatar src={teacher.profileImage || undefined} sx={{ width: 40, height: 40, bgcolor: "#4f46e5", fontWeight: 700 }}>
+                              <Avatar src={teacher.profileImage || undefined} sx={{ width: 40, height: 40, bgcolor: "#0284C7", fontWeight: 700 }}>
                                 {teacher.firstName?.charAt(0) || "T"}
                               </Avatar>
                               <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -1601,7 +1601,7 @@ export const ChatPage: React.FC = () => {
                                 variant="contained"
                                 size="small"
                                 onClick={() => handleStartChatWithPartner(teacher.teacherId, selectedChildId)}
-                                sx={{ borderRadius: "12px", textTransform: "none", fontWeight: 700, bgcolor: "#4f46e5" }}
+                                sx={{ borderRadius: "12px", textTransform: "none", fontWeight: 700, bgcolor: "#0284C7" }}
                               >
                                 Chat
                               </Button>
@@ -1649,10 +1649,10 @@ export const ChatPage: React.FC = () => {
               position: "absolute",
               bottom: 24,
               right: 24,
-              bgcolor: "#4f46e5",
+              bgcolor: "#0284C7",
               color: "#ffffff",
-              boxShadow: "0 10px 20px rgba(79, 70, 229, 0.4)",
-              "&:hover": { bgcolor: "#4338ca" },
+              boxShadow: "0 10px 20px rgba(2, 132, 199, 0.4)",
+              "&:hover": { bgcolor: "#0369A1" },
             }}
           >
             <EditIcon />
@@ -1699,7 +1699,7 @@ export const ChatPage: React.FC = () => {
                     display: { xs: "inline-flex", md: "none" },
                     mr: 1,
                     p: 0.5,
-                    color: "#4f46e5",
+                    color: "#0284C7",
                   }}
                   size="small"
                 >
@@ -1718,7 +1718,7 @@ export const ChatPage: React.FC = () => {
                           width: { xs: 40, md: 50 },
                           height: { xs: 40, md: 50 },
                           borderRadius: "14px",
-                          bgcolor: "#4f46e5",
+                          bgcolor: "#0284C7",
                           fontWeight: 700,
                           fontSize: "1.1rem",
                         }}
@@ -1753,7 +1753,7 @@ export const ChatPage: React.FC = () => {
                   </Typography>
 
                   {partnerTyping ? (
-                    <Typography variant="caption" color="#4f46e5" fontStyle="italic" fontWeight={600} sx={{ fontSize: "11px" }}>
+                    <Typography variant="caption" color="#0284C7" fontStyle="italic" fontWeight={600} sx={{ fontSize: "11px" }}>
                       typing...
                     </Typography>
                   ) : (() => {
@@ -1810,7 +1810,7 @@ export const ChatPage: React.FC = () => {
                 {/* Infinite Scroll Up Loader */}
                 {isLoadingMore && (
                   <Box sx={{ display: "flex", justifyContent: "center", py: 1 }}>
-                    <CircularProgress size={22} sx={{ color: "#4f46e5" }} />
+                    <CircularProgress size={22} sx={{ color: "#0284C7" }} />
                   </Box>
                 )}
 
@@ -1884,7 +1884,7 @@ export const ChatPage: React.FC = () => {
                 {/* Messages grouped by date with dynamic dividers */}
                 {isLoadingMessages ? (
                   <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-                    <CircularProgress size={32} sx={{ color: "#4f46e5" }} />
+                    <CircularProgress size={32} sx={{ color: "#0284C7" }} />
                   </Box>
                 ) : (() => {
                   // Helper: get YYYY-MM-DD local date string from ISO timestamp
@@ -1942,10 +1942,10 @@ export const ChatPage: React.FC = () => {
                             <Box
                               sx={{
                                 p: 0.5,
-                                boxShadow: "0 10px 20px -3px rgba(79, 70, 229, 0.3)",
+                                boxShadow: "0 4px 14px rgba(2, 132, 199, 0.25)",
                                 width: "100%",
                                 maxWidth: "440px",
-                                background: "linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)",
+                                background: "linear-gradient(135deg, #0284C7 0%, #0369A1 100%)",
                                 borderRadius: "16px 16px 2px 16px",
                               }}
                             >
@@ -2052,7 +2052,7 @@ export const ChatPage: React.FC = () => {
                                       display: "flex",
                                       alignItems: "center",
                                       justifyContent: "center",
-                                      color: "#4f46e5",
+                                      color: "#0284C7",
                                     }}
                                   >
                                     <FileIcon sx={{ fontSize: 22 }} />
@@ -2072,11 +2072,11 @@ export const ChatPage: React.FC = () => {
                                   disabled={downloadingFileId === msg._id}
                                   sx={{
                                     p: 1.25,
-                                    bgcolor: "#4f46e5",
+                                    bgcolor: "#0284C7",
                                     color: "#ffffff",
                                     borderRadius: "12px",
-                                    boxShadow: "0 2px 4px rgba(79, 70, 229, 0.2)",
-                                    "&:hover": { bgcolor: "#4338ca" },
+                                    boxShadow: "0 2px 4px rgba(2, 132, 199, 0.2)",
+                                    "&:hover": { bgcolor: "#0369A1" },
                                   }}
                                 >
                                   {downloadingFileId === msg._id ? (
@@ -2098,7 +2098,7 @@ export const ChatPage: React.FC = () => {
                           // OUTGOING TEXT BUBBLE
                           <Box
                             sx={{
-                              bgcolor: "#4f46e5",
+                              bgcolor: "#0284C7",
                               color: "#ffffff",
                               px: 2.5,
                               py: 1.5,
@@ -2221,10 +2221,10 @@ export const ChatPage: React.FC = () => {
                     color: "#64748b",
                     flexShrink: 0,
                     borderRadius: "10px",
-                    "&:hover": { color: "#4f46e5", bgcolor: "#e0e7ff" },
+                    "&:hover": { color: "#0284C7", bgcolor: "#e0e7ff" },
                   }}
                 >
-                  {uploadingFile ? <CircularProgress size={18} sx={{ color: "#4f46e5" }} /> : <AttachFileIcon sx={{ fontSize: 22 }} />}
+                  {uploadingFile ? <CircularProgress size={18} sx={{ color: "#0284C7" }} /> : <AttachFileIcon sx={{ fontSize: 22 }} />}
                 </IconButton>
 
                 <Box
@@ -2259,11 +2259,11 @@ export const ChatPage: React.FC = () => {
                     size="small"
                     onClick={(e) => setEmojiAnchorEl(e.currentTarget)}
                     sx={{
-                      color: Boolean(emojiAnchorEl) ? "#4f46e5" : "#94a3b8",
+                      color: Boolean(emojiAnchorEl) ? "#0284C7" : "#94a3b8",
                       p: 0.5,
                       flexShrink: 0,
                       transition: "color 0.15s ease",
-                      "&:hover": { color: "#4f46e5" },
+                      "&:hover": { color: "#0284C7" },
                     }}
                   >
                     <EmojiIcon sx={{ fontSize: 19 }} />
@@ -2278,12 +2278,12 @@ export const ChatPage: React.FC = () => {
                     height: 38,
                     minWidth: 38,
                     flexShrink: 0,
-                    bgcolor: "#4f46e5",
+                    bgcolor: "#0284C7",
                     color: "#ffffff",
                     borderRadius: "50%",
-                    boxShadow: "0 2px 8px rgba(79, 70, 229, 0.25)",
+                    boxShadow: "0 2px 8px rgba(2, 132, 199, 0.25)",
                     transition: "all 0.15s ease",
-                    "&:hover": { bgcolor: "#4338ca" },
+                    "&:hover": { bgcolor: "#0369A1" },
                     "&:active": { transform: "scale(0.92)" },
                     "&.Mui-disabled": { bgcolor: "#f1f5f9", color: "#cbd5e1", boxShadow: "none" },
                   }}
@@ -2321,7 +2321,7 @@ export const ChatPage: React.FC = () => {
                   height: 64,
                   borderRadius: "50%",
                   bgcolor: "#e0e7ff",
-                  color: "#4f46e5",
+                  color: "#0284C7",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -2362,7 +2362,7 @@ export const ChatPage: React.FC = () => {
       >
         <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pb: 1 }}>
           <Stack direction="row" alignItems="center" spacing={1}>
-            <InfoIcon sx={{ color: "#4f46e5" }} />
+            <InfoIcon sx={{ color: "#0284C7" }} />
             <Typography variant="h6" fontWeight={700} color="#0f172a">
               Contact Details
             </Typography>
@@ -2382,7 +2382,7 @@ export const ChatPage: React.FC = () => {
                     width: 60,
                     height: 60,
                     borderRadius: "16px",
-                    bgcolor: "#4f46e5",
+                    bgcolor: "#0284C7",
                     fontSize: 24,
                     fontWeight: 700,
                   }}
@@ -2419,7 +2419,7 @@ export const ChatPage: React.FC = () => {
                 {selectedContactInfo.email && (
                   <Box sx={{ p: 1.5, borderRadius: "12px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", bgcolor: "#f8fafc" }}>
                     <Stack direction="row" alignItems="center" spacing={1.5}>
-                      <EmailIcon fontSize="small" sx={{ color: "#4f46e5" }} />
+                      <EmailIcon fontSize="small" sx={{ color: "#0284C7" }} />
                       <Typography variant="body2" fontWeight={600} color="#0f172a">
                         {selectedContactInfo.email}
                       </Typography>
@@ -2435,7 +2435,7 @@ export const ChatPage: React.FC = () => {
                 {selectedContactInfo.phone && (
                   <Box sx={{ p: 1.5, borderRadius: "12px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", bgcolor: "#f8fafc" }}>
                     <Stack direction="row" alignItems="center" spacing={1.5}>
-                      <PhoneIcon fontSize="small" sx={{ color: "#4f46e5" }} />
+                      <PhoneIcon fontSize="small" sx={{ color: "#0284C7" }} />
                       <Typography variant="body2" fontWeight={600} color="#0f172a">
                         {selectedContactInfo.phone}
                       </Typography>
@@ -2502,7 +2502,7 @@ export const ChatPage: React.FC = () => {
                 setInfoModalOpen(false);
                 handleStartChatWithPartner(selectedContactInfo.id);
               }}
-              sx={{ borderRadius: "12px", textTransform: "none", fontWeight: 700, bgcolor: "#4f46e5" }}
+              sx={{ borderRadius: "12px", textTransform: "none", fontWeight: 700, bgcolor: "#0284C7" }}
             >
               Message Now
             </Button>
@@ -2533,7 +2533,7 @@ export const ChatPage: React.FC = () => {
               height: 42,
               borderRadius: "12px",
               bgcolor: "#e0e7ff",
-              color: "#4f46e5",
+              color: "#0284C7",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -2584,15 +2584,15 @@ export const ChatPage: React.FC = () => {
               borderRadius: "10px",
               textTransform: "none",
               fontWeight: 600,
-              bgcolor: "#4f46e5",
+              bgcolor: "#0284C7",
               color: "#ffffff",
               px: 2.5,
               py: 1,
-              boxShadow: "0 4px 6px -1px rgba(79, 70, 229, 0.2)",
-              "&:hover": { bgcolor: "#4338ca" },
+              boxShadow: "0 4px 6px -1px rgba(2, 132, 199, 0.2)",
+              "&:hover": { bgcolor: "#0369A1" },
             }}
           >
-            {isSendingInvite ? "Sending..." : "Send Invitation 📩"}
+            {isSendingInvite ? "Sending..." : "Send Invitation"}
           </Button>
         </DialogActions>
       </Dialog>

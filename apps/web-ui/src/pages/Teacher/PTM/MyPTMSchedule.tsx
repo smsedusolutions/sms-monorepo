@@ -106,7 +106,7 @@ export const MyPTMSchedule: React.FC = () => {
                     {upcoming.length > 0 && (
                         <>
                             <Typography fontWeight={700} sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                📅 Upcoming Sessions ({upcoming.length})
+                                Upcoming Sessions ({upcoming.length})
                             </Typography>
                             {upcoming.map((s: any) => <SessionCard key={s._id} session={s} />)}
                         </>
@@ -114,7 +114,7 @@ export const MyPTMSchedule: React.FC = () => {
                     {past.length > 0 && (
                         <>
                             <Typography fontWeight={700} color="text.secondary" sx={{ mb: 2, mt: upcoming.length ? 3 : 0, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                🕒 Past Sessions ({past.length})
+                                Past Sessions ({past.length})
                             </Typography>
                             {past.map((s: any) => <SessionCard key={s._id} session={s} />)}
                         </>

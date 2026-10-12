@@ -178,7 +178,7 @@ const TeacherLeaveApprovals: React.FC = () => {
                                                         height: 36,
                                                         fontSize: '0.8rem',
                                                         fontWeight: 700,
-                                                        background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                                                        bgcolor: '#0284C7',
                                                     }}
                                                 >
                                                     {getInitials(teacherName)}

@@ -204,9 +204,7 @@ const TeacherDashboard: React.FC = () => {
                             fontWeight={800}
                             sx={{
                                 mb: 0.25,
-                                background: 'linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
+                                color: '#0F172A',
                                 fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
                                 letterSpacing: '-0.02em',
                                 lineHeight: 1.2

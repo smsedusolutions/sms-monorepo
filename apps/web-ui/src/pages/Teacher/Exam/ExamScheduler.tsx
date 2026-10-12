@@ -370,13 +370,13 @@ const ExamPanel: React.FC<ExamPanelProps> = ({
                     }}
                 >
                     <ToggleButton value={0}>
-                        🏫 Classes ({myClassSchedules.length})
+                        Classes ({myClassSchedules.length})
                     </ToggleButton>
                     <ToggleButton value={1}>
-                        📘 Subjects ({mySubjectSchedules.length})
+                        Subjects ({mySubjectSchedules.length})
                     </ToggleButton>
                     <ToggleButton value={2}>
-                        🛡️ Invigilation ({invigilatorSchedules.length})
+                        Invigilation ({invigilatorSchedules.length})
                     </ToggleButton>
                 </ToggleButtonGroup>
             </Box>

@@ -179,6 +179,7 @@ const getAllClasses = async (req, res) => {
         const uniqueTeacherIds = [...new Set(teacherIds.filter(Boolean))];
 
         const teachers = await TeacherModel.find({
+            status: { $ne: "inactive" },
             $or: [
                 { teacherId: { $in: uniqueTeacherIds } },
                 { _id: { $in: uniqueTeacherIds.filter(id => mongoose.isValidObjectId(id)) } },
@@ -200,9 +201,10 @@ const getAllClasses = async (req, res) => {
                 cObj.sections = cObj.sections
                     .map((s) => {
                         const tId = s.classTeacherId || s.classTeacher;
-                        const tName = tId ? (teacherMap.get(tId) || tId) : null;
+                        const tName = tId && teacherMap.has(tId) ? teacherMap.get(tId) : null;
                         return {
                             ...s,
+                            classTeacherId: tId && teacherMap.has(tId) ? tId : null,
                             classTeacherName: tName,
                         };
                     })

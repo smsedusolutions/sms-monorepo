@@ -5,7 +5,6 @@ import {
   Typography,
   Chip,
 } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   School,
   Groups,
@@ -19,7 +18,6 @@ import {
   QueryStats,
   CheckCircle,
 } from '@mui/icons-material';
-import { use3DTilt } from '../hooks/use3DTilt';
 import type { ServiceFeature } from '../types';
 
 const FEATURES_DATA: ServiceFeature[] = [
@@ -31,8 +29,8 @@ const FEATURES_DATA: ServiceFeature[] = [
     category: 'core',
     description: 'Effortlessly manage student registrations, digital enrollments, documents, roll numbers, and academic histories in a single secure cloud hub.',
     highlights: ['Digital Admissions', 'Document Vault', 'ID Card Generation', 'Promotions Engine'],
-    gradient: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)',
-    accentColor: '#3B82F6',
+    gradient: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+    accentColor: '#0284C7',
   },
   {
     id: 'attendance-mgmt',
@@ -40,10 +38,10 @@ const FEATURES_DATA: ServiceFeature[] = [
     tagline: 'Automated real-time attendance',
     iconName: 'Groups',
     category: 'operations',
-    description: 'Instant RFID, biometric, and teacher mobile roll-call tracking with instant automated SMS & WhatsApp notification to parents for absences.',
-    highlights: ['RFID / Biometric Sync', 'Instant Absent Alerts', 'Monthly Muster Rolls', 'Leave Workflow'],
-    gradient: 'linear-gradient(135deg, #10B981 0%, #047857 100%)',
-    accentColor: '#10B981',
+    description: 'RFID, biometric, and teacher mobile roll-call tracking with automated SMS and WhatsApp notifications to parents for recorded absences.',
+    highlights: ['RFID & Biometric Sync', 'Instant Absent Alerts', 'Monthly Muster Rolls', 'Leave Workflow'],
+    gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+    accentColor: '#059669',
   },
   {
     id: 'exam-mgmt',
@@ -51,19 +49,19 @@ const FEATURES_DATA: ServiceFeature[] = [
     tagline: 'End-to-end evaluation & gradebook',
     iconName: 'Description',
     category: 'academic',
-    description: 'Design exam timetables, allocate hall tickets, grade tests with customizable grading scales, and generate beautiful printable PDF report cards.',
-    highlights: ['Hall Ticket Generator', 'Marks & Grade Entry', 'Rank & Percentile AI', 'CBSE / ICSE Report Cards'],
-    gradient: 'linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)',
-    accentColor: '#8B5CF6',
+    description: 'Design exam timetables, allocate hall tickets, grade tests with customizable grading scales, and generate printable PDF report cards.',
+    highlights: ['Hall Ticket Generator', 'Marks & Grade Entry', 'Rank & Percentile Computation', 'CBSE & State Board Cards'],
+    gradient: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+    accentColor: '#0284C7',
   },
   {
     id: 'timetable-mgmt',
     title: 'Timetable Management',
-    tagline: 'AI conflict-free scheduling',
+    tagline: 'Automated conflict-free scheduling',
     iconName: 'CalendarMonth',
     category: 'academic',
-    description: 'Eliminate scheduling clashes with smart period balancing, room allocations, and 1-click substitute teacher assignments for absent educators.',
-    highlights: ['Conflict Detection', 'Smart Substitute Engine', 'Teacher Workload Balancer', 'Export to PDF & App'],
+    description: 'Eliminate scheduling clashes with period balancing, classroom allocations, and quick substitute teacher assignments for absent educators.',
+    highlights: ['Conflict Detection', 'Substitute Engine', 'Teacher Workload Balancer', 'Export to PDF & App'],
     gradient: 'linear-gradient(135deg, #0EA5E9 0%, #0369A1 100%)',
     accentColor: '#0EA5E9',
   },
@@ -74,9 +72,9 @@ const FEATURES_DATA: ServiceFeature[] = [
     iconName: 'AccountBalanceWallet',
     category: 'operations',
     description: 'Define custom fee structures, collect online tuition & transport fees, issue digital receipts, and automate overdue reminder notifications.',
-    highlights: ['Online UPI / Card Gateway', 'Instant GST Receipts', 'Defaulter Follow-ups', 'Scholarship & Discounts'],
-    gradient: 'linear-gradient(135deg, #F59E0B 0%, #B45309 100%)',
-    accentColor: '#F59E0B',
+    highlights: ['Online UPI & Card Gateway', 'Instant GST Receipts', 'Defaulter Follow-ups', 'Scholarship & Discounts'],
+    gradient: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
+    accentColor: '#D97706',
   },
   {
     id: 'transport-mgmt',
@@ -86,19 +84,19 @@ const FEATURES_DATA: ServiceFeature[] = [
     category: 'operations',
     description: 'Live vehicle telemetry on interactive maps, driver verification, bus route planning, and proximity alerts when the bus approaches the pickup stop.',
     highlights: ['Live GPS Tracking', 'Geofence Alerts', 'Driver & Vehicle Records', 'Parent ETA Broadcast'],
-    gradient: 'linear-gradient(135deg, #F97316 0%, #C2410C 100%)',
-    accentColor: '#F97316',
+    gradient: 'linear-gradient(135deg, #EA580C 0%, #C2410C 100%)',
+    accentColor: '#EA580C',
   },
   {
     id: 'events-mgmt',
     title: 'Events Management',
-    tagline: 'Engaging campus calendar & PTMs',
+    tagline: 'Campus calendar & parent-teacher meetings',
     iconName: 'EventAvailable',
     category: 'engagement',
     description: 'Coordinate school sports days, cultural festivals, academic holidays, and Parent-Teacher Meeting (PTM) slot bookings without confusion.',
     highlights: ['Interactive Calendar', 'PTM Slot Reservations', 'Holiday Schedule', 'RSVP & Photo Galleries'],
-    gradient: 'linear-gradient(135deg, #EC4899 0%, #BE185D 100%)',
-    accentColor: '#EC4899',
+    gradient: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+    accentColor: '#0284C7',
   },
   {
     id: 'staff-mgmt',
@@ -108,19 +106,19 @@ const FEATURES_DATA: ServiceFeature[] = [
     category: 'core',
     description: 'Centralized faculty records, bio-data, qualification tracking, staff leave approvals, payroll generation, and classroom assignments.',
     highlights: ['Faculty Dossiers', 'Staff Attendance & Leave', 'Payroll & Payslips', 'Role Permissions Engine'],
-    gradient: 'linear-gradient(135deg, #6366F1 0%, #4338CA 100%)',
-    accentColor: '#6366F1',
+    gradient: 'linear-gradient(135deg, #334155 0%, #0F172A 100%)',
+    accentColor: '#334155',
   },
   {
     id: 'comm-mgmt',
     title: 'Communication & Notifications',
-    tagline: 'Instant omnichannel announcements',
+    tagline: 'Instant announcements across channels',
     iconName: 'Email',
     category: 'engagement',
-    description: 'Broadcast urgent circulars, homework alerts, emergency notices, and fee alerts via in-app push notifications, SMS, and WhatsApp.',
-    highlights: ['Emergency Broadcasts', 'Web Push Notifications', 'Email Newsletters', '2-Way Parent Messaging'],
-    gradient: 'linear-gradient(135deg, #EF4444 0%, #B91C1C 100%)',
-    accentColor: '#EF4444',
+    description: 'Broadcast circulars, homework assignments, emergency notices, and fee alerts via in-app push notifications, SMS, and WhatsApp.',
+    highlights: ['Emergency Broadcasts', 'Web Push Notifications', 'Email Bulletins', '2-Way Parent Messaging'],
+    gradient: 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)',
+    accentColor: '#DC2626',
   },
   {
     id: 'reports-mgmt',
@@ -128,83 +126,72 @@ const FEATURES_DATA: ServiceFeature[] = [
     tagline: 'Actionable educational intelligence',
     iconName: 'QueryStats',
     category: 'academic',
-    description: 'Dynamic visual dashboards, attendance percentage trends, fee collection forecasts, exam pass ratios, and 1-click Excel/PDF data exports.',
-    highlights: ['Predictive Pass Ratios', 'Financial Revenue Trends', 'Export to Excel / PDF', 'Principal Summary View'],
-    gradient: 'linear-gradient(135deg, #14B8A6 0%, #0F766E 100%)',
-    accentColor: '#14B8A6',
+    description: 'Visual dashboards, attendance percentage trends, fee collection forecasts, exam pass ratios, and single-click Excel and PDF data exports.',
+    highlights: ['Pass Ratio Analysis', 'Financial Revenue Trends', 'Export to Excel / PDF', 'Principal Summary View'],
+    gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+    accentColor: '#059669',
   },
 ];
 
-const FeatureCard: React.FC<{ feature: ServiceFeature }> = ({ feature }) => {
-  const { ref, style, glareStyle } = use3DTilt<HTMLDivElement>({
-    maxRotation: 12,
-    perspective: 1100,
-    scale: 1.03,
-  });
+import { useLandingTheme } from '../context/LandingThemeContext';
 
+const FeatureCard: React.FC<{ feature: ServiceFeature; isDark: boolean }> = ({ feature, isDark }) => {
   const renderIcon = () => {
     switch (feature.iconName) {
       case 'School':
-        return <School sx={{ fontSize: 26, color: 'white' }} />;
+        return <School sx={{ fontSize: 24, color: 'white' }} />;
       case 'Groups':
-        return <Groups sx={{ fontSize: 26, color: 'white' }} />;
+        return <Groups sx={{ fontSize: 24, color: 'white' }} />;
       case 'Description':
-        return <Description sx={{ fontSize: 26, color: 'white' }} />;
+        return <Description sx={{ fontSize: 24, color: 'white' }} />;
       case 'CalendarMonth':
-        return <CalendarMonth sx={{ fontSize: 26, color: 'white' }} />;
+        return <CalendarMonth sx={{ fontSize: 24, color: 'white' }} />;
       case 'AccountBalanceWallet':
-        return <AccountBalanceWallet sx={{ fontSize: 26, color: 'white' }} />;
+        return <AccountBalanceWallet sx={{ fontSize: 24, color: 'white' }} />;
       case 'DirectionsBus':
-        return <DirectionsBus sx={{ fontSize: 26, color: 'white' }} />;
+        return <DirectionsBus sx={{ fontSize: 24, color: 'white' }} />;
       case 'EventAvailable':
-        return <EventAvailable sx={{ fontSize: 26, color: 'white' }} />;
+        return <EventAvailable sx={{ fontSize: 24, color: 'white' }} />;
       case 'Badge':
-        return <Badge sx={{ fontSize: 26, color: 'white' }} />;
+        return <Badge sx={{ fontSize: 24, color: 'white' }} />;
       case 'Email':
-        return <Email sx={{ fontSize: 26, color: 'white' }} />;
+        return <Email sx={{ fontSize: 24, color: 'white' }} />;
       case 'QueryStats':
-        return <QueryStats sx={{ fontSize: 26, color: 'white' }} />;
+        return <QueryStats sx={{ fontSize: 24, color: 'white' }} />;
       default:
-        return <School sx={{ fontSize: 26, color: 'white' }} />;
+        return <School sx={{ fontSize: 24, color: 'white' }} />;
     }
   };
 
   return (
     <Box
-      ref={ref}
-      style={style}
       sx={{
-        position: 'relative',
-        borderRadius: '20px',
-        bgcolor: '#FFFFFF',
-        p: { xs: 2.8, sm: 3.2 },
-        border: '1px solid rgba(226, 232, 240, 0.9)',
-        boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02)',
+        borderRadius: '8px',
+        bgcolor: isDark ? '#111827' : '#FFFFFF',
+        p: { xs: 2.8, sm: 3 },
+        border: isDark ? '1px solid #1F2937' : '1px solid #E2E8F0',
+        boxShadow: isDark ? '0 4px 12px rgba(0, 0, 0, 0.25)' : '0 1px 3px rgba(0, 0, 0, 0.04)',
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        overflow: 'hidden',
-        transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
+        transition: 'border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.25s ease',
         '&:hover': {
           borderColor: feature.accentColor,
-          boxShadow: `0 20px 40px -15px ${feature.accentColor}35`,
+          boxShadow: isDark ? '0 8px 24px rgba(0, 0, 0, 0.45)' : '0 4px 16px rgba(0, 0, 0, 0.08)',
         },
       }}
     >
-      {glareStyle && <Box style={glareStyle} />}
-
       {/* Top row: Icon + Category Badge */}
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2.2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
         <Box
           sx={{
-            width: 52,
-            height: 52,
-            borderRadius: '16px',
+            width: 46,
+            height: 46,
+            borderRadius: '6px',
             background: feature.gradient,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: `0 8px 20px -4px ${feature.accentColor}50`,
           }}
         >
           {renderIcon()}
@@ -213,12 +200,13 @@ const FeatureCard: React.FC<{ feature: ServiceFeature }> = ({ feature }) => {
           size="small"
           label={feature.category.toUpperCase()}
           sx={{
-            fontWeight: 800,
+            fontWeight: 700,
             fontSize: '0.65rem',
-            letterSpacing: '0.05em',
-            bgcolor: `${feature.accentColor}12`,
-            color: feature.accentColor,
-            border: `1px solid ${feature.accentColor}30`,
+            letterSpacing: '0.04em',
+            borderRadius: '4px',
+            bgcolor: isDark ? '#1E293B' : '#F1F5F9',
+            color: isDark ? '#94A3B8' : '#334155',
+            border: isDark ? '1px solid #334155' : '1px solid #CBD5E1',
           }}
         />
       </Box>
@@ -227,9 +215,9 @@ const FeatureCard: React.FC<{ feature: ServiceFeature }> = ({ feature }) => {
       <Typography
         variant="h6"
         sx={{
-          fontSize: '1.25rem',
+          fontSize: '1.18rem',
           fontWeight: 800,
-          color: '#0F172A',
+          color: isDark ? '#F8FAFC' : '#0F172A',
           mb: 0.8,
           lineHeight: 1.25,
         }}
@@ -241,8 +229,8 @@ const FeatureCard: React.FC<{ feature: ServiceFeature }> = ({ feature }) => {
       <Typography
         sx={{
           fontSize: '0.88rem',
-          color: '#64748B',
-          lineHeight: 1.6,
+          color: isDark ? '#94A3B8' : '#64748B',
+          lineHeight: 1.55,
           mb: 2.5,
           flex: 1,
         }}
@@ -251,11 +239,11 @@ const FeatureCard: React.FC<{ feature: ServiceFeature }> = ({ feature }) => {
       </Typography>
 
       {/* Highlights Checkmark List */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, pt: 1.5, borderTop: '1px solid #F1F5F9' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.8, pt: 1.5, borderTop: isDark ? '1px solid #1E293B' : '1px solid #F1F5F9' }}>
         {feature.highlights.map((item) => (
           <Box key={item} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CheckCircle sx={{ fontSize: 16, color: feature.accentColor }} />
-            <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: '#334155' }}>
+            <Typography sx={{ fontSize: '0.78rem', fontWeight: 600, color: isDark ? '#CBD5E1' : '#334155' }}>
               {item}
             </Typography>
           </Box>
@@ -266,10 +254,11 @@ const FeatureCard: React.FC<{ feature: ServiceFeature }> = ({ feature }) => {
 };
 
 export const FeaturesSection: React.FC = () => {
+  const { isDark } = useLandingTheme();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
   const categories = [
-    { id: 'all', label: 'All 10 Features' },
+    { id: 'all', label: 'All 10 Modules' },
     { id: 'core', label: 'Core & Staff' },
     { id: 'academic', label: 'Academic & Exams' },
     { id: 'operations', label: 'Operations & Fees' },
@@ -284,9 +273,10 @@ export const FeaturesSection: React.FC = () => {
     <Box
       id="features"
       sx={{
-        py: { xs: 10, md: 14 },
-        position: 'relative',
-        zIndex: 5,
+        py: { xs: 8, md: 12 },
+        bgcolor: isDark ? '#0B0F19' : '#FFFFFF',
+        borderBottom: isDark ? '1px solid #1E293B' : '1px solid #E2E8F0',
+        transition: 'background-color 0.25s ease, border-color 0.25s ease',
       }}
     >
       <Container maxWidth="xl">
@@ -297,53 +287,52 @@ export const FeaturesSection: React.FC = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 1,
-              px: 2,
+              px: 1.6,
               py: 0.6,
-              borderRadius: '50px',
-              bgcolor: 'rgba(99, 102, 241, 0.08)',
-              border: '1px solid rgba(99, 102, 241, 0.2)',
+              borderRadius: '6px',
+              bgcolor: isDark ? 'rgba(56, 189, 248, 0.1)' : '#F1F5F9',
+              border: isDark ? '1px solid rgba(56, 189, 248, 0.25)' : '1px solid #CBD5E1',
               mb: 2,
             }}
           >
             <Typography
               sx={{
                 fontSize: '0.75rem',
-                fontWeight: 800,
-                color: '#4F46E5',
-                letterSpacing: '0.08em',
+                fontWeight: 700,
+                color: isDark ? '#38BDF8' : '#0F172A',
+                letterSpacing: '0.06em',
                 textTransform: 'uppercase',
               }}
             >
-              Everything A Modern Institution Needs
+              Institutional Modules
             </Typography>
           </Box>
 
           <Typography
             variant="h2"
             sx={{
-              fontSize: { xs: '2rem', sm: '2.8rem', md: '3.2rem' },
+              fontSize: { xs: '1.9rem', sm: '2.5rem', md: '2.8rem' },
               fontWeight: 900,
-              color: '#0F172A',
+              color: isDark ? '#F8FAFC' : '#0F172A',
               letterSpacing: '-0.025em',
-              mb: 2,
+              mb: 1.5,
             }}
           >
-            Our Core Features
+            Core Institutional Modules
           </Typography>
 
-          <Typography sx={{ fontSize: { xs: '1rem', sm: '1.12rem' }, color: '#64748B', lineHeight: 1.65 }}>
-            Directly from the SMS EDU SOLUTIONS flagship suite. Ten deeply integrated modules
-            engineered to automate every facet of your campus operations.
+          <Typography sx={{ fontSize: { xs: '0.98rem', sm: '1.05rem' }, color: isDark ? '#94A3B8' : '#64748B', lineHeight: 1.6 }}>
+            Ten deeply integrated software modules designed to manage campus operations, records, and communication.
           </Typography>
 
-          {/* Filter Categories */}
+          {/* Filter Categories - Rectangular 6px chips */}
           <Box
             sx={{
               display: 'flex',
               flexWrap: 'wrap',
               justifyContent: 'center',
               gap: 1,
-              mt: 4,
+              mt: 3.5,
             }}
           >
             {categories.map((cat) => (
@@ -353,18 +342,25 @@ export const FeaturesSection: React.FC = () => {
                 onClick={() => setSelectedCategory(cat.id)}
                 sx={{
                   px: 1.5,
-                  py: 2.2,
-                  borderRadius: '50px',
+                  py: 2,
+                  borderRadius: '6px',
                   fontWeight: 700,
-                  fontSize: '0.85rem',
+                  fontSize: '0.82rem',
                   cursor: 'pointer',
-                  bgcolor: selectedCategory === cat.id ? '#4F46E5' : 'rgba(255, 255, 255, 0.9)',
-                  color: selectedCategory === cat.id ? '#FFFFFF' : '#475569',
-                  border: selectedCategory === cat.id ? '1px solid #4F46E5' : '1px solid #E2E8F0',
-                  boxShadow: selectedCategory === cat.id ? '0 6px 20px rgba(79, 70, 229, 0.35)' : 'none',
-                  transition: 'all 0.25s ease',
+                  bgcolor: selectedCategory === cat.id
+                    ? isDark ? '#0284C7' : '#0F172A'
+                    : isDark ? '#111827' : '#FFFFFF',
+                  color: selectedCategory === cat.id
+                    ? '#FFFFFF'
+                    : isDark ? '#94A3B8' : '#334155',
+                  border: selectedCategory === cat.id
+                    ? isDark ? '1px solid #0284C7' : '1px solid #0F172A'
+                    : isDark ? '1px solid #1F2937' : '1px solid #CBD5E1',
+                  transition: 'background-color 0.2s ease, border-color 0.2s ease',
                   '&:hover': {
-                    bgcolor: selectedCategory === cat.id ? '#4338CA' : '#F1F5F9',
+                    bgcolor: selectedCategory === cat.id
+                      ? isDark ? '#0369A1' : '#1E293B'
+                      : isDark ? '#1E293B' : '#F8FAFC',
                   },
                 }}
               />
@@ -372,7 +368,7 @@ export const FeaturesSection: React.FC = () => {
           </Box>
         </Box>
 
-        {/* Features 3D Cards Grid */}
+        {/* Features Cards Grid */}
         <Box
           sx={{
             display: 'grid',
@@ -381,25 +377,17 @@ export const FeaturesSection: React.FC = () => {
               sm: 'repeat(2, 1fr)',
               lg: 'repeat(3, 1fr)',
             },
-            gap: 3.5,
+            gap: 3,
           }}
         >
-          <AnimatePresence>
-            {filteredFeatures.map((feature) => (
-              <motion.div
-                key={feature.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.35 }}
-              >
-                <FeatureCard feature={feature} />
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          {filteredFeatures.map((feature) => (
+            <Box key={feature.id}>
+              <FeatureCard feature={feature} isDark={isDark} />
+            </Box>
+          ))}
         </Box>
       </Container>
     </Box>
   );
 };
+

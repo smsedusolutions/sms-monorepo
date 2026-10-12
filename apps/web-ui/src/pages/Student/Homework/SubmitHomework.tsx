@@ -132,7 +132,7 @@ export const SubmitHomework: React.FC<SubmitHomeworkProps> = ({ homework, studen
                         {homework.description}
                     </Typography>
                     <Typography variant="caption" color={isOverdue ? 'error.main' : 'text.secondary'} sx={{ mt: 1, display: 'block', fontWeight: 600 }}>
-                        {isOverdue ? '⚠️ ' : '📅 '}Due Date: {new Date(homework.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        Due Date: {new Date(homework.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </Typography>
                 </Paper>
 

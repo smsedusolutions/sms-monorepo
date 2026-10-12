@@ -36,7 +36,7 @@ export const MobileAppLayout: React.FC<MobileAppLayoutProps> = ({
     const schoolName =
       school?.schoolName || userProfile?.schoolName || 'SMS Edu Solution';
     if (currentPageTitle) {
-      document.title = `${currentPageTitle} — ${schoolName}`;
+      document.title = `${currentPageTitle} | ${schoolName}`;
     } else {
       document.title = schoolName;
     }

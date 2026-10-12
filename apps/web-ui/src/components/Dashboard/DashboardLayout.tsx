@@ -63,7 +63,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
     useEffect(() => {
         const schoolName = school?.schoolName || userProfile?.schoolName || 'SMS Edu Solution';
         if (currentPageTitle) {
-            document.title = `${currentPageTitle} — ${schoolName}`;
+            document.title = `${currentPageTitle} | ${schoolName}`;
         } else {
             document.title = schoolName;
         }
@@ -493,7 +493,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                 sx={{
                                     width: 36,
                                     height: 36,
-                                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                                    bgcolor: '#0284C7',
                                     fontSize: '0.95rem',
                                     fontWeight: 700,
                                     border: profilePopupOpen ? '2px solid rgba(255,255,255,0.6)' : '2px solid rgba(255,255,255,0.2)',
@@ -525,7 +525,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                     right: 0,
                                     width: 260,
                                     background: '#1e293b',
-                                    borderRadius: '16px',
+                                    borderRadius: '8px',
                                     boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
                                     border: '1px solid rgba(255,255,255,0.08)',
                                     overflow: 'hidden',
@@ -540,7 +540,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                 {/* Profile Header */}
                                 <Box
                                     sx={{
-                                        background: 'linear-gradient(135deg, #1e3a5f 0%, #2d1b69 100%)',
+                                        background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
                                         px: 2.5,
                                         pt: 2.5,
                                         pb: 2,
@@ -558,7 +558,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                             sx={{
                                                 width: 64,
                                                 height: 64,
-                                                background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                                                bgcolor: '#0284C7',
                                                 fontSize: '1.6rem',
                                                 fontWeight: 700,
                                                 border: '3px solid rgba(255,255,255,0.15)',

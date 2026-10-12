@@ -305,7 +305,11 @@ const getAllParents = async (req, res) => {
 
     // Build query filters
     const query = {};
-    if (status) query.status = status;
+    if (status && status !== "all") {
+      query.status = status;
+    } else if (!status) {
+      query.status = { $ne: "inactive" };
+    }
     if (relationship) query.relationship = relationship;
 
     // Search filter (firstName, lastName, email, phone, or parentId)

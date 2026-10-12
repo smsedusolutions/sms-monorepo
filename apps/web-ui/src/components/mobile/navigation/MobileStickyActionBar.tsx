@@ -59,7 +59,7 @@ export const MobileStickyActionBar: React.FC<MobileStickyActionBarProps> = ({
             sx={{
               flex: 1,
               py: 1.4,
-              borderRadius: '14px',
+              borderRadius: '6px',
               fontWeight: 700,
               fontSize: '0.92rem',
               textTransform: 'none',
@@ -79,14 +79,15 @@ export const MobileStickyActionBar: React.FC<MobileStickyActionBarProps> = ({
           sx={{
             flex: secondaryLabel ? 2 : 1,
             py: 1.4,
-            borderRadius: '14px',
+            borderRadius: '6px',
             fontWeight: 700,
             fontSize: '0.92rem',
             textTransform: 'none',
-            bgcolor: '#4f46e5',
+            bgcolor: '#0284c7',
+            background: '#0284c7 !important',
             color: '#ffffff',
-            boxShadow: '0 4px 14px rgba(79, 70, 229, 0.35)',
-            '&:hover, &:active': { bgcolor: '#4338ca' },
+            boxShadow: 'none',
+            '&:hover, &:active': { bgcolor: '#0369a1', background: '#0369a1 !important' },
             '&.Mui-disabled': { bgcolor: '#e2e8f0', color: '#94a3b8' },
           }}
           startIcon={

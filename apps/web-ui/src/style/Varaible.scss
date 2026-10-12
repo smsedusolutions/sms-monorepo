@@ -5,9 +5,9 @@ $primary-color: #1976d2;
 $primary-light: #42a5f5;
 $primary-dark: #1565c0;
 
-$secondary-color: #9c27b0;
-$secondary-light: #ba68c8;
-$secondary-dark: #7b1fa2;
+$secondary-color: #0f172a;
+$secondary-light: #334155;
+$secondary-dark: #020617;
 
 $success-color: #2e7d32;
 $success-light: #4caf50;
@@ -40,9 +40,9 @@ $border-light: rgba(0, 0, 0, 0.08);
 $shadow-color: rgba(0, 0, 0, 0.1);
 $shadow-dark: rgba(0, 0, 0, 0.2);
 
-// Gradients
-$gradient-primary: linear-gradient(45deg, $primary-color, $primary-light);
-$gradient-secondary: linear-gradient(45deg, $secondary-color, $secondary-light);
+// Gradients (Solid corporate fallbacks)
+$gradient-primary: linear-gradient(135deg, $primary-color, $primary-dark);
+$gradient-secondary: linear-gradient(135deg, $secondary-color, $secondary-dark);
 
 // Component Colors
 $card-background: $surface-color;

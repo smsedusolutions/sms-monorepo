@@ -1,5 +1,5 @@
 /**
- * Data Rights Request Form — SMS Edu Solutions
+ * Data Rights Request Form: SMS Edu Solutions
  *
  * Simple, user-friendly form allowing students, parents, and teachers to exercise
  * their legal rights under India's Digital Personal Data Protection Act, 2023 (DPDP Act).
@@ -123,27 +123,27 @@ const DataRightsRequest: React.FC = () => {
   const requestOptions = [
     {
       value: 'Access Data (DPDP Act §11)',
-      label: '1. See My Data (DPDP Act §11) — I want a copy/summary of personal data held about me.',
+      label: '1. See My Data (DPDP Act §11): I want a copy/summary of personal data held about me.',
     },
     {
       value: 'Correct Data (DPDP Act §12)',
-      label: '2. Fix Mistakes in My Data (DPDP Act §12) — I want to update or correct inaccurate details.',
+      label: '2. Fix Mistakes in My Data (DPDP Act §12): I want to update or correct inaccurate details.',
     },
     {
       value: 'Erase Data (DPDP Act §12)',
-      label: '3. Delete My Data (DPDP Act §12) — I want my personal data deleted as I no longer use this school service.',
+      label: '3. Delete My Data (DPDP Act §12): I want my personal data deleted as I no longer use this school service.',
     },
     {
       value: 'Withdraw Consent (DPDP Act §6)',
-      label: '4. Stop Optional Processing (DPDP Act §6) — I want to withdraw consent for non-essential features.',
+      label: '4. Stop Optional Processing (DPDP Act §6): I want to withdraw consent for non-essential features.',
     },
     {
       value: 'Grievance / Complaint (DPDP Act §13)',
-      label: '5. DPDP Act Complaint (DPDP Act §13) — I have a grievance regarding how my personal data was handled.',
+      label: '5. DPDP Act Complaint (DPDP Act §13): I have a grievance regarding how my personal data was handled.',
     },
     {
       value: 'Register Nominee (DPDP Act §14)',
-      label: '6. Register a Nominee (DPDP Act §14) — I want to appoint a trusted person to manage my DPDP Act data rights.',
+      label: '6. Register a Nominee (DPDP Act §14): I want to appoint a trusted person to manage my DPDP Act data rights.',
     },
   ];
 
@@ -194,13 +194,13 @@ const DataRightsRequest: React.FC = () => {
             variant="contained"
             onClick={() => navigate('/login')}
             sx={{
-              bgcolor: '#4f46e5',
+              bgcolor: '#0284c7',
               textTransform: 'none',
               fontWeight: 600,
               px: 3,
               py: 1,
               borderRadius: '6px',
-              '&:hover': { bgcolor: '#4338ca' },
+              '&:hover': { bgcolor: '#0369a1' },
             }}
           >
             Return to Login
@@ -365,7 +365,7 @@ const DataRightsRequest: React.FC = () => {
                   <FormControlLabel
                     key={opt.value}
                     value={opt.value}
-                    control={<Radio size="small" sx={{ '&.Mui-checked': { color: '#4f46e5' } }} />}
+                    control={<Radio size="small" sx={{ '&.Mui-checked': { color: '#0284c7' } }} />}
                     label={<Typography sx={{ fontSize: '0.88rem', color: '#334155', py: 0.25 }}>{opt.label}</Typography>}
                     sx={{ mb: 0.5 }}
                   />
@@ -408,7 +408,7 @@ const DataRightsRequest: React.FC = () => {
                   <Radio
                     checked={form.declaration}
                     size="small"
-                    sx={{ '&.Mui-checked': { color: '#4f46e5' } }}
+                    sx={{ '&.Mui-checked': { color: '#0284c7' } }}
                   />
                 }
                 label={
@@ -431,14 +431,14 @@ const DataRightsRequest: React.FC = () => {
               disabled={isLoading}
               endIcon={<Send sx={{ fontSize: 16 }} />}
               sx={{
-                bgcolor: '#4f46e5',
+                bgcolor: '#0284c7',
                 textTransform: 'none',
                 fontWeight: 600,
                 fontSize: '0.92rem',
                 py: 1.25,
                 px: 3,
                 borderRadius: '6px',
-                '&:hover': { bgcolor: '#4338ca' },
+                '&:hover': { bgcolor: '#0369a1' },
               }}
             >
               {isLoading ? 'Submitting...' : 'Submit DPDP Act Request'}

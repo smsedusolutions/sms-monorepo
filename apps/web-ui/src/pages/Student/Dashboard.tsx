@@ -458,7 +458,7 @@ const StudentDashboard: React.FC = () => {
                             <Box sx={{ py: 3, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
                                 <AssignmentIcon sx={{ fontSize: 32, color: '#cbd5e1', mb: 0.5 }} />
                                 <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.8rem' }}>
-                                    No pending homework! All caught up. 🎉
+                                    No pending homework. All caught up.
                                 </Typography>
                             </Box>
                         ) : (

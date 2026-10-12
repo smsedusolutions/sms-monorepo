@@ -33,7 +33,7 @@ const modernTemplate = (content, options = {}) => {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .email-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
             padding: 40px 30px;
             text-align: center;
         }
@@ -53,7 +53,7 @@ const modernTemplate = (content, options = {}) => {
             color: #2d3748;
         }
         .email-content h1 {
-            color: #667eea;
+            color: #0284C7;
             font-size: 28px;
             font-weight: 700;
             margin: 0 0 20px 0;
@@ -79,7 +79,7 @@ const modernTemplate = (content, options = {}) => {
             line-height: 1.7;
         }
         .email-content a {
-            color: #667eea;
+            color: #0284C7;
             text-decoration: none;
             font-weight: 500;
         }

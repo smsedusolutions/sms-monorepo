@@ -36,7 +36,7 @@ export const BroadcastNotificationDialog: React.FC<BroadcastNotificationDialogPr
   const schoolId = TokenService.getSchoolId() || '';
   const broadcastMutation = useBroadcastNotification(schoolId);
 
-  const [title, setTitle] = useState('📢 School Alert: Important Update');
+  const [title, setTitle] = useState('School Alert: Important Update');
   const [message, setMessage] = useState('This is a real-time alert sent to all registered devices.');
   const [targetAudience, setTargetAudience] = useState<'all' | 'parents' | 'teachers' | 'students'>('all');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -122,10 +122,10 @@ export const BroadcastNotificationDialog: React.FC<BroadcastNotificationDialogPr
             onChange={(e) => setTargetAudience(e.target.value as any)}
             sx={{ borderRadius: 2 }}
           >
-            <MenuItem value="all">🌐 All Users (Parents, Teachers, Students)</MenuItem>
-            <MenuItem value="parents">👨‍👩‍👧 Parents Only</MenuItem>
-            <MenuItem value="teachers">👨‍🏫 Teachers Only</MenuItem>
-            <MenuItem value="students">🎓 Students Only</MenuItem>
+            <MenuItem value="all">All Users (Parents, Teachers, Students)</MenuItem>
+            <MenuItem value="parents">Parents Only</MenuItem>
+            <MenuItem value="teachers">Teachers Only</MenuItem>
+            <MenuItem value="students">Students Only</MenuItem>
           </Select>
         </FormControl>
 

@@ -321,7 +321,11 @@ const getAllTeachers = async (req, res) => {
     // Build query filters
     const query = {};
     if (department) query.department = department;
-    if (status) query.status = status;
+    if (status && status !== "all") {
+      query.status = status;
+    } else if (!status) {
+      query.status = { $ne: "inactive" };
+    }
     if (search) {
       // SECURITY (ReDoS): escape user-supplied search string before building RegExp
       const regex = new RegExp(escapeRegex(search), "i");

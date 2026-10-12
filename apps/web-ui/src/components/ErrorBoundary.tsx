@@ -135,7 +135,7 @@ class ErrorBoundary extends Component<Props, State> {
                                     sx={{
                                         px: 4,
                                         py: 1.5,
-                                        borderRadius: 2,
+                                        borderRadius: '6px',
                                         textTransform: 'none',
                                         fontSize: '1rem',
                                         backgroundColor: '#334155',
@@ -152,12 +152,12 @@ class ErrorBoundary extends Component<Props, State> {
                                     sx={{
                                         px: 4,
                                         py: 1.5,
-                                        borderRadius: 2,
+                                        borderRadius: '6px',
                                         textTransform: 'none',
                                         fontSize: '1rem',
-                                        background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
+                                        bgcolor: '#0284C7',
                                         '&:hover': {
-                                            background: 'linear-gradient(90deg, #2563eb, #7c3aed)',
+                                            bgcolor: '#0369A1',
                                         },
                                     }}
                                 >

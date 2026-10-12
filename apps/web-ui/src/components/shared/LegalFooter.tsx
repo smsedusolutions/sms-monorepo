@@ -1,12 +1,12 @@
 /**
- * LegalFooter — DPDP Act compliance component
+ * LegalFooter: DPDP Act compliance component
  *
  * Displayed on public-facing pages (Login, Privacy Policy, Terms, Data Rights).
  * Contains:
  *  - Links to Privacy Policy, Terms of Service, Data Rights Request
  *  - DPDP-mandated Grievance Officer contact
  *
- * [LEGAL REVIEW REQUIRED] — Grievance Officer name/email must be confirmed
+ * [LEGAL REVIEW REQUIRED]: Grievance Officer name/email must be confirmed
  *  and updated before going live.
  */
 
@@ -18,12 +18,12 @@ import { Shield, Gavel, AssignmentInd, ContactSupport } from '@mui/icons-materia
 interface LegalFooterProps {
   /** Override the primary colour for branded login pages */
   accentColor?: string;
-  /** Light variant — text appears on a white/light background */
+  /** Light variant: text appears on a white/light background */
   light?: boolean;
 }
 
 const LegalFooter: React.FC<LegalFooterProps> = ({
-  accentColor = '#6366F1',
+  accentColor = '#0284C7',
   light = false,
 }) => {
   const navigate = useNavigate();
@@ -88,7 +88,7 @@ const LegalFooter: React.FC<LegalFooterProps> = ({
         ))}
       </Box>
 
-      {/* Grievance Officer — DPDP Act §13 */}
+      {/* Grievance Officer - DPDP Act §13 */}
       {/* [LEGAL REVIEW REQUIRED] Replace name/email before go-live */}
       <Box
         sx={{

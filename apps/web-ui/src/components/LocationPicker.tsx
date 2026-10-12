@@ -190,7 +190,7 @@ const LocationPicker = ({
             {/* Selected coordinates info */}
             {position && (
                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, px: 0.5 }}>
-                    📍 {position.lat.toFixed(6)}, {position.lng.toFixed(6)} — drag the pin to adjust
+                    Coordinates: {position.lat.toFixed(6)}, {position.lng.toFixed(6)} (drag pin to adjust)
                 </Typography>
             )}
 

@@ -97,13 +97,13 @@ export const MobileActionSheet: React.FC<MobileActionSheetProps> = ({
         onClick={onClose}
         sx={{
           bgcolor: '#ffffff',
-          color: '#4f46e5',
+          color: '#0284c7',
           fontWeight: 700,
           fontSize: '0.95rem',
-          py: 1.6,
-          borderRadius: '16px',
+          py: 1.4,
+          borderRadius: '8px',
           textTransform: 'none',
-          boxShadow: '0 4px 14px rgba(0, 0, 0, 0.06)',
+          boxShadow: 'none',
           border: '1px solid #e2e8f0',
           '&:active': { transform: 'scale(0.98)', bgcolor: '#f8fafc' },
         }}

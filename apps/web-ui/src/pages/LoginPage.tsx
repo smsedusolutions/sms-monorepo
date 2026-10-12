@@ -58,14 +58,14 @@ const LoginPage: React.FC = () => {
   const { fetchProfile } = useUserStore();
   const { school, isLoading: isBrandingLoading } = useSubdomainSchool();
 
-  const primary = school?.loginTheme?.primaryColor || '#6366F1';
-  const accent = school?.loginTheme?.accentColor || '#8B5CF6';
+  const primary = school?.loginTheme?.primaryColor || '#0284C7';
+  const accent = school?.loginTheme?.accentColor || '#0369A1';
   const panelBg = school?.loginTheme?.backgroundColor || '#0B0F1A';
 
   useEffect(() => {
     document.title = school?.schoolName
-      ? `Login — ${school.schoolName}`
-      : 'Login — SMS Edu Solution';
+      ? `Login | ${school.schoolName}`
+      : 'Login | SMS Edu Solution';
     if (school?.schoolLogo) {
       const link =
         (document.querySelector("link[rel*='icon']") as HTMLLinkElement) ||
@@ -368,13 +368,12 @@ const LoginPage: React.FC = () => {
                   sx={{
                     width: 42,
                     height: 42,
-                    borderRadius: '12px',
-                    background:
-                      'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+                    borderRadius: '8px',
+                    background: '#0284C7',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: '0 6px 16px rgba(99,102,241,0.4)',
+                    boxShadow: '0 4px 12px rgba(2,132,199,0.3)',
                     flexShrink: 0,
                   }}
                 >
@@ -411,14 +410,14 @@ const LoginPage: React.FC = () => {
 
           {/* Home button to navigate to landing page */}
           <Button
-            onClick={() => navigate('/landing')}
+            onClick={() => navigate('/')}
             startIcon={<HomeIcon sx={{ fontSize: 18 }} />}
             sx={{
               color: '#FFFFFF',
               bgcolor: 'rgba(255, 255, 255, 0.08)',
               border: '1px solid rgba(255, 255, 255, 0.16)',
               backdropFilter: 'blur(10px)',
-              borderRadius: '50px',
+              borderRadius: '6px',
               px: 2.2,
               py: 0.7,
               fontSize: '0.85rem',
@@ -469,17 +468,14 @@ const LoginPage: React.FC = () => {
             <Typography
               sx={{
                 fontSize: 'clamp(2rem, 3.5vw, 3rem)',
-                fontWeight: 900,
-                lineHeight: 1.08,
+                fontWeight: 800,
+                lineHeight: 1.15,
                 mb: 2,
-                background:
-                  'linear-gradient(135deg, #F8FAFC 0%, #C7D2FE 60%, #A5B4FC 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                letterSpacing: '-1.5px',
+                color: '#F8FAFC',
+                letterSpacing: '-1px',
               }}
             >
-              Elevate Your School's Potential.
+              School Administration Platform
             </Typography>
           )}
 
@@ -488,8 +484,8 @@ const LoginPage: React.FC = () => {
             sx={{
               width: 44,
               height: 3,
-              borderRadius: 2,
-              background: `linear-gradient(90deg, ${primary}, ${accent})`,
+              borderRadius: '2px',
+              background: primary,
               mb: 2.5,
             }}
           />
@@ -502,19 +498,19 @@ const LoginPage: React.FC = () => {
               mb: 0.5,
             }}
           >
-            {school?.schoolTagline || 'Smart. Simple. Connected.'}
+            {school?.schoolTagline || 'Integrated School Information System'}
           </Typography>
           <Typography
             sx={{
               fontSize: '0.85rem',
-              color: 'rgba(255,255,255,0.4)',
+              color: 'rgba(255,255,255,0.6)',
               lineHeight: 1.7,
               maxWidth: 360,
             }}
           >
             {school
-              ? 'Powered by SMS Edu Solution — the all-in-one school management platform for a better tomorrow.'
-              : 'The all-in-one solution for modern school management. Streamline administrative tasks and engage parents effortlessly.'}
+              ? 'SMS Edu Solution: Unified school operations and management system.'
+              : 'Institutional administration, student records, examinations, and communication platform.'}
           </Typography>
         </Box>
 
@@ -697,51 +693,11 @@ const LoginPage: React.FC = () => {
             </Box>
           )}
 
-          {/* Stats when no school */}
-          {!school && (
-            <Box
-              sx={{
-                display: 'flex',
-                gap: 5,
-                pt: 3,
-                borderTop: '1px solid rgba(255,255,255,0.08)',
-              }}
-            >
-              {[
-                ['500+', 'Schools'],
-                ['50K+', 'Students'],
-                ['99.9%', 'Uptime'],
-              ].map(([num, label]) => (
-                <Box key={label}>
-                  <Typography
-                    sx={{
-                      fontWeight: 900,
-                      fontSize: '1.35rem',
-                      color: 'white',
-                      lineHeight: 1,
-                    }}
-                  >
-                    {num}
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: '0.7rem',
-                      color: 'rgba(255,255,255,0.35)',
-                      fontWeight: 500,
-                      mt: 0.3,
-                    }}
-                  >
-                    {label}
-                  </Typography>
-                </Box>
-              ))}
-            </Box>
-          )}
         </Box>
       </Box>
 
       {/* ════════════════════════════════════════════
-          RIGHT PANEL — Floating card with curved left edge
+          RIGHT PANEL: Authentication form card
       ════════════════════════════════════════════ */}
       <Box
         sx={{
@@ -784,13 +740,13 @@ const LoginPage: React.FC = () => {
             >
               <Button
                 size="small"
-                onClick={() => navigate('/landing')}
+                onClick={() => navigate('/')}
                 startIcon={<HomeIcon sx={{ fontSize: 16 }} />}
                 sx={{
                   color: '#475569',
                   bgcolor: '#F8FAFC',
                   border: '1px solid #E2E8F0',
-                  borderRadius: '20px',
+                  borderRadius: '6px',
                   px: 1.6,
                   py: 0.4,
                   fontSize: '0.78rem',
@@ -845,7 +801,7 @@ const LoginPage: React.FC = () => {
                   mb: 1,
                 }}
               >
-                Welcome Back! 👋
+                Welcome Back
               </Typography>
               <Typography
                 sx={{
@@ -1030,17 +986,15 @@ const LoginPage: React.FC = () => {
                   fontSize: '0.95rem',
                   fontWeight: 700,
                   textTransform: 'none',
-                  borderRadius: '12px',
-                  background: consentGiven
-                    ? `linear-gradient(135deg, ${primary} 0%, ${accent} 100%)`
-                    : '#E2E8F0',
-                  boxShadow: consentGiven ? `0 8px 24px ${primary}45` : 'none',
+                  borderRadius: '6px',
+                  background: consentGiven ? primary : '#E2E8F0',
+                  boxShadow: 'none',
                   mb: 3,
                   '&:hover': consentGiven ? {
-                    transform: 'translateY(-1px)',
-                    boxShadow: `0 12px 28px ${primary}60`,
+                    background: '#0369A1',
+                    boxShadow: 'none',
                   } : {},
-                  transition: 'all 0.2s ease',
+                  transition: 'background-color 0.2s ease',
                 }}
               >
                 Sign In

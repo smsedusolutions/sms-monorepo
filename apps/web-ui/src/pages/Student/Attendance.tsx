@@ -25,7 +25,7 @@ const STATUS_COLORS: Record<string, string> = {
     absent: '#ef4444',
     late: '#f59e0b',
     half_day: '#3b82f6',
-    leave: '#8b5cf6',
+    leave: '#0284C7',
 };
 
 const STATUS_BG: Record<string, string> = {
@@ -33,7 +33,7 @@ const STATUS_BG: Record<string, string> = {
     absent: '#fef2f2',
     late: '#fffbeb',
     half_day: '#eff6ff',
-    leave: '#f5f3ff',
+    leave: '#f0f9ff',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -247,7 +247,7 @@ const StudentAttendance: React.FC = () => {
                             sx={{
                                 p: { xs: 2, sm: 2.5 },
                                 borderRadius: 2,
-                                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                                background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
                                 color: 'white',
                                 height: '100%',
                                 minHeight: { xs: 240, md: 280 },
@@ -257,7 +257,7 @@ const StudentAttendance: React.FC = () => {
                                 flexDirection: 'column',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
-                                boxShadow: '0 8px 24px -6px rgba(99, 102, 241, 0.35)',
+                                boxShadow: '0 8px 24px -6px rgba(2, 132, 199, 0.35)',
                             }}
                         >
                             <Box sx={{
@@ -342,7 +342,7 @@ const StudentAttendance: React.FC = () => {
                                 { label: 'Present', value: summary?.present || 0, color: '#10b981', bg: '#ecfdf5', icon: <PresentIcon /> },
                                 { label: 'Absent', value: summary?.absent || 0, color: '#ef4444', bg: '#fef2f2', icon: <AbsentIcon /> },
                                 { label: 'Late', value: summary?.late || 0, color: '#f59e0b', bg: '#fffbeb', icon: <LateIcon /> },
-                                { label: 'Leave', value: summary?.leave || 0, color: '#8b5cf6', bg: '#f5f3ff', icon: <CalendarIcon /> },
+                                { label: 'Leave', value: summary?.leave || 0, color: '#0284C7', bg: '#f0f9ff', icon: <CalendarIcon /> },
                             ].map((stat) => (
                                 <Grid size={{ xs: 6, sm: 3 }} key={stat.label}>
                                     <Card elevation={0} sx={{ borderRadius: 2.5, bgcolor: stat.bg, border: `1px solid ${stat.color}25`, height: '100%' }}>

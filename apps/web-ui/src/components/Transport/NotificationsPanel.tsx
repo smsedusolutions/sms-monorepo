@@ -35,12 +35,12 @@ const BUS_STATUS_OPTIONS: { value: BusStatusPayload['status']; label: string; co
 ];
 
 const QUICK_NOTIF_OPTIONS: { value: TransportNotificationType; label: string }[] = [
-    { value: 'bus_departed', label: '🚌 Bus Departed' },
-    { value: 'bus_reached_school', label: '🏫 Bus Reached School' },
-    { value: 'bus_delayed', label: '⚠️ Bus Delayed' },
-    { value: 'child_picked', label: '✅ Child Picked Up' },
-    { value: 'child_dropped', label: '🏠 Child Dropped Off' },
-    { value: 'transport_update', label: '📢 Transport Update' },
+    { value: 'bus_departed', label: 'Bus Departed' },
+    { value: 'bus_reached_school', label: 'Bus Reached School' },
+    { value: 'bus_delayed', label: 'Bus Delayed' },
+    { value: 'child_picked', label: 'Child Picked Up' },
+    { value: 'child_dropped', label: 'Child Dropped Off' },
+    { value: 'transport_update', label: 'Transport Update' },
 ];
 
 const NotificationsPanel = ({ routes, schoolId, onClose }: NotificationsPanelProps) => {

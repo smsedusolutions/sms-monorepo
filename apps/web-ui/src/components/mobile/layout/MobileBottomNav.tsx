@@ -153,17 +153,16 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenMore, is
                   justifyContent: 'center',
                   px: 2,
                   py: 0.4,
-                  borderRadius: '20px',
-                  bgcolor: active ? 'rgba(79, 70, 229, 0.12)' : 'transparent',
-                  transition: 'background-color 0.2s ease, transform 0.2s ease',
+                  borderRadius: '6px',
+                  bgcolor: active ? 'rgba(2, 132, 199, 0.12)' : 'transparent',
+                  transition: 'background-color 0.2s ease',
                   mb: 0.3,
-                  transform: active ? 'scale(1.05)' : 'scale(1)',
                 }}
               >
                 <Icon
                   size={20}
-                  strokeWidth={active ? 2.5 : 1.8}
-                  color={active ? '#4f46e5' : '#64748b'}
+                  strokeWidth={active ? 2.2 : 1.8}
+                  color={active ? '#0284c7' : '#64748b'}
                 />
               </Box>
 
@@ -171,7 +170,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenMore, is
                 sx={{
                   fontSize: '0.68rem',
                   fontWeight: active ? 700 : 500,
-                  color: active ? '#4f46e5' : '#64748b',
+                  color: active ? '#0284c7' : '#64748b',
                   letterSpacing: '-0.01em',
                   lineHeight: 1.1,
                   transition: 'color 0.2s ease',

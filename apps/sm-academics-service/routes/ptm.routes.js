@@ -8,6 +8,8 @@ const {
     getPTMSlots,
     bookPTMSlot,
     getPTMForTeacher,
+    updatePTMSession,
+    deletePTMSession,
 } = require('../controllers/ptm.controller');
 
 // Create PTM session (Admin)
@@ -16,6 +18,28 @@ router.post(
     Authenticated,
     authorizeRoles('sch_admin', 'principal'),
     createPTMSession
+);
+
+// Update PTM session (Admin)
+router.patch(
+    '/:sessionId',
+    Authenticated,
+    authorizeRoles('sch_admin', 'principal'),
+    updatePTMSession
+);
+router.put(
+    '/:sessionId',
+    Authenticated,
+    authorizeRoles('sch_admin', 'principal'),
+    updatePTMSession
+);
+
+// Delete PTM session (Admin)
+router.delete(
+    '/:sessionId',
+    Authenticated,
+    authorizeRoles('sch_admin', 'principal'),
+    deletePTMSession
 );
 
 // Get all PTM sessions (Admin / List)

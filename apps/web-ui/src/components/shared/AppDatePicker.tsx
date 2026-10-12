@@ -103,11 +103,11 @@ export const AppDatePicker: React.FC<AppDatePickerProps> = ({
                   borderRadius: 1.25,
                   fontSize: '0.875rem',
                   '&:hover': {
-                    backgroundColor: alpha('#6366f1', 0.08),
+                    backgroundColor: alpha('#0284C7', 0.08),
                   },
                   '&.Mui-selected': {
                     backgroundColor: 'primary.main',
-                    boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
+                    boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)',
                     '&:hover': {
                       backgroundColor: 'primary.dark',
                     },

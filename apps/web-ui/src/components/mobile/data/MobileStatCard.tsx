@@ -21,7 +21,7 @@ export const MobileStatCard: React.FC<MobileStatCardProps> = ({
   title,
   value,
   icon,
-  gradient = 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+  gradient = 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
   trend,
   subtitle,
   onClick,
@@ -32,7 +32,7 @@ export const MobileStatCard: React.FC<MobileStatCardProps> = ({
       className="touch-card-active"
       sx={{
         bgcolor: '#ffffff',
-        borderRadius: '20px',
+        borderRadius: '8px',
         p: 2,
         border: '1px solid #e2e8f0',
         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.03)',
@@ -44,19 +44,19 @@ export const MobileStatCard: React.FC<MobileStatCardProps> = ({
         overflow: 'hidden',
       }}
     >
-      {/* Top row: Icon + Trend Pill */}
+      {/* Top row: Icon + Trend Badge */}
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
         <Box
           sx={{
             width: 44,
             height: 44,
-            borderRadius: '14px',
+            borderRadius: '6px',
             background: gradient,
             color: '#ffffff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
+            boxShadow: 'none',
           }}
         >
           {icon}
@@ -70,7 +70,7 @@ export const MobileStatCard: React.FC<MobileStatCardProps> = ({
               gap: 0.3,
               px: 1,
               py: 0.3,
-              borderRadius: '20px',
+              borderRadius: '4px',
               bgcolor: trend.isPositive ? '#ecfdf5' : '#fef2f2',
               color: trend.isPositive ? '#059669' : '#dc2626',
               fontSize: '0.72rem',
