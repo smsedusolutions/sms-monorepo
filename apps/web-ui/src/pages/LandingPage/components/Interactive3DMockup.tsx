@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Box, Typography, Chip } from '@mui/material';
-import { motion } from 'framer-motion';
 import {
   People,
   School,
@@ -14,8 +13,6 @@ import {
   Person,
   CheckCircle,
   BarChart,
-  Shield,
-  AutoGraph,
 } from '@mui/icons-material';
 import { use3DTilt } from '../hooks/use3DTilt';
 import { SmsEduLogo } from './BrandLogos';

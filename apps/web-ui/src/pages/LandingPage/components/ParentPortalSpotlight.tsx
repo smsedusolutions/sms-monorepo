@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, Container, Typography, Button } from '@mui/material';
-import { motion } from 'framer-motion';
 import {
   EscalatorWarning,
   NotificationsActive,
@@ -10,17 +9,11 @@ import {
   ArrowForward,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { use3DTilt } from '../hooks/use3DTilt';
 import { useLandingTheme } from '../context/LandingThemeContext';
 
 export const ParentPortalSpotlight: React.FC<{ onOpenDemo: () => void }> = ({ onOpenDemo }) => {
   const navigate = useNavigate();
   const { isDark } = useLandingTheme();
-  const { ref, style, glareStyle } = use3DTilt<HTMLDivElement>({
-    maxRotation: 8,
-    perspective: 1200,
-    scale: 1.01,
-  });
 
   return (
     <Box
