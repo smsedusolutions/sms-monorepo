@@ -16,7 +16,7 @@ import {
 import { Search as SearchIcon, Close as CloseIcon } from "@mui/icons-material";
 import { AppInput } from "../shared/AppInput";
 import { AppButton } from "../shared/AppButton";
-import { getIconifyUrl } from "../../utils/Icons";
+import { DynamicIcon, loadIcons } from "../../utils/Icons";
 
 interface IconPickerDialogProps {
   open: boolean;
@@ -30,12 +30,19 @@ const SUGGESTIONS = [
   "dashboard",
   "book",
   "user",
+  "people",
   "settings",
   "chart",
   "calendar",
   "mail",
   "security",
   "bell",
+];
+
+const API_HOSTS = [
+  "https://api.iconify.design",
+  "https://api.simplesvg.com",
+  "https://api.unisvg.com",
 ];
 
 const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
@@ -57,13 +64,25 @@ const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
 
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `https://api.iconify.design/search?query=${encodeURIComponent(
-          trimmed,
-        )}&limit=60`,
-      );
-      const data = await response.json();
-      if (data.icons && Array.isArray(data.icons)) {
+      let data: any = null;
+      for (const host of API_HOSTS) {
+        try {
+          const response = await fetch(
+            `${host}/search?query=${encodeURIComponent(trimmed)}&limit=60`,
+          );
+          if (response.ok) {
+            data = await response.json();
+            break;
+          }
+        } catch {
+          // Try next fallback host
+        }
+      }
+
+      if (data && data.icons && Array.isArray(data.icons)) {
+        // Pre-load all icon definitions in batch by prefix
+        // This takes only a few requests and prevents Cloudflare 429 rate limiting
+        await loadIcons(data.icons);
         setIcons(data.icons);
       } else {
         setIcons([]);
@@ -141,7 +160,7 @@ const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
       <Box sx={{ px: 3, pb: 1 }}>
         <AppInput
           fullWidth
-          placeholder="Search icons (e.g. school, user, chart)..."
+          placeholder="Search icons (e.g. school, people, user, chart)..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           InputProps={{
@@ -218,7 +237,6 @@ const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
           <Grid container spacing={2}>
             {icons.map((iconName) => {
               const isSelected = currentIcon === iconName;
-              const iconUrl = getIconifyUrl(iconName);
 
               return (
                 <Grid
@@ -260,23 +278,10 @@ const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
                           gap: 1,
                         }}
                       >
-                        <img
-                          src={iconUrl}
-                          alt={iconName}
-                          loading="lazy"
-                          style={{
-                            width: 32,
-                            height: 32,
-                            objectFit: "contain",
-                            filter: isSelected
-                              ? "brightness(0) invert(1)"
-                              : "none",
-                            opacity: isSelected ? 1 : 0.85,
-                          }}
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.visibility =
-                              "hidden";
-                          }}
+                        <DynamicIcon
+                          icon={iconName}
+                          size={32}
+                          color={isSelected ? "#ffffff" : "currentColor"}
                         />
                         <Typography
                           variant="caption"
