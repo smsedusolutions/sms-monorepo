@@ -34,6 +34,7 @@ import { useGetSchools } from "../../queries/School";
 import { useRoleStore } from "../../stores/roleStore";
 import type { CreateMenuPayload, Menu } from "../../types";
 import IconPickerDialog from "./IconPickerDialog";
+import { DynamicIcon } from "../../utils/Icons";
 import { AppInput } from "../shared/AppInput";
 import { AppSelect } from "../shared/AppSelect";
 import { AppButton } from "../shared/AppButton";
@@ -574,8 +575,27 @@ const AddMenusDialog: React.FC<AddMenusDialogProps> = ({
                 slotProps={{
                   input: {
                     readOnly: true,
+                    startAdornment: formData.menuIcon ? (
+                      <InputAdornment position="start">
+                        <DynamicIcon icon={formData.menuIcon} size="1.25rem" />
+                      </InputAdornment>
+                    ) : undefined,
                     endAdornment: (
                       <InputAdornment position="end">
+                        {formData.menuIcon && (
+                          <IconButton
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFormData((prev) => ({ ...prev, menuIcon: "" }));
+                            }}
+                            edge="end"
+                            size="small"
+                            sx={{ mr: 0.5 }}
+                            title="Clear icon"
+                          >
+                            <CloseIcon sx={{ fontSize: 18 }} />
+                          </IconButton>
+                        )}
                         <IconButton
                           onClick={() => setIconPickerOpen(true)}
                           edge="end"
