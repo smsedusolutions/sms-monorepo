@@ -1,4 +1,6 @@
 import React from "react";
+import { useIcon, loadIcons, getCachedIcon, normalizeIconName } from "./iconifyLoader";
+export { useIcon, loadIcons, getCachedIcon, normalizeIconName };
 // ===== MUI Icons =====
 import Dashboard from "@mui/icons-material/Dashboard";
 import AccountCircle from "@mui/icons-material/AccountCircle";
@@ -162,7 +164,8 @@ export interface DynamicIconProps {
 }
 
 /**
- * Dynamic Icon Component for rendering Iconify icons via CSS mask
+ * Dynamic Icon Component that renders inline SVG directly from Iconify definitions,
+ * completely avoiding Cloudflare 429 rate limits, broken images, and mask quirks.
  */
 export const DynamicIcon: React.FC<DynamicIconProps> = ({
   icon,
@@ -171,20 +174,41 @@ export const DynamicIcon: React.FC<DynamicIconProps> = ({
   className = "",
   style,
 }) => {
-  if (!icon) return null;
-  const iconUrl = getIconifyUrl(icon);
+  const iconData = useIcon(icon);
   const sizeStr = typeof size === "number" ? `${size}px` : size;
 
+  if (!icon) return null;
+
+  if (iconData) {
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox={`${iconData.left || 0} ${iconData.top || 0} ${iconData.width} ${iconData.height}`}
+        width={sizeStr}
+        height={sizeStr}
+        style={{
+          display: "inline-block",
+          verticalAlign: "middle",
+          color: color,
+          fill: "currentColor",
+          flexShrink: 0,
+          ...style,
+        }}
+        className={`dynamic-icon ${className}`.trim()}
+        dangerouslySetInnerHTML={{ __html: iconData.body }}
+        aria-hidden="true"
+      />
+    );
+  }
+
+  // Graceful fallback while loading
   return (
     <span
-      className={`dynamic-icon ${className}`.trim()}
+      className={`dynamic-icon-placeholder ${className}`.trim()}
       style={{
         width: sizeStr,
         height: sizeStr,
         display: "inline-block",
-        backgroundColor: color,
-        mask: `url(${iconUrl}) no-repeat center / contain`,
-        WebkitMask: `url(${iconUrl}) no-repeat center / contain`,
         flexShrink: 0,
         ...style,
       }}
