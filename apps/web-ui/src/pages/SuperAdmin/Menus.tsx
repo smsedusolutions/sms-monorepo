@@ -56,6 +56,7 @@ import ManageMenuAccessDialog from "../../components/Dialogs/ManageMenuAccessDia
 import HtmlTooltip from "../../components/Common/HtmlTooltip";
 import type { Menu } from "../../types";
 import { useRoleStore } from "../../stores/roleStore";
+import { DynamicIcon } from "../../utils/Icons";
 
 const getRoleChipColor = (value: string) => {
   const { roles } = useRoleStore.getState();
@@ -513,9 +514,12 @@ const Menus = () => {
   // ---- Shared cell renderers ----
 
   const renderMenuName = (menu: Menu, isChild = false) => (
-    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
       {isChild && (
         <SubMenuIcon sx={{ fontSize: 16, color: "text.secondary", mr: 0.5 }} />
+      )}
+      {menu.menuIcon && (
+        <DynamicIcon icon={menu.menuIcon} size="1.25rem" />
       )}
       <Typography variant="body2" sx={{ fontWeight: isChild ? 400 : 600 }}>
         {menu.menuName}

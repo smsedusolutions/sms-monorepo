@@ -10,10 +10,13 @@ import {
   InputAdornment,
   CircularProgress,
   Grid,
+  Tooltip,
+  Chip,
 } from "@mui/material";
 import { Search as SearchIcon, Close as CloseIcon } from "@mui/icons-material";
 import { AppInput } from "../shared/AppInput";
 import { AppButton } from "../shared/AppButton";
+import { getIconifyUrl } from "../../utils/Icons";
 
 interface IconPickerDialogProps {
   open: boolean;
@@ -21,6 +24,19 @@ interface IconPickerDialogProps {
   onSelect: (iconName: string) => void;
   currentIcon?: string;
 }
+
+const SUGGESTIONS = [
+  "school",
+  "dashboard",
+  "book",
+  "user",
+  "settings",
+  "chart",
+  "calendar",
+  "mail",
+  "security",
+  "bell",
+];
 
 const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
   open,
@@ -33,15 +49,21 @@ const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const searchIcons = async (query: string) => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setIcons([]);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const response = await fetch(
         `https://api.iconify.design/search?query=${encodeURIComponent(
-          query,
+          trimmed,
         )}&limit=60`,
       );
       const data = await response.json();
-      if (data.icons) {
+      if (data.icons && Array.isArray(data.icons)) {
         setIcons(data.icons);
       } else {
         setIcons([]);
@@ -57,18 +79,26 @@ const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
   useEffect(() => {
     const timer = setTimeout(() => {
       if (searchTerm.trim()) {
-        searchIcons(searchTerm);
+        searchIcons(searchTerm.trim());
       } else {
         setIcons([]);
       }
-    }, 500);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
   useEffect(() => {
-    if (open && icons.length === 0 && searchTerm) {
-      searchIcons(searchTerm);
+    if (open) {
+      if (currentIcon && !searchTerm) {
+        const initialQuery = currentIcon.split(":").pop() || currentIcon;
+        setSearchTerm(initialQuery);
+      } else if (!searchTerm && icons.length === 0) {
+        // Load default suggestions on first open
+        setSearchTerm("school");
+      } else if (searchTerm.trim() && icons.length === 0) {
+        searchIcons(searchTerm.trim());
+      }
     }
   }, [open]);
 
@@ -88,7 +118,7 @@ const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
           height: "80vh",
           display: "flex",
           flexDirection: "column",
-          borderRadius: '16px'
+          borderRadius: "16px",
         },
       }}
     >
@@ -100,13 +130,15 @@ const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
           pb: 1,
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>Select Icon</Typography>
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          Select Icon
+        </Typography>
         <IconButton onClick={onClose} size="small">
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
-      <Box sx={{ px: 3, pb: 2 }}>
+      <Box sx={{ px: 3, pb: 1 }}>
         <AppInput
           fullWidth
           placeholder="Search icons (e.g. school, user, chart)..."
@@ -115,12 +147,58 @@ const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                <SearchIcon sx={{ color: "text.secondary", fontSize: 20 }} />
               </InputAdornment>
             ),
+            endAdornment: searchTerm ? (
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={() => setSearchTerm("")}>
+                  <CloseIcon sx={{ fontSize: 18 }} />
+                </IconButton>
+              </InputAdornment>
+            ) : null,
           }}
           autoFocus
         />
+      </Box>
+
+      {/* Suggested Search Chips */}
+      <Box
+        sx={{
+          px: 3,
+          pb: 1.5,
+          display: "flex",
+          gap: 0.75,
+          flexWrap: "wrap",
+          alignItems: "center",
+        }}
+      >
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ fontWeight: 600, mr: 0.5 }}
+        >
+          Suggested:
+        </Typography>
+        {SUGGESTIONS.map((tag) => {
+          const isTagActive = searchTerm.toLowerCase() === tag;
+          return (
+            <Chip
+              key={tag}
+              label={tag}
+              size="small"
+              clickable
+              onClick={() => setSearchTerm(tag)}
+              variant={isTagActive ? "filled" : "outlined"}
+              color={isTagActive ? "primary" : "default"}
+              sx={{
+                fontSize: "0.72rem",
+                height: "24px",
+                cursor: "pointer",
+              }}
+            />
+          );
+        })}
       </Box>
 
       <DialogContent dividers sx={{ flex: 1, overflowY: "auto", p: 2 }}>
@@ -140,6 +218,7 @@ const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
           <Grid container spacing={2}>
             {icons.map((iconName) => {
               const isSelected = currentIcon === iconName;
+              const iconUrl = getIconifyUrl(iconName);
 
               return (
                 <Grid
@@ -147,72 +226,100 @@ const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
                   key={iconName}
                   sx={{ display: "flex", justifyContent: "center" }}
                 >
-                  <AppButton
-                    onClick={() => handleIconClick(iconName)}
-                    variant={isSelected ? "contained" : "outlined"}
-                    color={isSelected ? "primary" : "inherit"}
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      p: 1.5,
-                      width: "100%",
-                      minHeight: "90px",
-                      borderColor: isSelected ? "primary.main" : "divider",
-                      borderRadius: '10px',
-                      backgroundColor: isSelected ? undefined : 'background.paper',
-                      "&:hover": {
-                        backgroundColor: isSelected
-                          ? "primary.dark"
-                          : "action.hover",
-                        borderColor: isSelected
-                          ? "primary.dark"
-                          : "primary.main",
-                        transform: 'translateY(-2px)',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                      },
-                      transition: 'all 0.2s ease-in-out',
-                      textTransform: "none",
-                      gap: 1,
-                    }}
-                  >
-                    <img
-                      src={`https://api.iconify.design/${iconName}.svg`}
-                      alt={iconName}
-                      style={{
-                        width: 32,
-                        height: 32,
-                        filter: isSelected
-                          ? "brightness(0) invert(1)"
-                          : "none",
-                        opacity: isSelected ? 1 : 0.7
-                      }}
-                    />
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        width: "100%",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        textAlign: "center",
-                        fontSize: "0.65rem",
-                        fontWeight: isSelected ? 600 : 400
-                      }}
-                    >
-                      {iconName.split(':').pop()}
-                    </Typography>
-                  </AppButton>
+                  <Tooltip title={iconName} arrow placement="top">
+                    <Box sx={{ width: "100%" }}>
+                      <AppButton
+                        onClick={() => handleIconClick(iconName)}
+                        variant={isSelected ? "contained" : "outlined"}
+                        color={isSelected ? "primary" : "inherit"}
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          p: 1.5,
+                          width: "100%",
+                          minHeight: "90px",
+                          borderColor: isSelected ? "primary.main" : "divider",
+                          borderRadius: "10px",
+                          backgroundColor: isSelected
+                            ? undefined
+                            : "background.paper",
+                          "&:hover": {
+                            backgroundColor: isSelected
+                              ? "primary.dark"
+                              : "action.hover",
+                            borderColor: isSelected
+                              ? "primary.dark"
+                              : "primary.main",
+                            transform: "translateY(-2px)",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                          },
+                          transition: "all 0.2s ease-in-out",
+                          textTransform: "none",
+                          gap: 1,
+                        }}
+                      >
+                        <img
+                          src={iconUrl}
+                          alt={iconName}
+                          loading="lazy"
+                          style={{
+                            width: 32,
+                            height: 32,
+                            objectFit: "contain",
+                            filter: isSelected
+                              ? "brightness(0) invert(1)"
+                              : "none",
+                            opacity: isSelected ? 1 : 0.85,
+                          }}
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.visibility =
+                              "hidden";
+                          }}
+                        />
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            width: "100%",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            textAlign: "center",
+                            fontSize: "0.65rem",
+                            fontWeight: isSelected ? 600 : 400,
+                          }}
+                        >
+                          {iconName.split(":").pop()}
+                        </Typography>
+                      </AppButton>
+                    </Box>
+                  </Tooltip>
                 </Grid>
               );
             })}
 
             {!isLoading && icons.length === 0 && (
-              <Box sx={{ width: "100%", textAlign: "center", py: 4 }}>
-                <Typography color="text.secondary">
-                  No icons found matching "{searchTerm}"
-                </Typography>
+              <Box sx={{ width: "100%", textAlign: "center", py: 6 }}>
+                {searchTerm.trim() ? (
+                  <Typography color="text.secondary">
+                    No icons found matching "{searchTerm}"
+                  </Typography>
+                ) : (
+                  <>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 1 }}
+                    >
+                      Type a keyword above or select a suggestion to search for
+                      icons.
+                    </Typography>
+                    <Typography variant="caption" color="text.disabled">
+                      Browse thousands of icons powered by Iconify.
+                    </Typography>
+                  </>
+                )}
               </Box>
             )}
           </Grid>
@@ -220,7 +327,9 @@ const IconPickerDialog: React.FC<IconPickerDialogProps> = ({
       </DialogContent>
 
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <AppButton onClick={onClose} variant="text" color="inherit">Cancel</AppButton>
+        <AppButton onClick={onClose} variant="text" color="inherit">
+          Cancel
+        </AppButton>
       </DialogActions>
     </Dialog>
   );

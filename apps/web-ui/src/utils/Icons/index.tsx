@@ -1,3 +1,4 @@
+import React from "react";
 // ===== MUI Icons =====
 import Dashboard from "@mui/icons-material/Dashboard";
 import AccountCircle from "@mui/icons-material/AccountCircle";
@@ -135,3 +136,60 @@ export const MuiIcons = {
   Circle,
   DirectionsBus,
 };
+
+/**
+ * Converts an Iconify identifier (e.g. "mdi:home" or "tabler:school")
+ * into a valid raw SVG endpoint URL ("https://api.iconify.design/mdi/home.svg").
+ * The Iconify SVG API requires prefix/name.svg instead of prefix:name.svg.
+ */
+export const getIconifyUrl = (icon: string): string => {
+  if (!icon) return "";
+  const trimmed = icon.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  // Replace the prefix colon with a slash: "prefix:name" -> "prefix/name"
+  const formatted = trimmed.includes(":") ? trimmed.replace(":", "/") : trimmed;
+  return `https://api.iconify.design/${formatted}.svg`;
+};
+
+export interface DynamicIconProps {
+  icon: string;
+  size?: string | number;
+  color?: string;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+/**
+ * Dynamic Icon Component for rendering Iconify icons via CSS mask
+ */
+export const DynamicIcon: React.FC<DynamicIconProps> = ({
+  icon,
+  size = "1.5rem",
+  color = "currentColor",
+  className = "",
+  style,
+}) => {
+  if (!icon) return null;
+  const iconUrl = getIconifyUrl(icon);
+  const sizeStr = typeof size === "number" ? `${size}px` : size;
+
+  return (
+    <span
+      className={`dynamic-icon ${className}`.trim()}
+      style={{
+        width: sizeStr,
+        height: sizeStr,
+        display: "inline-block",
+        backgroundColor: color,
+        mask: `url(${iconUrl}) no-repeat center / contain`,
+        WebkitMask: `url(${iconUrl}) no-repeat center / contain`,
+        flexShrink: 0,
+        ...style,
+      }}
+      aria-hidden="true"
+    />
+  );
+};
+

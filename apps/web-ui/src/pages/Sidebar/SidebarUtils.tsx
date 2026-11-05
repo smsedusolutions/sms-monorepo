@@ -1,6 +1,8 @@
 import React from "react";
-import { MuiIcons } from "../../utils/Icons";
+import { MuiIcons, DynamicIcon, getIconifyUrl } from "../../utils/Icons";
 import { useRoleStore } from "../../stores/roleStore";
+
+export { DynamicIcon, getIconifyUrl };
 
 export interface SideBarMenuItemType {
   name: string;
@@ -9,26 +11,6 @@ export interface SideBarMenuItemType {
   isExpandable?: boolean;
   subItems?: SideBarMenuItemType[];
 }
-
-// Dynamic Icon Component for rendering Iconify icons
-export const DynamicIcon = ({ icon }: { icon: string }) => {
-  if (!icon) return null;
-  return (
-    <span
-      className="dynamic-icon"
-      style={{
-        width: "1.5rem",
-        height: "1.5rem",
-        display: "inline-block",
-        backgroundColor: "currentColor",
-        mask: `url(https://api.iconify.design/${icon}.svg) no-repeat center / contain`,
-        WebkitMask: `url(https://api.iconify.design/${icon}.svg) no-repeat center / contain`,
-        flexShrink: 0,
-      }}
-      aria-hidden="true"
-    />
-  );
-};
 
 // Helper to transform API menu data to Sidebar format
 export const transformMenuData = (
