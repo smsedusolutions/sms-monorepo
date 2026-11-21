@@ -662,7 +662,7 @@ const TimetableReview: React.FC = () => {
                 open={overrideConfirmOpen}
                 onClose={() => { setOverrideConfirmOpen(false); setOverridePending(null); }}
                 onConfirm={handleOverrideConfirm}
-                title="⚠️ Override Active Timetable?"
+                title="Override Active Timetable?"
                 description={
                     overridePending
                         ? `This will replace "${overridePending.existing.name}"${overridePending.existing.approvedAt ? ` (published ${formatDate(overridePending.existing.approvedAt)})` : ''}.\n\nThe current live timetable will be marked as "Replaced". This action cannot be undone.`
@@ -724,7 +724,7 @@ const TimetableReview: React.FC = () => {
                                         >
                                             {availableClassSections.map((item) => (
                                                 <MenuItem key={`${item.classId}_${item.sectionId}`} value={`${item.classId}_${item.sectionId}`}>
-                                                    🏫 {item.label}
+                                                    {item.label}
                                                 </MenuItem>
                                             ))}
                                         </Select>
@@ -787,7 +787,7 @@ const TimetableReview: React.FC = () => {
                                                                                 {getSubjectName(entry.subjectId)}
                                                                             </Typography>
                                                                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.3, fontSize: 11 }}>
-                                                                                👨‍🏫 {getTeacherName(entry.teacherId, entry)}
+                                                                                {getTeacherName(entry.teacherId, entry)}
                                                                             </Typography>
                                                                         </Box>
                                                                     ) : (
@@ -854,7 +854,7 @@ const TimetableReview: React.FC = () => {
                 fullWidth
             >
                 <DialogTitle sx={{ color: 'error.main', borderBottom: '1px solid #e2e8f0', fontWeight: 700 }}>
-                    ❌ Reject Timetable
+                    Reject Timetable
                 </DialogTitle>
                 <DialogContent>
                     <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>

@@ -27,7 +27,7 @@ const SchoolHeaderBadge: React.FC<SchoolHeaderBadgeProps> = ({ school }) => {
           px: 1.5,
           py: 1,
           bgcolor: 'white',
-          borderRadius: '50px',
+          borderRadius: '8px',
           boxShadow: '0 2px 16px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.06)',
           width: 'fit-content',
           transition: 'box-shadow 0.2s',

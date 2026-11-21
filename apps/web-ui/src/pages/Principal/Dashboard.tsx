@@ -73,72 +73,72 @@ const PrincipalDashboard = () => {
             description: 'Approve draft timetables',
             icon: <ScheduleIcon sx={{ fontSize: 28 }} />,
             path: '/principal/timetable/review',
-            gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-            iconColor: '#f093fb',
+            gradient: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+            iconColor: '#0284c7',
         },
         {
             label: 'Exam Approvals',
             description: 'Approve exam schedules',
             icon: <AssignmentIcon sx={{ fontSize: 28 }} />,
             path: '/principal/exam/approval',
-            gradient: 'linear-gradient(135deg, #fd7043 0%, #ffcc02 100%)',
-            iconColor: '#fd7043',
+            gradient: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)',
+            iconColor: '#ea580c',
         },
         {
             label: 'Attendance',
             description: 'School-wide attendance overview',
             icon: <HowToRegIcon sx={{ fontSize: 28 }} />,
             path: '/principal/attendance',
-            gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-            iconColor: '#43e97b',
+            gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+            iconColor: '#059669',
         },
         {
             label: 'Teachers',
             description: 'View teacher directory',
             icon: <PeopleIcon sx={{ fontSize: 28 }} />,
             path: '/principal/teachers',
-            gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-            iconColor: '#4facfe',
+            gradient: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+            iconColor: '#2563eb',
         },
         {
             label: 'Students',
             description: 'Browse student directory',
             icon: <SchoolIcon sx={{ fontSize: 28 }} />,
             path: '/principal/students',
-            gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
-            iconColor: '#11998e',
+            gradient: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
+            iconColor: '#0d9488',
         },
         {
             label: 'Exam Results',
             description: 'View school-wide results',
             icon: <CheckCircleIcon sx={{ fontSize: 28 }} />,
             path: '/principal/exam/results',
-            gradient: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)',
-            iconColor: '#6a11cb',
+            gradient: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+            iconColor: '#0284c7',
         },
         {
             label: 'Announcements',
             description: 'Publish school announcements',
             icon: <AnnouncementIcon sx={{ fontSize: 28 }} />,
             path: '/principal/announcements',
-            gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-            iconColor: '#fa709a',
+            gradient: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+            iconColor: '#d97706',
         },
         {
             label: 'Notifications',
             description: 'Stay updated with alerts',
             icon: <NotificationsIcon sx={{ fontSize: 28 }} />,
             path: '/principal/notifications',
-            gradient: 'linear-gradient(135deg, #56ab2f 0%, #a8e063 100%)',
-            iconColor: '#56ab2f',
+            gradient: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
+            iconColor: '#475569',
         },
         {
             label: 'Profile',
             description: 'Manage your account',
             icon: <AccountCircleIcon sx={{ fontSize: 28 }} />,
             path: '/principal/profile',
-            gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            iconColor: '#667eea',
+            gradient: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+            iconColor: '#0f172a',
         },
     ];
 
@@ -150,7 +150,7 @@ const PrincipalDashboard = () => {
                     mb: { xs: 2, sm: 3 },
                     p: { xs: 2, sm: 2.5 },
                     borderRadius: 2.5,
-                    background: 'linear-gradient(135deg, #1e3a5f 0%, #2d1b69 100%)',
+                    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
                     color: 'white',
                     position: 'relative',
                     overflow: 'hidden',
@@ -171,7 +171,7 @@ const PrincipalDashboard = () => {
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2, position: 'relative', zIndex: 1 }}>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Typography variant="h4" fontWeight={800} sx={{ fontSize: { xs: '1.35rem', sm: '1.75rem' }, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-                            Welcome back, {userName} 👋
+                            Welcome back, {userName}
                         </Typography>
                         <Typography variant="body2" sx={{ mt: 0.5, opacity: 0.85, fontSize: { xs: '0.8rem', sm: '0.875rem' } }}>
                             Here's what needs your attention today.

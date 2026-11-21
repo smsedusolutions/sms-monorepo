@@ -350,7 +350,7 @@ const TimetableDraftPreview = () => {
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Box>
           <Typography variant="h5" color="secondary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <span role="img" aria-label="magic">🪄</span> AI Timetable Draft Mode
+            AI Timetable Draft Mode
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Review the AI generated timetable. Changes are not live until you publish.
