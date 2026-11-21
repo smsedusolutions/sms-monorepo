@@ -283,7 +283,7 @@ const ParentTransport = () => {
                     <Card sx={{ mt: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
                         <CardContent sx={{ p: 2 }}>
                             <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>
-                                🗺️ Route Stop Schedule
+                                Route Stop Schedule
                             </Typography>
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
                                 {route.stops.map((stop, i) => {
@@ -429,7 +429,7 @@ const ParentTransport = () => {
                         <CardContent sx={{ p: 2 }}>
                             <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                                 {busLocation ? <Box className="animate-pulse h-2 w-2 rounded-full bg-green-500" /> : <Box className="h-2 w-2 rounded-full bg-slate-400" />}
-                                📡 {busLocation ? 'Live Bus Tracking Active' : 'Waiting for Bus GPS...'}
+                                {busLocation ? 'Live Bus Tracking Active' : 'Waiting for Bus GPS...'}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 {busLocation 

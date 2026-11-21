@@ -178,7 +178,8 @@ const PrincipalDialog: React.FC<PrincipalDialogProps> = ({
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Avatar
                         sx={{
-                            background: 'linear-gradient(135deg, #6a11cb, #2575fc)',
+                            bgcolor: 'primary.main',
+                            color: 'white',
                             width: 36,
                             height: 36,
                         }}

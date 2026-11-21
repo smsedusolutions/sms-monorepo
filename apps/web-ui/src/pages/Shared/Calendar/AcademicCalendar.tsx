@@ -411,7 +411,7 @@ export const AcademicCalendar: React.FC = () => {
                             fontWeight={800}
                             sx={{ fontSize: { xs: '1.25rem', sm: '1.6rem' }, letterSpacing: '-0.02em' }}
                         >
-                            📅 Academic Calendar
+                            Academic Calendar
                         </Typography>
                         <Chip
                             label={

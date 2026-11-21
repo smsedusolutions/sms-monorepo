@@ -137,7 +137,7 @@ const PrincipalManagement: React.FC = () => {
                             width: 80,
                             height: 80,
                             borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #6a11cb33, #2575fc33)',
+                            bgcolor: 'action.hover',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -145,7 +145,7 @@ const PrincipalManagement: React.FC = () => {
                             mb: 2,
                         }}
                     >
-                        <PrincipalIcon sx={{ fontSize: 40, color: '#6a11cb' }} />
+                        <PrincipalIcon sx={{ fontSize: 40, color: 'primary.main' }} />
                     </Box>
                     <Typography variant="h6" fontWeight={700} gutterBottom>
                         No Principal Registered Yet
@@ -158,7 +158,7 @@ const PrincipalManagement: React.FC = () => {
                         startIcon={<AddIcon />}
                         onClick={handleAdd}
                         sx={{
-                            background: 'linear-gradient(135deg, #6a11cb, #2575fc)',
+                            bgcolor: 'primary.main',
                             borderRadius: 2,
                             fontWeight: 600,
                             px: 4,
@@ -179,7 +179,7 @@ const PrincipalManagement: React.FC = () => {
                                 borderRadius: 4,
                                 border: '1px solid #e2e8f0',
                                 overflow: 'visible',
-                                background: 'linear-gradient(135deg, #ffffff, #f8f9ff)',
+                                bgcolor: '#ffffff',
                             }}
                         >
                             <CardContent sx={{ p: 3 }}>
@@ -194,9 +194,10 @@ const PrincipalManagement: React.FC = () => {
                                             mb: 2,
                                             fontSize: 36,
                                             fontWeight: 700,
-                                            background: 'linear-gradient(135deg, #6a11cb, #2575fc)',
+                                            bgcolor: 'primary.main',
+                                            color: 'white',
                                             border: '4px solid white',
-                                            boxShadow: '0 8px 24px rgba(106,17,203,0.25)',
+                                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                                         }}
                                     >
                                         {(principal.firstName?.[0] || '') + (principal.lastName?.[0] || '')}
@@ -210,9 +211,8 @@ const PrincipalManagement: React.FC = () => {
                                         <Chip
                                             label="Principal"
                                             size="small"
+                                            color="primary"
                                             sx={{
-                                                background: 'linear-gradient(135deg, #6a11cb, #2575fc)',
-                                                color: 'white',
                                                 fontWeight: 600,
                                             }}
                                             icon={<PrincipalIcon sx={{ color: 'white !important', fontSize: '14px !important' }} />}
