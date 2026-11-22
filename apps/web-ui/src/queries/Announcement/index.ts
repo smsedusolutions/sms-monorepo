@@ -18,13 +18,13 @@ interface ApiResponse<T> {
 export const announcementKeys = {
     all: ['announcements'] as const,
     lists: () => [...announcementKeys.all, 'list'] as const,
-    list: (schoolId: string, filters?: Record<string, unknown>) => [...announcementKeys.lists(), schoolId, filters] as const,
+    list: (schoolId: string, filters?: AnnouncementFilters | Record<string, unknown>) => [...announcementKeys.lists(), schoolId, filters] as const,
     my: (schoolId: string) => [...announcementKeys.all, 'my', schoolId] as const,
     details: () => [...announcementKeys.all, 'detail'] as const,
     detail: (schoolId: string, id: string) => [...announcementKeys.details(), schoolId, id] as const,
 };
 
-export interface AnnouncementFilters {
+export interface AnnouncementFilters extends Record<string, unknown> {
     category?: string;
     priority?: string;
     targetAudience?: string;
@@ -44,12 +44,12 @@ export const useGetAnnouncements = (
     filters?: AnnouncementFilters
 ) => {
     return useQuery({
-        queryKey: announcementKeys.list(schoolId, filters),
+        queryKey: announcementKeys.list(schoolId, filters as Record<string, unknown> | undefined),
         queryFn: () => useApi<ApiResponse<Announcement[]>>(
             "GET",
             `/api/school/${schoolId}/announcements`,
             undefined,
-            filters as Record<string, unknown>
+            filters as Record<string, unknown> | undefined
         ),
         enabled: !!schoolId,
     });
