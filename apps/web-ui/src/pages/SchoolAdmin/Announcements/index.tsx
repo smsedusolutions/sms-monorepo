@@ -14,8 +14,6 @@ import {
     DialogActions,
     TextField,
     MenuItem,
-    FormControlLabel,
-    Checkbox,
     Stack,
     Paper,
     IconButton,
@@ -23,8 +21,6 @@ import {
     Tooltip,
     useTheme,
     alpha,
-    Fade,
-    Divider,
 } from '@mui/material';
 import {
     Add as AddIcon,
@@ -35,13 +31,9 @@ import {
     AttachFile as AttachFileIcon,
     Search as SearchIcon,
     CalendarToday as CalendarIcon,
-    FilterList as FilterIcon,
     RestartAlt as ResetIcon,
     Visibility as ViewIcon,
     Download as DownloadIcon,
-    WarningAmber as WarningIcon,
-    EventNote as EventIcon,
-    School as SchoolIcon,
 } from '@mui/icons-material';
 import {
     useGetAnnouncements,
@@ -577,7 +569,13 @@ const SchoolAdminAnnouncements: React.FC = () => {
                             <DatePicker
                                 label="From Date"
                                 value={startDate}
-                                onChange={(date) => setStartDate(date)}
+                                maxDate={endDate || undefined}
+                                onChange={(date) => {
+                                    setStartDate(date);
+                                    if (date && endDate && date > endDate) {
+                                        setEndDate(null);
+                                    }
+                                }}
                                 slotProps={{
                                     textField: {
                                         size: 'small',
@@ -588,7 +586,14 @@ const SchoolAdminAnnouncements: React.FC = () => {
                             <DatePicker
                                 label="To Date"
                                 value={endDate}
-                                onChange={(date) => setEndDate(date)}
+                                minDate={startDate || undefined}
+                                referenceDate={startDate || undefined}
+                                onChange={(date) => {
+                                    setEndDate(date);
+                                    if (date && startDate && date < startDate) {
+                                        setStartDate(null);
+                                    }
+                                }}
                                 slotProps={{
                                     textField: {
                                         size: 'small',
@@ -1174,7 +1179,7 @@ const SchoolAdminAnnouncements: React.FC = () => {
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                     <AttachFileIcon sx={{ fontSize: 18, color: theme.palette.primary.main }} />
                                                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                                                        {file.name || `Attachment ${idx + 1}`}
+                                                        {file.fileName || file.name || `Attachment ${idx + 1}`}
                                                     </Typography>
                                                 </Box>
                                                 <DownloadIcon sx={{ fontSize: 18, color: theme.palette.text.secondary }} />
@@ -1414,19 +1419,16 @@ const SchoolAdminAnnouncements: React.FC = () => {
                             </Typography>
                             <FileUpload
                                 folder={IMAGEKIT_FOLDERS.ANNOUNCEMENTS}
-                                multiple
-                                onUploadSuccess={(url, file) => {
-                                    const newAttachment: AnnouncementAttachment = {
-                                        url,
-                                        name: file.name,
-                                        type: file.type,
-                                        size: file.size,
-                                    };
+                                baseFileName={`announcement_${schoolId}`}
+                                currentAttachments={formData.attachments}
+                                onUploadSuccess={(attachments: AnnouncementAttachment[]) => {
                                     setFormData((prev) => ({
                                         ...prev,
-                                        attachments: [...prev.attachments, newAttachment],
+                                        attachments,
                                     }));
                                 }}
+                                label="Add Attachments"
+                                maxFiles={5}
                             />
                             {formData.attachments.length > 0 && (
                                 <Stack spacing={1} sx={{ mt: 1.5 }}>
@@ -1447,7 +1449,7 @@ const SchoolAdminAnnouncements: React.FC = () => {
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 <AttachFileIcon sx={{ fontSize: 16, color: theme.palette.primary.main }} />
                                                 <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                                                    {file.name}
+                                                    {file.fileName || file.name || `Attachment ${idx + 1}`}
                                                 </Typography>
                                             </Box>
                                             <IconButton

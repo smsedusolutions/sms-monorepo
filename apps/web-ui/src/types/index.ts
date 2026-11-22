@@ -900,6 +900,9 @@ export interface AnnouncementAttachment {
   url: string;
   fileName: string;
   fileType: "image" | "pdf" | "document";
+  name?: string;
+  type?: string;
+  size?: number;
   uploadedAt?: string;
 }
 
@@ -1103,9 +1106,12 @@ export interface Notification {
   updatedAt?: string;
 }
 
-export interface NotificationFilters {
+export interface NotificationFilters extends Record<string, unknown> {
   isRead?: boolean;
-  type?: NotificationType;
+  type?: NotificationType | string;
+  search?: string;
+  startDate?: string;
+  endDate?: string;
   page?: number;
   limit?: number;
 }
