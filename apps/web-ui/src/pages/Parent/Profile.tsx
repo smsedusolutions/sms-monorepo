@@ -15,6 +15,7 @@ import {
     IconButton,
     Tooltip,
 } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
 import {
     Email as EmailIcon,
     Phone as PhoneIcon,
@@ -37,6 +38,7 @@ import { useChildSelector } from '../../context/ChildSelectorContext';
 import TokenService from '../../queries/token/tokenService';
 
 const ParentProfile: React.FC = () => {
+    const theme = useTheme();
     const navigate = useNavigate();
     const [requestDialogOpen, setRequestDialogOpen] = useState(false);
     const [requestFieldType, setRequestFieldType] = useState<"email_change" | "phone_change" | "general">("general");
@@ -107,10 +109,10 @@ const ParentProfile: React.FC = () => {
             >
                 <Box
                     sx={{
-                        bgcolor: '#0F172A',
+                        bgcolor: theme.palette.secondary.main,
                         px: { xs: 2.5, sm: 4 },
                         py: { xs: 3, sm: 3.5 },
-                        color: '#ffffff',
+                        color: theme.palette.secondary.contrastText,
                         position: 'relative',
                     }}
                 >
@@ -129,8 +131,8 @@ const ParentProfile: React.FC = () => {
                                 height: { xs: 76, sm: 92 },
                                 fontSize: { xs: '1.75rem', sm: '2.2rem' },
                                 fontWeight: 800,
-                                bgcolor: '#059669',
-                                color: '#ffffff',
+                                bgcolor: theme.palette.primary.main,
+                                color: theme.palette.primary.contrastText,
                                 border: '3px solid rgba(255, 255, 255, 0.9)',
                                 boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
                             }}
@@ -140,16 +142,16 @@ const ParentProfile: React.FC = () => {
 
                         <Box sx={{ flex: 1, minWidth: 0 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap', mb: 0.5 }}>
-                                <Typography variant="h5" fontWeight={800} sx={{ color: '#ffffff', fontSize: { xs: '1.3rem', sm: '1.65rem' } }}>
+                                <Typography variant="h5" fontWeight={800} sx={{ color: theme.palette.secondary.contrastText, fontSize: { xs: '1.3rem', sm: '1.65rem' } }}>
                                     {parentName}
                                 </Typography>
                                 <Chip
-                                    icon={<VerifiedIcon sx={{ fontSize: '14px !important', color: '#fff !important' }} />}
+                                    icon={<VerifiedIcon sx={{ fontSize: '14px !important', color: `${theme.palette.secondary.contrastText} !important` }} />}
                                     label="Verified Guardian"
                                     size="small"
                                     sx={{
                                         bgcolor: 'rgba(255, 255, 255, 0.15)',
-                                        color: '#ffffff',
+                                        color: theme.palette.secondary.contrastText,
                                         fontWeight: 700,
                                         fontSize: '0.7rem',
                                         backdropFilter: 'blur(4px)',
@@ -158,7 +160,7 @@ const ParentProfile: React.FC = () => {
                             </Box>
 
                             <Typography variant="body2" sx={{ color: 'rgba(255, 255, 255, 0.8)', mb: 1.5, fontSize: { xs: '0.825rem', sm: '0.9rem' } }}>
-                                Parent ID: <strong style={{ color: '#ffffff' }}>{parentId}</strong> • {parentRelationship.toUpperCase()} • {schoolName}
+                                Parent ID: <strong style={{ color: theme.palette.secondary.contrastText }}>{parentId}</strong> • {parentRelationship.toUpperCase()} • {schoolName}
                             </Typography>
 
                             <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ gap: 1 }}>
@@ -166,8 +168,8 @@ const ParentProfile: React.FC = () => {
                                     label={parentStatus === 'active' ? 'Active Account' : 'Inactive'}
                                     size="small"
                                     sx={{
-                                        bgcolor: parentStatus === 'active' ? '#10b981' : '#ef4444',
-                                        color: '#ffffff',
+                                        bgcolor: parentStatus === 'active' ? theme.palette.success.main : theme.palette.error.main,
+                                        color: theme.palette.success.contrastText,
                                         fontWeight: 700,
                                         fontSize: '0.725rem',
                                     }}
@@ -177,7 +179,7 @@ const ParentProfile: React.FC = () => {
                                     size="small"
                                     sx={{
                                         bgcolor: 'rgba(255, 255, 255, 0.2)',
-                                        color: '#ffffff',
+                                        color: theme.palette.secondary.contrastText,
                                         fontWeight: 700,
                                         fontSize: '0.725rem',
                                     }}
@@ -190,8 +192,8 @@ const ParentProfile: React.FC = () => {
                             startIcon={<EditIcon />}
                             onClick={() => openRequestDialog("general", "")}
                             sx={{
-                                bgcolor: '#ffffff',
-                                color: '#0F172A',
+                                bgcolor: theme.palette.background.paper,
+                                color: theme.palette.text.primary,
                                 fontWeight: 700,
                                 borderRadius: '6px',
                                 textTransform: 'none',
@@ -199,7 +201,7 @@ const ParentProfile: React.FC = () => {
                                 py: 1,
                                 fontSize: '0.85rem',
                                 boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                                '&:hover': { bgcolor: '#f1f5f9' },
+                                '&:hover': { bgcolor: alpha(theme.palette.background.paper, 0.9) },
                                 alignSelf: { xs: 'flex-start', sm: 'center' },
                             }}
                         >
@@ -209,22 +211,22 @@ const ParentProfile: React.FC = () => {
                 </Box>
 
                 {/* KPI Metrics Strip */}
-                <Grid container sx={{ bgcolor: '#f8fafc', borderTop: '1px solid', borderColor: 'divider' }}>
-                    <Grid size={{ xs: 6, sm: 3 }} sx={{ p: 2, textAlign: 'center', borderRight: { xs: '1px solid #e2e8f0', sm: '1px solid #e2e8f0' }, borderBottom: { xs: '1px solid #e2e8f0', sm: 'none' } }}>
+                <Grid container sx={{ bgcolor: alpha(theme.palette.text.primary, 0.02), borderTop: '1px solid', borderColor: 'divider' }}>
+                    <Grid size={{ xs: 6, sm: 3 }} sx={{ p: 2, textAlign: 'center', borderRight: { xs: '1px solid', sm: '1px solid' }, borderRightColor: 'divider', borderBottom: { xs: '1px solid', sm: 'none' }, borderBottomColor: 'divider' }}>
                         <Typography variant="caption" color="text.secondary" fontWeight={600}>LINKED STUDENTS</Typography>
-                        <Typography variant="h6" fontWeight={800} sx={{ mt: 0.25, color: '#1e293b' }}>{children.length}</Typography>
+                        <Typography variant="h6" fontWeight={800} sx={{ mt: 0.25, color: 'text.primary' }}>{children.length}</Typography>
                     </Grid>
-                    <Grid size={{ xs: 6, sm: 3 }} sx={{ p: 2, textAlign: 'center', borderRight: { sm: '1px solid #e2e8f0' }, borderBottom: { xs: '1px solid #e2e8f0', sm: 'none' } }}>
+                    <Grid size={{ xs: 6, sm: 3 }} sx={{ p: 2, textAlign: 'center', borderRight: { sm: '1px solid' }, borderRightColor: 'divider', borderBottom: { xs: '1px solid', sm: 'none' }, borderBottomColor: 'divider' }}>
                         <Typography variant="caption" color="text.secondary" fontWeight={600}>RELATIONSHIP</Typography>
-                        <Typography variant="h6" fontWeight={800} sx={{ mt: 0.25, color: '#059669', textTransform: 'capitalize' }}>{parentRelationship}</Typography>
+                        <Typography variant="h6" fontWeight={800} sx={{ mt: 0.25, color: theme.palette.primary.main, textTransform: 'capitalize' }}>{parentRelationship}</Typography>
                     </Grid>
-                    <Grid size={{ xs: 6, sm: 3 }} sx={{ p: 2, textAlign: 'center', borderRight: { xs: '1px solid #e2e8f0', sm: '1px solid #e2e8f0' } }}>
+                    <Grid size={{ xs: 6, sm: 3 }} sx={{ p: 2, textAlign: 'center', borderRight: { xs: '1px solid', sm: '1px solid' }, borderRightColor: 'divider' }}>
                         <Typography variant="caption" color="text.secondary" fontWeight={600}>OCCUPATION</Typography>
-                        <Typography variant="h6" fontWeight={800} sx={{ mt: 0.25, color: '#1e293b', fontSize: '0.95rem' }} noWrap>{parentOccupation}</Typography>
+                        <Typography variant="h6" fontWeight={800} sx={{ mt: 0.25, color: 'text.primary', fontSize: '0.95rem' }} noWrap>{parentOccupation}</Typography>
                     </Grid>
                     <Grid size={{ xs: 6, sm: 3 }} sx={{ p: 2, textAlign: 'center' }}>
                         <Typography variant="caption" color="text.secondary" fontWeight={600}>ACCOUNT STATUS</Typography>
-                        <Typography variant="h6" fontWeight={800} sx={{ mt: 0.25, color: parentStatus === 'active' ? '#10b981' : '#ef4444' }}>
+                        <Typography variant="h6" fontWeight={800} sx={{ mt: 0.25, color: parentStatus === 'active' ? theme.palette.success.main : theme.palette.error.main }}>
                             {parentStatus.toUpperCase()}
                         </Typography>
                     </Grid>
@@ -241,16 +243,16 @@ const ParentProfile: React.FC = () => {
                             borderRadius: '8px',
                             border: '1px solid',
                             borderColor: 'divider',
-                            bgcolor: '#ffffff',
+                            bgcolor: theme.palette.background.paper,
                         }}
                     >
-                        <Typography variant="subtitle1" fontWeight={700} color="#1e293b" sx={{ mb: 2 }}>
+                        <Typography variant="subtitle1" fontWeight={700} color="text.primary" sx={{ mb: 2 }}>
                             Contact & Personal Details
                         </Typography>
 
                         <Stack spacing={2}>
                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#ecfdf5', color: '#059669' }}>
+                                <Avatar sx={{ width: 36, height: 36, bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main }}>
                                     <EmailIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -267,7 +269,7 @@ const ParentProfile: React.FC = () => {
                             <Divider />
 
                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#ecfdf5', color: '#10b981' }}>
+                                <Avatar sx={{ width: 36, height: 36, bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main }}>
                                     <PhoneIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -284,7 +286,7 @@ const ParentProfile: React.FC = () => {
                             <Divider />
 
                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#fdf2f8', color: '#db2777' }}>
+                                <Avatar sx={{ width: 36, height: 36, bgcolor: alpha(theme.palette.secondary.main, 0.1), color: theme.palette.secondary.main }}>
                                     <GenderIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -296,7 +298,7 @@ const ParentProfile: React.FC = () => {
                             <Divider />
 
                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#fef3c7', color: '#d97706' }}>
+                                <Avatar sx={{ width: 36, height: 36, bgcolor: alpha(theme.palette.warning.main, 0.1), color: theme.palette.warning.main }}>
                                     <CakeIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -308,7 +310,7 @@ const ParentProfile: React.FC = () => {
                             <Divider />
 
                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#fffbeb', color: '#f59e0b' }}>
+                                <Avatar sx={{ width: 36, height: 36, bgcolor: alpha(theme.palette.warning.main, 0.1), color: theme.palette.warning.main }}>
                                     <WorkIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -320,7 +322,7 @@ const ParentProfile: React.FC = () => {
                             <Divider />
 
                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#f1f5f9', color: '#475569' }}>
+                                <Avatar sx={{ width: 36, height: 36, bgcolor: alpha(theme.palette.text.primary, 0.06), color: theme.palette.text.secondary }}>
                                     <HomeIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -332,7 +334,7 @@ const ParentProfile: React.FC = () => {
                             <Divider />
 
                             <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
-                                <Avatar sx={{ width: 36, height: 36, bgcolor: '#ecfdf5', color: '#059669' }}>
+                                <Avatar sx={{ width: 36, height: 36, bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main }}>
                                     <SchoolIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -354,16 +356,16 @@ const ParentProfile: React.FC = () => {
                             borderRadius: '8px',
                             border: '1px solid',
                             borderColor: 'divider',
-                            bgcolor: '#ffffff',
+                            bgcolor: theme.palette.background.paper,
                         }}
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2.5 }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                                <Box sx={{ p: 0.75, borderRadius: '6px', bgcolor: '#ecfdf5', color: '#059669' }}>
+                                <Box sx={{ p: 0.75, borderRadius: '6px', bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main }}>
                                     <FamilyIcon sx={{ fontSize: 22 }} />
                                 </Box>
                                 <Box>
-                                    <Typography variant="subtitle1" fontWeight={700} color="#1e293b">
+                                    <Typography variant="subtitle1" fontWeight={700} color="text.primary">
                                         Linked Students ({children.length})
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary">
@@ -386,13 +388,14 @@ const ParentProfile: React.FC = () => {
                                         sx={{
                                             p: 2,
                                             borderRadius: '8px',
-                                            border: '1px solid #e2e8f0',
-                                            bgcolor: '#f8fafc',
+                                            border: '1px solid',
+                                            borderColor: theme.palette.divider,
+                                            bgcolor: alpha(theme.palette.text.primary, 0.02),
                                             transition: 'all 0.18s ease-in-out',
                                             '&:hover': {
-                                                borderColor: '#cbd5e1',
+                                                borderColor: theme.palette.divider,
                                                 boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
-                                                bgcolor: '#ffffff',
+                                                bgcolor: theme.palette.background.paper,
                                             },
                                         }}
                                     >
@@ -403,7 +406,8 @@ const ParentProfile: React.FC = () => {
                                                     sx={{
                                                         width: 50,
                                                         height: 50,
-                                                        bgcolor: '#059669',
+                                                        bgcolor: theme.palette.primary.main,
+                                                        color: theme.palette.primary.contrastText,
                                                         fontWeight: 700,
                                                         fontSize: '1.15rem',
                                                     }}
@@ -411,7 +415,7 @@ const ParentProfile: React.FC = () => {
                                                     {child.firstName?.[0]}
                                                 </Avatar>
                                                 <Box>
-                                                    <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.95rem', color: '#1e293b' }}>
+                                                    <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.95rem', color: 'text.primary' }}>
                                                         {child.firstName} {child.lastName}
                                                     </Typography>
                                                     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
@@ -454,7 +458,7 @@ const ParentProfile: React.FC = () => {
                                                         setSelectedChild(child);
                                                         navigate(`/parent/children/${child.studentId}`);
                                                     }}
-                                                    sx={{ textTransform: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, bgcolor: '#059669', '&:hover': { bgcolor: '#047857' } }}
+                                                    sx={{ textTransform: 'none', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, bgcolor: theme.palette.primary.main, '&:hover': { bgcolor: theme.palette.primary.dark } }}
                                                 >
                                                     Profile
                                                 </Button>

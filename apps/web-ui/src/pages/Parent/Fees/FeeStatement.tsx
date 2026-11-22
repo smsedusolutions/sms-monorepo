@@ -4,6 +4,7 @@ import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Tabs, Tab, Avatar, Stack, IconButton, Divider
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
     ReceiptLong as StatementIcon,
     Download as DownloadIcon,
@@ -185,8 +186,9 @@ export const FeeStatement: React.FC = () => {
                         p: 2,
                         mb: 3,
                         borderRadius: 2,
-                        border: '1px solid #e0e7ff',
-                        bgcolor: '#f8fafc',
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        bgcolor: 'background.paper',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -233,7 +235,7 @@ export const FeeStatement: React.FC = () => {
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, sm: 4 }}>
-                    <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider', textAlign: 'center', bgcolor: '#f0fdf4' }}>
+                    <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider', textAlign: 'center', bgcolor: (theme) => alpha(theme.palette.success.main, 0.08) }}>
                         <Typography variant="caption" color="success.main" fontWeight={600}>TOTAL PAID</Typography>
                         <Typography fontWeight={800} sx={{ fontSize: '1.6rem', mt: 0.5, color: 'success.main' }}>
                             {formatCurrency(summary.totalPaid)}
@@ -241,7 +243,7 @@ export const FeeStatement: React.FC = () => {
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, sm: 4 }}>
-                    <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider', textAlign: 'center', bgcolor: '#fef2f2' }}>
+                    <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: '1px solid', borderColor: 'divider', textAlign: 'center', bgcolor: (theme) => alpha(theme.palette.error.main, 0.08) }}>
                         <Typography variant="caption" color="error.main" fontWeight={600}>OUTSTANDING BALANCE</Typography>
                         <Typography fontWeight={800} sx={{ fontSize: '1.6rem', mt: 0.5, color: 'error.main' }}>
                             {formatCurrency(summary.totalOutstanding)}

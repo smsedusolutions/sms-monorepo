@@ -28,6 +28,7 @@ import { exportReportCardPDF } from '../../utils/reportCardPdfExport';
 import TokenService from '../../queries/token/tokenService';
 import { useGetExams, useGetStudentReportCard } from '../../queries/Exam';
 import { useGetSubjects } from '../../queries/Subject';
+import { getEffectiveExamStatus, getExamStatusColor } from '../../utils/examUtils';
 import { useAcademicYear } from '../../hooks/useAcademicYear';
 
 const StudentResults = () => {
@@ -118,35 +119,45 @@ const StudentResults = () => {
                     </Alert>
 
                     {/* Show upcoming exams */}
-                    {allExams && allExams.filter((e: any) => e.status !== 'published').length > 0 && (
+                    {allExams && allExams.filter((e: any) => {
+                        const s = getEffectiveExamStatus(e);
+                        return s === 'ongoing' || s === 'scheduled' || s === 'draft';
+                    }).length > 0 && (
                         <Box sx={{ mt: 3 }}>
                             <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Upcoming / Ongoing Exams</Typography>
                             <Grid container spacing={2}>
-                                {allExams.filter((e: any) => e.status !== 'published' && e.status !== 'closed').map((exam: any) => (
-                                    <Grid key={exam._id} size={{ xs: 12, sm: 6, md: 4 }}>
-                                        <Card variant="outlined" sx={{ borderRadius: 2 }}>
-                                            <CardContent>
-                                                <Typography variant="subtitle1" fontWeight={600}>{exam.name}</Typography>
-                                                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                                                    {exam.typeId?.name || 'Exam'} | {exam.termId?.name || 'Term'}
-                                                </Typography>
-                                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <Chip
-                                                        label={exam.status}
-                                                        size="small"
-                                                        color={exam.status === 'ongoing' ? 'primary' : exam.status === 'scheduled' ? 'secondary' : 'default'}
-                                                        sx={{ textTransform: 'capitalize' }}
-                                                    />
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        {new Date(exam.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                                                        {' — '}
-                                                        {new Date(exam.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                {allExams.filter((e: any) => {
+                                    const s = getEffectiveExamStatus(e);
+                                    return s === 'ongoing' || s === 'scheduled' || s === 'draft';
+                                }).map((rawExam: any) => {
+                                    const effStatus = getEffectiveExamStatus(rawExam);
+                                    const exam = { ...rawExam, status: effStatus };
+                                    return (
+                                        <Grid key={exam._id} size={{ xs: 12, sm: 6, md: 4 }}>
+                                            <Card variant="outlined" sx={{ borderRadius: 2 }}>
+                                                <CardContent>
+                                                    <Typography variant="subtitle1" fontWeight={600}>{exam.name}</Typography>
+                                                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                                        {exam.typeId?.name || 'Exam'} | {exam.termId?.name || 'Term'}
                                                     </Typography>
-                                                </Box>
-                                            </CardContent>
-                                        </Card>
-                                    </Grid>
-                                ))}
+                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <Chip
+                                                            label={exam.status}
+                                                            size="small"
+                                                            color={getExamStatusColor(exam.status) as any}
+                                                            sx={{ textTransform: 'capitalize' }}
+                                                        />
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {new Date(exam.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                                            {' — '}
+                                                            {new Date(exam.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                                        </Typography>
+                                                    </Box>
+                                                </CardContent>
+                                            </Card>
+                                        </Grid>
+                                    );
+                                })}
                             </Grid>
                         </Box>
                     )}

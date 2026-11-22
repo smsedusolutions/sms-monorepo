@@ -16,6 +16,7 @@ import {
     Avatar,
     Stack
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import PrintIcon from '@mui/icons-material/Print';
 import InfoIcon from '@mui/icons-material/Info';
 
@@ -72,19 +73,19 @@ const ChildFeePanel: React.FC<{
             {/* Summary cards */}
             <Grid container spacing={{ xs: 1.5, sm: 2.5 }} sx={{ mb: 3 }}>
                 <Grid size={{ xs: 12, sm: 4 }}>
-                    <Paper elevation={0} sx={{ p: 2, border: '1px solid #e2e8f0', borderRadius: 2.5, textAlign: 'center' }}>
+                    <Paper elevation={0} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2.5, textAlign: 'center', bgcolor: 'background.paper' }}>
                         <Typography variant="caption" color="text.secondary" fontWeight={500}>Net Assigned Dues</Typography>
                         <Typography variant="h6" fontWeight={700} sx={{ mt: 0.5 }}>{formatCurrency(account.netFees)}</Typography>
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, sm: 4 }}>
-                    <Paper elevation={0} sx={{ p: 2, border: '1px solid #e2e8f0', borderRadius: 2.5, textAlign: 'center', bgcolor: '#f0fdf4' }}>
+                    <Paper elevation={0} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2.5, textAlign: 'center', bgcolor: (theme) => alpha(theme.palette.success.main, 0.08) }}>
                         <Typography variant="caption" color="text.secondary" fontWeight={500}>Paid Amount</Typography>
                         <Typography variant="h6" fontWeight={700} color="success.main" sx={{ mt: 0.5 }}>{formatCurrency(account.totalPaid)}</Typography>
                     </Paper>
                 </Grid>
                 <Grid size={{ xs: 6, sm: 4 }}>
-                    <Paper elevation={0} sx={{ p: 2, border: '1px solid #e2e8f0', borderRadius: 2.5, textAlign: 'center', bgcolor: '#fef2f2' }}>
+                    <Paper elevation={0} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 2.5, textAlign: 'center', bgcolor: (theme) => alpha(theme.palette.error.main, 0.08) }}>
                         <Typography variant="caption" color="text.secondary" fontWeight={500}>Outstanding Balance</Typography>
                         <Typography variant="h6" fontWeight={700} color="error.main" sx={{ mt: 0.5 }}>{formatCurrency(account.totalBalance)}</Typography>
                     </Paper>
@@ -185,8 +186,8 @@ const ParentFees: React.FC = () => {
             </Alert>
 
             {/* Child tabs */}
-            <Card sx={{ borderRadius: 2, border: '1px solid #f1f5f9', boxShadow: 'none' }}>
-                <Box sx={{ borderBottom: '1px solid #f1f5f9' }}>
+            <Card sx={{ borderRadius: 2, border: '1px solid', borderColor: 'divider', boxShadow: 'none' }}>
+                <Box sx={{ borderBottom: '1px solid', borderBottomColor: 'divider' }}>
                     <Tabs
                         value={activeTab}
                         onChange={(_, v) => setActiveTab(v)}

@@ -95,8 +95,10 @@ const verifyEmailConfig = async (req, res) => {
             message: isConnected ? 'Email configuration is valid' : 'Email configuration failed',
             connected: isConnected,
             config: {
-                emailUser: process.env.EMAIL_USER ? '✓ Configured' : '✗ Missing',
-                emailPass: process.env.EMAIL_PASS ? '✓ Configured' : '✗ Missing',
+                smtpHost: process.env.SMTP_HOST || 'smtpout.secureserver.net',
+                smtpPort: process.env.SMTP_PORT || '465',
+                emailUser: (process.env.SMTP_USERNAME || process.env.EMAIL_USER) ? '✓ Configured' : '✗ Missing',
+                emailPass: (process.env.SMTP_PASSWORD || process.env.EMAIL_PASS) ? '✓ Configured' : '✗ Missing',
                 projectName: process.env.PROJECT_NAME || 'School Management System'
             }
         });

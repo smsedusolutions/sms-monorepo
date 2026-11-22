@@ -202,6 +202,7 @@ const MainRouters = () => {
         <Route path="/landing" element={<Navigate to="/" replace />} />
         <Route path="/home" element={<Navigate to="/" replace />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<LoginPage initialForgotPasswordOpen={true} />} />
         <Route path="/unauthorized" element={<UnauthorizedPage />} />
         <Route path="/secret-setup-super-admin" element={<CreateSuperAdminSecret />} />
 

@@ -445,6 +445,8 @@ export interface Section {
   sectionId: string;
   name: string;
   classTeacherId?: string;
+  classTeacherName?: string;
+  classTeacher?: string;
 }
 
 // Class Types

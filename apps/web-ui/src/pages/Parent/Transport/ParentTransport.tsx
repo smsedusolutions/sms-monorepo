@@ -5,6 +5,7 @@ import {
     Box, Typography, Card, CardContent, Avatar, Divider, Chip,
     Alert, Skeleton, Grid, Button,
 } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
 import {
     DirectionsBus as BusIcon,
     LocationOn as StopIcon,
@@ -31,6 +32,7 @@ import { io, Socket } from 'socket.io-client';
 const SOCKET_URL = "http://localhost:5004";
 
 const ParentTransport = () => {
+    const theme = useTheme();
     const navigate = useNavigate();
     const schoolId = TokenService.getSchoolId() || '';
     const { selectedChild } = useChildSelector();
@@ -238,12 +240,12 @@ const ParentTransport = () => {
                                                     width: isAssigned ? 34 : 26,
                                                     height: isAssigned ? 34 : 26,
                                                     borderRadius: '50%',
-                                                    bgcolor: isAssigned ? '#059669' : 'primary.main',
+                                                    bgcolor: isAssigned ? 'primary.main' : 'text.secondary',
                                                     border: isAssigned ? '3px solid white' : '2px solid white',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                     fontSize: isAssigned ? '13px' : '11px',
                                                     fontWeight: 700, color: 'white',
-                                                    boxShadow: isAssigned ? '0 0 0 3px rgba(5,150,105,0.4)' : '0 2px 8px rgba(0,0,0,0.4)',
+                                                    boxShadow: isAssigned ? `0 0 0 3px ${alpha(theme.palette.primary.main, 0.4)}` : '0 2px 8px rgba(0,0,0,0.4)',
                                                     animation: isAssigned ? 'pulse 2s infinite' : 'none',
                                                 }}>
                                                     {i + 1}
@@ -255,7 +257,7 @@ const ParentTransport = () => {
 
                                 {/* Road route polyline */}
                                 {roadRoute.length > 0 && (
-                                    <MapRoute coordinates={roadRoute} color="#4F46E5" width={4} opacity={0.8} />
+                                    <MapRoute coordinates={roadRoute} color={theme.palette.primary.main} width={4} opacity={0.8} />
                                 )}
 
                                 {/* Live Bus Marker */}

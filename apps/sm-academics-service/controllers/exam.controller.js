@@ -95,6 +95,33 @@ const getExams = async (req, res) => {
         const schoolDbName = await getSchoolDbName(schoolId);
         const { Exam } = getModels(schoolDbName);
 
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+
+        // Auto-sync status based on dates in DB:
+        // 1. Past exams (endDate < todayStart) that are 'scheduled' or 'ongoing' -> 'completed'
+        await Exam.updateMany(
+            {
+                schoolId,
+                isActive: true,
+                status: { $in: ['scheduled', 'ongoing'] },
+                endDate: { $lt: todayStart }
+            },
+            { $set: { status: 'completed' } }
+        );
+
+        // 2. Ongoing exams (startDate <= now and endDate >= todayStart) that are 'scheduled' -> 'ongoing'
+        await Exam.updateMany(
+            {
+                schoolId,
+                isActive: true,
+                status: 'scheduled',
+                startDate: { $lte: now },
+                endDate: { $gte: todayStart }
+            },
+            { $set: { status: 'ongoing' } }
+        );
+
         const query = { schoolId, isActive: true };
         if (academicYear) query.academicYear = academicYear;
         if (status) query.status = status;
@@ -104,7 +131,28 @@ const getExams = async (req, res) => {
             .populate('termId', 'name')
             .sort({ startDate: -1 });
 
-        res.status(200).json({ success: true, data: exams });
+        // Double check mapped status to guarantee date consistency in API response
+        const mappedExams = exams.map(e => {
+            const doc = e.toObject ? e.toObject() : { ...e };
+            if (!['published', 'closed', 'completed'].includes(doc.status)) {
+                if (doc.endDate) {
+                    const end = new Date(doc.endDate);
+                    const endOfDay = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59, 999);
+                    if (now.getTime() > endOfDay.getTime()) {
+                        doc.status = 'completed';
+                    } else if (doc.startDate) {
+                        const start = new Date(doc.startDate);
+                        const startOfDay = new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0);
+                        if (now.getTime() >= startOfDay.getTime()) {
+                            doc.status = 'ongoing';
+                        }
+                    }
+                }
+            }
+            return doc;
+        });
+
+        res.status(200).json({ success: true, data: mappedExams });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

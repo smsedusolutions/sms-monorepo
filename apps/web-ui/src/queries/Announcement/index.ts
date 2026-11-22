@@ -24,10 +24,24 @@ export const announcementKeys = {
     detail: (schoolId: string, id: string) => [...announcementKeys.details(), schoolId, id] as const,
 };
 
+export interface AnnouncementFilters {
+    category?: string;
+    priority?: string;
+    targetAudience?: string;
+    status?: string;
+    search?: string;
+    startDate?: string;
+    endDate?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    limit?: number;
+}
+
 // Get all announcements (filtered by role)
 export const useGetAnnouncements = (
     schoolId: string,
-    filters?: { category?: string; status?: string; page?: number; limit?: number }
+    filters?: AnnouncementFilters
 ) => {
     return useQuery({
         queryKey: announcementKeys.list(schoolId, filters),

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Box,
     Typography,
@@ -68,6 +68,9 @@ const Announcements: React.FC = () => {
     const [currentFile, setCurrentFile] = useState<AnnouncementAttachment | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [datePreset, setDatePreset] = useState<'all' | 'today' | 'this_week' | 'this_month'>('all');
 
     const deleteAnnouncement = useDeleteAnnouncement(schoolId);
     const createAnnouncement = useCreateAnnouncement(schoolId);
@@ -75,13 +78,51 @@ const Announcements: React.FC = () => {
     const { data: classesData } = useGetClasses(schoolId);
 
     const classes = classesData?.data || [];
-    console.log(currentFile, "currentFile")
     const allAnnouncements = data?.data || [];
 
-    // Filter announcements based on tab
-    const announcements = tabValue === 0
-        ? allAnnouncements // All announcements
-        : allAnnouncements.filter((ann: Announcement) => ann.createdBy === userId); // Your announcements
+    // Filter announcements based on tab, search, category, and date preset
+    const announcements = useMemo(() => {
+        let list = tabValue === 0
+            ? allAnnouncements
+            : allAnnouncements.filter((ann: Announcement) => ann.createdBy === userId);
+
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase().trim();
+            list = list.filter(ann =>
+                (ann.title || '').toLowerCase().includes(q) ||
+                (ann.content || '').toLowerCase().includes(q)
+            );
+        }
+
+        if (categoryFilter !== 'all') {
+            list = list.filter(ann => ann.category === categoryFilter);
+        }
+
+        if (datePreset !== 'all') {
+            const now = new Date();
+            let startMs = 0;
+            if (datePreset === 'today') {
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                startMs = today.getTime();
+            } else if (datePreset === 'this_week') {
+                const day = now.getDay();
+                const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+                const start = new Date(now.setDate(diff));
+                start.setHours(0, 0, 0, 0);
+                startMs = start.getTime();
+            } else if (datePreset === 'this_month') {
+                const start = new Date(now.getFullYear(), now.getMonth(), 1);
+                startMs = start.getTime();
+            }
+
+            list = list.filter(ann => {
+                const annTime = new Date(ann.publishDate || ann.createdAt || '').getTime();
+                return annTime >= startMs;
+            });
+        }
+
+        return list;
+    }, [allAnnouncements, tabValue, userId, searchQuery, categoryFilter, datePreset]);
 
     const handleExpand = (announcementId: string, isSeen: boolean) => {
         // Mark as seen when expanding if not already seen
@@ -258,11 +299,62 @@ const Announcements: React.FC = () => {
                 </Button>
             </Box>
 
-            {/* Tabs for filtering */}
-            <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} sx={{ mb: 3 }}>
-                <Tab label="All Announcements" />
-                <Tab label="Your Announcements" />
-            </Tabs>
+            {/* Tabs & Search / Filters Toolbar */}
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', md: 'row' },
+                    justifyContent: 'space-between',
+                    alignItems: { xs: 'stretch', md: 'center' },
+                    gap: 2,
+                    mb: 3,
+                }}
+            >
+                <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
+                    <Tab label="All Announcements" />
+                    <Tab label="Your Announcements" />
+                </Tabs>
+
+                <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <AppInput
+                        placeholder="Search notices..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        size="small"
+                        sx={{ minWidth: { xs: '100%', sm: 180 } }}
+                    />
+                    <AppSelect
+                        label="Date"
+                        value={datePreset}
+                        onChange={(v) => setDatePreset(v as any)}
+                        options={[
+                            { value: 'all', label: 'All Time' },
+                            { value: 'today', label: 'Today' },
+                            { value: 'this_week', label: 'This Week' },
+                            { value: 'this_month', label: 'This Month' },
+                        ]}
+                        size="small"
+                        sx={{ minWidth: 120 }}
+                    />
+                    <AppSelect
+                        label="Category"
+                        value={categoryFilter}
+                        onChange={(v) => setCategoryFilter(v as any)}
+                        options={[
+                            { value: 'all', label: 'All Categories' },
+                            { value: 'general', label: 'General' },
+                            { value: 'academic', label: 'Academic' },
+                            { value: 'exam', label: 'Exam' },
+                            { value: 'event', label: 'Event' },
+                            { value: 'holiday', label: 'Holiday' },
+                            { value: 'fee', label: 'Fee' },
+                            { value: 'emergency', label: 'Emergency' },
+                        ]}
+                        size="small"
+                        sx={{ minWidth: 140 }}
+                    />
+                </Box>
+            </Box>
 
             {isLoading ? (
                 <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 4 }} />

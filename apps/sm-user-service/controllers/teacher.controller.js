@@ -233,31 +233,36 @@ const getTeacherById = async (req, res) => {
     }
 
     // Fetch class details for classNames
-    if (teacher.classes && teacher.classes.length > 0) {
+    {
       const schoolDb = getSchoolDbConnection(schoolDbName);
       const { ClassSchema: classSchema } = require("@sms/shared");
       const Class = schoolDb.model("Class", classSchema);
 
-      const uniqueClassIds = [
-        ...new Set(teacher.classes.map((c) => c.split("#")[0])),
-      ];
       const classesDocs = await Class.find({
-        classId: { $in: uniqueClassIds },
+        schoolId,
+        status: { $ne: "inactive" },
       }).select("classId name sections");
 
-      teacherObj.classNames = teacher.classes.map((c) => {
-        if (c.includes("#")) {
-          const [cId, sId] = c.split("#");
-          const classDoc = classesDocs.find((cls) => cls.classId === cId);
-          if (classDoc) {
-            const section = classDoc.sections.find((s) => s.sectionId === sId);
-            return section
-              ? `${classDoc.name} - ${section.name}`
-              : classDoc.name;
+      const assignedClassNames = [];
+      const validClassPairs = [];
+
+      classesDocs.forEach((classDoc) => {
+        (classDoc.sections || []).forEach((sec) => {
+          const isAssigned =
+            Boolean(sec.classTeacherId) &&
+            (sec.classTeacherId === teacher.teacherId ||
+              sec.classTeacherId === String(teacher._id) ||
+              (teacher.userId && sec.classTeacherId === teacher.userId));
+
+          if (isAssigned) {
+            assignedClassNames.push(`${classDoc.name} - ${sec.name}`);
+            validClassPairs.push(`${classDoc.classId}#${sec.sectionId}`);
           }
-        }
-        return c;
+        });
       });
+
+      teacherObj.classNames = [...new Set(assignedClassNames)];
+      teacherObj.classes = [...new Set(validClassPairs)];
     }
 
     // Fetch class teacher label if applicable
@@ -346,60 +351,52 @@ const getAllTeachers = async (req, res) => {
     ]);
 
 
-    // Collect all unique classIds from teachers' classes arrays (classId#sectionId format)
-    const allClassIds = [
-      ...new Set(
-        teachers.flatMap((t) =>
-          (t.classes || []).map((c) => (c.includes("#") ? c.split("#")[0] : c))
-        )
-      ),
-    ];
-
     const allSubjectIds = [...new Set(teachers.flatMap((t) => t.subjects || []))];
 
     const subjectMap = {};
-    const classDocMap = {};
     const schoolDb = getSchoolDbConnection(schoolDbName);
+    const { ClassSchema: classSchema, SubjectSchema: subjectSchema } = require("@sms/shared");
+    const Class = schoolDb.model("Class", classSchema);
+    const Subject = schoolDb.model("Subject", subjectSchema);
 
-    if (allClassIds.length > 0 || allSubjectIds.length > 0) {
-      const { ClassSchema: classSchema, SubjectSchema: subjectSchema } = require("@sms/shared");
-      const Class = schoolDb.model("Class", classSchema);
-      const Subject = schoolDb.model("Subject", subjectSchema);
+    const [allClassesDocs, subjectsDocs] = await Promise.all([
+      Class.find({ schoolId, status: { $ne: "inactive" } }).select("classId name sections"),
+      allSubjectIds.length > 0
+        ? Subject.find({
+            $or: [{ subjectId: { $in: allSubjectIds } }, { code: { $in: allSubjectIds } }],
+          }).select("subjectId code name")
+        : Promise.resolve([]),
+    ]);
 
-      const [classesDocs, subjectsDocs] = await Promise.all([
-        allClassIds.length > 0
-          ? Class.find({ classId: { $in: allClassIds } }).select("classId name sections")
-          : Promise.resolve([]),
-        allSubjectIds.length > 0
-          ? Subject.find({
-              $or: [{ subjectId: { $in: allSubjectIds } }, { code: { $in: allSubjectIds } }],
-            }).select("subjectId code name")
-          : Promise.resolve([]),
-      ]);
-
-      classesDocs.forEach((c) => (classDocMap[c.classId] = c));
-      subjectsDocs.forEach((s) => {
-        if (s.subjectId) subjectMap[s.subjectId] = s.name;
-        if (s.code) subjectMap[s.code] = s.name;
-      });
-    }
+    subjectsDocs.forEach((s) => {
+      if (s.subjectId) subjectMap[s.subjectId] = s.name;
+      if (s.code) subjectMap[s.code] = s.name;
+    });
 
     const teachersWithPopulatedData = teachers.map((t) => {
       const obj = t.toObject();
 
-      // Resolve human-readable classNames from classId#sectionId pairs
-      obj.classNames = (t.classes || []).map((pair) => {
-        if (pair.includes("#")) {
-          const [cId, sId] = pair.split("#");
-          const classDoc = classDocMap[cId];
-          if (classDoc) {
-            const section = classDoc.sections.find((s) => s.sectionId === sId);
-            return section ? `${classDoc.name} - ${section.name}` : classDoc.name;
-          }
-        }
-        return pair;
-      }).filter(Boolean);
+      // Resolve actual assigned classes from Class collection (source of truth)
+      const assignedClassNames = [];
+      const validClassPairs = [];
 
+      allClassesDocs.forEach((classDoc) => {
+        (classDoc.sections || []).forEach((sec) => {
+          const isAssigned =
+            Boolean(sec.classTeacherId) &&
+            (sec.classTeacherId === t.teacherId ||
+              sec.classTeacherId === String(t._id) ||
+              (t.userId && sec.classTeacherId === t.userId));
+
+          if (isAssigned) {
+            assignedClassNames.push(`${classDoc.name} - ${sec.name}`);
+            validClassPairs.push(`${classDoc.classId}#${sec.sectionId}`);
+          }
+        });
+      });
+
+      obj.classNames = [...new Set(assignedClassNames)];
+      obj.classes = [...new Set(validClassPairs)];
       obj.subjectNames = (t.subjects || []).map((id) => subjectMap[id] || id).filter(Boolean);
       return obj;
     });

@@ -18,6 +18,7 @@ module.exports = {
     MenuBackupModel: require('./menuBackup.model'),
     EmailRegistryModel: require('./EmailRegistry.model'),
     PendingSuperAdminModel: require('./pending-super-admin.model'),
+    PasswordResetOtpModel: require('./password-reset-otp.model'),
     AttendanceCheckinSchema: require('./attendance-checkin.model'),
     AttendancePeriodSchema: require('./attendance-period.model'),
     AttendanceSimpleSchema: require('./attendance-simple.model'),

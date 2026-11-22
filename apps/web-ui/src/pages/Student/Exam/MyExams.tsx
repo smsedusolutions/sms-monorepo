@@ -46,6 +46,7 @@ import TokenService from '../../../queries/token/tokenService';
 import { useUserStore } from '../../../stores/userStore';
 import { AdmitCardPDF } from '../../../components/PDFLayouts';
 import { useAcademicYear } from '../../../hooks/useAcademicYear';
+import { categorizeExams, getExamStatusColor } from '../../../utils/examUtils';
 
 const MyExams = () => {
     const theme = useTheme();
@@ -57,7 +58,11 @@ const MyExams = () => {
     const { data: reportCardData, isLoading: reportLoading } = useGetStudentReportCard(schoolId, studentId);
     const { data: examsData, isLoading: examsLoading, error: examsError } = useGetExams(schoolId);
 
-    const upcomingExams = examsData?.data?.filter((e: any) => ['scheduled', 'ongoing', 'draft'].includes(e.status)) || [];
+    const { ongoing: ongoingExams, upcoming: upcomingOnlyExams } = useMemo(
+        () => categorizeExams(examsData?.data || []),
+        [examsData]
+    );
+    const upcomingExams = [...ongoingExams, ...upcomingOnlyExams];
 
     return (
         <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: 1200, mx: 'auto' }}>
@@ -359,7 +364,7 @@ const AdmitCardBlock = ({
                             <Chip
                                 label={exam.status}
                                 size="small"
-                                color={exam.status === 'scheduled' ? 'warning' : exam.status === 'ongoing' ? 'success' : 'default'}
+                                color={getExamStatusColor(exam.status) as any}
                                 sx={{ textTransform: 'capitalize', fontWeight: 700, fontSize: '0.7rem', height: 22 }}
                             />
                         </Box>

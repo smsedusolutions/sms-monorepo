@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Box, Typography, Grid, Skeleton, Alert, Button } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
 import PeopleIcon from '@mui/icons-material/People';
 import SchoolIcon from '@mui/icons-material/School';
 import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom';
@@ -28,6 +29,7 @@ import DashboardRefreshButton from '../../components/shared/DashboardRefreshButt
 import BroadcastNotificationDialog from '../../components/Dialogs/BroadcastNotificationDialog';
 import TokenService from '../../queries/token/tokenService';
 import { useNavigate } from 'react-router-dom';
+import { getEffectiveExamStatus } from '../../utils/examUtils';
 
 interface QuickActionCard {
     label: string;
@@ -38,128 +40,129 @@ interface QuickActionCard {
     iconColor: string;
 }
 
-const quickActions: QuickActionCard[] = [
-    {
-        label: 'Profile',
-        description: 'Manage your account settings',
-        icon: <AccountCircleIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/profile',
-        gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-        iconColor: '#059669',
-    },
-    {
-        label: 'Classes',
-        description: 'View and manage all classes',
-        icon: <ClassIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/classes',
-        gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-        iconColor: '#059669',
-    },
-    {
-        label: 'Timetable',
-        description: 'Configure class timetables',
-        icon: <ScheduleIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/timetable/master',
-        gradient: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
-        iconColor: '#111827',
-    },
-    {
-        label: 'Subjects',
-        description: 'Manage school subjects',
-        icon: <MenuBookIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/subjects',
-        gradient: 'linear-gradient(135deg, #047857 0%, #064e3b 100%)',
-        iconColor: '#047857',
-    },
-    {
-        label: 'Attendance',
-        description: 'Track student attendance',
-        icon: <HowToRegIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/attendance',
-        gradient: 'linear-gradient(135deg, #10b981 0%, #047857 100%)',
-        iconColor: '#059669',
-    },
-    {
-        label: 'Announcements',
-        description: 'Broadcast to school community',
-        icon: <AnnouncementIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/announcements',
-        gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-        iconColor: '#d97706',
-    },
-    {
-        label: 'Fee Management',
-        description: 'Track fees and payments',
-        icon: <AttachMoneyIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/fees/dashboard',
-        gradient: 'linear-gradient(135deg, #374151 0%, #111827 100%)',
-        iconColor: '#111827',
-    },
-    {
-        label: 'Transport',
-        description: 'Manage routes and vehicles',
-        icon: <DirectionsBusIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/transport',
-        gradient: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
-        iconColor: '#d97706',
-    },
-    {
-        label: 'Exam Management',
-        description: 'Schedule and manage exams',
-        icon: <AssignmentIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/exam/config',
-        gradient: 'linear-gradient(135deg, #059669 0%, #065f46 100%)',
-        iconColor: '#059669',
-    },
-    {
-        label: 'Leave Requests',
-        description: 'Review pending leaves',
-        icon: <EventNoteIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/leaverequest',
-        gradient: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
-        iconColor: '#f59e0b',
-    },
-    {
-        label: 'Notifications',
-        description: 'Stay updated with alerts',
-        icon: <NotificationsIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/notifications',
-        gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-        iconColor: '#f59e0b',
-    },
-    {
-        label: 'School Location',
-        description: 'Update school map details',
-        icon: <LocationOnIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/location',
-        gradient: 'linear-gradient(135deg, #0d9488 0%, #047857 100%)',
-        iconColor: '#0d9488',
-    },
-    {
-        label: 'Promotion',
-        description: 'Promote students to next grade',
-        icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/promotion',
-        gradient: 'linear-gradient(135deg, #1f2937 0%, #030712 100%)',
-        iconColor: '#111827',
-    },
-    {
-        label: 'School Info',
-        description: 'Update school details',
-        icon: <SchoolIcon sx={{ fontSize: 28 }} />,
-        path: '/school-admin/school',
-        gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-        iconColor: '#059669',
-    },
-];
-
 const SchoolAdminDashboard = () => {
+    const theme = useTheme();
     const schoolId = TokenService.getSchoolId() || '';
     const { data, isLoading, error, isError, refetch: refetchStats } = useGetSchoolDashboardStats(schoolId);
     const { data: leaveData, refetch: refetchLeaves } = useGetLeaveStats(schoolId);
     const { data: examsData, isLoading: isExamsLoading, refetch: refetchExams } = useGetExams(schoolId);
     const [broadcastDialogOpen, setBroadcastDialogOpen] = useState(false);
     const navigate = useNavigate();
+
+    const quickActions: QuickActionCard[] = useMemo(() => [
+        {
+            label: 'Profile',
+            description: 'Manage your account settings',
+            icon: <AccountCircleIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/profile',
+            gradient: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+            iconColor: theme.palette.primary.main,
+        },
+        {
+            label: 'Classes',
+            description: 'View and manage all classes',
+            icon: <ClassIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/classes',
+            gradient: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
+            iconColor: theme.palette.primary.main,
+        },
+        {
+            label: 'Timetable',
+            description: 'Configure class timetables',
+            icon: <ScheduleIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/timetable/master',
+            gradient: `linear-gradient(135deg, ${theme.palette.secondary.light} 0%, ${theme.palette.secondary.main} 100%)`,
+            iconColor: theme.palette.secondary.main,
+        },
+        {
+            label: 'Subjects',
+            description: 'Manage school subjects',
+            icon: <MenuBookIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/subjects',
+            gradient: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
+            iconColor: theme.palette.primary.dark,
+        },
+        {
+            label: 'Attendance',
+            description: 'Track student attendance',
+            icon: <HowToRegIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/attendance',
+            gradient: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.dark} 100%)`,
+            iconColor: theme.palette.primary.main,
+        },
+        {
+            label: 'Announcements',
+            description: 'Broadcast to school community',
+            icon: <AnnouncementIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/announcements',
+            gradient: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`,
+            iconColor: theme.palette.warning.dark,
+        },
+        {
+            label: 'Fee Management',
+            description: 'Track fees and payments',
+            icon: <AttachMoneyIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/fees/dashboard',
+            gradient: `linear-gradient(135deg, ${theme.palette.secondary.light} 0%, ${theme.palette.secondary.main} 100%)`,
+            iconColor: theme.palette.secondary.main,
+        },
+        {
+            label: 'Transport',
+            description: 'Manage routes and vehicles',
+            icon: <DirectionsBusIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/transport',
+            gradient: `linear-gradient(135deg, ${theme.palette.warning.light} 0%, ${theme.palette.warning.dark} 100%)`,
+            iconColor: theme.palette.warning.dark,
+        },
+        {
+            label: 'Exam Management',
+            description: 'Schedule and manage exams',
+            icon: <AssignmentIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/exam/config',
+            gradient: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+            iconColor: theme.palette.primary.main,
+        },
+        {
+            label: 'Leave Requests',
+            description: 'Review pending leaves',
+            icon: <EventNoteIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/leaverequest',
+            gradient: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`,
+            iconColor: theme.palette.warning.main,
+        },
+        {
+            label: 'Notifications',
+            description: 'Stay updated with alerts',
+            icon: <NotificationsIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/notifications',
+            gradient: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`,
+            iconColor: theme.palette.warning.main,
+        },
+        {
+            label: 'School Location',
+            description: 'Update school map details',
+            icon: <LocationOnIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/location',
+            gradient: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.dark} 100%)`,
+            iconColor: theme.palette.primary.main,
+        },
+        {
+            label: 'Promotion',
+            description: 'Promote students to next grade',
+            icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/promotion',
+            gradient: `linear-gradient(135deg, ${theme.palette.secondary.light} 0%, ${theme.palette.secondary.main} 100%)`,
+            iconColor: theme.palette.secondary.main,
+        },
+        {
+            label: 'School Info',
+            description: 'Update school details',
+            icon: <SchoolIcon sx={{ fontSize: 28 }} />,
+            path: '/school-admin/school',
+            gradient: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+            iconColor: theme.palette.primary.main,
+        },
+    ], [theme]);
 
     if (isError && !data) {
         return (
@@ -181,7 +184,10 @@ const SchoolAdminDashboard = () => {
     const exams = examsData?.data || [];
 
     // Find the latest active or published exam
-    const activeExam = exams.find((e: any) => e.status === 'published' || e.status === 'completed') || exams[0];
+    const activeExam = exams.find((e: any) => {
+        const s = getEffectiveExamStatus(e);
+        return s === 'published' || s === 'completed';
+    }) || exams[0];
 
     const { data: publishStatusData, isLoading: isStatusLoading } = useGetExamPublishStatus(
         schoolId,
@@ -190,7 +196,8 @@ const SchoolAdminDashboard = () => {
     const publishData = publishStatusData?.data;
 
     const examName = publishData?.exam?.name || activeExam?.name;
-    const examStatus = publishData?.exam?.status || activeExam?.status;
+    const rawStatus = publishData?.exam?.status || activeExam?.status;
+    const examStatus = publishData?.exam ? getEffectiveExamStatus(publishData.exam) : activeExam ? getEffectiveExamStatus(activeExam) : rawStatus;
 
     let totalPassed = 0;
     let totalFailed = 0;
@@ -227,7 +234,7 @@ const SchoolAdminDashboard = () => {
                         fontWeight={800}
                         sx={{
                             mb: 0.25,
-                            background: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
+                            background: `linear-gradient(135deg, ${theme.palette.text.primary} 0%, ${theme.palette.text.secondary} 100%)`,
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
                             fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
@@ -255,7 +262,7 @@ const SchoolAdminDashboard = () => {
                             fontWeight: 800,
                             fontSize: { xs: '0.78rem', sm: '0.85rem' },
                             textTransform: 'none',
-                            boxShadow: '0 4px 12px rgba(5,150,105,0.25)',
+                            boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.25)}`,
                             whiteSpace: 'nowrap',
                         }}
                     >
@@ -304,8 +311,8 @@ const SchoolAdminDashboard = () => {
                                 value={stats?.totalTeachers || 0}
                                 subtitle={`${stats?.activeTeachers || 0} active`}
                                 icon={<PeopleIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
-                                color="#059669"
-                                bgColor="#ecfdf5"
+                                color={theme.palette.primary.main}
+                                bgColor={alpha(theme.palette.primary.main, 0.08)}
                                 to="/school-admin/teachers"
                             />
                         </Grid>
@@ -315,8 +322,8 @@ const SchoolAdminDashboard = () => {
                                 value={stats?.totalStudents || 0}
                                 subtitle={`${stats?.activeStudents || 0} active`}
                                 icon={<SchoolIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
-                                color="#047857"
-                                bgColor="#d1fae5"
+                                color={theme.palette.primary.dark}
+                                bgColor={alpha(theme.palette.primary.dark, 0.08)}
                                 to="/school-admin/students"
                             />
                         </Grid>
@@ -326,8 +333,8 @@ const SchoolAdminDashboard = () => {
                                 value={stats?.totalParents || 0}
                                 subtitle={`${stats?.activeParents || 0} active`}
                                 icon={<FamilyRestroomIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
-                                color="#111827"
-                                bgColor="#f3f4f6"
+                                color={theme.palette.secondary.main}
+                                bgColor={alpha(theme.palette.secondary.main, 0.08)}
                                 to="/school-admin/parents"
                             />
                         </Grid>
@@ -337,8 +344,8 @@ const SchoolAdminDashboard = () => {
                                 value={leaveStats?.totalPending || 0}
                                 subtitle={`${leaveStats?.todayPending || 0} today`}
                                 icon={<EventNoteIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
-                                color="#f59e0b"
-                                bgColor="#fffbeb"
+                                color={theme.palette.warning.main}
+                                bgColor={alpha(theme.palette.warning.main, 0.08)}
                                 to="/school-admin/leaverequest"
                             />
                         </Grid>
@@ -365,7 +372,7 @@ const SchoolAdminDashboard = () => {
                 <Typography
                     variant="subtitle1"
                     fontWeight={700}
-                    color="#1e293b"
+                    color="text.primary"
                     sx={{ mb: 0.25, fontSize: { xs: '0.95rem', sm: '1.15rem' } }}
                 >
                     Quick Navigation
@@ -387,8 +394,8 @@ const SchoolAdminDashboard = () => {
                                     gap: 0.75,
                                     p: { xs: 1.25, sm: 1.75 },
                                     borderRadius: 2.5,
-                                    background: 'white',
-                                    border: '1px solid #e2e8f0',
+                                    background: theme.palette.background.paper,
+                                    border: `1px solid ${theme.palette.divider}`,
                                     boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
                                     cursor: 'pointer',
                                     textAlign: 'center',
@@ -399,7 +406,7 @@ const SchoolAdminDashboard = () => {
                                     '&:hover': {
                                         transform: 'translateY(-3px)',
                                         boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-                                        borderColor: '#cbd5e1',
+                                        borderColor: theme.palette.divider,
                                         '& .action-icon-box': {
                                             transform: 'scale(1.08)',
                                         },
@@ -437,7 +444,7 @@ const SchoolAdminDashboard = () => {
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         color: 'white',
-                                        boxShadow: `0 3px 10px ${action.iconColor}35`,
+                                        boxShadow: `0 3px 10px ${alpha(action.iconColor, 0.35)}`,
                                         transition: 'transform 0.2s ease',
                                         flexShrink: 0,
                                         '& .MuiSvgIcon-root': {
@@ -453,7 +460,7 @@ const SchoolAdminDashboard = () => {
                                         variant="caption"
                                         sx={{
                                             fontWeight: 700,
-                                            color: '#1e293b',
+                                            color: theme.palette.text.primary,
                                             fontSize: { xs: '0.72rem', sm: '0.78rem' },
                                             transition: 'color 0.2s ease',
                                             lineHeight: 1.15,
@@ -466,7 +473,7 @@ const SchoolAdminDashboard = () => {
                                     <Typography
                                         variant="caption"
                                         sx={{
-                                            color: '#94a3b8',
+                                            color: theme.palette.text.secondary,
                                             fontSize: { xs: '0.62rem', sm: '0.68rem' },
                                             display: { xs: 'none', md: 'block' },
                                             mt: 0.2,

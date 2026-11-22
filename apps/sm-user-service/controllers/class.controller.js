@@ -179,7 +179,6 @@ const getAllClasses = async (req, res) => {
         const uniqueTeacherIds = [...new Set(teacherIds.filter(Boolean))];
 
         const teachers = await TeacherModel.find({
-            status: { $ne: "inactive" },
             $or: [
                 { teacherId: { $in: uniqueTeacherIds } },
                 { _id: { $in: uniqueTeacherIds.filter(id => mongoose.isValidObjectId(id)) } },
@@ -204,7 +203,7 @@ const getAllClasses = async (req, res) => {
                         const tName = tId && teacherMap.has(tId) ? teacherMap.get(tId) : null;
                         return {
                             ...s,
-                            classTeacherId: tId && teacherMap.has(tId) ? tId : null,
+                            classTeacherId: s.classTeacherId || (tId && teacherMap.has(tId) ? tId : null),
                             classTeacherName: tName,
                         };
                     })
@@ -461,6 +460,21 @@ const addSection = async (req, res) => {
         classData.sections.push(newSection);
         await classData.save();
 
+        if (classTeacherId) {
+            const schoolDb = getSchoolDbConnection(schoolDbName);
+            const { TeacherSchema: teacherSchema } = require("@sms/shared");
+            const Teacher = schoolDb.model("Teacher", teacherSchema);
+            const pair = `${classId}#${sectionId}`;
+            await Teacher.updateMany(
+                { classes: pair, teacherId: { $ne: classTeacherId } },
+                { $pull: { classes: pair } }
+            );
+            await Teacher.findOneAndUpdate(
+                { teacherId: classTeacherId },
+                { $addToSet: { classes: pair } }
+            );
+        }
+
         const response = res.status(200).json({
             success: true,
             message: "Section added successfully",
@@ -528,17 +542,15 @@ const removeSection = async (req, res) => {
         classData.sections.splice(sectionIndex, 1);
         await classData.save();
 
-        // Remove classId#sectionId from the assigned teacher's classes array
-        if (removedSection.classTeacherId) {
-            const schoolDb = getSchoolDbConnection(schoolDbName);
-            const { TeacherSchema: teacherSchema } = require("@sms/shared");
-            const Teacher = schoolDb.model("Teacher", teacherSchema);
-            const pair = `${classId}#${sectionId}`;
-            await Teacher.findOneAndUpdate(
-                { teacherId: removedSection.classTeacherId },
-                { $pull: { classes: pair } }
-            );
-        }
+        // Remove classId#sectionId from all teachers' classes array
+        const schoolDb = getSchoolDbConnection(schoolDbName);
+        const { TeacherSchema: teacherSchema } = require("@sms/shared");
+        const Teacher = schoolDb.model("Teacher", teacherSchema);
+        const pair = `${classId}#${sectionId}`;
+        await Teacher.updateMany(
+            { classes: pair },
+            { $pull: { classes: pair } }
+        );
 
         const response = res.status(200).json({
             success: true,
@@ -607,7 +619,11 @@ const assignClassTeacher = async (req, res) => {
         const Teacher = schoolDb.model("Teacher", teacherSchema);
         const pair = `${classId}#${sectionId}`;
 
-        // Remove pair from old teacher's classes array (if any)
+        // 1. Remove pair from any other teacher's classes array
+        await Teacher.updateMany(
+            { classes: pair, teacherId: { $ne: teacherId } },
+            { $pull: { classes: pair } }
+        );
         if (section.classTeacherId && section.classTeacherId !== teacherId) {
             await Teacher.findOneAndUpdate(
                 { teacherId: section.classTeacherId },
@@ -615,11 +631,28 @@ const assignClassTeacher = async (req, res) => {
             );
         }
 
-        // Update section.classTeacherId in Class document
+        // Also clean up pair from all teachers if unassigning
+        if (!teacherId) {
+            await Teacher.updateMany(
+                { classes: pair },
+                { $pull: { classes: pair } }
+            );
+        }
+
+        // 2. Atomically update section.classTeacherId in Class document
+        await ClassModel.updateOne(
+            { classId, "sections.sectionId": sectionId },
+            { $set: { "sections.$.classTeacherId": teacherId || null } }
+        );
+
+        // Also update in-memory instance and markModified to be safe
         section.classTeacherId = teacherId || null;
+        if (classData.markModified) {
+            classData.markModified("sections");
+        }
         await classData.save();
 
-        // Add pair to new teacher's classes array (if assigning, not clearing)
+        // 3. Add pair to new teacher's classes array (if assigning, not clearing)
         if (teacherId) {
             await Teacher.findOneAndUpdate(
                 { teacherId },
@@ -627,12 +660,14 @@ const assignClassTeacher = async (req, res) => {
             );
         }
 
+        const updatedClass = await ClassModel.findOne({ classId });
+
         return res.status(200).json({
             success: true,
             message: teacherId
                 ? "Class teacher assigned successfully"
                 : "Class teacher removed successfully",
-            data: classData,
+            data: updatedClass || classData,
         });
     } catch (error) {
         console.error("Error assigning class teacher:", error);

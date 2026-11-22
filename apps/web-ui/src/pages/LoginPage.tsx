@@ -34,16 +34,24 @@ import useSubdomainSchool from '../hooks/useSubdomainSchool';
 import LoginPageSkeleton from '../components/login/LoginPageSkeleton';
 import CustomLoginPage from '../components/login/CustomLoginPage';
 import LegalFooter from '../components/shared/LegalFooter';
+import ForgotPasswordDialog from '../components/Dialogs/ForgotPasswordDialog';
 
 interface LoginForm { email: string; password: string; }
 interface LoginErrors { email?: string; password?: string; }
 
-const LoginPage: React.FC = () => {
+interface LoginPageProps {
+  initialForgotPasswordOpen?: boolean;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({ initialForgotPasswordOpen = false }) => {
   const [formData, setFormData] = useState<LoginForm>({ email: '', password: '' });
   const [errors, setErrors] = useState<LoginErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(
+    initialForgotPasswordOpen || (typeof window !== 'undefined' && window.location.pathname === '/forgot-password')
+  );
   // DPDP Act §6 — explicit opt-in consent before processing personal data
   // [LEGAL REVIEW REQUIRED] Consent wording below must be reviewed by a lawyer
   const [consentGiven, setConsentGiven] = useState(false);
@@ -813,7 +821,7 @@ const LoginPage: React.FC = () => {
                     fontSize: '0.75rem',
                     '&:hover': { opacity: 0.7 },
                   }}
-                  onClick={() => navigate('/forgot-password')}
+                  onClick={() => setForgotPasswordOpen(true)}
                 >
                   Forgot Password?
                 </Typography>
@@ -976,6 +984,17 @@ const LoginPage: React.FC = () => {
           </Box>
         </Fade>
       </Box>
+
+      {/* Forgot Password / Account Recovery Dialog */}
+      <ForgotPasswordDialog
+        open={forgotPasswordOpen}
+        onClose={() => setForgotPasswordOpen(false)}
+        initialEmail={formData.email}
+        primaryColor={primary}
+        onSuccessRedirect={(newEmail) => {
+          setFormData((prev) => ({ ...prev, email: newEmail, password: '' }));
+        }}
+      />
     </Box>
   );
 };

@@ -135,7 +135,7 @@ async function seedExams() {
     endDate: new Date("2026-09-25"),
     resultPublishDate: new Date("2026-10-05"),
     gradingSystemId: gradingSystem._id,
-    status: "scheduled"
+    status: "completed"
   });
 
   const finalExam = await Exam.create({

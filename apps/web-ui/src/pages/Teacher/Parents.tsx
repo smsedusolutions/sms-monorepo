@@ -136,6 +136,7 @@ const TeacherParentsPage = () => {
             align: 'center',
             format: (_, row) => (
                 <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
+                    {/* Chat button temporarily commented out
                     <Tooltip title="Send Encrypted Message">
                         <IconButton
                             size="small"
@@ -148,6 +149,7 @@ const TeacherParentsPage = () => {
                             <ChatIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
+                    */}
                     <Tooltip title={isAdmin ? "Edit" : "Only Admin can edit"}>
                         <span>
                             <IconButton

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import {
     Box, Typography, Grid, Avatar, Chip, Skeleton, Alert, Stack, Paper, Button, Divider
 } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
 import {
     Person as PersonIcon,
     School as SchoolIcon,
@@ -16,7 +17,6 @@ import {
     ReceiptLong as FeeIcon,
     People as TeachersIcon,
     Schedule as TimetableIcon,
-    Chat as ChatIcon,
     Check as CheckIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
@@ -35,6 +35,7 @@ import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidge
 import DashboardRefreshButton from '../../components/shared/DashboardRefreshButton';
 
 const ParentDashboard = () => {
+    const theme = useTheme();
     const navigate = useNavigate();
     const [supportDialogOpen, setSupportDialogOpen] = useState(false);
     const user = TokenService.getUser();
@@ -68,19 +69,19 @@ const ParentDashboard = () => {
     const attendancePercentage = summary?.percentage !== undefined ? parseFloat(String(summary.percentage)) : ((selectedChild as any)?.attendancePercentage || 0);
 
     const getAttendanceColor = (percentage: number) => {
-        if (percentage >= 90) return '#10b981';
-        if (percentage >= 75) return '#f59e0b';
-        return '#ef4444';
+        if (percentage >= 90) return theme.palette.success.main;
+        if (percentage >= 75) return theme.palette.warning.main;
+        return theme.palette.error.main;
     };
 
     const percentageColor = getAttendanceColor(attendancePercentage);
 
     const donutSegments = useMemo(() => [
-        { label: 'Present', value: summary?.present || 0, color: '#10b981' },
-        { label: 'Absent',  value: summary?.absent  || 0, color: '#ef4444' },
-        { label: 'Late',    value: summary?.late    || 0, color: '#f59e0b' },
-        { label: 'Leave',   value: summary?.leave   || 0, color: '#8b5cf6' },
-    ], [summary]);
+        { label: 'Present', value: summary?.present || 0, color: theme.palette.success.main },
+        { label: 'Absent', value: summary?.absent || 0, color: theme.palette.error.main },
+        { label: 'Late', value: summary?.late || 0, color: theme.palette.warning.main },
+        { label: 'Leave', value: summary?.leave || 0, color: theme.palette.secondary.main },
+    ], [summary, theme]);
 
     const handleChildSelect = (child: ChildStats) => {
         const foundContextChild = contextChildren.find(c => c.studentId === child.studentId);
@@ -118,9 +119,7 @@ const ParentDashboard = () => {
                             fontWeight={800}
                             sx={{
                                 mb: 0.25,
-                                background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
+                                color: theme.palette.text.primary,
                                 fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
                                 letterSpacing: '-0.02em',
                                 lineHeight: 1.2
@@ -177,15 +176,15 @@ const ParentDashboard = () => {
                                                 sx={{
                                                     p: { xs: 1.5, sm: 1.75 },
                                                     borderRadius: 2,
-                                                    bgcolor: isSelected ? '#f8faff' : '#ffffff',
+                                                    bgcolor: isSelected ? alpha(theme.palette.primary.main, 0.05) : theme.palette.background.paper,
                                                     border: '1.5px solid',
-                                                    borderColor: isSelected ? '#4f46e5' : '#e2e8f0',
-                                                    boxShadow: isSelected ? '0 4px 16px rgba(79, 70, 229, 0.12)' : '0 2px 8px rgba(0, 0, 0, 0.02)',
+                                                    borderColor: isSelected ? theme.palette.primary.main : theme.palette.divider,
+                                                    boxShadow: isSelected ? `0 4px 16px ${alpha(theme.palette.primary.main, 0.15)}` : '0 2px 8px rgba(0, 0, 0, 0.02)',
                                                     transition: 'all 0.18s ease-in-out',
                                                     cursor: 'pointer',
                                                     position: 'relative',
                                                     '&:hover': {
-                                                        borderColor: isSelected ? '#4338ca' : '#cbd5e1',
+                                                        borderColor: isSelected ? theme.palette.primary.dark : theme.palette.action.hover,
                                                         transform: 'translateY(-1.5px)',
                                                         boxShadow: '0 6px 18px rgba(0, 0, 0, 0.05)',
                                                     }
@@ -198,11 +197,11 @@ const ParentDashboard = () => {
                                                         sx={{
                                                             width: { xs: 44, sm: 48 },
                                                             height: { xs: 44, sm: 48 },
-                                                            bgcolor: isSelected ? '#4f46e5' : '#e2e8f0',
-                                                            color: isSelected ? '#ffffff' : '#475569',
+                                                            bgcolor: isSelected ? theme.palette.primary.main : theme.palette.action.selected,
+                                                            color: isSelected ? theme.palette.primary.contrastText : theme.palette.text.secondary,
                                                             fontWeight: 700,
                                                             fontSize: { xs: '1rem', sm: '1.1rem' },
-                                                            border: isSelected ? '2px solid #4f46e5' : '1px solid #cbd5e1',
+                                                            border: isSelected ? `2px solid ${theme.palette.primary.main}` : `1px solid ${theme.palette.divider}`,
                                                             flexShrink: 0,
                                                         }}
                                                     >
@@ -216,14 +215,14 @@ const ParentDashboard = () => {
                                                             {isSelected ? (
                                                                 <Chip
                                                                     size="small"
-                                                                    icon={<CheckIcon sx={{ fontSize: '13px !important', color: '#fff !important' }} />}
+                                                                    icon={<CheckIcon sx={{ fontSize: '13px !important', color: `${theme.palette.primary.contrastText} !important` }} />}
                                                                     label="Active"
                                                                     sx={{
                                                                         height: 20,
                                                                         fontSize: '0.675rem',
                                                                         fontWeight: 700,
-                                                                        bgcolor: '#4f46e5',
-                                                                        color: '#ffffff',
+                                                                        bgcolor: theme.palette.primary.main,
+                                                                        color: theme.palette.primary.contrastText,
                                                                         px: 0.25,
                                                                         borderRadius: 1.5,
                                                                     }}
@@ -247,9 +246,9 @@ const ParentDashboard = () => {
                                                                     fontSize: '0.7rem',
                                                                     borderRadius: 1.5,
                                                                     fontWeight: 700,
-                                                                    bgcolor: `${getAttendanceColor(child.attendancePercentage)}15`,
+                                                                    bgcolor: alpha(getAttendanceColor(child.attendancePercentage), 0.12),
                                                                     color: getAttendanceColor(child.attendancePercentage),
-                                                                    border: `1px solid ${getAttendanceColor(child.attendancePercentage)}35`
+                                                                    border: `1px solid ${alpha(getAttendanceColor(child.attendancePercentage), 0.3)}`
                                                                 }}
                                                             />
                                                             {child.pendingLeaves > 0 && (
@@ -261,9 +260,9 @@ const ParentDashboard = () => {
                                                                         fontSize: '0.7rem',
                                                                         borderRadius: 1.5,
                                                                         fontWeight: 700,
-                                                                        bgcolor: '#fffbeb',
-                                                                        color: '#b45309',
-                                                                        border: '1px solid #fde68a'
+                                                                        bgcolor: alpha(theme.palette.warning.main, 0.12),
+                                                                        color: theme.palette.warning.dark,
+                                                                        border: `1px solid ${alpha(theme.palette.warning.main, 0.3)}`
                                                                     }}
                                                                 />
                                                             )}
@@ -291,8 +290,9 @@ const ParentDashboard = () => {
                             sx={{
                                 p: { xs: 2, sm: 2.5 },
                                 borderRadius: 2,
-                                border: '1px solid #e2e8f0',
-                                bgcolor: '#ffffff',
+                                border: '1px solid',
+                                borderColor: theme.palette.divider,
+                                bgcolor: theme.palette.background.paper,
                                 boxShadow: '0 4px 16px rgba(0, 0, 0, 0.03)',
                                 cursor: 'pointer',
                                 transition: 'transform 0.18s ease, box-shadow 0.18s ease',
@@ -304,11 +304,11 @@ const ParentDashboard = () => {
                         >
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.75, flexWrap: 'wrap', gap: 1 }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <AccessTimeIcon sx={{ color: '#2563eb', fontSize: 20 }} />
+                                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: alpha(theme.palette.primary.main, 0.1), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <AccessTimeIcon sx={{ color: theme.palette.primary.main, fontSize: 20 }} />
                                     </Box>
                                     <Box>
-                                        <Typography variant="subtitle1" fontWeight={700} color="#1e293b" sx={{ fontSize: { xs: '0.95rem', sm: '1.05rem' }, lineHeight: 1.2 }}>
+                                        <Typography variant="subtitle1" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '0.95rem', sm: '1.05rem' }, lineHeight: 1.2 }}>
                                             {selectedChild ? `${selectedChild.firstName}'s Attendance` : 'Attendance Summary'}
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
@@ -334,8 +334,8 @@ const ParentDashboard = () => {
                                                             fontSize: '0.725rem',
                                                             fontWeight: 700,
                                                             cursor: 'pointer',
-                                                            bgcolor: active ? '#4f46e5' : '#f1f5f9',
-                                                            color: active ? '#fff' : '#64748b',
+                                                            bgcolor: active ? theme.palette.primary.main : alpha(theme.palette.action.hover, 0.08),
+                                                            color: active ? theme.palette.primary.contrastText : theme.palette.text.secondary,
                                                             '&:hover': { opacity: 0.9 }
                                                         }}
                                                     />
@@ -349,15 +349,15 @@ const ParentDashboard = () => {
                                         endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
                                         onClick={(e) => { e.stopPropagation(); navigate('/parent/attendance'); }}
                                         sx={{
-                                            borderColor: '#cbd5e1',
-                                            color: '#334155',
+                                            borderColor: theme.palette.divider,
+                                            color: theme.palette.text.primary,
                                             borderRadius: 2,
                                             fontWeight: 600,
                                             px: 1.5,
                                             py: 0.35,
                                             fontSize: '0.75rem',
                                             textTransform: 'none',
-                                            '&:hover': { borderColor: '#94a3b8', bgcolor: '#f8fafc' }
+                                            '&:hover': { borderColor: theme.palette.text.secondary, bgcolor: alpha(theme.palette.action.hover, 0.05) }
                                         }}
                                     >
                                         Details
@@ -389,45 +389,45 @@ const ParentDashboard = () => {
                                     <Grid size={{ xs: 12, sm: 7.5 }}>
                                         <Grid container spacing={1}>
                                             <Grid size={{ xs: 6 }}>
-                                                <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#ecfdf5', border: '1px solid #a7f3d0' }}>
+                                                <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: alpha(theme.palette.success.main, 0.08), border: `1px solid ${alpha(theme.palette.success.main, 0.25)}` }}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.25 }}>
-                                                        <PresentIcon sx={{ color: '#10b981', fontSize: 16 }} />
-                                                        <Typography variant="caption" fontWeight={700} color="#065f46" sx={{ fontSize: '0.725rem' }}>Present</Typography>
+                                                        <PresentIcon sx={{ color: theme.palette.success.main, fontSize: 16 }} />
+                                                        <Typography variant="caption" fontWeight={700} color={theme.palette.success.dark} sx={{ fontSize: '0.725rem' }}>Present</Typography>
                                                     </Box>
-                                                    <Typography variant="h6" fontWeight={800} color="#10b981" sx={{ fontSize: '1.15rem' }}>
+                                                    <Typography variant="h6" fontWeight={800} color={theme.palette.success.main} sx={{ fontSize: '1.15rem' }}>
                                                         {summary?.present || 0} <Typography component="span" variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>days</Typography>
                                                     </Typography>
                                                 </Box>
                                             </Grid>
                                             <Grid size={{ xs: 6 }}>
-                                                <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#fef2f2', border: '1px solid #fecaca' }}>
+                                                <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: alpha(theme.palette.error.main, 0.08), border: `1px solid ${alpha(theme.palette.error.main, 0.25)}` }}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.25 }}>
-                                                        <AbsentIcon sx={{ color: '#ef4444', fontSize: 16 }} />
-                                                        <Typography variant="caption" fontWeight={700} color="#991b1b" sx={{ fontSize: '0.725rem' }}>Absent</Typography>
+                                                        <AbsentIcon sx={{ color: theme.palette.error.main, fontSize: 16 }} />
+                                                        <Typography variant="caption" fontWeight={700} color={theme.palette.error.dark} sx={{ fontSize: '0.725rem' }}>Absent</Typography>
                                                     </Box>
-                                                    <Typography variant="h6" fontWeight={800} color="#ef4444" sx={{ fontSize: '1.15rem' }}>
+                                                    <Typography variant="h6" fontWeight={800} color={theme.palette.error.main} sx={{ fontSize: '1.15rem' }}>
                                                         {summary?.absent || 0} <Typography component="span" variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>days</Typography>
                                                     </Typography>
                                                 </Box>
                                             </Grid>
                                             <Grid size={{ xs: 6 }}>
-                                                <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#fffbeb', border: '1px solid #fde68a' }}>
+                                                <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: alpha(theme.palette.warning.main, 0.08), border: `1px solid ${alpha(theme.palette.warning.main, 0.25)}` }}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.25 }}>
-                                                        <LateIcon sx={{ color: '#f59e0b', fontSize: 16 }} />
-                                                        <Typography variant="caption" fontWeight={700} color="#92400e" sx={{ fontSize: '0.725rem' }}>Late</Typography>
+                                                        <LateIcon sx={{ color: theme.palette.warning.main, fontSize: 16 }} />
+                                                        <Typography variant="caption" fontWeight={700} color={theme.palette.warning.dark} sx={{ fontSize: '0.725rem' }}>Late</Typography>
                                                     </Box>
-                                                    <Typography variant="h6" fontWeight={800} color="#f59e0b" sx={{ fontSize: '1.15rem' }}>
+                                                    <Typography variant="h6" fontWeight={800} color={theme.palette.warning.main} sx={{ fontSize: '1.15rem' }}>
                                                         {summary?.late || 0} <Typography component="span" variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>days</Typography>
                                                     </Typography>
                                                 </Box>
                                             </Grid>
                                             <Grid size={{ xs: 6 }}>
-                                                <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#f5f3ff', border: '1px solid #ddd6fe' }}>
+                                                <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: alpha(theme.palette.secondary.main, 0.08), border: `1px solid ${alpha(theme.palette.secondary.main, 0.25)}` }}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 0.25 }}>
-                                                        <LeaveIcon sx={{ color: '#8b5cf6', fontSize: 16 }} />
-                                                        <Typography variant="caption" fontWeight={700} color="#5b21b6" sx={{ fontSize: '0.725rem' }}>Leave</Typography>
+                                                        <LeaveIcon sx={{ color: theme.palette.secondary.main, fontSize: 16 }} />
+                                                        <Typography variant="caption" fontWeight={700} color={theme.palette.secondary.dark} sx={{ fontSize: '0.725rem' }}>Leave</Typography>
                                                     </Box>
-                                                    <Typography variant="h6" fontWeight={800} color="#8b5cf6" sx={{ fontSize: '1.15rem' }}>
+                                                    <Typography variant="h6" fontWeight={800} color={theme.palette.secondary.main} sx={{ fontSize: '1.15rem' }}>
                                                         {summary?.leave || 0} <Typography component="span" variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>days</Typography>
                                                     </Typography>
                                                 </Box>
@@ -446,14 +446,14 @@ const ParentDashboard = () => {
                                 {loadingHomework ? (
                                     <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 2.5 }} />
                                 ) : upcomingHomework.length === 0 ? (
-                                    <Box sx={{ py: 2.5, textAlign: 'center', bgcolor: '#f8fafc', borderRadius: 2.5, border: '1px solid #e2e8f0' }}>
+                                    <Box sx={{ py: 2.5, textAlign: 'center', bgcolor: alpha(theme.palette.text.primary, 0.02), borderRadius: 2.5, border: '1px solid', borderColor: theme.palette.divider }}>
                                         <AssignmentIcon sx={{ fontSize: 32, color: 'text.disabled', opacity: 0.5, mb: 0.5 }} />
                                         <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.8rem' }}>No pending homework</Typography>
                                     </Box>
                                 ) : (
                                     <Stack spacing={1}>
                                         {upcomingHomework.slice(0, 3).map((hw: Homework) => (
-                                            <Box key={hw.homeworkId} sx={{ p: 1.25, borderRadius: 2, bgcolor: '#ffffff', border: '1px solid #e2e8f0', '&:hover': { bgcolor: '#f8fafc' } }}>
+                                            <Box key={hw.homeworkId} sx={{ p: 1.25, borderRadius: 2, bgcolor: theme.palette.background.paper, border: '1px solid', borderColor: theme.palette.divider, '&:hover': { bgcolor: alpha(theme.palette.text.primary, 0.02) } }}>
                                                 <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>{hw.title}</Typography>
                                                 <Typography variant="caption" color="text.secondary">{hw.subjectName} • Due {new Date(hw.dueDate).toLocaleDateString()}</Typography>
                                             </Box>
@@ -467,7 +467,7 @@ const ParentDashboard = () => {
                                 {loadingAnnouncements ? (
                                     <Skeleton variant="rectangular" height={140} sx={{ borderRadius: 2.5 }} />
                                 ) : announcements.length === 0 ? (
-                                    <Box sx={{ py: 2.5, textAlign: 'center', bgcolor: '#f8fafc', borderRadius: 2.5, border: '1px solid #e2e8f0' }}>
+                                    <Box sx={{ py: 2.5, textAlign: 'center', bgcolor: alpha(theme.palette.text.primary, 0.02), borderRadius: 2.5, border: '1px solid', borderColor: theme.palette.divider }}>
                                         <AnnouncementIcon sx={{ fontSize: 32, color: 'text.disabled', opacity: 0.5, mb: 0.5 }} />
                                         <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.8rem' }}>No new announcements</Typography>
                                     </Box>
@@ -477,11 +477,11 @@ const ParentDashboard = () => {
                                             <Box key={ann.announcementId} sx={{
                                                 p: 1.25,
                                                 borderRadius: 2,
-                                                bgcolor: ann.priority === 'urgent' ? '#fef2f2' : '#ffffff',
+                                                bgcolor: ann.priority === 'urgent' ? alpha(theme.palette.error.main, 0.05) : theme.palette.background.paper,
                                                 border: '1px solid',
-                                                borderColor: ann.priority === 'urgent' ? '#fecaca' : '#e2e8f0',
+                                                borderColor: ann.priority === 'urgent' ? alpha(theme.palette.error.main, 0.25) : theme.palette.divider,
                                                 borderLeft: 3.5,
-                                                borderLeftColor: ann.priority === 'urgent' ? '#ef4444' : '#3b82f6'
+                                                borderLeftColor: ann.priority === 'urgent' ? theme.palette.error.main : theme.palette.primary.main
                                             }}>
                                                 <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.85rem' }}>{ann.title}</Typography>
                                                 <Typography variant="caption" display="block" color="text.secondary">{ann.category} • {new Date(ann.publishDate).toLocaleDateString()}</Typography>
@@ -496,16 +496,16 @@ const ParentDashboard = () => {
                     {/* Recent Leave Applications Card */}
                     {childLeaves.length > 0 && (
                         <Box sx={{ mt: { xs: 2, sm: 2.5 } }}>
-                            <Paper elevation={0} sx={{ p: { xs: 1.75, sm: 2 }, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#ffffff' }}>
+                            <Paper elevation={0} sx={{ p: { xs: 1.75, sm: 2 }, borderRadius: 2, border: '1px solid', borderColor: theme.palette.divider, bgcolor: theme.palette.background.paper }}>
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.5 }}>
-                                    <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Recent Leave Applications</Typography>
+                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary">Recent Leave Applications</Typography>
                                     <Button size="small" onClick={() => navigate('/parent/leave/apply')} sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.75rem', p: 0.5 }}>
                                         Apply Leave →
                                     </Button>
                                 </Box>
                                 <Stack spacing={1}>
                                     {childLeaves.slice(0, 2).map((leave: any) => (
-                                        <Box key={leave.leaveId} sx={{ p: 1.25, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Box key={leave.leaveId} sx={{ p: 1.25, borderRadius: 2, bgcolor: alpha(theme.palette.text.primary, 0.02), border: '1px solid', borderColor: theme.palette.divider, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <Box>
                                                 <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '0.825rem' }}>{leave.reason || leave.leaveType || 'Leave Request'}</Typography>
                                                 <Typography variant="caption" color="text.secondary">
@@ -519,10 +519,10 @@ const ParentDashboard = () => {
                                                     height: 22,
                                                     fontSize: '0.675rem',
                                                     fontWeight: 700,
-                                                    bgcolor: leave.status === 'approved' ? '#ecfdf5' : leave.status === 'rejected' ? '#fef2f2' : '#fffbeb',
-                                                    color: leave.status === 'approved' ? '#10b981' : leave.status === 'rejected' ? '#ef4444' : '#f59e0b',
+                                                    bgcolor: leave.status === 'approved' ? alpha(theme.palette.success.main, 0.1) : leave.status === 'rejected' ? alpha(theme.palette.error.main, 0.1) : alpha(theme.palette.warning.main, 0.1),
+                                                    color: leave.status === 'approved' ? theme.palette.success.main : leave.status === 'rejected' ? theme.palette.error.main : theme.palette.warning.main,
                                                     border: '1px solid',
-                                                    borderColor: leave.status === 'approved' ? '#a7f3d0' : leave.status === 'rejected' ? '#fecaca' : '#fde68a',
+                                                    borderColor: leave.status === 'approved' ? alpha(theme.palette.success.main, 0.3) : leave.status === 'rejected' ? alpha(theme.palette.error.main, 0.3) : alpha(theme.palette.warning.main, 0.3),
                                                 }}
                                             />
                                         </Box>
@@ -538,13 +538,13 @@ const ParentDashboard = () => {
                     <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>Quick Actions</Typography>
                     <Grid container spacing={1.25}>
                         {[
-                            { label: 'Apply Leave', icon: <LeaveIcon />, path: '/parent/leave/apply', color: '#f59e0b' },
-                            { label: 'Exam Results', icon: <SchoolIcon />, path: '/parent/exam/results', color: '#059669' },
-                            { label: 'Timetable', icon: <TimetableIcon />, path: '/parent/timetable', color: '#047857' },
-                            { label: 'Teachers', icon: <TeachersIcon />, path: '/parent/teachers', color: '#111827' },
-                            { label: 'Homework', icon: <AssignmentIcon />, path: '/parent/homework', color: '#1f2937' },
-                            { label: 'Announcements', icon: <AnnouncementIcon />, path: '/parent/announcements', color: '#f59e0b' },
-                            { label: 'Chat Teachers', icon: <ChatIcon />, path: '/parent/chat', color: '#059669' },
+                            { label: 'Apply Leave', icon: <LeaveIcon />, path: '/parent/leave/apply', color: theme.palette.secondary.main },
+                            { label: 'Exam Results', icon: <SchoolIcon />, path: '/parent/exam/results', color: theme.palette.primary.main },
+                            { label: 'Timetable', icon: <TimetableIcon />, path: '/parent/timetable', color: theme.palette.primary.dark },
+                            { label: 'Teachers', icon: <TeachersIcon />, path: '/parent/teachers', color: theme.palette.text.primary },
+                            { label: 'Homework', icon: <AssignmentIcon />, path: '/parent/homework', color: theme.palette.primary.main },
+                            { label: 'Announcements', icon: <AnnouncementIcon />, path: '/parent/announcements', color: theme.palette.secondary.main },
+                            // { label: 'Chat Teachers', icon: <ChatIcon />, path: '/parent/chat', color: theme.palette.primary.main },
                         ].map((action) => (
                             <Grid size={{ xs: 4, sm: 4, lg: 6 }} key={action.label}>
                                 <Paper
@@ -556,15 +556,15 @@ const ParentDashboard = () => {
                                         cursor: 'pointer',
                                         height: '100%',
                                         borderRadius: 2.5,
-                                        bgcolor: '#ffffff',
-                                        border: '1px solid #e2e8f0',
+                                        bgcolor: theme.palette.background.paper,
+                                        border: `1px solid ${theme.palette.divider}`,
                                         boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
                                         transition: 'all 0.18s ease-in-out',
-                                        '&:hover': { transform: 'translateY(-2px)', borderColor: '#cbd5e1', boxShadow: '0 4px 14px rgba(0,0,0,0.06)' }
+                                        '&:hover': { transform: 'translateY(-2px)', borderColor: theme.palette.action.hover, boxShadow: '0 4px 14px rgba(0,0,0,0.06)' }
                                     }}
                                     onClick={() => navigate(action.path)}
                                 >
-                                    <Avatar sx={{ bgcolor: `${action.color}15`, color: action.color, mb: 1, mx: 'auto', width: { xs: 36, sm: 42 }, height: { xs: 36, sm: 42 }, border: '1px solid', borderColor: `${action.color}30` }}>
+                                    <Avatar sx={{ bgcolor: alpha(action.color, 0.12), color: action.color, mb: 1, mx: 'auto', width: { xs: 36, sm: 42 }, height: { xs: 36, sm: 42 }, border: `1px solid ${alpha(action.color, 0.25)}` }}>
                                         {React.cloneElement(action.icon as any, { sx: { fontSize: { xs: 19, sm: 22 } } })}
                                     </Avatar>
                                     <Typography variant="caption" fontWeight={700} color="text.primary" sx={{ display: 'block', fontSize: { xs: '0.72rem', sm: '0.775rem' }, lineHeight: 1.2 }} noWrap>{action.label}</Typography>
@@ -581,18 +581,18 @@ const ParentDashboard = () => {
                             mt: 2,
                             p: { xs: 1.75, sm: 2 },
                             borderRadius: 2,
-                            border: '1px solid #e0e7ff',
-                            bgcolor: '#f5f3ff',
+                            border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                            bgcolor: alpha(theme.palette.primary.main, 0.04),
                             cursor: 'pointer',
                             transition: 'transform 0.18s ease, box-shadow 0.18s ease',
-                            '&:hover': { transform: 'translateY(-1.5px)', boxShadow: '0 6px 18px rgba(139, 92, 246, 0.12)' }
+                            '&:hover': { transform: 'translateY(-1.5px)', boxShadow: `0 6px 18px ${alpha(theme.palette.primary.main, 0.12)}` }
                         }}
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 0.75 }}>
-                            <Box sx={{ p: 0.75, borderRadius: 1.5, bgcolor: '#8b5cf6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Box sx={{ p: 0.75, borderRadius: 1.5, bgcolor: theme.palette.primary.main, color: theme.palette.primary.contrastText, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <FeeIcon sx={{ fontSize: 18 }} />
                             </Box>
-                            <Typography variant="subtitle2" fontWeight={700} color="#4c1d95" sx={{ fontSize: '0.875rem' }}>Fees & Online Payments</Typography>
+                            <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ fontSize: '0.875rem' }}>Fees & Online Payments</Typography>
                         </Box>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5, fontSize: '0.75rem' }}>
                             Check fee balances, download receipt history, and pay online securely.
@@ -602,13 +602,13 @@ const ParentDashboard = () => {
                             fullWidth
                             size="small"
                             onClick={(e) => { e.stopPropagation(); navigate('/parent/fees'); }}
-                            sx={{ bgcolor: '#7c3aed', '&:hover': { bgcolor: '#6d28d9' }, borderRadius: 2, fontWeight: 700, textTransform: 'none', py: 0.6, fontSize: '0.8rem' }}
+                            sx={{ bgcolor: theme.palette.primary.main, color: theme.palette.primary.contrastText, '&:hover': { bgcolor: theme.palette.primary.dark }, borderRadius: 2, fontWeight: 700, textTransform: 'none', py: 0.6, fontSize: '0.8rem' }}
                         >
                             Manage & Pay Fees
                         </Button>
                     </Paper>
 
-                    {/* Chat with Teachers CTA Card */}
+                    {/* Chat with Teachers CTA Card - Temporarily commented out
                     <Paper
                         elevation={0}
                         onClick={() => navigate('/parent/chat')}
@@ -616,18 +616,18 @@ const ParentDashboard = () => {
                             mt: 2,
                             p: { xs: 1.75, sm: 2 },
                             borderRadius: 2,
-                            border: '1px solid #c7d2fe',
-                            bgcolor: '#eef2ff',
+                            border: `1px solid ${alpha(theme.palette.secondary.main, 0.25)}`,
+                            bgcolor: alpha(theme.palette.secondary.main, 0.04),
                             cursor: 'pointer',
                             transition: 'transform 0.18s ease, box-shadow 0.18s ease',
-                            '&:hover': { transform: 'translateY(-1.5px)', boxShadow: '0 6px 18px rgba(79, 70, 229, 0.12)' }
+                            '&:hover': { transform: 'translateY(-1.5px)', boxShadow: `0 6px 18px ${alpha(theme.palette.secondary.main, 0.12)}` }
                         }}
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 0.75 }}>
-                            <Box sx={{ p: 0.75, borderRadius: 1.5, bgcolor: '#4f46e5', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Box sx={{ p: 0.75, borderRadius: 1.5, bgcolor: theme.palette.secondary.main, color: theme.palette.secondary.contrastText, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <ChatIcon sx={{ fontSize: 18 }} />
                             </Box>
-                            <Typography variant="subtitle2" fontWeight={700} color="#312e81" sx={{ fontSize: '0.875rem' }}>Chat with Teachers</Typography>
+                            <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ fontSize: '0.875rem' }}>Chat with Teachers</Typography>
                         </Box>
                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1.5, fontSize: '0.75rem' }}>
                             Send secure messages to your child's teachers for real-time updates.
@@ -637,15 +637,16 @@ const ParentDashboard = () => {
                             fullWidth
                             size="small"
                             onClick={(e) => { e.stopPropagation(); navigate('/parent/chat'); }}
-                            sx={{ bgcolor: '#4f46e5', '&:hover': { bgcolor: '#4338ca' }, borderRadius: 2, fontWeight: 700, textTransform: 'none', py: 0.6, fontSize: '0.8rem' }}
+                            sx={{ bgcolor: theme.palette.secondary.main, color: theme.palette.secondary.contrastText, '&:hover': { bgcolor: theme.palette.secondary.dark }, borderRadius: 2, fontWeight: 700, textTransform: 'none', py: 0.6, fontSize: '0.8rem' }}
                             startIcon={<ChatIcon sx={{ fontSize: 16 }} />}
                         >
                             Open Secure Chat
                         </Button>
                     </Paper>
+                    */}
 
                     {/* Need Assistance Card */}
-                    <Paper sx={{ mt: 2, p: { xs: 1.75, sm: 2 }, bgcolor: '#1e40af', color: '#ffffff', borderRadius: 2 }}>
+                    <Paper sx={{ mt: 2, p: { xs: 1.75, sm: 2 }, bgcolor: theme.palette.text.primary, color: theme.palette.primary.contrastText, borderRadius: 2 }}>
                         <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5, fontSize: '0.875rem' }}>Need assistance?</Typography>
                         <Typography variant="caption" sx={{ mb: 1.5, opacity: 0.9, display: 'block', fontSize: '0.75rem' }}>
                             Our school administration is available for any questions or support.
@@ -653,7 +654,7 @@ const ParentDashboard = () => {
                         <Button
                             variant="contained"
                             size="small"
-                            sx={{ bgcolor: '#ffffff', color: '#1e40af', fontWeight: 700, '&:hover': { bgcolor: '#f8fafc' }, borderRadius: 2, textTransform: 'none', py: 0.6, fontSize: '0.8rem' }}
+                            sx={{ bgcolor: theme.palette.background.paper, color: theme.palette.text.primary, fontWeight: 700, '&:hover': { bgcolor: alpha(theme.palette.background.paper, 0.9) }, borderRadius: 2, textTransform: 'none', py: 0.6, fontSize: '0.8rem' }}
                             fullWidth
                             startIcon={<PersonIcon sx={{ fontSize: 16 }} />}
                             onClick={() => setSupportDialogOpen(true)}

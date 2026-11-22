@@ -35,6 +35,7 @@ import { useGetTeacherById } from '../../../queries/Teacher';
 import TokenService from '../../../queries/token/tokenService';
 import { useUrlTab } from '../../../hooks/useUrlTab';
 import { useAcademicYear } from '../../../hooks/useAcademicYear';
+import { categorizeExams, getExamStatusColor } from '../../../utils/examUtils';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -64,10 +65,8 @@ const extractClassRank = (name: string): number => {
 };
 
 const statusColor = (status: string): 'success' | 'warning' | 'info' | 'default' => {
-    if (status === 'ongoing') return 'success';
-    if (status === 'scheduled') return 'warning';
-    if (status === 'completed') return 'info';
-    return 'default';
+    const col = getExamStatusColor(status);
+    return col === 'primary' ? 'warning' : col;
 };
 
 // Helper to check if a teacher is assigned in an invigilators array
@@ -550,15 +549,10 @@ const TeacherExamScheduler: React.FC = () => {
 
     const allExams: any[] = examsData?.data || [];
 
-    const sortByStartDate = (a: any, b: any) => {
-        const dateA = a.startDate ? new Date(a.startDate).getTime() : 0;
-        const dateB = b.startDate ? new Date(b.startDate).getTime() : 0;
-        return dateA - dateB;
-    };
-
-    const ongoingExams = allExams.filter(e => e.status === 'ongoing').sort(sortByStartDate);
-    const upcomingExams = allExams.filter(e => ['scheduled', 'draft'].includes(e.status)).sort(sortByStartDate);
-    const pastExams = allExams.filter(e => e.status === 'completed').sort(sortByStartDate);
+    const { ongoing: ongoingExams, upcoming: upcomingExams, completed: pastExams } = useMemo(
+        () => categorizeExams(allExams),
+        [allExams]
+    );
 
     const tabExams = [ongoingExams, upcomingExams, pastExams][selectedTab] ?? [];
 

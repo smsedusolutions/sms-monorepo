@@ -1,4 +1,6 @@
+import { useMemo } from 'react';
 import { Box, Typography, Grid, Skeleton, Alert, Chip, Card, CardContent, Button, Stack } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
 import PeopleIcon from '@mui/icons-material/People';
 import SchoolIcon from '@mui/icons-material/School';
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -34,6 +36,7 @@ interface QuickActionCard {
 }
 
 const PrincipalDashboard = () => {
+    const theme = useTheme();
     const { user } = useUserStore();
     const schoolId = TokenService.getSchoolId() || user?.schoolId || TokenService.getUser()?.schoolId || '';
 
@@ -58,14 +61,14 @@ const PrincipalDashboard = () => {
         ? `${user.firstName} ${user.lastName || ''}`.trim()
         : 'Principal';
 
-    const quickActions: QuickActionCard[] = [
+    const quickActions: QuickActionCard[] = useMemo(() => [
         {
             label: 'Leave Approvals',
             description: 'Review teacher leave requests',
             icon: <EventNoteIcon sx={{ fontSize: 28 }} />,
             path: '/principal/leave/teacher-requests',
-            gradient: 'linear-gradient(135deg, #f5af19 0%, #f12711 100%)',
-            iconColor: '#f5af19',
+            gradient: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`,
+            iconColor: theme.palette.warning.main,
             badge: leaveStats?.teacherPending || 0,
         },
         {
@@ -73,74 +76,74 @@ const PrincipalDashboard = () => {
             description: 'Approve draft timetables',
             icon: <ScheduleIcon sx={{ fontSize: 28 }} />,
             path: '/principal/timetable/review',
-            gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-            iconColor: '#059669',
+            gradient: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+            iconColor: theme.palette.primary.main,
         },
         {
             label: 'Exam Approvals',
             description: 'Approve exam schedules',
             icon: <AssignmentIcon sx={{ fontSize: 28 }} />,
             path: '/principal/exam/approval',
-            gradient: 'linear-gradient(135deg, #ea580c 0%, #c2410c 100%)',
-            iconColor: '#ea580c',
+            gradient: `linear-gradient(135deg, ${theme.palette.warning.light} 0%, ${theme.palette.warning.main} 100%)`,
+            iconColor: theme.palette.warning.main,
         },
         {
             label: 'Attendance',
             description: 'School-wide attendance overview',
             icon: <HowToRegIcon sx={{ fontSize: 28 }} />,
             path: '/principal/attendance',
-            gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-            iconColor: '#059669',
+            gradient: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
+            iconColor: theme.palette.primary.main,
         },
         {
             label: 'Teachers',
             description: 'View teacher directory',
             icon: <PeopleIcon sx={{ fontSize: 28 }} />,
             path: '/principal/teachers',
-            gradient: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-            iconColor: '#2563eb',
+            gradient: `linear-gradient(135deg, ${theme.palette.secondary.light} 0%, ${theme.palette.secondary.main} 100%)`,
+            iconColor: theme.palette.secondary.main,
         },
         {
             label: 'Students',
             description: 'Browse student directory',
             icon: <SchoolIcon sx={{ fontSize: 28 }} />,
             path: '/principal/students',
-            gradient: 'linear-gradient(135deg, #0d9488 0%, #0f766e 100%)',
-            iconColor: '#0d9488',
+            gradient: `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.secondary.dark} 100%)`,
+            iconColor: theme.palette.primary.dark,
         },
         {
             label: 'Exam Results',
             description: 'View school-wide results',
             icon: <CheckCircleIcon sx={{ fontSize: 28 }} />,
             path: '/principal/exam/results',
-            gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
-            iconColor: '#059669',
+            gradient: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+            iconColor: theme.palette.primary.main,
         },
         {
             label: 'Announcements',
             description: 'Publish school announcements',
             icon: <AnnouncementIcon sx={{ fontSize: 28 }} />,
             path: '/principal/announcements',
-            gradient: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
-            iconColor: '#d97706',
+            gradient: `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`,
+            iconColor: theme.palette.warning.dark,
         },
         {
             label: 'Notifications',
             description: 'Stay updated with alerts',
             icon: <NotificationsIcon sx={{ fontSize: 28 }} />,
             path: '/principal/notifications',
-            gradient: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
-            iconColor: '#475569',
+            gradient: `linear-gradient(135deg, ${theme.palette.secondary.light} 0%, ${theme.palette.secondary.main} 100%)`,
+            iconColor: theme.palette.secondary.main,
         },
         {
             label: 'Profile',
             description: 'Manage your account',
             icon: <AccountCircleIcon sx={{ fontSize: 28 }} />,
             path: '/principal/profile',
-            gradient: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-            iconColor: '#0f172a',
+            gradient: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 100%)`,
+            iconColor: theme.palette.secondary.main,
         },
-    ];
+    ], [theme, leaveStats?.teacherPending]);
 
     return (
         <Box sx={{ p: { xs: 1.5, sm: 2.5, md: 3 }, maxWidth: 1400, mx: 'auto' }}>
@@ -150,7 +153,7 @@ const PrincipalDashboard = () => {
                     mb: { xs: 2, sm: 3 },
                     p: { xs: 2, sm: 2.5 },
                     borderRadius: 2.5,
-                    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                    background: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 100%)`,
                     color: 'white',
                     position: 'relative',
                     overflow: 'hidden',
@@ -182,14 +185,14 @@ const PrincipalDashboard = () => {
                                 size="small"
                                 sx={{
                                     mt: 1.25,
-                                    bgcolor: 'rgba(251,191,36,0.25)',
-                                    color: '#fde68a',
-                                    border: '1px solid rgba(251,191,36,0.4)',
+                                    bgcolor: alpha(theme.palette.warning.main, 0.25),
+                                    color: theme.palette.warning.light,
+                                    border: `1px solid ${alpha(theme.palette.warning.main, 0.4)}`,
                                     fontWeight: 700,
                                     fontSize: '0.72rem',
                                     height: 24
                                 }}
-                                icon={<EventNoteIcon sx={{ color: '#fde68a !important', fontSize: '14px !important' }} />}
+                                icon={<EventNoteIcon sx={{ color: `${theme.palette.warning.light} !important`, fontSize: '14px !important' }} />}
                                 onClick={() => navigate('/principal/leave/teacher-requests')}
                             />
                         )}
@@ -219,7 +222,7 @@ const PrincipalDashboard = () => {
 
             {/* Stats Cards - 2x2 on mobile, 4 on desktop */}
             <Box sx={{ mb: { xs: 2.5, sm: 3.5 } }}>
-                <Typography variant="subtitle1" fontWeight={700} color="#1e293b" sx={{ mb: 1.25, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>
+                <Typography variant="subtitle1" fontWeight={700} color="text.primary" sx={{ mb: 1.25, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>
                     School Overview
                 </Typography>
                 <Grid container spacing={{ xs: 1.5, sm: 2 }}>
@@ -237,8 +240,8 @@ const PrincipalDashboard = () => {
                                     value={stats?.totalTeachers || 0}
                                     subtitle={`${stats?.activeTeachers || 0} active`}
                                     icon={<PeopleIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
-                                    color="#3b82f6"
-                                    bgColor="#eff6ff"
+                                    color={theme.palette.primary.main}
+                                    bgColor={alpha(theme.palette.primary.main, 0.08)}
                                     to="/principal/teachers"
                                 />
                             </Grid>
@@ -248,8 +251,8 @@ const PrincipalDashboard = () => {
                                     value={stats?.totalStudents || 0}
                                     subtitle={`${stats?.activeStudents || 0} active`}
                                     icon={<SchoolIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
-                                    color="#10b981"
-                                    bgColor="#ecfdf5"
+                                    color={theme.palette.primary.dark}
+                                    bgColor={alpha(theme.palette.primary.dark, 0.08)}
                                     to="/principal/students"
                                 />
                             </Grid>
@@ -259,8 +262,8 @@ const PrincipalDashboard = () => {
                                     value={leaveStats?.totalPending || 0}
                                     subtitle={`${leaveStats?.teacherPending || 0} teachers`}
                                     icon={<EventNoteIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
-                                    color="#f59e0b"
-                                    bgColor="#fffbeb"
+                                    color={theme.palette.warning.main}
+                                    bgColor={alpha(theme.palette.warning.main, 0.08)}
                                     to="/principal/leave/teacher-requests"
                                 />
                             </Grid>
@@ -270,8 +273,8 @@ const PrincipalDashboard = () => {
                                     value={stats?.totalParents || 0}
                                     subtitle={`${stats?.activeParents || 0} active`}
                                     icon={<HowToRegIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
-                                    color="#8b5cf6"
-                                    bgColor="#f5f3ff"
+                                    color={theme.palette.secondary.main}
+                                    bgColor={alpha(theme.palette.secondary.main, 0.08)}
                                     to="/principal/students"
                                 />
                             </Grid>
@@ -283,22 +286,22 @@ const PrincipalDashboard = () => {
             {/* Pending Approvals Section */}
             <Box sx={{ mb: { xs: 2.5, sm: 3.5 } }}>
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5, flexWrap: 'wrap' }}>
-                    <PendingActionsIcon sx={{ color: totalPendingApprovals > 0 ? '#d97706' : '#10b981', fontSize: 22 }} />
-                    <Typography variant="subtitle1" fontWeight={700} color="#1e293b" sx={{ fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>
+                    <PendingActionsIcon sx={{ color: totalPendingApprovals > 0 ? theme.palette.warning.main : theme.palette.success.main, fontSize: 22 }} />
+                    <Typography variant="subtitle1" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>
                         Pending Approvals & Actions
                     </Typography>
                     {totalPendingApprovals > 0 ? (
                         <Chip
                             label={`${totalPendingApprovals} pending`}
                             size="small"
-                            sx={{ bgcolor: '#fef3c7', color: '#b45309', fontWeight: 700, borderRadius: '6px', height: 20, fontSize: '0.68rem' }}
+                            sx={{ bgcolor: alpha(theme.palette.warning.main, 0.12), color: theme.palette.warning.dark, fontWeight: 700, borderRadius: '6px', height: 20, fontSize: '0.68rem' }}
                         />
                     ) : (
                         <Chip
-                            icon={<CheckCircleOutlineIcon sx={{ fontSize: '12px !important', color: '#047857 !important' }} />}
+                            icon={<CheckCircleOutlineIcon sx={{ fontSize: '12px !important', color: `${theme.palette.success.main} !important` }} />}
                             label="Up To Date"
                             size="small"
-                            sx={{ bgcolor: '#d1fae5', color: '#047857', fontWeight: 700, borderRadius: '6px', height: 20, fontSize: '0.68rem' }}
+                            sx={{ bgcolor: alpha(theme.palette.success.main, 0.12), color: theme.palette.success.main, fontWeight: 700, borderRadius: '6px', height: 20, fontSize: '0.68rem' }}
                         />
                     )}
                 </Stack>
@@ -309,10 +312,10 @@ const PrincipalDashboard = () => {
                         <Card
                             elevation={0}
                             sx={{
-                                border: pendingTimetableCount > 0 ? '1.5px solid #fde68a' : '1px solid #e2e8f0',
+                                border: pendingTimetableCount > 0 ? `1.5px solid ${alpha(theme.palette.warning.main, 0.4)}` : `1px solid ${theme.palette.divider}`,
                                 borderRadius: 2.5,
-                                background: pendingTimetableCount > 0 ? 'linear-gradient(135deg, #fffdf5 0%, #fffbebe6 100%)' : '#fff',
-                                boxShadow: pendingTimetableCount > 0 ? '0 2px 10px rgba(245, 158, 11, 0.08)' : '0 2px 8px rgba(0,0,0,0.02)',
+                                background: pendingTimetableCount > 0 ? alpha(theme.palette.warning.main, 0.04) : theme.palette.background.paper,
+                                boxShadow: pendingTimetableCount > 0 ? `0 2px 10px ${alpha(theme.palette.warning.main, 0.1)}` : '0 2px 8px rgba(0,0,0,0.02)',
                                 transition: 'transform 0.18s ease, box-shadow 0.18s ease',
                                 '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }
                             }}
@@ -320,10 +323,10 @@ const PrincipalDashboard = () => {
                             <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
                                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
                                     <Box sx={{ minWidth: 0 }}>
-                                        <Typography variant="caption" fontWeight={700} sx={{ color: '#92400e', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.68rem' }}>
-                                            Timetable Review
+                                        <Typography variant="caption" fontWeight={700} sx={{ color: theme.palette.warning.dark, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.68rem' }}>
+                                             Timetable Review
                                         </Typography>
-                                        <Typography variant="h6" fontWeight={800} color={pendingTimetableCount > 0 ? '#b45309' : '#334155'} sx={{ mt: 0.25, fontSize: '1.1rem' }}>
+                                        <Typography variant="h6" fontWeight={800} color={pendingTimetableCount > 0 ? theme.palette.warning.dark : 'text.primary'} sx={{ mt: 0.25, fontSize: '1.1rem' }}>
                                             {pendingTimetableCount} {pendingTimetableCount === 1 ? 'Timetable' : 'Timetables'}
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25, fontSize: '0.72rem', display: 'block' }} noWrap>
@@ -332,7 +335,7 @@ const PrincipalDashboard = () => {
                                                 : 'No timetables waiting for approval'}
                                         </Typography>
                                     </Box>
-                                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: alpha(theme.palette.warning.main, 0.12), color: theme.palette.warning.dark, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <ScheduleIcon sx={{ fontSize: 20 }} />
                                     </Box>
                                 </Stack>
@@ -356,10 +359,10 @@ const PrincipalDashboard = () => {
                         <Card
                             elevation={0}
                             sx={{
-                                border: pendingTeacherLeaveCount > 0 ? '1.5px solid #fecdd3' : '1px solid #e2e8f0',
+                                border: pendingTeacherLeaveCount > 0 ? `1.5px solid ${alpha(theme.palette.error.main, 0.4)}` : `1px solid ${theme.palette.divider}`,
                                 borderRadius: 2.5,
-                                background: pendingTeacherLeaveCount > 0 ? 'linear-gradient(135deg, #fff5f5 0%, #fff1f2e6 100%)' : '#fff',
-                                boxShadow: pendingTeacherLeaveCount > 0 ? '0 2px 10px rgba(239, 68, 68, 0.08)' : '0 2px 8px rgba(0,0,0,0.02)',
+                                background: pendingTeacherLeaveCount > 0 ? alpha(theme.palette.error.main, 0.04) : theme.palette.background.paper,
+                                boxShadow: pendingTeacherLeaveCount > 0 ? `0 2px 10px ${alpha(theme.palette.error.main, 0.1)}` : '0 2px 8px rgba(0,0,0,0.02)',
                                 transition: 'transform 0.18s ease, box-shadow 0.18s ease',
                                 '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }
                             }}
@@ -367,10 +370,10 @@ const PrincipalDashboard = () => {
                             <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
                                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
                                     <Box sx={{ minWidth: 0 }}>
-                                        <Typography variant="caption" fontWeight={700} sx={{ color: '#9f1239', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.68rem' }}>
+                                        <Typography variant="caption" fontWeight={700} sx={{ color: theme.palette.error.main, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.68rem' }}>
                                             Teacher Leaves
                                         </Typography>
-                                        <Typography variant="h6" fontWeight={800} color={pendingTeacherLeaveCount > 0 ? '#be123c' : '#334155'} sx={{ mt: 0.25, fontSize: '1.1rem' }}>
+                                        <Typography variant="h6" fontWeight={800} color={pendingTeacherLeaveCount > 0 ? theme.palette.error.main : 'text.primary'} sx={{ mt: 0.25, fontSize: '1.1rem' }}>
                                             {pendingTeacherLeaveCount} {pendingTeacherLeaveCount === 1 ? 'Request' : 'Requests'}
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25, fontSize: '0.72rem', display: 'block' }} noWrap>
@@ -379,7 +382,7 @@ const PrincipalDashboard = () => {
                                                 : 'No teacher leaves pending'}
                                         </Typography>
                                     </Box>
-                                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#ffe4e6', color: '#e11d48', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: alpha(theme.palette.error.main, 0.12), color: theme.palette.error.main, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <EventNoteIcon sx={{ fontSize: 20 }} />
                                     </Box>
                                 </Stack>
@@ -403,9 +406,9 @@ const PrincipalDashboard = () => {
                         <Card
                             elevation={0}
                             sx={{
-                                border: '1px solid #e2e8f0',
+                                border: `1px solid ${theme.palette.divider}`,
                                 borderRadius: 2.5,
-                                background: '#fff',
+                                background: theme.palette.background.paper,
                                 boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
                                 transition: 'transform 0.18s ease, box-shadow 0.18s ease',
                                 '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }
@@ -414,17 +417,17 @@ const PrincipalDashboard = () => {
                             <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
                                 <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
                                     <Box sx={{ minWidth: 0 }}>
-                                        <Typography variant="caption" fontWeight={700} sx={{ color: '#4338ca', textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.68rem' }}>
+                                        <Typography variant="caption" fontWeight={700} sx={{ color: theme.palette.primary.main, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.68rem' }}>
                                             Exam Approvals
                                         </Typography>
-                                        <Typography variant="h6" fontWeight={800} color="#334155" sx={{ mt: 0.25, fontSize: '1.1rem' }}>
+                                        <Typography variant="h6" fontWeight={800} color="text.primary" sx={{ mt: 0.25, fontSize: '1.1rem' }}>
                                             {pendingExams.length} {pendingExams.length === 1 ? 'Exam' : 'Exams'}
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary" sx={{ mt: 0.25, fontSize: '0.72rem', display: 'block' }} noWrap>
                                             {pendingExams.length > 0 ? 'Active & upcoming exam schedules' : 'No pending exam approvals'}
                                         </Typography>
                                     </Box>
-                                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#e0e7ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: alpha(theme.palette.primary.main, 0.12), color: theme.palette.primary.main, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                         <AssignmentIcon sx={{ fontSize: 20 }} />
                                     </Box>
                                 </Stack>
@@ -450,7 +453,7 @@ const PrincipalDashboard = () => {
                 <Typography
                     variant="subtitle1"
                     fontWeight={700}
-                    color="#1e293b"
+                    color="text.primary"
                     sx={{ mb: 0.25, fontSize: { xs: '0.95rem', sm: '1.15rem' } }}
                 >
                     Quick Navigation
@@ -472,8 +475,8 @@ const PrincipalDashboard = () => {
                                     gap: 0.75,
                                     p: { xs: 1.25, sm: 1.75 },
                                     borderRadius: 2.5,
-                                    background: 'white',
-                                    border: '1px solid #e2e8f0',
+                                    background: theme.palette.background.paper,
+                                    border: `1px solid ${theme.palette.divider}`,
                                     boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
                                     cursor: 'pointer',
                                     textAlign: 'center',
@@ -484,7 +487,7 @@ const PrincipalDashboard = () => {
                                     '&:hover': {
                                         transform: 'translateY(-3px)',
                                         boxShadow: '0 8px 24px rgba(0,0,0,0.08)',
-                                        borderColor: '#cbd5e1',
+                                        borderColor: theme.palette.divider,
                                         '& .action-icon-box': {
                                             transform: 'scale(1.08)',
                                         },
@@ -521,7 +524,7 @@ const PrincipalDashboard = () => {
                                             minWidth: 18,
                                             height: 18,
                                             borderRadius: '9px',
-                                            bgcolor: '#ef4444',
+                                            bgcolor: theme.palette.error.main,
                                             color: 'white',
                                             fontSize: '0.6rem',
                                             fontWeight: 700,
@@ -545,7 +548,7 @@ const PrincipalDashboard = () => {
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         color: 'white',
-                                        boxShadow: `0 3px 10px ${action.iconColor}35`,
+                                        boxShadow: `0 3px 10px ${alpha(action.iconColor, 0.35)}`,
                                         transition: 'transform 0.2s ease',
                                         flexShrink: 0,
                                         '& .MuiSvgIcon-root': {
@@ -561,7 +564,7 @@ const PrincipalDashboard = () => {
                                         variant="caption"
                                         sx={{
                                             fontWeight: 700,
-                                            color: '#1e293b',
+                                            color: theme.palette.text.primary,
                                             fontSize: { xs: '0.72rem', sm: '0.78rem' },
                                             transition: 'color 0.2s ease',
                                             lineHeight: 1.15,
@@ -574,7 +577,7 @@ const PrincipalDashboard = () => {
                                     <Typography
                                         variant="caption"
                                         sx={{
-                                            color: '#94a3b8',
+                                            color: theme.palette.text.secondary,
                                             fontSize: { xs: '0.62rem', sm: '0.68rem' },
                                             display: { xs: 'none', md: 'block' },
                                             mt: 0.2,
