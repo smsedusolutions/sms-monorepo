@@ -8,6 +8,8 @@ const DEFAULT_ALLOWED_ORIGINS = [
     'http://127.0.0.1:3000',
     'http://127.0.0.1:5173',
     'http://127.0.0.1:*',
+    'https://demoschool.smsedusolutions.in',
+    'http://demoschool.smsedusolutions.in',
     'https://smsedusolutions.in',
     'https://www.smsedusolutions.in',
     'https://*.smsedusolutions.in',
@@ -55,6 +57,24 @@ function getAllowedOrigins(customOrigins = []) {
 function isOriginAllowed(origin, customOrigins = []) {
     // Requests with no origin (mobile apps, Postman, curl, server-to-server) are always permitted
     if (!origin) return true;
+
+    const normOrigin = String(origin).trim().replace(/^["']|["']$/g, '').replace(/\/+$/, '').toLowerCase();
+
+    // Direct in-code hardcoded whitelist for immediate resolution
+    if (
+        normOrigin === 'https://demoschool.smsedusolutions.in' ||
+        normOrigin === 'http://demoschool.smsedusolutions.in' ||
+        normOrigin === 'https://www.smsedusolutions.in' ||
+        normOrigin === 'http://www.smsedusolutions.in' ||
+        normOrigin === 'https://smsedusolutions.in' ||
+        normOrigin === 'http://smsedusolutions.in' ||
+        normOrigin === 'https://smsedusolutions.vercel.app' ||
+        normOrigin === 'https://sms-web-ui.vercel.app' ||
+        normOrigin.endsWith('.smsedusolutions.in') ||
+        normOrigin.endsWith('.vercel.app')
+    ) {
+        return true;
+    }
 
     const allowedList = getAllowedOrigins(customOrigins);
     return allowedList.some(pattern => matchOrigin(origin, pattern));
