@@ -142,9 +142,9 @@ const CreateSuperAdminSecret: React.FC = () => {
       },
       "&.Mui-focused": {
         backgroundColor: "rgba(15, 23, 42, 0.7)",
-        boxShadow: "0 0 0 3px rgba(2, 132, 199, 0.25)",
+        boxShadow: "0 0 0 3px rgba(5, 150, 105, 0.25)",
         "& fieldset": {
-          borderColor: "#0284C7",
+          borderColor: "#059669",
         },
       },
     },
@@ -216,7 +216,7 @@ const CreateSuperAdminSecret: React.FC = () => {
               The Super Admin account has been registered successfully.
               You will be redirected to the login page shortly...
             </Typography>
-            <CircularProgress size={24} sx={{ color: "#0284C7" }} />
+            <CircularProgress size={24} sx={{ color: "#059669" }} />
           </Box>
         ) : (
           <>
@@ -385,9 +385,9 @@ const CreateSuperAdminSecret: React.FC = () => {
                     fontSize: "1rem",
                     fontWeight: 600,
                     borderRadius: '6px',
-                    bgcolor: "#0284C7",
+                    bgcolor: "#059669",
                     "&:hover": {
-                      bgcolor: "#0369A1",
+                      bgcolor: "#047857",
                     },
                   }}
                 >

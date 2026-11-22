@@ -222,7 +222,7 @@ const SubstituteManagement = () => {
                     <TodayIcon sx={{ fontSize: 20, color: 'primary.main' }} />
                     <Box>
                         <Typography variant="body2" fontWeight={600} color="text.primary">
-                            Today's Substitutes: <strong style={{ color: '#2563eb' }}>{todayCount}</strong>
+                            Today's Substitutes: <strong style={{ color: '#059669' }}>{todayCount}</strong>
                         </Typography>
                     </Box>
                 </Box>

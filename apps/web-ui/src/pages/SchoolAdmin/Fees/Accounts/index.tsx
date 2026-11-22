@@ -213,7 +213,7 @@ const FeeAccounts: React.FC = () => {
                         </Paper>
                     </Grid>
                     <Grid size={{ xs: 6, sm: 4, md: 2.4 }}>
-                        <Paper elevation={0} sx={{ p: 1.5, border: '1px solid #e2e8f0', borderRadius: 2.5, textAlign: 'center', bgcolor: '#eff6ff' }}>
+                        <Paper elevation={0} sx={{ p: 1.5, border: '1px solid #e2e8f0', borderRadius: 2.5, textAlign: 'center', bgcolor: '#ecfdf5' }}>
                             <Typography variant="caption" color="text.secondary" fontWeight={500} noWrap display="block">Discounts/Waivers</Typography>
                             <Typography variant="subtitle1" fontWeight={700} color="primary.main" sx={{ mt: 0.5 }}>{formatCurrency(selectedAccount.totalDiscount + selectedAccount.totalWaived)}</Typography>
                         </Paper>

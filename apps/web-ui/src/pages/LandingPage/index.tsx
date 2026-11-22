@@ -24,7 +24,7 @@ const LandingPageContent: React.FC = () => {
         position: 'relative',
         minHeight: '100vh',
         bgcolor: isDark ? '#0B0F19' : '#FFFFFF',
-        color: isDark ? '#F8FAFC' : '#0F172A',
+        color: isDark ? '#F8FAFC' : '#111827',
         overflowX: 'hidden',
         transition: 'background-color 0.25s ease, color 0.25s ease',
       }}

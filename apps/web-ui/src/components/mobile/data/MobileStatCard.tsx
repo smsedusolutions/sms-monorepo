@@ -21,7 +21,7 @@ export const MobileStatCard: React.FC<MobileStatCardProps> = ({
   title,
   value,
   icon,
-  gradient = 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+  gradient = 'linear-gradient(135deg, #059669 0%, #047857 100%)',
   trend,
   subtitle,
   onClick,

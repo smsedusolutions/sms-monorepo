@@ -15,7 +15,7 @@ const SuperAdminDashboard = () => {
     const stats = data?.data;
 
     const quickActions = [
-        { label: 'All Schools', icon: <SchoolIcon />, path: '/super-admin/schools', color: '#0284C7', gradient: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)' },
+        { label: 'All Schools', icon: <SchoolIcon />, path: '/super-admin/schools', color: '#059669', gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)' },
         { label: 'Administrators', icon: <PeopleIcon />, path: '/super-admin/users', color: '#0F172A', gradient: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)' },
         { label: 'Add School', icon: <DomainAddIcon />, path: '/super-admin/schools', color: '#10b981', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
         { label: 'Add Admin', icon: <PersonAddIcon />, path: '/super-admin/users', color: '#f59e0b', gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },

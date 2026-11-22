@@ -5,6 +5,7 @@ import { ChildSelectorProvider } from "../context/ChildSelectorContext";
 import PageSkeleton from "../components/shared/PageSkeleton";
 import { useRoleStore } from "../stores/roleStore";
 import TokenService from "../queries/token/tokenService";
+import { isSchoolSubdomain } from "../hooks/useSubdomainSchool";
 
 // Public Pages
 const LandingPage = lazy(() => import("../pages/LandingPage"));
@@ -162,7 +163,13 @@ const MainRouters = () => {
           path="/"
           element={
             (() => {
-              if (!userRole) return <LandingPage />;
+              if (!userRole) {
+                // Except for www subdomain and root domain, redirect all school subdomains directly to /login
+                if (isSchoolSubdomain()) {
+                  return <Navigate to={`/login${window.location.search}`} replace />;
+                }
+                return <LandingPage />;
+              }
 
               const basePath = getBasePath(userRole);
               if (basePath) {

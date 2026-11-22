@@ -44,112 +44,112 @@ const quickActions: QuickActionCard[] = [
         description: 'Manage your account settings',
         icon: <AccountCircleIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/profile',
-        gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        iconColor: '#667eea',
+        gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+        iconColor: '#059669',
     },
     {
         label: 'Classes',
         description: 'View and manage all classes',
         icon: <ClassIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/classes',
-        gradient: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
-        iconColor: '#11998e',
+        gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        iconColor: '#059669',
     },
     {
         label: 'Timetable',
         description: 'Configure class timetables',
         icon: <ScheduleIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/timetable/master',
-        gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-        iconColor: '#f093fb',
+        gradient: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
+        iconColor: '#111827',
     },
     {
         label: 'Subjects',
         description: 'Manage school subjects',
         icon: <MenuBookIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/subjects',
-        gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-        iconColor: '#4facfe',
+        gradient: 'linear-gradient(135deg, #047857 0%, #064e3b 100%)',
+        iconColor: '#047857',
     },
     {
         label: 'Attendance',
         description: 'Track student attendance',
         icon: <HowToRegIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/attendance',
-        gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-        iconColor: '#43e97b',
+        gradient: 'linear-gradient(135deg, #10b981 0%, #047857 100%)',
+        iconColor: '#059669',
     },
     {
         label: 'Announcements',
         description: 'Broadcast to school community',
         icon: <AnnouncementIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/announcements',
-        gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-        iconColor: '#fa709a',
+        gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+        iconColor: '#d97706',
     },
     {
         label: 'Fee Management',
         description: 'Track fees and payments',
         icon: <AttachMoneyIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/fees/dashboard',
-        gradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
-        iconColor: '#30cfd0',
+        gradient: 'linear-gradient(135deg, #374151 0%, #111827 100%)',
+        iconColor: '#111827',
     },
     {
         label: 'Transport',
         description: 'Manage routes and vehicles',
         icon: <DirectionsBusIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/transport',
-        gradient: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
-        iconColor: '#a18cd1',
+        gradient: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+        iconColor: '#d97706',
     },
     {
         label: 'Exam Management',
         description: 'Schedule and manage exams',
         icon: <AssignmentIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/exam/config',
-        gradient: 'linear-gradient(135deg, #fd7043 0%, #ffcc02 100%)',
-        iconColor: '#fd7043',
+        gradient: 'linear-gradient(135deg, #059669 0%, #065f46 100%)',
+        iconColor: '#059669',
     },
     {
         label: 'Leave Requests',
         description: 'Review pending leaves',
         icon: <EventNoteIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/leaverequest',
-        gradient: 'linear-gradient(135deg, #f5af19 0%, #f12711 100%)',
-        iconColor: '#f5af19',
+        gradient: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
+        iconColor: '#f59e0b',
     },
     {
         label: 'Notifications',
         description: 'Stay updated with alerts',
         icon: <NotificationsIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/notifications',
-        gradient: 'linear-gradient(135deg, #56ab2f 0%, #a8e063 100%)',
-        iconColor: '#56ab2f',
+        gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+        iconColor: '#f59e0b',
     },
     {
         label: 'School Location',
         description: 'Update school map details',
         icon: <LocationOnIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/location',
-        gradient: 'linear-gradient(135deg, #e96c4b 0%, #f7ce68 100%)',
-        iconColor: '#e96c4b',
+        gradient: 'linear-gradient(135deg, #0d9488 0%, #047857 100%)',
+        iconColor: '#0d9488',
     },
     {
         label: 'Promotion',
         description: 'Promote students to next grade',
         icon: <TrendingUpIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/promotion',
-        gradient: 'linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)',
-        iconColor: '#6a11cb',
+        gradient: 'linear-gradient(135deg, #1f2937 0%, #030712 100%)',
+        iconColor: '#111827',
     },
     {
         label: 'School Info',
         description: 'Update school details',
         icon: <SchoolIcon sx={{ fontSize: 28 }} />,
         path: '/school-admin/school',
-        gradient: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-        iconColor: '#2a5298',
+        gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+        iconColor: '#059669',
     },
 ];
 
@@ -255,7 +255,7 @@ const SchoolAdminDashboard = () => {
                             fontWeight: 800,
                             fontSize: { xs: '0.78rem', sm: '0.85rem' },
                             textTransform: 'none',
-                            boxShadow: '0 4px 12px rgba(37,99,235,0.25)',
+                            boxShadow: '0 4px 12px rgba(5,150,105,0.25)',
                             whiteSpace: 'nowrap',
                         }}
                     >
@@ -304,8 +304,8 @@ const SchoolAdminDashboard = () => {
                                 value={stats?.totalTeachers || 0}
                                 subtitle={`${stats?.activeTeachers || 0} active`}
                                 icon={<PeopleIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
-                                color="#3b82f6"
-                                bgColor="#eff6ff"
+                                color="#059669"
+                                bgColor="#ecfdf5"
                                 to="/school-admin/teachers"
                             />
                         </Grid>
@@ -315,8 +315,8 @@ const SchoolAdminDashboard = () => {
                                 value={stats?.totalStudents || 0}
                                 subtitle={`${stats?.activeStudents || 0} active`}
                                 icon={<SchoolIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
-                                color="#10b981"
-                                bgColor="#ecfdf5"
+                                color="#047857"
+                                bgColor="#d1fae5"
                                 to="/school-admin/students"
                             />
                         </Grid>
@@ -326,8 +326,8 @@ const SchoolAdminDashboard = () => {
                                 value={stats?.totalParents || 0}
                                 subtitle={`${stats?.activeParents || 0} active`}
                                 icon={<FamilyRestroomIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />}
-                                color="#8b5cf6"
-                                bgColor="#f5f3ff"
+                                color="#111827"
+                                bgColor="#f3f4f6"
                                 to="/school-admin/parents"
                             />
                         </Grid>

@@ -38,7 +38,7 @@ export const MobileCardItem: React.FC<MobileCardItemProps> = ({
   subtitle,
   avatar,
   avatarText,
-  avatarBg = '#0284c7',
+  avatarBg = '#059669',
   badge,
   badges,
   metaItems,

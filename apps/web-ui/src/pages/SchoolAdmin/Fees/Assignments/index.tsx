@@ -435,7 +435,7 @@ const FeeAssignments: React.FC = () => {
 
                     {activeDrawerAccount && (
                         <Stack spacing={2.5}>
-                            <Card sx={{ bgcolor: '#eff6ff', border: '1px solid #dbeafe', boxShadow: 'none', borderRadius: 2 }}>
+                            <Card sx={{ bgcolor: '#ecfdf5', border: '1px solid #a7f3d0', boxShadow: 'none', borderRadius: 2 }}>
                                 <CardContent sx={{ p: 2 }}>
                                     <Typography variant="subtitle1" fontWeight={700} color="#1e3a8a">{activeDrawerAccount.studentName}</Typography>
                                     <Typography variant="body2" color="text.secondary">Class: {activeDrawerAccount.className}</Typography>

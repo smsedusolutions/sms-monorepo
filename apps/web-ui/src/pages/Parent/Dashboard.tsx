@@ -539,12 +539,12 @@ const ParentDashboard = () => {
                     <Grid container spacing={1.25}>
                         {[
                             { label: 'Apply Leave', icon: <LeaveIcon />, path: '/parent/leave/apply', color: '#f59e0b' },
-                            { label: 'Exam Results', icon: <SchoolIcon />, path: '/parent/exam/results', color: '#10b981' },
-                            { label: 'Timetable', icon: <TimetableIcon />, path: '/parent/timetable', color: '#3b82f6' },
-                            { label: 'Teachers', icon: <TeachersIcon />, path: '/parent/teachers', color: '#8b5cf6' },
-                            { label: 'Homework', icon: <AssignmentIcon />, path: '/parent/homework', color: '#ec4899' },
-                            { label: 'Announcements', icon: <AnnouncementIcon />, path: '/parent/announcements', color: '#06b6d4' },
-                            { label: 'Chat Teachers', icon: <ChatIcon />, path: '/parent/chat', color: '#4f46e5' },
+                            { label: 'Exam Results', icon: <SchoolIcon />, path: '/parent/exam/results', color: '#059669' },
+                            { label: 'Timetable', icon: <TimetableIcon />, path: '/parent/timetable', color: '#047857' },
+                            { label: 'Teachers', icon: <TeachersIcon />, path: '/parent/teachers', color: '#111827' },
+                            { label: 'Homework', icon: <AssignmentIcon />, path: '/parent/homework', color: '#1f2937' },
+                            { label: 'Announcements', icon: <AnnouncementIcon />, path: '/parent/announcements', color: '#f59e0b' },
+                            { label: 'Chat Teachers', icon: <ChatIcon />, path: '/parent/chat', color: '#059669' },
                         ].map((action) => (
                             <Grid size={{ xs: 4, sm: 4, lg: 6 }} key={action.label}>
                                 <Paper

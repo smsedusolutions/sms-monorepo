@@ -57,7 +57,7 @@ export const MobileSegmentedTabs: React.FC<MobileSegmentedTabsProps> = ({
 
             <span className="relative z-10 flex items-center gap-1.5">
               {tab.icon && (
-                <span style={{ color: isActive ? '#0284c7' : '#64748b', display: 'flex' }}>
+                <span style={{ color: isActive ? '#059669' : '#64748b', display: 'flex' }}>
                   {tab.icon}
                 </span>
               )}
@@ -66,7 +66,7 @@ export const MobileSegmentedTabs: React.FC<MobileSegmentedTabsProps> = ({
                 sx={{
                   fontWeight: isActive ? 700 : 600,
                   fontSize: '0.84rem',
-                  color: isActive ? '#0f172a' : '#64748b',
+                  color: isActive ? '#111827' : '#64748b',
                   lineHeight: 1.2,
                   fontFamily: '"Outfit", sans-serif',
                   transition: 'color 0.2s ease',
@@ -81,7 +81,7 @@ export const MobileSegmentedTabs: React.FC<MobileSegmentedTabsProps> = ({
                     px: 0.8,
                     py: 0.1,
                     borderRadius: '4px',
-                    bgcolor: isActive ? '#0284c7' : '#cbd5e1',
+                    bgcolor: isActive ? '#059669' : '#cbd5e1',
                     color: '#ffffff',
                     fontSize: '0.68rem',
                     fontWeight: 700,

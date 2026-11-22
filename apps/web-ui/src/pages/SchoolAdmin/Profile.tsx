@@ -418,7 +418,7 @@ const SchoolAdminProfile: React.FC = () => {
                 <Divider />
 
                 <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5 }}>
-                  <Avatar sx={{ width: 36, height: 36, bgcolor: "#eff6ff", color: "#2563eb" }}>
+                  <Avatar sx={{ width: 36, height: 36, bgcolor: "#ecfdf5", color: "#059669" }}>
                     <PhoneIcon sx={{ fontSize: 18 }} />
                   </Avatar>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -508,7 +508,7 @@ const SchoolAdminProfile: React.FC = () => {
 
             <Grid container spacing={1.5}>
               {[
-                { label: "Students Registry", desc: "Admissions, rosters & profiles", icon: <StudentsIcon />, path: "/school-admin/students", color: "#0284c7" },
+                { label: "Students Registry", desc: "Admissions, rosters & profiles", icon: <StudentsIcon />, path: "/school-admin/students", color: "#059669" },
                 { label: "Faculty Directory", desc: "Teacher assignments & profiles", icon: <TeachersIcon />, path: "/school-admin/teachers", color: "#059669" },
                 { label: "Classes & Sections", desc: "Academic structural hierarchy", icon: <ClassesIcon />, path: "/school-admin/classes", color: "#7c3aed" },
                 { label: "Fee Management", desc: "Structures, ledgers & collection", icon: <FeesIcon />, path: "/school-admin/fees/dashboard", color: "#d97706" },

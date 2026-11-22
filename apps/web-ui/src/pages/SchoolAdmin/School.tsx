@@ -59,7 +59,7 @@ const SchoolPage = () => {
                     p: 4,
                     mb: 4,
                     borderRadius: 2,
-                    background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+                    background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
                     color: 'white',
                     position: 'relative',
                     overflow: 'hidden'
@@ -99,7 +99,7 @@ const SchoolPage = () => {
                             }
                         }}
                     >
-                        {!school.schoolLogo && <SchoolIcon sx={{ fontSize: 50, color: '#0284C7' }} />}
+                        {!school.schoolLogo && <SchoolIcon sx={{ fontSize: 50, color: '#059669' }} />}
                     </Avatar>
                     <Box sx={{ flex: 1 }}>
                         <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>

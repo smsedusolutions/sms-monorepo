@@ -29,8 +29,8 @@ const FEATURES_DATA: ServiceFeature[] = [
     category: 'core',
     description: 'Effortlessly manage student registrations, digital enrollments, documents, roll numbers, and academic histories in a single secure cloud hub.',
     highlights: ['Digital Admissions', 'Document Vault', 'ID Card Generation', 'Promotions Engine'],
-    gradient: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
-    accentColor: '#0284C7',
+    gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+    accentColor: '#059669',
   },
   {
     id: 'attendance-mgmt',
@@ -51,8 +51,8 @@ const FEATURES_DATA: ServiceFeature[] = [
     category: 'academic',
     description: 'Design exam timetables, allocate hall tickets, grade tests with customizable grading scales, and generate printable PDF report cards.',
     highlights: ['Hall Ticket Generator', 'Marks & Grade Entry', 'Rank & Percentile Computation', 'CBSE & State Board Cards'],
-    gradient: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
-    accentColor: '#0284C7',
+    gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+    accentColor: '#059669',
   },
   {
     id: 'timetable-mgmt',
@@ -62,7 +62,7 @@ const FEATURES_DATA: ServiceFeature[] = [
     category: 'academic',
     description: 'Eliminate scheduling clashes with period balancing, classroom allocations, and quick substitute teacher assignments for absent educators.',
     highlights: ['Conflict Detection', 'Substitute Engine', 'Teacher Workload Balancer', 'Export to PDF & App'],
-    gradient: 'linear-gradient(135deg, #0EA5E9 0%, #0369A1 100%)',
+    gradient: 'linear-gradient(135deg, #0EA5E9 0%, #047857 100%)',
     accentColor: '#0EA5E9',
   },
   {
@@ -95,8 +95,8 @@ const FEATURES_DATA: ServiceFeature[] = [
     category: 'engagement',
     description: 'Coordinate school sports days, cultural festivals, academic holidays, and Parent-Teacher Meeting (PTM) slot bookings without confusion.',
     highlights: ['Interactive Calendar', 'PTM Slot Reservations', 'Holiday Schedule', 'RSVP & Photo Galleries'],
-    gradient: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
-    accentColor: '#0284C7',
+    gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+    accentColor: '#059669',
   },
   {
     id: 'staff-mgmt',
@@ -106,7 +106,7 @@ const FEATURES_DATA: ServiceFeature[] = [
     category: 'core',
     description: 'Centralized faculty records, bio-data, qualification tracking, staff leave approvals, payroll generation, and classroom assignments.',
     highlights: ['Faculty Dossiers', 'Staff Attendance & Leave', 'Payroll & Payslips', 'Role Permissions Engine'],
-    gradient: 'linear-gradient(135deg, #334155 0%, #0F172A 100%)',
+    gradient: 'linear-gradient(135deg, #334155 0%, #111827 100%)',
     accentColor: '#334155',
   },
   {
@@ -217,7 +217,7 @@ const FeatureCard: React.FC<{ feature: ServiceFeature; isDark: boolean }> = ({ f
         sx={{
           fontSize: '1.18rem',
           fontWeight: 800,
-          color: isDark ? '#F8FAFC' : '#0F172A',
+          color: isDark ? '#F8FAFC' : '#111827',
           mb: 0.8,
           lineHeight: 1.25,
         }}
@@ -299,7 +299,7 @@ export const FeaturesSection: React.FC = () => {
               sx={{
                 fontSize: '0.75rem',
                 fontWeight: 700,
-                color: isDark ? '#38BDF8' : '#0F172A',
+                color: isDark ? '#34d399' : '#111827',
                 letterSpacing: '0.06em',
                 textTransform: 'uppercase',
               }}
@@ -313,7 +313,7 @@ export const FeaturesSection: React.FC = () => {
             sx={{
               fontSize: { xs: '1.9rem', sm: '2.5rem', md: '2.8rem' },
               fontWeight: 900,
-              color: isDark ? '#F8FAFC' : '#0F172A',
+              color: isDark ? '#F8FAFC' : '#111827',
               letterSpacing: '-0.025em',
               mb: 1.5,
             }}
@@ -348,18 +348,18 @@ export const FeaturesSection: React.FC = () => {
                   fontSize: '0.82rem',
                   cursor: 'pointer',
                   bgcolor: selectedCategory === cat.id
-                    ? isDark ? '#0284C7' : '#0F172A'
+                    ? isDark ? '#059669' : '#111827'
                     : isDark ? '#111827' : '#FFFFFF',
                   color: selectedCategory === cat.id
                     ? '#FFFFFF'
                     : isDark ? '#94A3B8' : '#334155',
                   border: selectedCategory === cat.id
-                    ? isDark ? '1px solid #0284C7' : '1px solid #0F172A'
+                    ? isDark ? '1px solid #059669' : '1px solid #111827'
                     : isDark ? '1px solid #1F2937' : '1px solid #CBD5E1',
                   transition: 'background-color 0.2s ease, border-color 0.2s ease',
                   '&:hover': {
                     bgcolor: selectedCategory === cat.id
-                      ? isDark ? '#0369A1' : '#1E293B'
+                      ? isDark ? '#047857' : '#1E293B'
                       : isDark ? '#1E293B' : '#F8FAFC',
                   },
                 }}

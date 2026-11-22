@@ -77,7 +77,7 @@ export const MobileFormField: React.FC<MobileFormFieldProps> = ({
               borderColor: error ? '#ef4444' : '#cbd5e1',
             },
             '&.Mui-focused fieldset': {
-              borderColor: error ? '#ef4444' : '#0284c7',
+              borderColor: error ? '#ef4444' : '#059669',
               borderWidth: '2px',
             },
             ...InputProps?.sx,

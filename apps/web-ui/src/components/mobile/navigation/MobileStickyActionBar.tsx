@@ -83,11 +83,11 @@ export const MobileStickyActionBar: React.FC<MobileStickyActionBarProps> = ({
             fontWeight: 700,
             fontSize: '0.92rem',
             textTransform: 'none',
-            bgcolor: '#0284c7',
-            background: '#0284c7 !important',
+            bgcolor: '#059669',
+            background: '#059669 !important',
             color: '#ffffff',
             boxShadow: 'none',
-            '&:hover, &:active': { bgcolor: '#0369a1', background: '#0369a1 !important' },
+            '&:hover, &:active': { bgcolor: '#047857', background: '#047857 !important' },
             '&.Mui-disabled': { bgcolor: '#e2e8f0', color: '#94a3b8' },
           }}
           startIcon={

@@ -128,8 +128,8 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
                   width: 36,
                   height: 36,
                   borderRadius: '6px',
-                  bgcolor: 'rgba(2, 132, 199, 0.08)',
-                  color: '#0284c7',
+                  bgcolor: 'rgba(5, 150, 105, 0.08)',
+                  color: '#059669',
                   '&:active': { transform: 'scale(0.92)' },
                 }}
                 aria-label="Go Back"
@@ -143,7 +143,7 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
                 sx={{
                   width: 34,
                   height: 34,
-                  bgcolor: '#0284c7',
+                  bgcolor: '#059669',
                   fontSize: 14,
                   fontWeight: 700,
                   boxShadow: 'none',
@@ -240,8 +240,8 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
                     sx={{
                       width: 32,
                       height: 32,
-                      color: settingsAnchorEl ? '#0284c7' : '#475569',
-                      bgcolor: settingsAnchorEl ? 'rgba(2, 132, 199, 0.1)' : 'transparent',
+                      color: settingsAnchorEl ? '#059669' : '#475569',
+                      bgcolor: settingsAnchorEl ? 'rgba(5, 150, 105, 0.1)' : 'transparent',
                       borderRadius: '6px',
                       '&:active': { transform: 'scale(0.92)' },
                     }}
@@ -287,7 +287,7 @@ export const MobileAppHeader: React.FC<MobileAppHeaderProps> = ({
                     sx={{
                       width: 30,
                       height: 30,
-                      bgcolor: '#0284c7',
+                      bgcolor: '#059669',
                       fontSize: 12,
                       fontWeight: 600,
                       border: '2px solid #ffffff',

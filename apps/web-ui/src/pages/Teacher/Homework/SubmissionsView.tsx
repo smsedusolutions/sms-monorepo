@@ -366,7 +366,7 @@ export const SubmissionsView: React.FC<SubmissionsViewProps> = ({ homeworkId, ho
                                                         Submitted: {new Date(item.submission.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                                     </Typography>
                                                     {item.submission.marksAwarded !== undefined && (
-                                                        <Typography variant="caption" sx={{ color: '#0284c7', fontWeight: 700, display: 'block' }}>
+                                                        <Typography variant="caption" sx={{ color: '#059669', fontWeight: 700, display: 'block' }}>
                                                             Marks: {item.submission.marksAwarded}{item.submission.maxMarks ? `/${item.submission.maxMarks}` : ''}
                                                         </Typography>
                                                     )}

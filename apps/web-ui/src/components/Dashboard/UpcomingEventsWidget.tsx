@@ -102,9 +102,9 @@ const getCategoryConfig = (type: CalendarEventType | string) => {
         default:
             return {
                 label: 'Event',
-                color: '#3b82f6',
-                bg: '#eff6ff',
-                borderColor: '#bfdbfe',
+                color: '#059669',
+                bg: '#ecfdf5',
+                borderColor: '#a7f3d0',
                 icon: <EventIcon sx={{ fontSize: 14 }} />,
             };
     }
@@ -117,7 +117,7 @@ const getRelativeCountdown = (dateStr: string) => {
 
     if (diff === 0) return { text: 'Today', color: '#ef4444', bg: '#fee2e2' };
     if (diff === 1) return { text: 'Tomorrow', color: '#f59e0b', bg: '#fef3c7' };
-    if (diff > 1) return { text: `In ${diff} days`, color: '#3b82f6', bg: '#dbeafe' };
+    if (diff > 1) return { text: `In ${diff} days`, color: '#059669', bg: '#ecfdf5' };
     return { text: 'Ongoing', color: '#10b981', bg: '#ecfdf5' };
 };
 

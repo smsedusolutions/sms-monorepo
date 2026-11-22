@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SVGAreaChart — Lightweight SVG area / line chart.
  * Drop-in replacement for react-google-charts AreaChart / LineChart.
  * Zero external dependencies. No network requests.
@@ -26,7 +26,7 @@ interface SVGAreaChartProps {
 
 const SVGAreaChart: React.FC<SVGAreaChartProps> = ({
   data,
-  colors = ['#6366f1'],
+  colors = ['#059669'],
   height = 180,
   filled = true,
   yMin,
@@ -66,7 +66,7 @@ const SVGAreaChart: React.FC<SVGAreaChartProps> = ({
   const chartW = svgW - marginLeft - marginRight;
   const chartH = svgH - marginTop - marginBottom;
 
-  const color = colors[0] || '#6366f1';
+  const color = colors[0] || '#059669';
 
   const points = parsed.map((pt, i) => ({
     x: marginLeft + (i / (parsed.length - 1)) * chartW,

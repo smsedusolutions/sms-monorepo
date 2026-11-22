@@ -74,7 +74,7 @@ const TermsOfService: React.FC = () => {
         >
           {/* Header */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', sm: '1.9rem' }, color: '#0f172a', mb: 1 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', sm: '1.9rem' }, color: '#111827', mb: 1 }}>
               Terms of Service & DPDP Act Agreement
             </Typography>
             <Typography sx={{ fontSize: '0.9rem', color: '#64748b', mb: 1.5 }}>
@@ -102,7 +102,7 @@ const TermsOfService: React.FC = () => {
 
           {/* Section 1 */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               1. Acceptance of Terms
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7 }}>
@@ -114,7 +114,7 @@ const TermsOfService: React.FC = () => {
 
           {/* Section 2 */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               2. Who Can Use This Platform
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
@@ -133,7 +133,7 @@ const TermsOfService: React.FC = () => {
 
           {/* Section 3: Data Protection Clause (DPDP Act) */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               3. Data Protection & Privacy (DPDP Act, 2023 Rules)
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
@@ -159,7 +159,7 @@ const TermsOfService: React.FC = () => {
 
           {/* Section 4: Your Rights Under DPDP Act */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               4. Exercising Your Rights Under the DPDP Act
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
@@ -176,7 +176,7 @@ const TermsOfService: React.FC = () => {
               <Box
                 component="span"
                 onClick={() => navigate('/data-rights')}
-                sx={{ color: '#0284c7', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+                sx={{ color: '#059669', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
               >
                 DPDP Act Data Rights Request Page
               </Box>
@@ -188,7 +188,7 @@ const TermsOfService: React.FC = () => {
 
           {/* Section 5: Account Security */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               5. Account Security & User Duties
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
@@ -205,7 +205,7 @@ const TermsOfService: React.FC = () => {
 
           {/* Section 6: Grievance Redressal */}
           <Box sx={{ mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               6. Grievance Redressal (DPDP Act Section 13)
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 2 }}>
@@ -213,11 +213,11 @@ const TermsOfService: React.FC = () => {
             </Typography>
 
             <Box sx={{ p: 2.5, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
-              <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', mb: 1 }}>
+              <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: '#111827', mb: 1 }}>
                 DPDP Act Grievance Contact:
               </Typography>
               <Typography sx={{ fontSize: '0.85rem', color: '#334155', mb: 0.5 }}>
-                • <strong>Email:</strong> <a href="mailto:grievance@smsedusolutions.com" style={{ color: '#0284c7', textDecoration: 'none', fontWeight: 600 }}>grievance@smsedusolutions.com</a>
+                • <strong>Email:</strong> <a href="mailto:grievance@smsedusolutions.com" style={{ color: '#059669', textDecoration: 'none', fontWeight: 600 }}>grievance@smsedusolutions.com</a>
               </Typography>
               <Typography sx={{ fontSize: '0.85rem', color: '#334155', mb: 0.5 }}>
                 • <strong>Response SLA:</strong> Resolved within 30 days under DPDP Act requirements.

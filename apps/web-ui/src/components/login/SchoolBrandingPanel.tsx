@@ -20,11 +20,11 @@ const SmsLogo: React.FC<{ size?: number }> = ({ size = 44 }) => (
       width: size,
       height: size,
       borderRadius: '8px',
-      bgcolor: '#0284C7',
+      bgcolor: '#059669',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      boxShadow: '0 4px 12px rgba(2, 132, 199, 0.3)',
+      boxShadow: '0 4px 12px rgba(5, 150, 105, 0.3)',
       flexShrink: 0,
     }}
   >
@@ -38,7 +38,7 @@ const SchoolLogoMark: React.FC<{
   name?: string;
   primaryColor?: string;
   size?: number;
-}> = ({ logo, name, primaryColor = '#0284C7', size = 44 }) => {
+}> = ({ logo, name, primaryColor = '#059669', size = 44 }) => {
   if (logo) {
     return (
       <Box
@@ -89,8 +89,8 @@ const SchoolLogoMark: React.FC<{
 };
 
 const SchoolBrandingPanel: React.FC<SchoolBrandingPanelProps> = ({ school }) => {
-  const primary = school?.loginTheme?.primaryColor || '#0284C7';
-  const bg = school?.loginTheme?.backgroundColor || '#0F172A';
+  const primary = school?.loginTheme?.primaryColor || '#059669';
+  const bg = school?.loginTheme?.backgroundColor || '#111827';
 
   const isDarkBg = (() => {
     const hex = bg.replace('#', '');
@@ -102,7 +102,7 @@ const SchoolBrandingPanel: React.FC<SchoolBrandingPanelProps> = ({ school }) => 
     return lum < 0.5;
   })();
 
-  const heroTextColor = isDarkBg ? '#F8FAFC' : '#0F172A';
+  const heroTextColor = isDarkBg ? '#F8FAFC' : '#111827';
   const subTextColor = isDarkBg ? 'rgba(248,250,252,0.65)' : '#475569';
 
   if (!school) {
@@ -113,7 +113,7 @@ const SchoolBrandingPanel: React.FC<SchoolBrandingPanelProps> = ({ school }) => 
           display: { xs: 'none', md: 'flex' },
           flexDirection: 'column',
           p: 6,
-          bgcolor: '#0F172A',
+          bgcolor: '#111827',
           borderRight: '1px solid rgba(255,255,255,0.08)',
         }}
       >
@@ -138,13 +138,13 @@ const SchoolBrandingPanel: React.FC<SchoolBrandingPanelProps> = ({ school }) => 
                 display: 'inline-block',
                 px: 1.5,
                 py: 0.5,
-                bgcolor: 'rgba(2,132,199,0.15)',
-                border: '1px solid rgba(2,132,199,0.3)',
+                bgcolor: 'rgba(5,150,105,0.15)',
+                border: '1px solid rgba(5,150,105,0.3)',
                 borderRadius: '6px',
                 mb: 3,
               }}
             >
-              <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: '#38BDF8', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              <Typography sx={{ fontSize: '0.72rem', fontWeight: 700, color: '#34d399', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 School Management System
               </Typography>
             </Box>

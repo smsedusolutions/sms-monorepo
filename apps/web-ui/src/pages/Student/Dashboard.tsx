@@ -634,12 +634,12 @@ const StudentDashboard: React.FC = () => {
                     ))
                 ) : (
                     [
-                        { title: 'Attendance', value: `${percentage}%`, subtitle: 'Report & charts', icon: <AttendanceIcon />, color: '#10b981', onClick: () => navigate('/student/attendance') },
-                        { title: 'My Timetable', value: 'Schedule', subtitle: 'Daily class schedule', icon: <TimetableIcon />, color: '#3b82f6', onClick: () => navigate('/student/timetable') },
-                        { title: 'My Exams', value: 'Exams', subtitle: 'Schedules & hall tickets', icon: <ResultsIcon />, color: '#8b5cf6', onClick: () => navigate('/student/exam/my-exams') },
+                        { title: 'Attendance', value: `${percentage}%`, subtitle: 'Report & charts', icon: <AttendanceIcon />, color: '#059669', onClick: () => navigate('/student/attendance') },
+                        { title: 'My Timetable', value: 'Schedule', subtitle: 'Daily class schedule', icon: <TimetableIcon />, color: '#047857', onClick: () => navigate('/student/timetable') },
+                        { title: 'My Exams', value: 'Exams', subtitle: 'Schedules & hall tickets', icon: <ResultsIcon />, color: '#111827', onClick: () => navigate('/student/exam/my-exams') },
                         { title: 'Leave Application', value: 'Leave', subtitle: 'Apply & view status', icon: <LeaveIcon />, color: '#f59e0b', onClick: () => navigate('/student/leave/apply') },
-                        { title: 'Support Ticket', value: 'Support', subtitle: 'Submit query', icon: <SupportIcon />, color: '#6366f1', onClick: () => setSupportDialogOpen(true) },
-                        { title: 'My Profile', value: 'Profile', subtitle: 'Personal details & ID', icon: <ClassIcon />, color: '#06b6d4', onClick: () => navigate('/student/profile') },
+                        { title: 'Support Ticket', value: 'Support', subtitle: 'Submit query', icon: <SupportIcon />, color: '#1f2937', onClick: () => setSupportDialogOpen(true) },
+                        { title: 'My Profile', value: 'Profile', subtitle: 'Personal details & ID', icon: <ClassIcon />, color: '#059669', onClick: () => navigate('/student/profile') },
                     ].map((item) => (
                         <Grid size={{ xs: 6, sm: 6, md: 4 }} key={item.title}>
                             <Paper

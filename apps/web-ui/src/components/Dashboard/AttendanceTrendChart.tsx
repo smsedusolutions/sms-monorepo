@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Box, Typography, Skeleton, Paper } from '@mui/material';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import SVGAreaChart from '../Charts/SVGAreaChart';
@@ -33,7 +33,7 @@ export const AttendanceTrendChart: React.FC<AttendanceTrendChartProps> = ({
             ) : (
                 <SVGAreaChart
                     data={chartData}
-                    colors={['#3b82f6']}
+                    colors={['#059669']}
                     height={chartHeight}
                     filled={true}
                     yMin={0}

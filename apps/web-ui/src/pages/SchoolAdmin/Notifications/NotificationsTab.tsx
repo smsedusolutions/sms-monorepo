@@ -60,10 +60,10 @@ const getNotificationVisuals = (type: NotificationType | string) => {
       };
     case "announcement":
       return {
-        icon: <AnnouncementIcon sx={{ fontSize: 20, color: "#2563eb" }} />,
-        bg: "#eff6ff",
+        icon: <AnnouncementIcon sx={{ fontSize: 20, color: "#059669" }} />,
+        bg: "#ecfdf5",
         label: "Announcement",
-        chipColor: "#2563eb",
+        chipColor: "#059669",
       };
     case "leave_status":
       return {
@@ -417,7 +417,7 @@ const NotificationsTab: React.FC = () => {
                               width: 6,
                               height: 6,
                               borderRadius: "50%",
-                              bgcolor: "#2563eb",
+                              bgcolor: "#059669",
                               flexShrink: 0,
                             }}
                           />

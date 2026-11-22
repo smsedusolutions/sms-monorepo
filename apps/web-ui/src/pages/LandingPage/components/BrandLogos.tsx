@@ -40,7 +40,7 @@ export const SmsEduLogo: React.FC<SmsLogoProps> = ({
                 fontWeight: 900,
                 fontSize: size > 40 ? '1.45rem' : '1.2rem',
                 letterSpacing: '-0.03em',
-                color: variant === 'dark' ? '#FFFFFF' : '#0F172A',
+                color: variant === 'dark' ? '#FFFFFF' : '#111827',
                 lineHeight: 1,
               }}
             >
@@ -52,7 +52,7 @@ export const SmsEduLogo: React.FC<SmsLogoProps> = ({
                 fontWeight: 800,
                 fontSize: size > 40 ? '1.05rem' : '0.9rem',
                 letterSpacing: '0.04em',
-                color: variant === 'dark' ? '#38BDF8' : '#0284C7',
+                color: variant === 'dark' ? '#34d399' : '#059669',
                 lineHeight: 1,
               }}
             >
@@ -70,7 +70,7 @@ export const SmsEduLogo: React.FC<SmsLogoProps> = ({
             }}
           >
             powered by{' '}
-            <strong style={{ color: variant === 'dark' ? '#67E8F9' : '#0284C7' }}>
+            <strong style={{ color: variant === 'dark' ? '#67E8F9' : '#059669' }}>
               3v TechWorks
             </strong>
           </Typography>
