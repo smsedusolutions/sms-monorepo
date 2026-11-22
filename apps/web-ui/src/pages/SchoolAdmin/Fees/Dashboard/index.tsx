@@ -147,7 +147,7 @@ const FeeDashboard: React.FC = () => {
                 <Grid size={{ xs: 6, sm: 6, md: 3 }}>
                     <Card elevation={0} sx={{ borderRadius: 2.5, border: '1px solid #e2e8f0', bgcolor: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.02)', height: '100%' }}>
                         <CardContent sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 }, p: { xs: 1.25, sm: 1.75 }, '&:last-child': { pb: { xs: 1.25, sm: 1.75 } } }}>
-                            <Box sx={{ p: { xs: 0.75, sm: 1 }, bgcolor: '#eff6ff', borderRadius: 2, color: '#3b82f6', display: 'flex', flexShrink: 0 }}>
+                            <Box sx={{ p: { xs: 0.75, sm: 1 }, bgcolor: '#ecfdf5', borderRadius: 2, color: '#059669', display: 'flex', flexShrink: 0 }}>
                                 <AccountBalanceWalletIcon sx={{ fontSize: { xs: 20, sm: 26 } }} />
                             </Box>
                             <Box sx={{ minWidth: 0, overflow: 'hidden' }}>
@@ -271,7 +271,7 @@ const FeeDashboard: React.FC = () => {
                                     </Box>
                                 ) : (
                                     todayMethods.map((item: any, idx: number) => {
-                                        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+                                        const colors = ['#059669', '#10b981', '#f59e0b', '#111827', '#047857'];
                                         const color = colors[idx % colors.length];
                                         return (
                                             <Box key={item._id} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 1, bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid #f1f5f9' }}>
@@ -322,9 +322,9 @@ const FeeDashboard: React.FC = () => {
             </Typography>
             <Grid container spacing={{ xs: 1.5, sm: 2 }}>
                 {[
-                    { label: 'Fee Categories', icon: <SettingsIcon />, to: '/school-admin/fees/categories', color: '#3b82f6' },
-                    { label: 'Fee Structures', icon: <SettingsIcon />, to: '/school-admin/fees/structures', color: '#10b981' },
-                    { label: 'Student Ledgers', icon: <PeopleIcon />, to: '/school-admin/fees/accounts', color: '#8b5cf6' },
+                    { label: 'Fee Categories', icon: <SettingsIcon />, to: '/school-admin/fees/categories', color: '#059669' },
+                    { label: 'Fee Structures', icon: <SettingsIcon />, to: '/school-admin/fees/structures', color: '#047857' },
+                    { label: 'Student Ledgers', icon: <PeopleIcon />, to: '/school-admin/fees/accounts', color: '#111827' },
                     { label: 'Collection Reports', icon: <AssessmentIcon />, to: '/school-admin/fees/reports', color: '#f59e0b' },
                 ].map((action) => (
                     <Grid size={{ xs: 6, sm: 3 }} key={action.label}>

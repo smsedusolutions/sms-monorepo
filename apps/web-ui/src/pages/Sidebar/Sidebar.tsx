@@ -208,8 +208,8 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
         }}
         style={{
           zIndex: 1200,
-          background: "#1e293b",
-          boxShadow: isOpen ? "4px 0 20px rgba(30, 41, 59, 0.3)" : "none",
+          background: "#111827",
+          boxShadow: isOpen ? "4px 0 20px rgba(17, 24, 39, 0.3)" : "none",
           overflow: "hidden",
           display: "flex",
           flexDirection: "column",
@@ -258,7 +258,7 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
                   gap: 2,
                 }}
               >
-                <CircularProgress size={24} sx={{ color: "#3b82f6" }} />
+                <CircularProgress size={24} sx={{ color: "#059669" }} />
                 <Typography variant="caption" sx={{ color: "#94a3b8" }}>
                   Loading menus...
                 </Typography>
@@ -274,9 +274,9 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
                 const isHovered = hoveredItem === item.name;
                 const isSelected = isMenuItemSelected(item);
                 const backgroundColor = isSelected
-                  ? "#3b82f6"
+                  ? "#059669"
                   : isHovered
-                    ? "rgba(59, 130, 246, 0.2)"
+                    ? "rgba(5, 150, 105, 0.15)"
                     : "transparent";
 
                 return (
@@ -301,7 +301,7 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
                         borderRadius: "8px",
                         marginBottom: "4px",
                         border: isSelected
-                          ? "1px solid rgba(59, 130, 246, 0.3)"
+                          ? "1px solid rgba(5, 150, 105, 0.3)"
                           : "1px solid transparent",
                         transition: "all 0.2s ease",
                         padding: "12px 16px",
@@ -359,11 +359,11 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
                         }}
                         transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
                         style={{
-                          background: "rgba(30, 41, 59, 0.5)",
+                          background: "rgba(17, 24, 39, 0.6)",
                           borderRadius: "8px",
                           margin: "4px 0 4px 16px",
                           overflow: "hidden",
-                          border: "1px solid #334155",
+                          border: "1px solid #1f2937",
                         }}
                       >
                         {(expandedItem === item.name ||
@@ -375,9 +375,9 @@ const Sidebar = ({ isOpen, onClose, role, onLogout }: SidebarProps) => {
                               hoveredSubItem === `${item.name}-${subItem.name}`;
 
                             const subItemBackground = isSubItemActive
-                              ? "linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, rgba(96, 165, 250, 0.3) 100%)"
+                              ? "linear-gradient(135deg, rgba(5, 150, 105, 0.3) 0%, rgba(16, 185, 129, 0.3) 100%)"
                               : isSubItemHovered
-                                ? "rgba(59, 130, 246, 0.15)"
+                                ? "rgba(5, 150, 105, 0.15)"
                                 : "transparent";
 
                             return (

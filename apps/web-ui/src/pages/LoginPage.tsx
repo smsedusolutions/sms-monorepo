@@ -3,7 +3,6 @@ import {
   Box,
   Typography,
   IconButton,
-  Button,
   InputAdornment,
   Alert,
   Fade,
@@ -16,7 +15,6 @@ import {
   Email,
   Lock,
   School as SchoolIcon,
-  Home as HomeIcon,
   ArrowForward,
   VerifiedUser,
   LocationOn,
@@ -58,9 +56,9 @@ const LoginPage: React.FC = () => {
   const { fetchProfile } = useUserStore();
   const { school, isLoading: isBrandingLoading } = useSubdomainSchool();
 
-  const primary = school?.loginTheme?.primaryColor || '#0284C7';
-  const accent = school?.loginTheme?.accentColor || '#0369A1';
-  const panelBg = school?.loginTheme?.backgroundColor || '#0B0F1A';
+  const primary = school?.loginTheme?.primaryColor || '#059669';
+  const accent = school?.loginTheme?.accentColor || '#047857';
+  const panelBg = school?.loginTheme?.backgroundColor || '#111827';
 
   useEffect(() => {
     document.title = school?.schoolName
@@ -369,11 +367,11 @@ const LoginPage: React.FC = () => {
                     width: 42,
                     height: 42,
                     borderRadius: '8px',
-                    background: '#0284C7',
+                    background: '#059669',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    boxShadow: '0 4px 12px rgba(2,132,199,0.3)',
+                    boxShadow: '0 4px 12px rgba(5,150,105,0.3)',
                     flexShrink: 0,
                   }}
                 >
@@ -407,33 +405,6 @@ const LoginPage: React.FC = () => {
               </Box>
             </>
           )}
-
-          {/* Home button to navigate to landing page */}
-          <Button
-            onClick={() => navigate('/')}
-            startIcon={<HomeIcon sx={{ fontSize: 18 }} />}
-            sx={{
-              color: '#FFFFFF',
-              bgcolor: 'rgba(255, 255, 255, 0.08)',
-              border: '1px solid rgba(255, 255, 255, 0.16)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: '6px',
-              px: 2.2,
-              py: 0.7,
-              fontSize: '0.85rem',
-              fontWeight: 700,
-              textTransform: 'none',
-              transition: 'all 0.25s ease',
-              '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.18)',
-                borderColor: 'rgba(255, 255, 255, 0.35)',
-                transform: 'translateY(-2px)',
-                boxShadow: '0 6px 20px rgba(0,0,0,0.3)',
-              },
-            }}
-          >
-            Home
-          </Button>
         </Box>
 
         {/* ── Hero section ── */}
@@ -729,40 +700,15 @@ const LoginPage: React.FC = () => {
               position: 'relative',
             }}
           >
-            {/* Top Bar with Home Button & Secure Login badge */}
+            {/* Top Bar with Secure Login badge */}
             <Box
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-end',
                 mb: 2.5,
               }}
             >
-              <Button
-                size="small"
-                onClick={() => navigate('/')}
-                startIcon={<HomeIcon sx={{ fontSize: 16 }} />}
-                sx={{
-                  color: '#475569',
-                  bgcolor: '#F8FAFC',
-                  border: '1px solid #E2E8F0',
-                  borderRadius: '6px',
-                  px: 1.6,
-                  py: 0.4,
-                  fontSize: '0.78rem',
-                  fontWeight: 700,
-                  textTransform: 'none',
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    bgcolor: '#F1F5F9',
-                    color: '#0F172A',
-                    borderColor: '#CBD5E1',
-                  },
-                }}
-              >
-                Home
-              </Button>
-
               <Box
                 sx={{
                   display: 'flex',
@@ -991,7 +937,7 @@ const LoginPage: React.FC = () => {
                   boxShadow: 'none',
                   mb: 3,
                   '&:hover': consentGiven ? {
-                    background: '#0369A1',
+                    background: '#047857',
                     boxShadow: 'none',
                   } : {},
                   transition: 'background-color 0.2s ease',

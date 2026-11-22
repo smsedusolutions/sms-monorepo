@@ -162,7 +162,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         {
             id: 'timeFormat',
             label: 'Time Format',
-            icon: <AccessTimeIcon sx={{ fontSize: 18, color: '#3b82f6' }} />,
+            icon: <AccessTimeIcon sx={{ fontSize: 18, color: '#059669' }} />,
             currentValueLabel: timeFormat === '12h' ? '12h (AM/PM)' : '24h',
             options: [
                 { label: '12 Hours (AM/PM)', value: '12h' },
@@ -199,7 +199,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 position="fixed"
                 sx={{
                     zIndex: 1201,
-                    backgroundColor: '#1e293b',
+                    backgroundColor: '#111827',
                     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                 }}
             >
@@ -214,7 +214,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                             zIndex: 1300,
                             backgroundColor: 'transparent',
                             '& .MuiLinearProgress-bar': {
-                                backgroundColor: '#3b82f6',
+                                backgroundColor: '#059669',
                             },
                         }}
                     />
@@ -308,7 +308,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                         top: 'calc(100% + 10px)',
                                         right: { xs: '-30px', sm: 0 },
                                         width: { xs: 220, sm: 240 },
-                                        bgcolor: '#1e293b',
+                                        bgcolor: '#111827',
                                         borderRadius: '14px',
                                         boxShadow: '0 20px 50px rgba(0,0,0,0.45)',
                                         border: '1px solid rgba(255,255,255,0.1)',
@@ -352,7 +352,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                                         px: 2,
                                                         py: 1.2,
                                                         cursor: 'pointer',
-                                                        bgcolor: isSubOpen ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                                                        bgcolor: isSubOpen ? 'rgba(5, 150, 105, 0.15)' : 'transparent',
                                                         color: isSubOpen ? '#ffffff' : 'rgba(255,255,255,0.9)',
                                                         transition: 'background 0.15s',
                                                         '&:hover': {
@@ -371,7 +371,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                                         {!isMobile && (
                                                             <ChevronLeftIcon sx={{
                                                                 fontSize: 16,
-                                                                color: isSubOpen ? '#60a5fa' : '#94a3b8',
+                                                                color: isSubOpen ? '#34d399' : '#94a3b8',
                                                                 transform: isSubOpen ? 'translateX(-3px)' : 'none',
                                                                 transition: 'all 0.2s ease',
                                                             }} />
@@ -406,7 +406,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                                                       top: -6,
                                                                       right: 'calc(100% + 8px)',
                                                                       width: 190,
-                                                                      bgcolor: '#0f172a',
+                                                                      bgcolor: '#030712',
                                                                       borderRadius: '12px',
                                                                       boxShadow: '0 16px 36px rgba(0,0,0,0.5)',
                                                                       border: '1px solid rgba(255,255,255,0.12)',
@@ -439,8 +439,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                                                         pl: isMobile ? 4 : 2,
                                                                         py: 0.9,
                                                                         cursor: 'pointer',
-                                                                        bgcolor: isSelected ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-                                                                        color: isSelected ? '#60a5fa' : 'rgba(255,255,255,0.85)',
+                                                                        bgcolor: isSelected ? 'rgba(5, 150, 105, 0.2)' : 'transparent',
+                                                                        color: isSelected ? '#34d399' : 'rgba(255,255,255,0.85)',
                                                                         transition: 'background 0.15s',
                                                                         '&:hover': {
                                                                             bgcolor: 'rgba(255,255,255,0.1)',
@@ -451,7 +451,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                                                     <Typography variant="body2" sx={{ fontWeight: isSelected ? 700 : 500, fontSize: '0.8rem' }}>
                                                                         {opt.label}
                                                                     </Typography>
-                                                                    {isSelected && <CheckIcon sx={{ fontSize: 16, color: '#3b82f6' }} />}
+                                                                    {isSelected && <CheckIcon sx={{ fontSize: 16, color: '#059669' }} />}
                                                                 </Box>
                                                             );
                                                         })}
@@ -493,7 +493,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                 sx={{
                                     width: 36,
                                     height: 36,
-                                    bgcolor: '#0284C7',
+                                    bgcolor: '#059669',
                                     fontSize: '0.95rem',
                                     fontWeight: 700,
                                     border: profilePopupOpen ? '2px solid rgba(255,255,255,0.6)' : '2px solid rgba(255,255,255,0.2)',
@@ -524,7 +524,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                     top: 'calc(100% + 12px)',
                                     right: 0,
                                     width: 260,
-                                    background: '#1e293b',
+                                    background: '#111827',
                                     borderRadius: '8px',
                                     boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
                                     border: '1px solid rgba(255,255,255,0.08)',
@@ -540,7 +540,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                 {/* Profile Header */}
                                 <Box
                                     sx={{
-                                        background: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+                                        background: 'linear-gradient(135deg, #030712 0%, #111827 100%)',
                                         px: 2.5,
                                         pt: 2.5,
                                         pb: 2,
@@ -558,7 +558,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                             sx={{
                                                 width: 64,
                                                 height: 64,
-                                                bgcolor: '#0284C7',
+                                                bgcolor: '#059669',
                                                 fontSize: '1.6rem',
                                                 fontWeight: 700,
                                                 border: '3px solid rgba(255,255,255,0.15)',
@@ -576,8 +576,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                                 width: 12,
                                                 height: 12,
                                                 borderRadius: '50%',
-                                                background: '#22c55e',
-                                                border: '2px solid #1e293b',
+                                                background: '#10b981',
+                                                border: '2px solid #111827',
                                             }}
                                         />
                                     </Box>
@@ -592,11 +592,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                                 px: 1.2,
                                                 py: 0.2,
                                                 borderRadius: '20px',
-                                                background: 'rgba(59, 130, 246, 0.25)',
-                                                border: '1px solid rgba(59, 130, 246, 0.4)',
+                                                background: 'rgba(5, 150, 105, 0.25)',
+                                                border: '1px solid rgba(5, 150, 105, 0.4)',
                                             }}
                                         >
-                                            <Typography sx={{ fontSize: '0.7rem', color: '#93c5fd', fontWeight: 600, textTransform: 'capitalize' }}>
+                                            <Typography sx={{ fontSize: '0.7rem', color: '#6ee7b7', fontWeight: 600, textTransform: 'capitalize' }}>
                                                 {roleName}
                                             </Typography>
                                         </Box>
@@ -621,8 +621,8 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                                                 color: '#cbd5e1',
                                                 transition: 'all 0.18s ease',
                                                 '&:hover': {
-                                                    background: 'rgba(59, 130, 246, 0.15)',
-                                                    color: '#93c5fd',
+                                                    background: 'rgba(5, 150, 105, 0.15)',
+                                                    color: '#6ee7b7',
                                                 },
                                             }}
                                         >

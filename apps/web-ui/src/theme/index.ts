@@ -1,21 +1,28 @@
 import { createTheme, alpha } from '@mui/material/styles';
 
-const primaryMain = '#0284c7'; // Sky / Corporate Blue
-const secondaryMain = '#0f172a'; // Slate 900
+const primaryMain = '#059669'; // Emerald
+const secondaryMain = '#111827'; // Rich Charcoal
+const accentWarning = '#f59e0b'; // Warm Marigold
 const backgroundDefault = '#f8fafc'; // Slate 50
 
 export const theme = createTheme({
   palette: {
     primary: {
       main: primaryMain,
-      light: alpha(primaryMain, 0.1),
-      dark: '#0369a1',
+      light: '#10b981',
+      dark: '#047857',
       contrastText: '#ffffff',
     },
     secondary: {
       main: secondaryMain,
-      light: alpha(secondaryMain, 0.1),
-      dark: '#020617',
+      light: '#1f2937',
+      dark: '#030712',
+      contrastText: '#ffffff',
+    },
+    warning: {
+      main: accentWarning,
+      light: '#fbbf24',
+      dark: '#d97706',
       contrastText: '#ffffff',
     },
     background: {
@@ -23,10 +30,10 @@ export const theme = createTheme({
       paper: '#ffffff',
     },
     text: {
-      primary: '#1e293b', // Slate 800
-      secondary: '#64748b', // Slate 500
+      primary: '#111827', // Rich Charcoal
+      secondary: '#4b5563', // Gray 600
     },
-    divider: alpha('#cbd5e1', 0.5), // Slate 300
+    divider: alpha('#e5e7eb', 0.8), // Gray 200
   },
   typography: {
     fontFamily: '"Outfit", "Inter", "Roboto", "Helvetica", "Arial", sans-serif',
@@ -60,7 +67,7 @@ export const theme = createTheme({
           backgroundColor: primaryMain,
           color: '#ffffff',
           '&:hover': {
-            backgroundColor: '#0369a1',
+            backgroundColor: '#047857',
           },
         },
       },

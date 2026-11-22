@@ -254,9 +254,9 @@ const StudentsPage = () => {
             <IconButton
               size="small"
               sx={{
-                color: '#0284c7',
-                bgcolor: 'rgba(2, 132, 199, 0.08)',
-                '&:hover': { bgcolor: 'rgba(2, 132, 199, 0.16)' },
+                color: '#059669',
+                bgcolor: 'rgba(5, 150, 105, 0.08)',
+                '&:hover': { bgcolor: 'rgba(5, 150, 105, 0.16)' },
               }}
               onClick={(e) => { e.stopPropagation(); handleOpenTC(row); }}
             >

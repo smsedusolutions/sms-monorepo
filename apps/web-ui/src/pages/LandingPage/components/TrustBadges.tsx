@@ -52,7 +52,7 @@ const SingleBadgeCard: React.FC<BadgeItemProps> = ({ icon, title, subtitle, acce
       </Box>
 
       <Box>
-        <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: isDark ? '#F8FAFC' : '#0F172A', lineHeight: 1.25, mb: 0.4 }}>
+        <Typography sx={{ fontWeight: 800, fontSize: '1rem', color: isDark ? '#F8FAFC' : '#111827', lineHeight: 1.25, mb: 0.4 }}>
           {title}
         </Typography>
         <Typography sx={{ fontSize: '0.82rem', color: isDark ? '#94A3B8' : '#64748B', lineHeight: 1.45 }}>
@@ -71,19 +71,19 @@ export const TrustBadges: React.FC = () => {
       icon: <Security sx={{ fontSize: 26 }} />,
       title: 'Secure & Reliable',
       subtitle: 'Data encryption, DPDP Act compliance, role-based access control.',
-      accent: '#0284C7',
+      accent: '#059669',
     },
     {
       icon: <CloudDone sx={{ fontSize: 26 }} />,
       title: 'Cloud Hosted',
       subtitle: 'Continuous availability with zero on-premise servers or maintenance overhead.',
-      accent: '#38BDF8',
+      accent: '#34d399',
     },
     {
       icon: <Devices sx={{ fontSize: 26 }} />,
       title: 'Multi-Device Access',
       subtitle: 'Optimized responsive access across Laptops, Tablets, and Mobile Phones.',
-      accent: isDark ? '#CBD5E1' : '#0F172A',
+      accent: isDark ? '#CBD5E1' : '#111827',
     },
     {
       icon: <Diversity3 sx={{ fontSize: 26 }} />,
@@ -97,7 +97,7 @@ export const TrustBadges: React.FC = () => {
     <Box
       sx={{
         py: { xs: 5, md: 7 },
-        bgcolor: isDark ? '#0F172A' : '#F8FAFC',
+        bgcolor: isDark ? '#111827' : '#F8FAFC',
         borderBottom: isDark ? '1px solid #1E293B' : '1px solid #E2E8F0',
         transition: 'background-color 0.25s ease, border-color 0.25s ease',
       }}

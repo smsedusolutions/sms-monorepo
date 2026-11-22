@@ -52,8 +52,8 @@ export const LandingFooter: React.FC = () => {
                 width: 44,
                 height: 44,
                 borderRadius: '6px',
-                bgcolor: 'rgba(2, 132, 199, 0.15)',
-                color: '#38BDF8',
+                bgcolor: 'rgba(5, 150, 105, 0.15)',
+                color: '#34d399',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -70,14 +70,14 @@ export const LandingFooter: React.FC = () => {
                 <Typography
                   component="a"
                   href="tel:+916361888927"
-                  sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.95rem', textDecoration: 'none', '&:hover': { color: '#38BDF8' } }}
+                  sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.95rem', textDecoration: 'none', '&:hover': { color: '#34d399' } }}
                 >
                   6361888927
                 </Typography>
                 <Typography
                   component="a"
                   href="tel:+917259237030"
-                  sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.95rem', textDecoration: 'none', '&:hover': { color: '#38BDF8' } }}
+                  sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.95rem', textDecoration: 'none', '&:hover': { color: '#34d399' } }}
                 >
                   72592 37030
                 </Typography>
@@ -93,7 +93,7 @@ export const LandingFooter: React.FC = () => {
                 height: 44,
                 borderRadius: '6px',
                 bgcolor: 'rgba(14, 165, 233, 0.15)',
-                color: '#38BDF8',
+                color: '#34d399',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -109,7 +109,7 @@ export const LandingFooter: React.FC = () => {
               <Typography
                 component="a"
                 href="mailto:support@smsedusolutions.in"
-                sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none', wordBreak: 'break-all', '&:hover': { color: '#38BDF8' } }}
+                sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none', wordBreak: 'break-all', '&:hover': { color: '#34d399' } }}
               >
                 support@smsedusolutions.in
               </Typography>
@@ -142,7 +142,7 @@ export const LandingFooter: React.FC = () => {
                 href="https://www.smsedusolutions.in"
                 target="_blank"
                 rel="noreferrer"
-                sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none', '&:hover': { color: '#38BDF8' } }}
+                sx={{ color: '#FFFFFF', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none', '&:hover': { color: '#34d399' } }}
               >
                 www.smsedusolutions.in
               </Typography>
@@ -155,7 +155,7 @@ export const LandingFooter: React.FC = () => {
               sx={{
                 fontSize: '0.95rem',
                 fontWeight: 800,
-                color: '#38BDF8',
+                color: '#34d399',
               }}
             >
               Technology for Tomorrow's Learners
@@ -210,7 +210,7 @@ export const LandingFooter: React.FC = () => {
                     fontSize: '0.88rem',
                     textDecoration: 'none',
                     transition: 'color 0.2s',
-                    '&:hover': { color: '#38BDF8' },
+                    '&:hover': { color: '#34d399' },
                   }}
                 >
                   {item}
@@ -246,7 +246,7 @@ export const LandingFooter: React.FC = () => {
                     cursor: 'pointer',
                     textDecoration: 'none',
                     transition: 'color 0.2s',
-                    '&:hover': { color: '#38BDF8' },
+                    '&:hover': { color: '#34d399' },
                   }}
                 >
                   {item.label}
@@ -280,8 +280,8 @@ export const LandingFooter: React.FC = () => {
               variant="contained"
               onClick={() => navigate('/login')}
               sx={{
-                background: '#0284C7 !important',
-                bgcolor: '#0284C7 !important',
+                background: '#059669 !important',
+                bgcolor: '#059669 !important',
                 color: 'white !important',
                 fontWeight: 700,
                 borderRadius: '6px',
@@ -290,8 +290,8 @@ export const LandingFooter: React.FC = () => {
                 textTransform: 'none',
                 boxShadow: 'none',
                 '&:hover': {
-                  background: '#0369A1 !important',
-                  bgcolor: '#0369A1 !important',
+                  background: '#047857 !important',
+                  bgcolor: '#047857 !important',
                   boxShadow: 'none',
                 },
               }}
@@ -320,7 +320,7 @@ export const LandingFooter: React.FC = () => {
               href="https://3vtechworks.com"
               target="_blank"
               rel="noopener"
-              sx={{ color: '#38BDF8', fontWeight: 700, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
+              sx={{ color: '#34d399', fontWeight: 700, textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}
             >
               3v TechWorks
             </Link>
@@ -330,14 +330,14 @@ export const LandingFooter: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
             <Link
               onClick={() => navigate('/privacy-policy')}
-              sx={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'none', '&:hover': { color: '#38BDF8' } }}
+              sx={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'none', '&:hover': { color: '#34d399' } }}
             >
               Privacy Policy
             </Link>
             <Typography sx={{ color: '#475569', fontSize: '0.75rem' }}>•</Typography>
             <Link
               onClick={() => navigate('/terms-and-conditions')}
-              sx={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'none', '&:hover': { color: '#38BDF8' } }}
+              sx={{ color: '#94A3B8', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'none', '&:hover': { color: '#34d399' } }}
             >
               Terms & Conditions
             </Link>

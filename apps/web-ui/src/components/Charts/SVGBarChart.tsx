@@ -1,4 +1,4 @@
-﻿/**
+/**
  * SVGBarChart — Lightweight grouped column chart.
  * Drop-in replacement for react-google-charts ColumnChart.
  * Zero external dependencies. No network requests.
@@ -19,7 +19,7 @@ interface SVGBarChartProps {
   yMin?: number;
 }
 
-const DEFAULT_COLORS = ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'];
+const DEFAULT_COLORS = ['#059669', '#047857', '#111827', '#f59e0b', '#ef4444'];
 
 const SVGBarChart: React.FC<SVGBarChartProps> = ({
   data,

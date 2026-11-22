@@ -3,32 +3,44 @@ const { matchOrigin } = require('./originMatcher');
 const DEFAULT_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://localhost:5173',
+    'http://localhost:5174',
     'http://localhost:*',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:5173',
     'http://127.0.0.1:*',
+    'https://smsedusolutions.in',
+    'https://www.smsedusolutions.in',
+    'https://*.smsedusolutions.in',
+    'https://*smsedusolutions.in',
+    '*.smsedusolutions.in',
     'https://smsedusolutions.vercel.app',
     'https://sms-web-ui.vercel.app',
     'https://*.vercel.app',
     'https://*vercel.app',
-    'https://smsedusolutions.in',
-    'https://*.smsedusolutions.in',
-    'https://*smsedusolutions.in',
+    '*.vercel.app',
 ];
 
 /**
- * Resolves the merged list of allowed origins from defaults, environment variables, and custom additions.
+ * Resolves the merged list of allowed origins from defaults, environment variables (ALLOWED_ORIGIN / ALLOWED_ORIGINS), and custom additions.
  * @param {string[]|string} [customOrigins]
  * @returns {string[]}
  */
 function getAllowedOrigins(customOrigins = []) {
-    const envOrigins = process.env.ALLOWED_ORIGINS || process.env.CORS_ORIGINS || '';
-    const parsedEnv = envOrigins
-        ? envOrigins
-            .split(',')
-            .map(url => url.trim().replace(/^["']|["']$/g, ''))
-            .filter(Boolean)
-        : [];
+    const envVars = [
+        process.env.ALLOWED_ORIGIN,
+        process.env.ALLOWED_ORIGINS,
+        process.env.CORS_ORIGIN,
+        process.env.CORS_ORIGINS,
+        process.env.FRONTEND_URL,
+        process.env.CLIENT_URL,
+    ];
+
+    const parsedEnv = envVars
+        .filter(Boolean)
+        .flatMap(val => (typeof val === 'string' ? val.split(',') : []))
+        .map(url => url.trim().replace(/^["']|["']$/g, '').replace(/\/+$/, ''))
+        .filter(Boolean);
+
     const extra = Array.isArray(customOrigins) ? customOrigins : (customOrigins ? [customOrigins] : []);
     const merged = [...DEFAULT_ALLOWED_ORIGINS, ...parsedEnv, ...extra];
     return Array.from(new Set(merged.filter(Boolean)));
@@ -80,6 +92,9 @@ function getCorsOptions(customOptions = {}) {
             'RateLimit-Limit',
             'RateLimit-Remaining',
             'RateLimit-Reset',
+            'sentry-trace',
+            'baggage',
+            'x-client-version',
         ],
         exposedHeaders: [
             'Content-Range',

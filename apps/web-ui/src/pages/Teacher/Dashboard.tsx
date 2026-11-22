@@ -162,11 +162,11 @@ const TeacherDashboard: React.FC = () => {
     }, [teacher, allClasses, allStudents]);
 
     const cardColors = [
-        { bg: '#ecfdf5', accent: '#10b981', iconBg: '#d1fae5' },
-        { bg: '#eff6ff', accent: '#3b82f6', iconBg: '#dbeafe' },
-        { bg: '#f5f3ff', accent: '#8b5cf6', iconBg: '#ede9fe' },
-        { bg: '#fdf2f8', accent: '#ec4899', iconBg: '#fce7f3' },
+        { bg: '#ecfdf5', accent: '#059669', iconBg: '#d1fae5' },
+        { bg: '#f3f4f6', accent: '#111827', iconBg: '#e5e7eb' },
         { bg: '#fffbeb', accent: '#f59e0b', iconBg: '#fef3c7' },
+        { bg: '#f0fdf4', accent: '#047857', iconBg: '#dcfce7' },
+        { bg: '#fffbeb', accent: '#d97706', iconBg: '#fef3c7' },
     ];
 
     const assignedTotalStudents = useMemo(() => {
@@ -248,8 +248,8 @@ const TeacherDashboard: React.FC = () => {
                     ))
                 ) : (
                     [
-                        { label: 'Total Students', value: assignedTotalStudents > 0 ? assignedTotalStudents : (stats?.totalStudents || 0), icon: <StudentsIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: '#6366f1' },
-                        { label: 'Today Attendance', value: stats?.attendancePercentage || 'Not Marked', icon: <AttendanceIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: '#10b981' },
+                        { label: 'Total Students', value: assignedTotalStudents > 0 ? assignedTotalStudents : (stats?.totalStudents || 0), icon: <StudentsIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: '#059669' },
+                        { label: 'Today Attendance', value: stats?.attendancePercentage || 'Not Marked', icon: <AttendanceIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: '#047857' },
                         { label: 'Pending Leaves', value: stats?.pendingLeaveRequests || 0, icon: <EventIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: '#f59e0b' },
                     ].map((stat) => (
                         <Grid size={{ xs: 4, sm: 4, md: 4 }} key={stat.label}>

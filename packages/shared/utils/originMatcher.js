@@ -1,8 +1,8 @@
 /**
  * Helper to match an origin against an allowed pattern
- * Supporting wildcards like https://*.vercel.app, https://*vercel.app, *.vercel.app, http://localhost:*
- * @param {string} origin - The request's origin header (e.g. 'https://smsedusolutions.vercel.app')
- * @param {string} allowedPattern - An allowed origin pattern (e.g. 'https://*.vercel.app')
+ * Supporting wildcards like https://*.smsedusolutions.in, https://*.vercel.app, *.smsedusolutions.in, http://localhost:*
+ * @param {string} origin - The request's origin header (e.g. 'https://demoschool.smsedusolutions.in')
+ * @param {string} allowedPattern - An allowed origin pattern (e.g. 'https://*.smsedusolutions.in')
  * @returns {boolean} - True if the origin matches the pattern
  */
 function normalizeOrigin(url) {
@@ -13,7 +13,6 @@ function normalizeOrigin(url) {
         .replace(/\/+$/, '')
         .toLowerCase();
 }
-
 
 function matchOrigin(origin, allowedPattern) {
     if (!origin || !allowedPattern) return false;
@@ -32,16 +31,52 @@ function matchOrigin(origin, allowedPattern) {
 
     if (originNoProto === patternNoProto) return true;
 
-    // 3. Check if pattern contains wildcard
+    // 3. Subdomain and Wildcard Matching
     if (normPattern.includes('*')) {
         try {
+            // Check protocol match if pattern specifies one
+            const patternProtoMatch = normPattern.match(/^([a-z]+):\/\//);
+            const originProtoMatch = normOrigin.match(/^([a-z]+):\/\//);
+            if (patternProtoMatch && originProtoMatch) {
+                if (patternProtoMatch[1] !== originProtoMatch[1]) {
+                    return false;
+                }
+            }
+
+            // Extract host and port
+            const originHostPort = originNoProto;
+            const patternHostPort = patternNoProto;
+            const originHost = originHostPort.split(':')[0];
+            const patternHost = patternHostPort.split(':')[0];
+            const originPort = originHostPort.includes(':') ? originHostPort.split(':')[1] : '';
+            const patternPort = patternHostPort.includes(':') ? patternHostPort.split(':')[1] : '';
+
+            // Handle domain wildcards like *.smsedusolutions.in or *smsedusolutions.in
+            if (patternHost.startsWith('*.')) {
+                const rootDomain = patternHost.slice(2);
+                if (originHost === rootDomain || originHost.endsWith('.' + rootDomain)) {
+                    if (patternPort && patternPort !== '*' && patternPort !== originPort) {
+                        return false;
+                    }
+                    return true;
+                }
+            } else if (patternHost.startsWith('*')) {
+                const suffix = patternHost.slice(1).replace(/^\./, '');
+                if (originHost === suffix || originHost.endsWith('.' + suffix)) {
+                    if (patternPort && patternPort !== '*' && patternPort !== originPort) {
+                        return false;
+                    }
+                    return true;
+                }
+            }
+
+            // Regex wildcard fallback (e.g. http://localhost:*, https://*-branch.vercel.app)
             const hasProtocol = /^[a-z]+:\/\//.test(normPattern);
             const protocolPrefix = hasProtocol ? '^' : '^(?:https?:\\/\\/|wss?:\\/\\/)?';
 
             const parts = normPattern.split('*');
             const escapedParts = parts.map(part => part.replace(/[.+^${}()|[\]\\]/g, '\\$&'));
 
-            // Replace wildcard separator with safe character class
             const regexBody = escapedParts.join('[a-zA-Z0-9-.:]*');
             const regexStr = `${protocolPrefix}${regexBody}$`;
 

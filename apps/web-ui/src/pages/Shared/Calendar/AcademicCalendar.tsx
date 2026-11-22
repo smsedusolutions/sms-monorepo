@@ -106,7 +106,7 @@ export const CALENDAR_EVENT_TYPES: EventTypeConfig[] = [
     {
         value: 'event',
         label: 'General Event',
-        color: '#3b82f6',
+        color: '#059669',
         bg: '#eff6ff',
         borderColor: '#bfdbfe',
         icon: <EventIcon fontSize="small" />,
@@ -151,7 +151,7 @@ export const CALENDAR_EVENT_TYPES: EventTypeConfig[] = [
 ];
 
 export const AUDIENCE_OPTIONS: { value: CalendarTargetAudience; label: string; color: string }[] = [
-    { value: 'all', label: 'All (School-wide)', color: '#3b82f6' },
+    { value: 'all', label: 'All (School-wide)', color: '#059669' },
     { value: 'teacher', label: 'Teachers', color: '#8b5cf6' },
     { value: 'student', label: 'Students', color: '#10b981' },
     { value: 'parent', label: 'Parents', color: '#f59e0b' },
@@ -371,7 +371,7 @@ export const AcademicCalendar: React.FC = () => {
         const diff = differenceInCalendarDays(s, today);
         if (diff === 0) return { label: 'Today', color: '#ef4444', bg: '#fee2e2' };
         if (diff === 1) return { label: 'Tomorrow', color: '#f59e0b', bg: '#fef3c7' };
-        if (diff > 1 && diff <= 7) return { label: `In ${diff} days`, color: '#3b82f6', bg: '#dbeafe' };
+        if (diff > 1 && diff <= 7) return { label: `In ${diff} days`, color: '#059669', bg: '#ecfdf5' };
         if (diff > 7) return { label: `In ${Math.ceil(diff / 7)}w`, color: '#6b7280', bg: '#f3f4f6' };
         return { label: 'Completed', color: '#9ca3af', bg: '#f3f4f6' };
     };
@@ -483,13 +483,13 @@ export const AcademicCalendar: React.FC = () => {
                             startIcon={<AddIcon />}
                             onClick={() => handleOpenCreate(selectedDay || new Date())}
                             sx={{
-                                bgcolor: '#3b82f6',
-                                '&:hover': { bgcolor: '#2563eb' },
+                                bgcolor: '#059669',
+                                '&:hover': { bgcolor: '#047857' },
                                 px: 2,
                                 py: 0.8,
                                 fontWeight: 700,
                                 borderRadius: 2,
-                                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
+                                boxShadow: '0 4px 12px rgba(5, 150, 105, 0.4)',
                             }}
                         >
                             Add Event
@@ -671,7 +671,7 @@ export const AcademicCalendar: React.FC = () => {
                                                 variant="caption"
                                                 fontWeight={800}
                                                 sx={{
-                                                    color: index === 0 ? '#ef4444' : index === 6 ? '#3b82f6' : 'text.secondary',
+                                                    color: index === 0 ? '#ef4444' : index === 6 ? '#059669' : 'text.secondary',
                                                     fontSize: { xs: '0.68rem', sm: '0.78rem' },
                                                     textTransform: 'uppercase',
                                                     letterSpacing: '0.05em',
@@ -752,7 +752,7 @@ export const AcademicCalendar: React.FC = () => {
                                                                 display: 'flex',
                                                                 alignItems: 'center',
                                                                 justifyContent: 'center',
-                                                                bgcolor: today ? '#f59e0b' : isSelected ? '#3b82f6' : 'transparent',
+                                                                bgcolor: today ? '#f59e0b' : isSelected ? '#059669' : 'transparent',
                                                                 color: today || isSelected ? 'white' : isWeekend ? '#64748b' : 'text.primary',
                                                                 boxShadow: today ? '0 2px 6px rgba(245, 158, 11, 0.4)' : 'none',
                                                             }}
@@ -949,7 +949,7 @@ export const AcademicCalendar: React.FC = () => {
                                                                     <IconButton
                                                                         size="small"
                                                                         onClick={() => handleOpenEdit(ev)}
-                                                                        sx={{ color: '#3b82f6', p: 0.4 }}
+                                                                        sx={{ color: '#059669', p: 0.4 }}
                                                                     >
                                                                         <EditIcon fontSize="small" />
                                                                     </IconButton>
@@ -1197,7 +1197,7 @@ export const AcademicCalendar: React.FC = () => {
                                                 <IconButton
                                                     size="small"
                                                     onClick={() => handleOpenEdit(ev)}
-                                                    sx={{ color: '#3b82f6', border: '1px solid', borderColor: 'divider' }}
+                                                    sx={{ color: '#059669', border: '1px solid', borderColor: 'divider' }}
                                                 >
                                                     <EditIcon fontSize="small" />
                                                 </IconButton>

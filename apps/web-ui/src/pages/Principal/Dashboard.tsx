@@ -73,8 +73,8 @@ const PrincipalDashboard = () => {
             description: 'Approve draft timetables',
             icon: <ScheduleIcon sx={{ fontSize: 28 }} />,
             path: '/principal/timetable/review',
-            gradient: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-            iconColor: '#0284c7',
+            gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+            iconColor: '#059669',
         },
         {
             label: 'Exam Approvals',
@@ -113,8 +113,8 @@ const PrincipalDashboard = () => {
             description: 'View school-wide results',
             icon: <CheckCircleIcon sx={{ fontSize: 28 }} />,
             path: '/principal/exam/results',
-            gradient: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-            iconColor: '#0284c7',
+            gradient: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+            iconColor: '#059669',
         },
         {
             label: 'Announcements',

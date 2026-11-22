@@ -155,9 +155,9 @@ class ErrorBoundary extends Component<Props, State> {
                                         borderRadius: '6px',
                                         textTransform: 'none',
                                         fontSize: '1rem',
-                                        bgcolor: '#0284C7',
+                                        bgcolor: '#059669',
                                         '&:hover': {
-                                            bgcolor: '#0369A1',
+                                            bgcolor: '#047857',
                                         },
                                     }}
                                 >

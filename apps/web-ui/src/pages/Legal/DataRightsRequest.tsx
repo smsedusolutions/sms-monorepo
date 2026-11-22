@@ -175,7 +175,7 @@ const DataRightsRequest: React.FC = () => {
           }}
         >
           <CheckCircle sx={{ color: '#16a34a', fontSize: 56, mb: 2 }} />
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#0f172a', mb: 1 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700, color: '#111827', mb: 1 }}>
             DPDP Act Request Submitted
           </Typography>
           <Typography sx={{ fontSize: '0.92rem', color: '#475569', lineHeight: 1.6, mb: 3 }}>
@@ -194,13 +194,13 @@ const DataRightsRequest: React.FC = () => {
             variant="contained"
             onClick={() => navigate('/login')}
             sx={{
-              bgcolor: '#0284c7',
+              bgcolor: '#059669',
               textTransform: 'none',
               fontWeight: 600,
               px: 3,
               py: 1,
               borderRadius: '6px',
-              '&:hover': { bgcolor: '#0369a1' },
+              '&:hover': { bgcolor: '#047857' },
             }}
           >
             Return to Login
@@ -260,7 +260,7 @@ const DataRightsRequest: React.FC = () => {
         >
           {/* Header */}
           <Box sx={{ mb: 3.5 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', sm: '1.9rem' }, color: '#0f172a', mb: 1 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', sm: '1.9rem' }, color: '#111827', mb: 1 }}>
               Data Rights Request Form (DPDP Act, 2023)
             </Typography>
             <Typography sx={{ fontSize: '0.9rem', color: '#64748b', mb: 2 }}>
@@ -288,7 +288,7 @@ const DataRightsRequest: React.FC = () => {
 
           {/* Form */}
           <Box component="form" onSubmit={handleSubmit}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a', mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.05rem', color: '#111827', mb: 2 }}>
               1. Your Contact Information
             </Typography>
 
@@ -346,7 +346,7 @@ const DataRightsRequest: React.FC = () => {
 
             <Divider sx={{ mb: 4 }} />
 
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.05rem', color: '#0f172a', mb: 2 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.05rem', color: '#111827', mb: 2 }}>
               2. Select Your DPDP Act Request Type
             </Typography>
 
@@ -365,7 +365,7 @@ const DataRightsRequest: React.FC = () => {
                   <FormControlLabel
                     key={opt.value}
                     value={opt.value}
-                    control={<Radio size="small" sx={{ '&.Mui-checked': { color: '#0284c7' } }} />}
+                    control={<Radio size="small" sx={{ '&.Mui-checked': { color: '#059669' } }} />}
                     label={<Typography sx={{ fontSize: '0.88rem', color: '#334155', py: 0.25 }}>{opt.label}</Typography>}
                     sx={{ mb: 0.5 }}
                   />
@@ -408,7 +408,7 @@ const DataRightsRequest: React.FC = () => {
                   <Radio
                     checked={form.declaration}
                     size="small"
-                    sx={{ '&.Mui-checked': { color: '#0284c7' } }}
+                    sx={{ '&.Mui-checked': { color: '#059669' } }}
                   />
                 }
                 label={
@@ -431,14 +431,14 @@ const DataRightsRequest: React.FC = () => {
               disabled={isLoading}
               endIcon={<Send sx={{ fontSize: 16 }} />}
               sx={{
-                bgcolor: '#0284c7',
+                bgcolor: '#059669',
                 textTransform: 'none',
                 fontWeight: 600,
                 fontSize: '0.92rem',
                 py: 1.25,
                 px: 3,
                 borderRadius: '6px',
-                '&:hover': { bgcolor: '#0369a1' },
+                '&:hover': { bgcolor: '#047857' },
               }}
             >
               {isLoading ? 'Submitting...' : 'Submit DPDP Act Request'}

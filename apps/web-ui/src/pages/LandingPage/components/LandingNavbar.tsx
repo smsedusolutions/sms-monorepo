@@ -14,9 +14,7 @@ import {
 import {
   Menu as MenuIcon,
   Close as CloseIcon,
-  Login as LoginIcon,
   PhoneInTalk,
-  ArrowForward,
   LightMode,
   DarkMode,
 } from '@mui/icons-material';
@@ -129,7 +127,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
                   position: 'relative',
                   transition: 'color 0.2s ease',
                   '&:hover': {
-                    color: isDark ? '#38BDF8' : '#0284C7',
+                    color: isDark ? '#34d399' : '#059669',
                   },
                   '&::after': {
                     content: '""',
@@ -138,7 +136,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
                     height: '2px',
                     bottom: -4,
                     left: 0,
-                    bgcolor: isDark ? '#38BDF8' : '#0284C7',
+                    bgcolor: isDark ? '#34d399' : '#059669',
                     transition: 'width 0.2s ease',
                   },
                   '&:hover::after': {
@@ -157,10 +155,10 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
             <Button
               component="a"
               href="tel:+916361888927"
-              startIcon={<PhoneInTalk sx={{ fontSize: 18, color: isDark ? '#38BDF8' : '#0284C7' }} />}
+              startIcon={<PhoneInTalk sx={{ fontSize: 18, color: isDark ? '#34d399' : '#059669' }} />}
               sx={{
                 display: { xs: 'none', lg: 'inline-flex' },
-                color: isDark ? '#F8FAFC' : '#0F172A',
+                color: isDark ? '#F8FAFC' : '#111827',
                 fontWeight: 600,
                 fontSize: '0.85rem',
                 borderRadius: '6px',
@@ -183,7 +181,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
                 onClick={toggleTheme}
                 aria-label="Toggle color theme"
                 sx={{
-                  color: isDark ? '#F59E0B' : '#0F172A',
+                  color: isDark ? '#F59E0B' : '#111827',
                   bgcolor: isDark ? '#1E293B' : '#F1F5F9',
                   border: isDark ? '1px solid #334155' : '1px solid #CBD5E1',
                   borderRadius: '6px',
@@ -199,56 +197,32 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
               </IconButton>
             </Tooltip>
 
-            {/* Book Demo Button */}
+            {/* Book Live Demo Button */}
             <Button
-              variant="outlined"
+              variant="contained"
               onClick={onOpenDemo}
               sx={{
                 display: { xs: 'none', sm: 'inline-flex' },
-                borderColor: isDark ? '#334155' : '#CBD5E1',
-                color: isDark ? '#F8FAFC' : '#0F172A',
-                fontWeight: 700,
-                borderRadius: '6px',
-                px: 2.2,
-                py: 0.85,
-                fontSize: '0.88rem',
-                textTransform: 'none',
-                bgcolor: isDark ? 'transparent' : 'transparent',
-                '&:hover': {
-                  borderColor: isDark ? '#64748B' : '#94A3B8',
-                  bgcolor: isDark ? '#1E293B' : '#F8FAFC',
-                },
-              }}
-            >
-              Book Live Demo
-            </Button>
-
-            {/* Login / Portal Button */}
-            <Button
-              variant="contained"
-              onClick={() => navigate('/login')}
-              endIcon={<ArrowForward sx={{ fontSize: 18 }} />}
-              sx={{
-                background: isDark ? '#0284C7 !important' : '#0F172A !important',
-                bgcolor: isDark ? '#0284C7 !important' : '#0F172A !important',
+                background: isDark ? '#059669 !important' : '#111827 !important',
+                bgcolor: isDark ? '#059669 !important' : '#111827 !important',
                 color: '#FFFFFF !important',
                 fontWeight: 700,
                 borderRadius: '6px',
-                px: { xs: 2, sm: 2.8 },
+                px: 2.8,
                 py: 0.85,
-                fontSize: { xs: '0.85rem', sm: '0.9rem' },
+                fontSize: '0.88rem',
                 textTransform: 'none',
                 boxShadow: 'none',
-                border: isDark ? '1px solid #0284C7' : '1px solid #0F172A',
+                border: isDark ? '1px solid #059669' : '1px solid #111827',
                 '&:hover': {
-                  background: isDark ? '#0369A1 !important' : '#1E293B !important',
-                  bgcolor: isDark ? '#0369A1 !important' : '#1E293B !important',
-                  borderColor: isDark ? '#0369A1' : '#1E293B',
+                  background: isDark ? '#047857 !important' : '#1E293B !important',
+                  bgcolor: isDark ? '#047857 !important' : '#1E293B !important',
+                  borderColor: isDark ? '#047857' : '#1E293B',
                   boxShadow: 'none',
                 },
               }}
             >
-              Portal Login
+              Book Live Demo
             </Button>
 
             {/* Mobile Hamburger Toggle */}
@@ -276,8 +250,8 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
         PaperProps={{
           sx: {
             width: 290,
-            bgcolor: isDark ? '#0F172A' : '#FFFFFF',
-            color: isDark ? '#F8FAFC' : '#0F172A',
+            bgcolor: isDark ? '#111827' : '#FFFFFF',
+            color: isDark ? '#F8FAFC' : '#111827',
             borderLeft: isDark ? '1px solid #1E293B' : '1px solid #E2E8F0',
             p: 3,
             display: 'flex',
@@ -311,7 +285,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
                     color: isDark ? '#94A3B8' : '#334155',
                     '&:hover': {
                       bgcolor: isDark ? '#1E293B' : '#F8FAFC',
-                      color: isDark ? '#38BDF8' : '#0284C7',
+                      color: isDark ? '#34d399' : '#059669',
                     },
                   }}
                 >
@@ -328,14 +302,14 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
             variant="outlined"
             onClick={toggleTheme}
             fullWidth
-            startIcon={isDark ? <LightMode sx={{ color: '#F59E0B' }} /> : <DarkMode sx={{ color: '#0F172A' }} />}
+            startIcon={isDark ? <LightMode sx={{ color: '#F59E0B' }} /> : <DarkMode sx={{ color: '#111827' }} />}
             sx={{
               borderRadius: '6px',
               py: 1,
               fontWeight: 700,
               textTransform: 'none',
               borderColor: isDark ? '#334155' : '#CBD5E1',
-              color: isDark ? '#F8FAFC' : '#0F172A',
+              color: isDark ? '#F8FAFC' : '#111827',
               bgcolor: isDark ? '#1E293B' : '#F8FAFC',
               '&:hover': {
                 bgcolor: isDark ? '#334155' : '#F1F5F9',
@@ -347,7 +321,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
           </Button>
 
           <Button
-            variant="outlined"
+            variant="contained"
             onClick={() => {
               setMobileOpen(false);
               onOpenDemo();
@@ -358,40 +332,16 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = ({ onOpenDemo }) => {
               py: 1.1,
               fontWeight: 700,
               textTransform: 'none',
-              borderColor: isDark ? '#334155' : '#CBD5E1',
-              color: isDark ? '#F8FAFC' : '#0F172A',
+              bgcolor: isDark ? '#059669' : '#111827',
+              color: '#FFFFFF',
+              boxShadow: 'none',
+              border: isDark ? '1px solid #059669' : '1px solid #111827',
               '&:hover': {
-                bgcolor: isDark ? '#1E293B' : '#F8FAFC',
+                bgcolor: isDark ? '#047857' : '#1E293B',
               },
             }}
           >
             Book Live Demo
-          </Button>
-
-          <Button
-            variant="contained"
-            onClick={() => {
-              setMobileOpen(false);
-              navigate('/login');
-            }}
-            fullWidth
-            startIcon={<LoginIcon />}
-            sx={{
-              bgcolor: isDark ? '#0284C7' : '#0F172A',
-              color: '#FFFFFF',
-              borderRadius: '6px',
-              py: 1.1,
-              fontWeight: 700,
-              textTransform: 'none',
-              boxShadow: 'none',
-              border: isDark ? '1px solid #0284C7' : '1px solid #0F172A',
-              '&:hover': {
-                bgcolor: isDark ? '#0369A1' : '#1E293B',
-                boxShadow: 'none',
-              },
-            }}
-          >
-            Go to Login
           </Button>
 
           <Box sx={{ mt: 2, textAlign: 'center' }}>

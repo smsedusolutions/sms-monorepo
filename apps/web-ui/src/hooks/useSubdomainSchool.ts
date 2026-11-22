@@ -39,11 +39,21 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Extracts subdomain from current hostname.
- * "greenvalley.spexzee.me" → "greenvalley"
- * "localhost" / bare domain → null
+ * "demoschool.smsedusolutions.in" → "demoschool"
+ * "www.smsedusolutions.in" / bare domain → null
  */
-const extractSubdomainFromHost = (): string | null => {
-  const hostname = window.location.hostname;
+export const extractSubdomainFromHost = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  const hostname = window.location.hostname.toLowerCase();
+
+  // Dev query param ?school=
+  const params = new URLSearchParams(window.location.search);
+  const qSchool = params.get('school');
+  if (qSchool) return qSchool;
+
+  // Localhost without subdomain
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return null;
+
   const parts = hostname.split('.');
 
   // Needs at least 3 parts: subdomain.domain.tld
@@ -52,14 +62,29 @@ const extractSubdomainFromHost = (): string | null => {
     // Ignore "www"
     return sub !== 'www' ? sub : null;
   }
+
+  // Local dev subdomains like demoschool.localhost
+  if (parts.length === 2 && parts[1] === 'localhost' && parts[0] !== 'www') {
+    return parts[0];
+  }
+
   return null;
+};
+
+/**
+ * Detects if the current request is for a specific school subdomain (or dev school query),
+ * meaning anything other than the main marketing/landing site (bare domain or 'www').
+ */
+export const isSchoolSubdomain = (): boolean => {
+  return extractSubdomainFromHost() !== null;
 };
 
 /**
  * Reads ?school= query param from URL.
  * Used for local development testing without a real subdomain.
  */
-const getQueryParamSchool = (): string | null => {
+export const getQueryParamSchool = (): string | null => {
+  if (typeof window === 'undefined') return null;
   const params = new URLSearchParams(window.location.search);
   return params.get('school');
 };

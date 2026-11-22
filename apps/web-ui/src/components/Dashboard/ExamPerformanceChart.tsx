@@ -93,7 +93,7 @@ export const ExamPerformanceChart: React.FC<ExamPerformanceChartProps> = ({
                         border: '1px dashed #cbd5e1',
                     }}
                 >
-                    <Box sx={{ p: 1.25, borderRadius: '50%', bgcolor: 'rgba(59, 130, 246, 0.08)', color: '#3b82f6', mb: 1 }}>
+                    <Box sx={{ p: 1.25, borderRadius: '50%', bgcolor: 'rgba(5, 150, 105, 0.08)', color: '#059669', mb: 1 }}>
                         <EventNoteIcon sx={{ fontSize: 28 }} />
                     </Box>
                     <Typography fontWeight={700} variant="body2" color="text.primary" sx={{ mb: 0.5 }}>

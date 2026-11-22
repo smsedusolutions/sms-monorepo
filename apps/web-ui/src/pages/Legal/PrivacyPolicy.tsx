@@ -82,7 +82,7 @@ const PrivacyPolicy: React.FC = () => {
         >
           {/* Header */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', sm: '1.9rem' }, color: '#0f172a', mb: 1 }}>
+            <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', sm: '1.9rem' }, color: '#111827', mb: 1 }}>
               Privacy Policy (DPDP Act, 2023)
             </Typography>
             <Typography sx={{ fontSize: '0.9rem', color: '#64748b', mb: 1.5 }}>
@@ -110,7 +110,7 @@ const PrivacyPolicy: React.FC = () => {
 
           {/* Section 1: Who We Are & DPDP Act Roles */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               1. Who We Are and Our Role Under the DPDP Act
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
@@ -133,7 +133,7 @@ const PrivacyPolicy: React.FC = () => {
 
           {/* Section 2: What Data We Collect */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               2. Personal Data We Collect (DPDP Act Section 7 Notice)
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 2 }}>
@@ -188,7 +188,7 @@ const PrivacyPolicy: React.FC = () => {
 
           {/* Section 3: Why We Use This Data */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               3. Why We Need Your Data (DPDP Act Processing Purposes)
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
@@ -207,7 +207,7 @@ const PrivacyPolicy: React.FC = () => {
 
           {/* Section 4: Children's Data & Parent Consent */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               4. Children's Data & Parental Consent (DPDP Act Section 9)
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
@@ -224,7 +224,7 @@ const PrivacyPolicy: React.FC = () => {
 
           {/* Section 5: How Long We Keep Data */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               5. How Long We Keep Data (DPDP Act Data Retention)
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
@@ -241,7 +241,7 @@ const PrivacyPolicy: React.FC = () => {
 
           {/* Section 6: Third Parties & Cookies */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               6. Third-Party Services & Consent Choices (DPDP Act)
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
@@ -264,7 +264,7 @@ const PrivacyPolicy: React.FC = () => {
                 variant="outlined"
                 size="small"
                 onClick={resetConsent}
-                sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.8rem', color: '#0284c7', borderColor: '#cbd5e1' }}
+                sx={{ textTransform: 'none', fontWeight: 600, fontSize: '0.8rem', color: '#059669', borderColor: '#cbd5e1' }}
               >
                 Reset DPDP Consent Preference
               </Button>
@@ -275,7 +275,7 @@ const PrivacyPolicy: React.FC = () => {
 
           {/* Section 7: Your Legal Rights Under the DPDP Act */}
           <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               7. Your Legal Rights Under the DPDP Act, 2023
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 1.5 }}>
@@ -307,14 +307,14 @@ const PrivacyPolicy: React.FC = () => {
                 variant="contained"
                 onClick={() => navigate('/data-rights')}
                 sx={{
-                  bgcolor: '#0284c7',
+                  bgcolor: '#059669',
                   textTransform: 'none',
                   fontWeight: 600,
                   fontSize: '0.88rem',
                   py: 1,
                   px: 2.5,
                   borderRadius: '6px',
-                  '&:hover': { bgcolor: '#0369a1' },
+                  '&:hover': { bgcolor: '#047857' },
                 }}
               >
                 Submit a DPDP Act Data Rights Request
@@ -326,7 +326,7 @@ const PrivacyPolicy: React.FC = () => {
 
           {/* Section 8: Grievance Officer & Contact */}
           <Box sx={{ mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a', mb: 1.5 }}>
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', color: '#111827', mb: 1.5 }}>
               8. Grievance Officer (DPDP Act Section 13)
             </Typography>
             <Typography sx={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.7, mb: 2 }}>
@@ -334,11 +334,11 @@ const PrivacyPolicy: React.FC = () => {
             </Typography>
 
             <Box sx={{ p: 2.5, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px' }}>
-              <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: '#0f172a', mb: 1 }}>
+              <Typography sx={{ fontSize: '0.88rem', fontWeight: 700, color: '#111827', mb: 1 }}>
                 DPDP Act Grievance Contact:
               </Typography>
               <Typography sx={{ fontSize: '0.85rem', color: '#334155', mb: 0.5 }}>
-                • <strong>Email:</strong> <a href="mailto:grievance@smsedusolutions.com" style={{ color: '#0284c7', textDecoration: 'none', fontWeight: 600 }}>grievance@smsedusolutions.com</a>
+                • <strong>Email:</strong> <a href="mailto:grievance@smsedusolutions.com" style={{ color: '#059669', textDecoration: 'none', fontWeight: 600 }}>grievance@smsedusolutions.com</a>
               </Typography>
               <Typography sx={{ fontSize: '0.85rem', color: '#334155', mb: 0.5 }}>
                 • <strong>Response Time:</strong> Within 30 days as mandated by the DPDP Act (India).

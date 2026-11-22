@@ -52,7 +52,7 @@ export const AppBreadcrumbs: React.FC<AppBreadcrumbsProps> = () => {
                   gap: 0.6,
                 }}
               >
-                {isFirst && <HomeIcon sx={{ fontSize: '1.1rem', color: '#3b82f6' }} />}
+                {isFirst && <HomeIcon sx={{ fontSize: '1.1rem', color: '#059669' }} />}
                 <Typography
                   variant="body2"
                   sx={{
@@ -86,8 +86,8 @@ export const AppBreadcrumbs: React.FC<AppBreadcrumbsProps> = () => {
                 transition: 'all 0.2s ease',
                 '&:hover': item.path
                   ? {
-                      color: '#3b82f6',
-                      backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                      color: '#059669',
+                      backgroundColor: 'rgba(5, 150, 105, 0.08)',
                     }
                   : {},
               }}

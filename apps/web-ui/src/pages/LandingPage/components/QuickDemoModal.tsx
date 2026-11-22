@@ -66,7 +66,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
   const inputStyle = {
     '& .MuiOutlinedInput-root': {
       bgcolor: isDark ? '#1E293B' : '#FFFFFF',
-      color: isDark ? '#F8FAFC' : '#0F172A',
+      color: isDark ? '#F8FAFC' : '#111827',
       '& fieldset': {
         borderColor: isDark ? '#334155' : '#CBD5E1',
       },
@@ -74,13 +74,13 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
         borderColor: isDark ? '#64748B' : '#94A3B8',
       },
       '&.Mui-focused fieldset': {
-        borderColor: isDark ? '#38BDF8' : '#0284C7',
+        borderColor: isDark ? '#34d399' : '#059669',
       },
     },
     '& .MuiInputLabel-root': {
       color: isDark ? '#94A3B8' : '#64748B',
       '&.Mui-focused': {
-        color: isDark ? '#38BDF8' : '#0284C7',
+        color: isDark ? '#34d399' : '#059669',
       },
     },
   };
@@ -95,7 +95,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
         sx: {
           borderRadius: '12px',
           p: { xs: 1.5, sm: 2.5 },
-          bgcolor: isDark ? '#0F172A' : '#FFFFFF',
+          bgcolor: isDark ? '#111827' : '#FFFFFF',
           border: isDark ? '1px solid #1E293B' : '1px solid #E2E8F0',
           boxShadow: isDark
             ? '0 25px 50px -12px rgba(0, 0, 0, 0.7)'
@@ -104,7 +104,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, pt: 1 }}>
-        <Typography sx={{ fontWeight: 900, fontSize: '1.4rem', color: isDark ? '#F8FAFC' : '#0F172A' }}>
+        <Typography sx={{ fontWeight: 900, fontSize: '1.4rem', color: isDark ? '#F8FAFC' : '#111827' }}>
           Schedule a Live Demo
         </Typography>
         <IconButton onClick={handleReset} sx={{ color: isDark ? '#94A3B8' : '#64748B' }}>
@@ -130,7 +130,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
             >
               <CheckCircle sx={{ fontSize: 44, color: '#10B981' }} />
             </Box>
-            <Typography sx={{ fontSize: '1.4rem', fontWeight: 800, color: isDark ? '#F8FAFC' : '#0F172A', mb: 1 }}>
+            <Typography sx={{ fontSize: '1.4rem', fontWeight: 800, color: isDark ? '#F8FAFC' : '#111827', mb: 1 }}>
               Demo Request Received!
             </Typography>
             <Typography sx={{ color: isDark ? '#94A3B8' : '#64748B', fontSize: '0.95rem', maxWidth: 420, mx: 'auto', mb: 3 }}>
@@ -165,7 +165,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
                   textTransform: 'none',
                   fontWeight: 700,
                   borderColor: isDark ? '#334155' : '#CBD5E1',
-                  color: isDark ? '#F8FAFC' : '#0F172A',
+                  color: isDark ? '#F8FAFC' : '#111827',
                 }}
               >
                 Close
@@ -261,7 +261,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Phone sx={{ fontSize: 18, color: '#0284C7' }} />
+                <Phone sx={{ fontSize: 18, color: '#059669' }} />
                 <Typography sx={{ fontSize: '0.8rem', color: isDark ? '#CBD5E1' : '#334155', fontWeight: 600 }}>
                   Need urgent assistance?
                 </Typography>
@@ -272,7 +272,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
                 sx={{
                   fontSize: '0.85rem',
                   fontWeight: 800,
-                  color: isDark ? '#38BDF8' : '#0284C7',
+                  color: isDark ? '#34d399' : '#059669',
                   textDecoration: 'none',
                   '&:hover': { textDecoration: 'underline' },
                 }}
@@ -287,7 +287,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
               size="large"
               endIcon={<Send />}
               sx={{
-                bgcolor: isDark ? '#0284C7' : '#0F172A',
+                bgcolor: isDark ? '#059669' : '#111827',
                 color: '#FFFFFF',
                 fontWeight: 800,
                 borderRadius: '6px',
@@ -297,7 +297,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ open, onClose })
                 boxShadow: 'none',
                 mt: 1,
                 '&:hover': {
-                  bgcolor: isDark ? '#0369A1' : '#1E293B',
+                  bgcolor: isDark ? '#047857' : '#1E293B',
                   boxShadow: 'none',
                 },
               }}

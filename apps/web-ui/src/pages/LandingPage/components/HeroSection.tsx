@@ -1,14 +1,12 @@
 import React from 'react';
 import { Box, Container, Typography, Button, Stack } from '@mui/material';
 import {
-  ArrowForward,
   PlayCircleOutline,
   School,
   VerifiedUser,
   Security,
   CloudDone,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 import { Interactive3DMockup } from './Interactive3DMockup';
 import { useLandingTheme } from '../context/LandingThemeContext';
 
@@ -17,7 +15,6 @@ interface HeroSectionProps {
 }
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
-  const navigate = useNavigate();
   const { isDark } = useLandingTheme();
 
   return (
@@ -51,17 +48,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
                 px: 1.6,
                 py: 0.6,
                 borderRadius: '6px',
-                bgcolor: isDark ? 'rgba(2, 132, 199, 0.12)' : '#F1F5F9',
+                bgcolor: isDark ? 'rgba(5, 150, 105, 0.12)' : '#F1F5F9',
                 border: isDark ? '1px solid rgba(56, 189, 248, 0.25)' : '1px solid #CBD5E1',
                 mb: 2.5,
               }}
             >
-              <School sx={{ color: isDark ? '#38BDF8' : '#0284C7', fontSize: 16 }} />
+              <School sx={{ color: isDark ? '#34d399' : '#059669', fontSize: 16 }} />
               <Typography
                 sx={{
                   fontSize: '0.8rem',
                   fontWeight: 700,
-                  color: isDark ? '#38BDF8' : '#0F172A',
+                  color: isDark ? '#34d399' : '#111827',
                   letterSpacing: '0.03em',
                   textTransform: 'uppercase',
                 }}
@@ -78,7 +75,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
                 fontWeight: 900,
                 lineHeight: 1.1,
                 letterSpacing: '-0.03em',
-                color: isDark ? '#F8FAFC' : '#0F172A',
+                color: isDark ? '#F8FAFC' : '#111827',
                 mb: 2.5,
               }}
             >
@@ -110,11 +107,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
               <Button
                 variant="contained"
                 size="large"
-                onClick={() => navigate('/login')}
-                endIcon={<ArrowForward />}
+                onClick={onOpenDemo}
+                startIcon={<PlayCircleOutline />}
                 sx={{
-                  background: isDark ? '#0284C7 !important' : '#0F172A !important',
-                  bgcolor: isDark ? '#0284C7 !important' : '#0F172A !important',
+                  background: isDark ? '#059669 !important' : '#111827 !important',
+                  bgcolor: isDark ? '#059669 !important' : '#111827 !important',
                   color: '#FFFFFF !important',
                   fontWeight: 700,
                   fontSize: '0.98rem',
@@ -123,37 +120,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
                   py: 1.3,
                   textTransform: 'none',
                   boxShadow: 'none',
-                  border: isDark ? '1px solid #0284C7' : '1px solid #0F172A',
+                  border: isDark ? '1px solid #059669' : '1px solid #111827',
                   transition: 'background-color 0.2s ease, border-color 0.2s ease',
                   '&:hover': {
-                    background: isDark ? '#0369A1 !important' : '#1E293B !important',
-                    bgcolor: isDark ? '#0369A1 !important' : '#1E293B !important',
-                    borderColor: isDark ? '#0369A1' : '#1E293B',
+                    background: isDark ? '#047857 !important' : '#1E293B !important',
+                    bgcolor: isDark ? '#047857 !important' : '#1E293B !important',
+                    borderColor: isDark ? '#047857' : '#1E293B',
                     boxShadow: 'none',
-                  },
-                }}
-              >
-                Launch Portal Login
-              </Button>
-
-              <Button
-                variant="outlined"
-                size="large"
-                onClick={onOpenDemo}
-                startIcon={<PlayCircleOutline />}
-                sx={{
-                  borderColor: isDark ? '#334155' : '#CBD5E1',
-                  bgcolor: isDark ? '#111827' : '#FFFFFF',
-                  color: isDark ? '#F8FAFC' : '#0F172A',
-                  fontWeight: 700,
-                  fontSize: '0.98rem',
-                  borderRadius: '6px',
-                  px: 3,
-                  py: 1.3,
-                  textTransform: 'none',
-                  '&:hover': {
-                    borderColor: isDark ? '#64748B' : '#94A3B8',
-                    bgcolor: isDark ? '#1E293B' : '#F8FAFC',
                   },
                 }}
               >
@@ -172,7 +145,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onOpenDemo }) => {
               }}
             >
               {[
-                { icon: <CloudDone sx={{ color: isDark ? '#38BDF8' : '#0284C7', fontSize: 18 }} />, label: 'Cloud Hosted (Zero Hardware)' },
+                { icon: <CloudDone sx={{ color: isDark ? '#34d399' : '#059669', fontSize: 18 }} />, label: 'Cloud Hosted (Zero Hardware)' },
                 { icon: <VerifiedUser sx={{ color: '#10B981', fontSize: 18 }} />, label: 'DPDP Act, 2023 Compliant' },
                 { icon: <Security sx={{ color: isDark ? '#94A3B8' : '#334155', fontSize: 18 }} />, label: 'Role-Based Access Control' },
               ].map((item) => (

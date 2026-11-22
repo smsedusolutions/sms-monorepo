@@ -12,22 +12,22 @@ import { ThreeVLogo } from './BrandLogos';
 export const ManagedBy3vSection: React.FC = () => {
   const pillars = [
     {
-      icon: <CloudQueue sx={{ fontSize: 24, color: '#38BDF8' }} />,
+      icon: <CloudQueue sx={{ fontSize: 24, color: '#34d399' }} />,
       title: 'High-Availability Cloud Architecture',
       description: 'Distributed cloud architecture designed for high availability, automatic scaling, and zero hardware maintenance for campuses.',
     },
     {
-      icon: <ShieldOutlined sx={{ fontSize: 24, color: '#38BDF8' }} />,
+      icon: <ShieldOutlined sx={{ fontSize: 24, color: '#34d399' }} />,
       title: 'Zero-Trust Security & DPDP Compliance',
       description: 'Role-based access control, encrypted backups, and full compliance with India’s Digital Personal Data Protection Act, 2023.',
     },
     {
-      icon: <Memory sx={{ fontSize: 24, color: '#0284C7' }} />,
+      icon: <Memory sx={{ fontSize: 24, color: '#059669' }} />,
       title: 'Real-Time Telemetry & Sync',
       description: 'Real-time WebSocket alerts, responsive biometric attendance logging, and reliable GPS student bus telemetry.',
     },
     {
-      icon: <SupportAgent sx={{ fontSize: 24, color: '#0284C7' }} />,
+      icon: <SupportAgent sx={{ fontSize: 24, color: '#059669' }} />,
       title: 'Managed Operations & Support',
       description: 'Continuous infrastructure monitoring, zero-downtime application updates, and dedicated technical support.',
     },
@@ -59,7 +59,7 @@ export const ManagedBy3vSection: React.FC = () => {
               mb: 3,
             }}
           >
-            <Box sx={{ width: 8, height: 8, borderRadius: '2px', bgcolor: '#38BDF8' }} />
+            <Box sx={{ width: 8, height: 8, borderRadius: '2px', bgcolor: '#34d399' }} />
             <Typography sx={{ fontSize: '0.78rem', fontWeight: 800, color: '#7DD3FC', letterSpacing: '0.06em' }}>
               TECHNOLOGY & INFRASTRUCTURE PARTNER
             </Typography>
@@ -141,7 +141,7 @@ export const ManagedBy3vSection: React.FC = () => {
                 flexDirection: 'column',
                 transition: 'border-color 0.2s ease',
                 '&:hover': {
-                  borderColor: '#38BDF8',
+                  borderColor: '#34d399',
                 },
               }}
             >
@@ -201,8 +201,8 @@ export const ManagedBy3vSection: React.FC = () => {
             variant="contained"
             endIcon={<OpenInNew sx={{ fontSize: 16 }} />}
             sx={{
-              background: '#0284C7 !important',
-              bgcolor: '#0284C7 !important',
+              background: '#059669 !important',
+              bgcolor: '#059669 !important',
               color: '#FFFFFF !important',
               fontWeight: 700,
               fontSize: '0.92rem',
@@ -213,8 +213,8 @@ export const ManagedBy3vSection: React.FC = () => {
               boxShadow: 'none',
               whiteSpace: 'nowrap',
               '&:hover': {
-                background: '#0369A1 !important',
-                bgcolor: '#0369A1 !important',
+                background: '#047857 !important',
+                bgcolor: '#047857 !important',
                 boxShadow: 'none',
               },
             }}

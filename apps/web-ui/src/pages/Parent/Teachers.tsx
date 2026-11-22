@@ -38,7 +38,7 @@ import TokenService from '../../queries/token/tokenService';
 import type { ChildTeacherInfo } from '../../types';
 
 const AVATAR_COLORS = [
-    'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+    'linear-gradient(135deg, #059669 0%, #047857 100%)',
     'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
     'linear-gradient(135deg, #10b981 0%, #047857 100%)',
     'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
@@ -240,10 +240,10 @@ const ParentTeachers: React.FC = () => {
                                         height: '100%',
                                         borderRadius: 4,
                                         border: '1px solid',
-                                        borderColor: teacher.isClassTeacher ? '#0284C7' : '#e2e8f0',
+                                        borderColor: teacher.isClassTeacher ? '#059669' : '#e2e8f0',
                                         bgcolor: '#ffffff',
                                         boxShadow: teacher.isClassTeacher
-                                            ? '0 6px 20px -6px rgba(2, 132, 199, 0.2)'
+                                            ? '0 6px 20px -6px rgba(5, 150, 105, 0.2)'
                                             : '0 4px 16px rgba(0, 0, 0, 0.04)',
                                         transition: 'all 0.25 ease',
                                         '&:hover': {
@@ -257,7 +257,7 @@ const ParentTeachers: React.FC = () => {
                                     {teacher.isClassTeacher && (
                                         <Box sx={{
                                             position: 'absolute', top: 0, left: 0, right: 0, height: 4,
-                                            background: '#0284C7'
+                                            background: '#059669'
                                         }} />
                                     )}
 

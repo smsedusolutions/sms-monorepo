@@ -85,7 +85,7 @@ export const SubmitHomework: React.FC<SubmitHomeworkProps> = ({ homework, studen
             case 'rejected':
                 return { label: 'Rejected', color: 'error' as const, bg: '#fef2f2' };
             case 'reviewed':
-                return { label: 'Reviewed', color: 'info' as const, bg: '#f0f9ff' };
+                return { label: 'Reviewed', color: 'info' as const, bg: '#ecfdf5' };
             case 'late':
                 return { label: 'Late Submission', color: 'warning' as const, bg: '#fffbeb' };
             default:
@@ -150,10 +150,10 @@ export const SubmitHomework: React.FC<SubmitHomeworkProps> = ({ homework, studen
 
                 {/* Teacher Feedback / Marks Card */}
                 {existingSubmission && (existingSubmission.status === 'reviewed' || existingSubmission.status === 'accepted' || existingSubmission.status === 'rejected') && (
-                    <Box sx={{ p: 2, bgcolor: isAccepted ? '#f0fdf4' : existingSubmission.status === 'rejected' ? '#fef2f2' : '#f0f9ff', borderRadius: 2, mb: 2.5, border: '1px solid', borderColor: isAccepted ? '#bbf7d0' : existingSubmission.status === 'rejected' ? '#fecaca' : '#bae6fd' }}>
+                    <Box sx={{ p: 2, bgcolor: isAccepted ? '#f0fdf4' : existingSubmission.status === 'rejected' ? '#fef2f2' : '#ecfdf5', borderRadius: 2, mb: 2.5, border: '1px solid', borderColor: isAccepted ? '#bbf7d0' : existingSubmission.status === 'rejected' ? '#fecaca' : '#bae6fd' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
-                            <ReviewIcon sx={{ color: isAccepted ? '#16a34a' : existingSubmission.status === 'rejected' ? '#dc2626' : '#0284c7', fontSize: 18 }} />
-                            <Typography fontWeight={700} sx={{ color: isAccepted ? '#16a34a' : existingSubmission.status === 'rejected' ? '#dc2626' : '#0284c7', fontSize: '0.9rem' }}>
+                            <ReviewIcon sx={{ color: isAccepted ? '#16a34a' : existingSubmission.status === 'rejected' ? '#dc2626' : '#059669', fontSize: 18 }} />
+                            <Typography fontWeight={700} sx={{ color: isAccepted ? '#16a34a' : existingSubmission.status === 'rejected' ? '#dc2626' : '#059669', fontSize: '0.9rem' }}>
                                 Teacher Evaluation
                             </Typography>
                         </Box>

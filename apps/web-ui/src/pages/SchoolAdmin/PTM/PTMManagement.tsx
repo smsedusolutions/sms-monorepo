@@ -683,7 +683,7 @@ export const PTMManagement: React.FC = () => {
                                                     <IconButton
                                                         size="small"
                                                         onClick={() => handleOpenEdit(s)}
-                                                        sx={{ color: '#3b82f6', border: '1px solid', borderColor: 'divider' }}
+                                                        sx={{ color: '#059669', border: '1px solid', borderColor: 'divider' }}
                                                     >
                                                         <EditIcon fontSize="small" />
                                                     </IconButton>

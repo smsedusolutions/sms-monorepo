@@ -23,7 +23,7 @@ interface LegalFooterProps {
 }
 
 const LegalFooter: React.FC<LegalFooterProps> = ({
-  accentColor = '#0284C7',
+  accentColor = '#059669',
   light = false,
 }) => {
   const navigate = useNavigate();

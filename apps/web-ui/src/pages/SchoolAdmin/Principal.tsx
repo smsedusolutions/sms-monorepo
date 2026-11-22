@@ -303,11 +303,11 @@ const PrincipalManagement: React.FC = () => {
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                                     {[
                                         { label: 'Teacher Leave Approvals', desc: 'Review and approve/reject teacher leave requests', color: '#f59e0b' },
-                                        { label: 'Timetable Review', desc: 'Review draft timetables before they go live', color: '#3b82f6' },
-                                        { label: 'Exam Schedule Approvals', desc: 'Approve exam schedules and publish results', color: '#8b5cf6' },
+                                        { label: 'Timetable Review', desc: 'Review draft timetables before they go live', color: '#059669' },
+                                        { label: 'Exam Schedule Approvals', desc: 'Approve exam schedules and publish results', color: '#047857' },
                                         { label: 'Student & Teacher Directory', desc: 'Read-only view of all school members', color: '#10b981' },
-                                        { label: 'Attendance Oversight', desc: 'Monitor school-wide attendance reports', color: '#ef4444' },
-                                        { label: 'School Announcements', desc: 'Create and manage school-wide announcements', color: '#6366f1' },
+                                        { label: 'Attendance Oversight', desc: 'Monitor school-wide attendance reports', color: '#111827' },
+                                        { label: 'School Announcements', desc: 'Create and manage school-wide announcements', color: '#059669' },
                                     ].map((item) => (
                                         <Box
                                             key={item.label}

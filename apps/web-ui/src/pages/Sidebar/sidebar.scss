@@ -1,7 +1,7 @@
 .sidebar {
   width: 250px;
   height: 100%;
-  background-color: #1e293b;
+  background-color: #111827;
   color: #fff;
   position: fixed;
   transition: transform 0.3s ease-in-out;
@@ -44,11 +44,11 @@
 }
 
 .menu-item:hover {
-  background-color: #334155;
+  background-color: #1f2937;
 }
 
 .menu-item.selected {
-  background-color: #3b82f6;
+  background-color: #059669;
   color: #fff;
 }
 

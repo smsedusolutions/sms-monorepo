@@ -22,7 +22,7 @@ export const ParentPortalSpotlight: React.FC<{ onOpenDemo: () => void }> = ({ on
         py: { xs: 8, md: 12 },
         position: 'relative',
         zIndex: 5,
-        bgcolor: isDark ? '#0F172A' : '#F8FAFC',
+        bgcolor: isDark ? '#111827' : '#F8FAFC',
         borderBottom: isDark ? '1px solid #1E293B' : '1px solid #E2E8F0',
         transition: 'background-color 0.25s ease, border-color 0.25s ease',
       }}
@@ -33,7 +33,7 @@ export const ParentPortalSpotlight: React.FC<{ onOpenDemo: () => void }> = ({ on
             position: 'relative',
             borderRadius: '12px',
             p: { xs: 3.5, sm: 5, md: 6 },
-            bgcolor: isDark ? '#111827' : '#0F172A',
+            bgcolor: isDark ? '#111827' : '#111827',
             border: isDark ? '1px solid #1F2937' : '1px solid #334155',
             boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.4)',
             overflow: 'hidden',
@@ -179,7 +179,7 @@ export const ParentPortalSpotlight: React.FC<{ onOpenDemo: () => void }> = ({ on
                   time: 'Live',
                 },
                 {
-                  icon: <TrendingUp sx={{ color: '#38BDF8' }} />,
+                  icon: <TrendingUp sx={{ color: '#34d399' }} />,
                   title: 'Term 1 Exam Report Card Ready',
                   subtitle: 'Ananya scored 94% in Mathematics and secured Rank #2 in Class 8-B.',
                   tag: 'Gradebook',
