@@ -25,7 +25,16 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Unified dynamic CORS configuration
-const corsOptions = getCorsOptions();
+const corsOptions = getCorsOptions({
+    allowedOrigins: [
+        'https://demoschool.smsedusolutions.in',
+        'https://www.smsedusolutions.in',
+        'https://smsedusolutions.in',
+        'https://*.smsedusolutions.in',
+        'https://smsedusolutions.vercel.app',
+        'https://*.vercel.app',
+    ],
+});
 app.use(cors(corsOptions));
 
 app.use(compression());
