@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Box, Typography, Grid, Skeleton, Alert, Avatar, Paper, Button, Stack, Chip, Divider } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
 import {
     School as ClassIcon,
     Assessment as ResultsIcon,
@@ -32,6 +33,7 @@ import DashboardErrorState from '../../components/shared/DashboardErrorState';
 import DashboardRefreshButton from '../../components/shared/DashboardRefreshButton';
 
 const StudentDashboard: React.FC = () => {
+    const theme = useTheme();
     const navigate = useNavigate();
     const [supportDialogOpen, setSupportDialogOpen] = useState(false);
     const user = TokenService.getUser();
@@ -88,14 +90,14 @@ const StudentDashboard: React.FC = () => {
     const presentDays = (summary?.present || 0) + (summary?.late || 0);
     const percentage = totalDays > 0 ? ((presentDays / totalDays) * 100).toFixed(0) : '0';
     const pctNumber = parseFloat(percentage);
-    const percentageColor = pctNumber >= 90 ? '#10b981' : pctNumber >= 75 ? '#f59e0b' : '#ef4444';
+    const percentageColor = pctNumber >= 90 ? theme.palette.success.main : pctNumber >= 75 ? theme.palette.warning.main : theme.palette.error.main;
 
     const donutSegments = useMemo(() => [
-        { label: 'Present', value: summary?.present || 0, color: '#10b981' },
-        { label: 'Absent',  value: summary?.absent  || 0, color: '#ef4444' },
-        { label: 'Late',    value: summary?.late    || 0, color: '#f59e0b' },
-        { label: 'Leave',   value: summary?.leave   || 0, color: '#8b5cf6' },
-    ], [summary]);
+        { label: 'Present', value: summary?.present || 0, color: theme.palette.success.main },
+        { label: 'Absent',  value: summary?.absent  || 0, color: theme.palette.error.main },
+        { label: 'Late',    value: summary?.late    || 0, color: theme.palette.warning.main },
+        { label: 'Leave',   value: summary?.leave   || 0, color: theme.palette.secondary.main },
+    ], [summary, theme]);
 
     // ── Today's Timetable ──
     const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -165,7 +167,7 @@ const StudentDashboard: React.FC = () => {
                         fontWeight={800}
                         sx={{
                             mb: 0.25,
-                            background: 'linear-gradient(135deg, #1e293b 0%, #475569 100%)',
+                            background: `linear-gradient(135deg, ${theme.palette.text.primary} 0%, ${theme.palette.text.secondary} 100%)`,
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
                             fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
@@ -208,8 +210,8 @@ const StudentDashboard: React.FC = () => {
                     p: { xs: 2, sm: 2.5 },
                     mb: { xs: 2, sm: 3 },
                     borderRadius: 2,
-                    border: '1px solid #e2e8f0',
-                    bgcolor: '#ffffff',
+                    border: `1px solid ${theme.palette.divider}`,
+                    bgcolor: theme.palette.background.paper,
                     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.03)',
                     cursor: 'pointer',
                     transition: 'transform 0.18s ease, box-shadow 0.18s ease',
@@ -221,11 +223,11 @@ const StudentDashboard: React.FC = () => {
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1.75, flexWrap: 'wrap', gap: 1 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                        <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <AttendanceIcon sx={{ color: '#2563eb', fontSize: 20 }} />
+                        <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: alpha(theme.palette.primary.main, 0.08), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <AttendanceIcon sx={{ color: theme.palette.primary.main, fontSize: 20 }} />
                         </Box>
                         <Box>
-                            <Typography variant="subtitle1" fontWeight={700} color="#1e293b" sx={{ fontSize: { xs: '0.95rem', sm: '1.05rem' }, lineHeight: 1.2 }}>
+                            <Typography variant="subtitle1" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '0.95rem', sm: '1.05rem' }, lineHeight: 1.2 }}>
                                 My Attendance Summary
                             </Typography>
                             <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
@@ -239,15 +241,15 @@ const StudentDashboard: React.FC = () => {
                         endIcon={<ArrowForwardIcon sx={{ fontSize: 16 }} />}
                         onClick={() => navigate('/student/attendance')}
                         sx={{
-                            borderColor: '#cbd5e1',
-                            color: '#334155',
+                            borderColor: theme.palette.divider,
+                            color: 'text.primary',
                             borderRadius: 2,
                             fontWeight: 600,
                             px: 1.5,
                             py: 0.35,
                             fontSize: '0.75rem',
                             textTransform: 'none',
-                            '&:hover': { borderColor: '#94a3b8', bgcolor: '#f8fafc' }
+                            '&:hover': { borderColor: theme.palette.divider, bgcolor: alpha(theme.palette.primary.main, 0.04) }
                         }}
                     >
                         Details
@@ -274,31 +276,31 @@ const StudentDashboard: React.FC = () => {
                         <Grid size={{ xs: 12, sm: 8 }}>
                             <Grid container spacing={1}>
                                 <Grid size={{ xs: 6, sm: 3 }}>
-                                    <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#ecfdf5', border: '1px solid #a7f3d0', textAlign: 'center' }}>
-                                        <PresentIcon sx={{ color: '#10b981', fontSize: 18, mb: 0.25 }} />
-                                        <Typography variant="h6" fontWeight={800} color="#10b981" sx={{ fontSize: '1.1rem' }}>{summary?.present || 0}</Typography>
-                                        <Typography variant="caption" fontWeight={600} color="#065f46" sx={{ fontSize: '0.7rem' }}>Present</Typography>
+                                    <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: alpha(theme.palette.success.main, 0.08), border: `1px solid ${alpha(theme.palette.success.main, 0.25)}`, textAlign: 'center' }}>
+                                        <PresentIcon sx={{ color: theme.palette.success.main, fontSize: 18, mb: 0.25 }} />
+                                        <Typography variant="h6" fontWeight={800} color={theme.palette.success.main} sx={{ fontSize: '1.1rem' }}>{summary?.present || 0}</Typography>
+                                        <Typography variant="caption" fontWeight={600} color={theme.palette.success.dark} sx={{ fontSize: '0.7rem' }}>Present</Typography>
                                     </Box>
                                 </Grid>
                                 <Grid size={{ xs: 6, sm: 3 }}>
-                                    <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#fef2f2', border: '1px solid #fecaca', textAlign: 'center' }}>
-                                        <AbsentIcon sx={{ color: '#ef4444', fontSize: 18, mb: 0.25 }} />
-                                        <Typography variant="h6" fontWeight={800} color="#ef4444" sx={{ fontSize: '1.1rem' }}>{summary?.absent || 0}</Typography>
-                                        <Typography variant="caption" fontWeight={600} color="#991b1b" sx={{ fontSize: '0.7rem' }}>Absent</Typography>
+                                    <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: alpha(theme.palette.error.main, 0.08), border: `1px solid ${alpha(theme.palette.error.main, 0.25)}`, textAlign: 'center' }}>
+                                        <AbsentIcon sx={{ color: theme.palette.error.main, fontSize: 18, mb: 0.25 }} />
+                                        <Typography variant="h6" fontWeight={800} color={theme.palette.error.main} sx={{ fontSize: '1.1rem' }}>{summary?.absent || 0}</Typography>
+                                        <Typography variant="caption" fontWeight={600} color={theme.palette.error.dark} sx={{ fontSize: '0.7rem' }}>Absent</Typography>
                                     </Box>
                                 </Grid>
                                 <Grid size={{ xs: 6, sm: 3 }}>
-                                    <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#fffbeb', border: '1px solid #fde68a', textAlign: 'center' }}>
-                                        <LateIcon sx={{ color: '#f59e0b', fontSize: 18, mb: 0.25 }} />
-                                        <Typography variant="h6" fontWeight={800} color="#f59e0b" sx={{ fontSize: '1.1rem' }}>{summary?.late || 0}</Typography>
-                                        <Typography variant="caption" fontWeight={600} color="#92400e" sx={{ fontSize: '0.7rem' }}>Late</Typography>
+                                    <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: alpha(theme.palette.warning.main, 0.08), border: `1px solid ${alpha(theme.palette.warning.main, 0.25)}`, textAlign: 'center' }}>
+                                        <LateIcon sx={{ color: theme.palette.warning.main, fontSize: 18, mb: 0.25 }} />
+                                        <Typography variant="h6" fontWeight={800} color={theme.palette.warning.main} sx={{ fontSize: '1.1rem' }}>{summary?.late || 0}</Typography>
+                                        <Typography variant="caption" fontWeight={600} color={theme.palette.warning.dark} sx={{ fontSize: '0.7rem' }}>Late</Typography>
                                     </Box>
                                 </Grid>
                                 <Grid size={{ xs: 6, sm: 3 }}>
-                                    <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: '#f5f3ff', border: '1px solid #ddd6fe', textAlign: 'center' }}>
-                                        <LeaveIcon sx={{ color: '#8b5cf6', fontSize: 18, mb: 0.25 }} />
-                                        <Typography variant="h6" fontWeight={800} color="#8b5cf6" sx={{ fontSize: '1.1rem' }}>{summary?.leave || 0}</Typography>
-                                        <Typography variant="caption" fontWeight={600} color="#5b21b6" sx={{ fontSize: '0.7rem' }}>Leave</Typography>
+                                    <Box sx={{ p: 1.25, borderRadius: 2, bgcolor: alpha(theme.palette.secondary.main, 0.08), border: `1px solid ${alpha(theme.palette.secondary.main, 0.25)}`, textAlign: 'center' }}>
+                                        <LeaveIcon sx={{ color: theme.palette.secondary.main, fontSize: 18, mb: 0.25 }} />
+                                        <Typography variant="h6" fontWeight={800} color={theme.palette.secondary.main} sx={{ fontSize: '1.1rem' }}>{summary?.leave || 0}</Typography>
+                                        <Typography variant="caption" fontWeight={600} color={theme.palette.secondary.dark} sx={{ fontSize: '0.7rem' }}>Leave</Typography>
                                     </Box>
                                 </Grid>
                             </Grid>
@@ -321,8 +323,8 @@ const StudentDashboard: React.FC = () => {
                             p: { xs: 2, sm: 2.5 },
                             height: '100%',
                             borderRadius: 2,
-                            border: '1px solid #e2e8f0',
-                            bgcolor: '#ffffff',
+                            border: `1px solid ${theme.palette.divider}`,
+                            bgcolor: theme.palette.background.paper,
                             boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
                             display: 'flex',
                             flexDirection: 'column',
@@ -330,11 +332,11 @@ const StudentDashboard: React.FC = () => {
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
                             <Stack direction="row" spacing={1.25} alignItems="center">
-                                <Avatar sx={{ bgcolor: '#eff6ff', color: '#2563eb', width: 36, height: 36 }}>
+                                <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.08), color: theme.palette.primary.main, width: 36, height: 36 }}>
                                     <TimetableIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box>
-                                    <Typography variant="subtitle2" fontWeight={700} color="#1e293b" sx={{ fontSize: '0.9rem' }}>
+                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ fontSize: '0.9rem' }}>
                                         Today's Classes
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem' }}>
@@ -353,7 +355,7 @@ const StudentDashboard: React.FC = () => {
                             </Stack>
                         ) : todayPeriods.length === 0 ? (
                             <Box sx={{ py: 3, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <CalendarIcon sx={{ fontSize: 32, color: '#cbd5e1', mb: 0.5 }} />
+                                <CalendarIcon sx={{ fontSize: 32, color: theme.palette.text.secondary, mb: 0.5 }} />
                                 <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.8rem' }}>
                                     No classes scheduled for today ({todayDayName}).
                                 </Typography>
@@ -366,14 +368,14 @@ const StudentDashboard: React.FC = () => {
                                         sx={{
                                             p: 1.25,
                                             borderRadius: 2,
-                                            bgcolor: '#f8fafc',
-                                            border: '1px solid #f1f5f9',
+                                            bgcolor: alpha(theme.palette.text.secondary, 0.04),
+                                            border: `1px solid ${theme.palette.divider}`,
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'space-between',
                                             gap: 1,
                                             transition: 'background-color 0.18s',
-                                            '&:hover': { bgcolor: '#f1f5f9' }
+                                            '&:hover': { bgcolor: alpha(theme.palette.text.secondary, 0.08) }
                                         }}
                                     >
                                         <Box sx={{ minWidth: 60 }}>
@@ -387,7 +389,7 @@ const StudentDashboard: React.FC = () => {
                                             )}
                                         </Box>
                                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                                            <Typography variant="body2" fontWeight={700} noWrap color="#1e293b" sx={{ fontSize: '0.825rem' }}>
+                                            <Typography variant="body2" fontWeight={700} noWrap color="text.primary" sx={{ fontSize: '0.825rem' }}>
                                                 {getSubjectName(period)}
                                             </Typography>
                                             {getTeacherName(period) && (
@@ -424,8 +426,8 @@ const StudentDashboard: React.FC = () => {
                             p: { xs: 2, sm: 2.5 },
                             height: '100%',
                             borderRadius: 2,
-                            border: '1px solid #e2e8f0',
-                            bgcolor: '#ffffff',
+                            border: `1px solid ${theme.palette.divider}`,
+                            bgcolor: theme.palette.background.paper,
                             boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
                             display: 'flex',
                             flexDirection: 'column',
@@ -433,11 +435,11 @@ const StudentDashboard: React.FC = () => {
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
                             <Stack direction="row" spacing={1.25} alignItems="center">
-                                <Avatar sx={{ bgcolor: '#fff7ed', color: '#ea580c', width: 36, height: 36 }}>
+                                <Avatar sx={{ bgcolor: alpha(theme.palette.warning.main, 0.08), color: theme.palette.warning.main, width: 36, height: 36 }}>
                                     <HomeworkIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box>
-                                    <Typography variant="subtitle2" fontWeight={700} color="#1e293b" sx={{ fontSize: '0.9rem' }}>
+                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ fontSize: '0.9rem' }}>
                                         Pending Homework
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem' }}>
@@ -456,7 +458,7 @@ const StudentDashboard: React.FC = () => {
                             </Stack>
                         ) : recentHomework.length === 0 ? (
                             <Box sx={{ py: 3, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <AssignmentIcon sx={{ fontSize: 32, color: '#cbd5e1', mb: 0.5 }} />
+                                <AssignmentIcon sx={{ fontSize: 32, color: theme.palette.text.secondary, mb: 0.5 }} />
                                 <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.8rem' }}>
                                     No pending homework. All caught up.
                                 </Typography>
@@ -472,12 +474,12 @@ const StudentDashboard: React.FC = () => {
                                             sx={{
                                                 p: 1.25,
                                                 borderRadius: 2,
-                                                bgcolor: overdue ? '#fef2f2' : '#f8fafc',
+                                                bgcolor: overdue ? alpha(theme.palette.error.main, 0.06) : alpha(theme.palette.text.secondary, 0.04),
                                                 border: '1px solid',
-                                                borderColor: overdue ? '#fecaca' : '#f1f5f9',
+                                                borderColor: overdue ? alpha(theme.palette.error.main, 0.3) : theme.palette.divider,
                                                 cursor: 'pointer',
                                                 transition: 'background-color 0.18s',
-                                                '&:hover': { bgcolor: overdue ? '#fee2e2' : '#f1f5f9' }
+                                                '&:hover': { bgcolor: overdue ? alpha(theme.palette.error.main, 0.1) : alpha(theme.palette.text.secondary, 0.08) }
                                             }}
                                         >
                                             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.25 }}>
@@ -497,7 +499,7 @@ const StudentDashboard: React.FC = () => {
                                                     />
                                                 )}
                                             </Box>
-                                            <Typography variant="body2" fontWeight={700} noWrap color="#1e293b" sx={{ fontSize: '0.825rem' }}>
+                                            <Typography variant="body2" fontWeight={700} noWrap color="text.primary" sx={{ fontSize: '0.825rem' }}>
                                                 {hw.title}
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25, fontSize: '0.7rem' }}>
@@ -530,8 +532,8 @@ const StudentDashboard: React.FC = () => {
                             p: { xs: 2, sm: 2.5 },
                             height: '100%',
                             borderRadius: 2,
-                            border: '1px solid #e2e8f0',
-                            bgcolor: '#ffffff',
+                            border: `1px solid ${theme.palette.divider}`,
+                            bgcolor: theme.palette.background.paper,
                             boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
                             display: 'flex',
                             flexDirection: 'column',
@@ -539,11 +541,11 @@ const StudentDashboard: React.FC = () => {
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
                             <Stack direction="row" spacing={1.25} alignItems="center">
-                                <Avatar sx={{ bgcolor: '#f3e8ff', color: '#9333ea', width: 36, height: 36 }}>
+                                <Avatar sx={{ bgcolor: alpha(theme.palette.secondary.main, 0.08), color: theme.palette.secondary.main, width: 36, height: 36 }}>
                                     <AnnouncementIcon sx={{ fontSize: 18 }} />
                                 </Avatar>
                                 <Box>
-                                    <Typography variant="subtitle2" fontWeight={700} color="#1e293b" sx={{ fontSize: '0.9rem' }}>
+                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ fontSize: '0.9rem' }}>
                                         Announcements
                                     </Typography>
                                     <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem' }}>
@@ -562,7 +564,7 @@ const StudentDashboard: React.FC = () => {
                             </Stack>
                         ) : recentAnnouncements.length === 0 ? (
                             <Box sx={{ py: 3, textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                                <AnnouncementIcon sx={{ fontSize: 32, color: '#cbd5e1', mb: 0.5 }} />
+                                <AnnouncementIcon sx={{ fontSize: 32, color: theme.palette.text.secondary, mb: 0.5 }} />
                                 <Typography variant="body2" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.8rem' }}>
                                     No announcements at the moment.
                                 </Typography>
@@ -576,11 +578,11 @@ const StudentDashboard: React.FC = () => {
                                         sx={{
                                             p: 1.25,
                                             borderRadius: 2,
-                                            bgcolor: '#f8fafc',
-                                            border: '1px solid #f1f5f9',
+                                            bgcolor: alpha(theme.palette.text.secondary, 0.04),
+                                            border: `1px solid ${theme.palette.divider}`,
                                             cursor: 'pointer',
                                             transition: 'background-color 0.18s',
-                                            '&:hover': { bgcolor: '#f1f5f9' }
+                                            '&:hover': { bgcolor: alpha(theme.palette.text.secondary, 0.08) }
                                         }}
                                     >
                                         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 0.25 }}>
@@ -595,7 +597,7 @@ const StudentDashboard: React.FC = () => {
                                                 {new Date(ann.createdAt || ann.publishDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                                             </Typography>
                                         </Box>
-                                        <Typography variant="body2" fontWeight={700} noWrap color="#1e293b" sx={{ fontSize: '0.825rem' }}>
+                                        <Typography variant="body2" fontWeight={700} noWrap color="text.primary" sx={{ fontSize: '0.825rem' }}>
                                             {ann.title}
                                         </Typography>
                                         {ann.content && (
@@ -634,12 +636,12 @@ const StudentDashboard: React.FC = () => {
                     ))
                 ) : (
                     [
-                        { title: 'Attendance', value: `${percentage}%`, subtitle: 'Report & charts', icon: <AttendanceIcon />, color: '#059669', onClick: () => navigate('/student/attendance') },
-                        { title: 'My Timetable', value: 'Schedule', subtitle: 'Daily class schedule', icon: <TimetableIcon />, color: '#047857', onClick: () => navigate('/student/timetable') },
-                        { title: 'My Exams', value: 'Exams', subtitle: 'Schedules & hall tickets', icon: <ResultsIcon />, color: '#111827', onClick: () => navigate('/student/exam/my-exams') },
-                        { title: 'Leave Application', value: 'Leave', subtitle: 'Apply & view status', icon: <LeaveIcon />, color: '#f59e0b', onClick: () => navigate('/student/leave/apply') },
-                        { title: 'Support Ticket', value: 'Support', subtitle: 'Submit query', icon: <SupportIcon />, color: '#1f2937', onClick: () => setSupportDialogOpen(true) },
-                        { title: 'My Profile', value: 'Profile', subtitle: 'Personal details & ID', icon: <ClassIcon />, color: '#059669', onClick: () => navigate('/student/profile') },
+                        { title: 'Attendance', value: `${percentage}%`, subtitle: 'Report & charts', icon: <AttendanceIcon />, color: theme.palette.primary.main, onClick: () => navigate('/student/attendance') },
+                        { title: 'My Timetable', value: 'Schedule', subtitle: 'Daily class schedule', icon: <TimetableIcon />, color: theme.palette.primary.dark, onClick: () => navigate('/student/timetable') },
+                        { title: 'My Exams', value: 'Exams', subtitle: 'Schedules & hall tickets', icon: <ResultsIcon />, color: theme.palette.secondary.main, onClick: () => navigate('/student/exam/my-exams') },
+                        { title: 'Leave Application', value: 'Leave', subtitle: 'Apply & view status', icon: <LeaveIcon />, color: theme.palette.warning.main, onClick: () => navigate('/student/leave/apply') },
+                        { title: 'Support Ticket', value: 'Support', subtitle: 'Submit query', icon: <SupportIcon />, color: theme.palette.secondary.light, onClick: () => setSupportDialogOpen(true) },
+                        { title: 'My Profile', value: 'Profile', subtitle: 'Personal details & ID', icon: <ClassIcon />, color: theme.palette.primary.main, onClick: () => navigate('/student/profile') },
                     ].map((item) => (
                         <Grid size={{ xs: 6, sm: 6, md: 4 }} key={item.title}>
                             <Paper
@@ -649,19 +651,19 @@ const StudentDashboard: React.FC = () => {
                                     p: { xs: 1.5, sm: 2 },
                                     height: '100%',
                                     borderRadius: 2.5,
-                                    bgcolor: '#ffffff',
-                                    border: '1px solid #e2e8f0',
+                                    bgcolor: theme.palette.background.paper,
+                                    border: `1px solid ${theme.palette.divider}`,
                                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
                                     transition: 'all 0.18s ease-in-out',
                                     cursor: 'pointer',
-                                    '&:hover': { transform: 'translateY(-2px)', borderColor: '#cbd5e1', boxShadow: '0 4px 14px rgba(0,0,0,0.06)' }
+                                    '&:hover': { transform: 'translateY(-2px)', borderColor: theme.palette.divider, boxShadow: '0 4px 14px rgba(0,0,0,0.06)' }
                                 }}
                             >
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-                                    <Avatar sx={{ bgcolor: `${item.color}15`, color: item.color, width: { xs: 36, sm: 40 }, height: { xs: 36, sm: 40 }, borderRadius: 2 }}>
+                                    <Avatar sx={{ bgcolor: alpha(item.color, 0.12), color: item.color, width: { xs: 36, sm: 40 }, height: { xs: 36, sm: 40 }, border: `1px solid ${alpha(item.color, 0.25)}`, borderRadius: 2 }}>
                                         {React.cloneElement(item.icon as any, { sx: { fontSize: { xs: 18, sm: 22 } } })}
                                     </Avatar>
-                                    <ArrowForwardIcon sx={{ color: '#cbd5e1', fontSize: 16 }} />
+                                    <ArrowForwardIcon sx={{ color: theme.palette.text.secondary, fontSize: 16 }} />
                                 </Box>
                                 <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: { xs: '0.825rem', sm: '0.9rem' }, mb: 0.25 }} noWrap>{item.title}</Typography>
                                 <Typography variant="caption" color="text.secondary" fontWeight={500} sx={{ fontSize: '0.7rem' }} noWrap>{item.subtitle}</Typography>

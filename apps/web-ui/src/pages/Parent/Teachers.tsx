@@ -18,6 +18,7 @@ import {
     Stack,
     IconButton,
 } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
 import {
     Person as PersonIcon,
     School as SchoolIcon,
@@ -29,28 +30,25 @@ import {
     Call as CallIcon,
     MenuBook as SubjectIcon,
     Badge as BadgeIcon,
-    Chat as ChatIcon,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 import { useChildSelector } from '../../context/ChildSelectorContext';
 import { useGetChildTeachers } from '../../queries/ParentPortal';
 import TokenService from '../../queries/token/tokenService';
 import type { ChildTeacherInfo } from '../../types';
 
-const AVATAR_COLORS = [
-    'linear-gradient(135deg, #059669 0%, #047857 100%)',
-    'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-    'linear-gradient(135deg, #10b981 0%, #047857 100%)',
-    'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-    'linear-gradient(135deg, #0F172A 0%, #334155 100%)',
-];
-
 const ParentTeachers: React.FC = () => {
-    const navigate = useNavigate();
+    const theme = useTheme();
     const schoolId = TokenService.getSchoolId() || '';
     const { selectedChild, setSelectedChild, children: contextChildren, isLoading: loadingChild } = useChildSelector();
     const [searchQuery, setSearchQuery] = useState('');
     const [copiedText, setCopiedText] = useState<string | null>(null);
+
+    const AVATAR_COLORS = useMemo(() => [
+        `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+        `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 100%)`,
+        `linear-gradient(135deg, ${theme.palette.warning.main} 0%, ${theme.palette.warning.dark} 100%)`,
+        `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
+    ], [theme]);
 
     const { data, isLoading, error } = useGetChildTeachers(
         schoolId,
@@ -115,11 +113,11 @@ const ParentTeachers: React.FC = () => {
             {/* Page Header */}
             <Box sx={{ mb: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-                    <Box sx={{ p: 1.25, borderRadius: 2.5, bgcolor: '#eff6ff', color: '#2563eb' }}>
+                    <Box sx={{ p: 1.25, borderRadius: 2.5, bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main }}>
                         <PersonIcon sx={{ fontSize: 28 }} />
                     </Box>
                     <Box>
-                        <Typography variant="h4" fontWeight={800} color="#1e293b" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+                        <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                             Faculty & Teachers
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
@@ -131,7 +129,7 @@ const ParentTeachers: React.FC = () => {
 
             {/* ── Multi-Child Switcher Bar ── */}
             {contextChildren.length > 1 && (
-                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 2, border: '1px solid', borderColor: theme.palette.divider, bgcolor: theme.palette.background.paper }}>
                     <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, display: 'block' }}>
                         Select Child
                     </Typography>
@@ -153,13 +151,13 @@ const ParentTeachers: React.FC = () => {
                                         py: 0.75,
                                         fontSize: '0.8125rem',
                                         flexShrink: 0,
-                                        bgcolor: isSelected ? '#4f46e5' : '#ffffff',
-                                        color: isSelected ? '#ffffff' : '#475569',
-                                        borderColor: isSelected ? '#4f46e5' : '#cbd5e1',
-                                        boxShadow: isSelected ? '0 2px 8px rgba(79, 70, 229, 0.25)' : 'none',
+                                        bgcolor: isSelected ? theme.palette.primary.main : theme.palette.background.paper,
+                                        color: isSelected ? theme.palette.primary.contrastText : theme.palette.text.secondary,
+                                        borderColor: isSelected ? theme.palette.primary.main : theme.palette.divider,
+                                        boxShadow: isSelected ? `0 2px 8px ${alpha(theme.palette.primary.main, 0.25)}` : 'none',
                                         '&:hover': {
-                                            bgcolor: isSelected ? '#4338ca' : '#f1f5f9',
-                                            borderColor: isSelected ? '#4338ca' : '#94a3b8',
+                                            bgcolor: isSelected ? theme.palette.primary.dark : alpha(theme.palette.text.primary, 0.04),
+                                            borderColor: isSelected ? theme.palette.primary.dark : theme.palette.divider,
                                         }
                                     }}
                                 >
@@ -180,13 +178,13 @@ const ParentTeachers: React.FC = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     sx={{
                         width: { xs: '100%', sm: 340 },
-                        bgcolor: '#ffffff',
+                        bgcolor: theme.palette.background.paper,
                         '& .MuiOutlinedInput-root': { borderRadius: 2 }
                     }}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <SearchIcon sx={{ color: '#94a3b8' }} />
+                                <SearchIcon sx={{ color: theme.palette.text.secondary }} />
                             </InputAdornment>
                         ),
                     }}
@@ -217,9 +215,9 @@ const ParentTeachers: React.FC = () => {
                     ))
                 ) : filteredTeachers.length === 0 ? (
                     <Grid size={{ xs: 12 }}>
-                        <Paper elevation={0} sx={{ textAlign: 'center', py: 8, px: 3, borderRadius: 4, border: '1px solid #e2e8f0', bgcolor: '#ffffff' }}>
-                            <PersonIcon sx={{ fontSize: 64, color: '#cbd5e1', mb: 2 }} />
-                            <Typography variant="h6" fontWeight={700} color="#1e293b">
+                        <Paper elevation={0} sx={{ textAlign: 'center', py: 8, px: 3, borderRadius: 4, border: '1px solid', borderColor: theme.palette.divider, bgcolor: theme.palette.background.paper }}>
+                            <PersonIcon sx={{ fontSize: 64, color: theme.palette.divider, mb: 2 }} />
+                            <Typography variant="h6" fontWeight={700} color="text.primary">
                                 {searchQuery ? 'No matching teachers found' : 'No teachers assigned yet'}
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -240,12 +238,12 @@ const ParentTeachers: React.FC = () => {
                                         height: '100%',
                                         borderRadius: 4,
                                         border: '1px solid',
-                                        borderColor: teacher.isClassTeacher ? '#059669' : '#e2e8f0',
-                                        bgcolor: '#ffffff',
+                                        borderColor: teacher.isClassTeacher ? theme.palette.primary.main : theme.palette.divider,
+                                        bgcolor: theme.palette.background.paper,
                                         boxShadow: teacher.isClassTeacher
-                                            ? '0 6px 20px -6px rgba(5, 150, 105, 0.2)'
+                                            ? `0 6px 20px -6px ${alpha(theme.palette.primary.main, 0.25)}`
                                             : '0 4px 16px rgba(0, 0, 0, 0.04)',
-                                        transition: 'all 0.25 ease',
+                                        transition: 'all 0.25s ease',
                                         '&:hover': {
                                             transform: 'translateY(-4px)',
                                             boxShadow: '0 12px 32px rgba(0, 0, 0, 0.08)',
@@ -257,7 +255,7 @@ const ParentTeachers: React.FC = () => {
                                     {teacher.isClassTeacher && (
                                         <Box sx={{
                                             position: 'absolute', top: 0, left: 0, right: 0, height: 4,
-                                            background: '#059669'
+                                            background: theme.palette.primary.main
                                         }} />
                                     )}
 
@@ -274,14 +272,15 @@ const ParentTeachers: React.FC = () => {
                                                     fontWeight: 800,
                                                     fontSize: '1.5rem',
                                                     boxShadow: '0 4px 14px rgba(0, 0, 0, 0.12)',
-                                                    border: '2px solid #ffffff',
+                                                    border: '2px solid',
+                                                    borderColor: theme.palette.background.paper,
                                                 }}
                                             >
                                                 {teacher.firstName?.[0]}
                                             </Avatar>
                                             <Box sx={{ flex: 1, minWidth: 0 }}>
                                                 <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.75, mb: 0.5 }}>
-                                                    <Typography variant="h6" fontWeight={800} color="#1e293b" noWrap>
+                                                    <Typography variant="h6" fontWeight={800} color="text.primary" noWrap>
                                                         {teacherName}
                                                     </Typography>
                                                 </Box>
@@ -289,14 +288,14 @@ const ParentTeachers: React.FC = () => {
                                                 {teacher.isClassTeacher && (
                                                     <Chip
                                                         size="small"
-                                                        icon={<StarIcon sx={{ color: '#fbbf24 !important', fontSize: 15 }} />}
+                                                        icon={<StarIcon sx={{ color: `${theme.palette.warning.main} !important`, fontSize: 15 }} />}
                                                         label="Class Teacher"
                                                         sx={{
                                                             height: 24,
                                                             fontWeight: 700,
-                                                            bgcolor: '#fef3c7',
-                                                            color: '#92400e',
-                                                            border: '1px solid #fde68a',
+                                                            bgcolor: alpha(theme.palette.warning.main, 0.1),
+                                                            color: theme.palette.warning.dark,
+                                                            border: `1px solid ${alpha(theme.palette.warning.main, 0.25)}`,
                                                             mb: 1,
                                                         }}
                                                     />
@@ -306,18 +305,19 @@ const ParentTeachers: React.FC = () => {
                                                 <Box sx={{ display: 'flex', gap: 0.6, flexWrap: 'wrap', mt: 0.5 }}>
                                                     {teacher.subjectNames && teacher.subjectNames.length > 0 ? (
                                                         teacher.subjectNames.map((subject, idx) => (
-                                                            <Chip
+                                                             <Chip
                                                                 key={idx}
                                                                 size="small"
-                                                                icon={<SubjectIcon sx={{ fontSize: '13px !important', color: '#475569 !important' }} />}
+                                                                icon={<SubjectIcon sx={{ fontSize: '13px !important', color: `${theme.palette.text.secondary} !important` }} />}
                                                                 label={subject}
                                                                 sx={{
                                                                     height: 22,
                                                                     fontWeight: 600,
-                                                                    bgcolor: '#f1f5f9',
-                                                                    color: '#334155',
+                                                                    bgcolor: alpha(theme.palette.text.primary, 0.04),
+                                                                    color: theme.palette.text.primary,
                                                                     fontSize: '0.72rem',
-                                                                    border: '1px solid #e2e8f0',
+                                                                    border: '1px solid',
+                                                                    borderColor: theme.palette.divider,
                                                                 }}
                                                             />
                                                         ))
@@ -326,7 +326,7 @@ const ParentTeachers: React.FC = () => {
                                                             size="small"
                                                             icon={<SchoolIcon sx={{ fontSize: '13px !important' }} />}
                                                             label="Subject Teacher"
-                                                            sx={{ height: 22, bgcolor: '#f8fafc', color: '#64748b' }}
+                                                            sx={{ height: 22, bgcolor: alpha(theme.palette.text.primary, 0.04), color: theme.palette.text.secondary }}
                                                         />
                                                     )}
                                                 </Box>
@@ -340,16 +340,16 @@ const ParentTeachers: React.FC = () => {
                                             {teacher.email && (
                                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
-                                                        <Box sx={{ p: 0.75, borderRadius: 1.5, bgcolor: '#f1f5f9', color: '#64748b', display: 'flex' }}>
+                                                        <Box sx={{ p: 0.75, borderRadius: 1.5, bgcolor: alpha(theme.palette.text.primary, 0.04), color: theme.palette.text.secondary, display: 'flex' }}>
                                                             <EmailIcon sx={{ fontSize: 16 }} />
                                                         </Box>
-                                                        <Typography variant="body2" color="#334155" fontWeight={500} noWrap>
+                                                        <Typography variant="body2" color="text.primary" fontWeight={500} noWrap>
                                                             {teacher.email}
                                                         </Typography>
                                                     </Box>
                                                     <Tooltip title={copiedText === teacher.email ? 'Copied!' : 'Copy Email'}>
                                                         <IconButton size="small" onClick={() => handleCopy(teacher.email || '')}>
-                                                            <CopyIcon sx={{ fontSize: 16, color: '#94a3b8' }} />
+                                                            <CopyIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
                                                         </IconButton>
                                                     </Tooltip>
                                                 </Box>
@@ -358,10 +358,10 @@ const ParentTeachers: React.FC = () => {
                                             {teacher.phone && (
                                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, minWidth: 0 }}>
-                                                        <Box sx={{ p: 0.75, borderRadius: 1.5, bgcolor: '#ecfdf5', color: '#10b981', display: 'flex' }}>
+                                                        <Box sx={{ p: 0.75, borderRadius: 1.5, bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main, display: 'flex' }}>
                                                             <PhoneIcon sx={{ fontSize: 16 }} />
                                                         </Box>
-                                                        <Typography variant="body2" color="#334155" fontWeight={600} noWrap>
+                                                        <Typography variant="body2" color="text.primary" fontWeight={600} noWrap>
                                                             {teacher.phone}
                                                         </Typography>
                                                     </Box>
@@ -371,14 +371,14 @@ const ParentTeachers: React.FC = () => {
                                                                 size="small"
                                                                 component="a"
                                                                 href={`tel:${teacher.phone}`}
-                                                                sx={{ bgcolor: '#ecfdf5', color: '#10b981', '&:hover': { bgcolor: '#d1fae5' } }}
+                                                                sx={{ bgcolor: alpha(theme.palette.success.main, 0.1), color: theme.palette.success.main, '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.2) } }}
                                                             >
                                                                 <CallIcon sx={{ fontSize: 15 }} />
                                                             </IconButton>
                                                         </Tooltip>
                                                         <Tooltip title={copiedText === teacher.phone ? 'Copied!' : 'Copy Phone'}>
                                                             <IconButton size="small" onClick={() => handleCopy(teacher.phone || '')}>
-                                                                <CopyIcon sx={{ fontSize: 16, color: '#94a3b8' }} />
+                                                                <CopyIcon sx={{ fontSize: 16, color: theme.palette.text.secondary }} />
                                                             </IconButton>
                                                         </Tooltip>
                                                     </Stack>
@@ -388,6 +388,7 @@ const ParentTeachers: React.FC = () => {
 
                                         {/* Action buttons */}
                                         <Stack direction="row" spacing={1} sx={{ mt: 2.5 }}>
+                                            {/* Chat button temporarily commented out
                                             <Button
                                                 variant="contained"
                                                 size="small"
@@ -402,12 +403,13 @@ const ParentTeachers: React.FC = () => {
                                                     borderRadius: 2.5,
                                                     fontWeight: 700,
                                                     textTransform: 'none',
-                                                    bgcolor: '#2563eb',
-                                                    '&:hover': { bgcolor: '#1d4ed8' },
+                                                    bgcolor: theme.palette.primary.main,
+                                                    '&:hover': { bgcolor: theme.palette.primary.dark },
                                                 }}
                                             >
                                                 Chat
                                             </Button>
+                                            */}
 
                                             {teacher.email && (
                                                 <Button
@@ -421,9 +423,9 @@ const ParentTeachers: React.FC = () => {
                                                         borderRadius: 2.5,
                                                         fontWeight: 700,
                                                         textTransform: 'none',
-                                                        borderColor: '#cbd5e1',
-                                                        color: '#475569',
-                                                        '&:hover': { borderColor: '#2563eb', bgcolor: '#eff6ff', color: '#2563eb' }
+                                                        borderColor: theme.palette.divider,
+                                                        color: theme.palette.text.primary,
+                                                        '&:hover': { borderColor: theme.palette.primary.main, bgcolor: alpha(theme.palette.primary.main, 0.04) }
                                                     }}
                                                 >
                                                     Email

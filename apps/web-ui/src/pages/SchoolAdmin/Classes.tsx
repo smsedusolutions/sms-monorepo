@@ -67,6 +67,11 @@ const ClassesPage = () => {
         setDialogOpen(true);
     };
 
+    const currentEditClass = useMemo(() => {
+        if (!editData) return null;
+        return (data?.data || []).find((c: Class) => c.classId === editData.classId) || editData;
+    }, [editData, data?.data]);
+
     const handleEdit = (classItem: Class) => {
         setEditData(classItem);
         setDialogOpen(true);
@@ -491,7 +496,7 @@ const ClassesPage = () => {
                 open={dialogOpen}
                 onClose={handleDialogClose}
                 schoolId={schoolId}
-                editData={editData}
+                editData={currentEditClass}
             />
         </Box>
     );

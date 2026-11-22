@@ -48,6 +48,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import { pdf } from '@react-pdf/renderer';
 import { useAuth } from '../../../context/AuthContext';
+import { getEffectiveExamStatus, getExamStatusColor } from '../../../utils/examUtils';
 import { useUrlTab } from '../../../hooks/useUrlTab';
 import { useIsMobile } from '../../../hooks/useIsMobile';
 import {
@@ -232,13 +233,7 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
     };
 
     const getStatusColor = (status: string) => {
-        switch (status?.toLowerCase()) {
-            case 'published': return 'success';
-            case 'ongoing': return 'info';
-            case 'scheduled': return 'primary';
-            case 'draft': return 'warning';
-            default: return 'default';
-        }
+        return getExamStatusColor(status);
     };
 
     return (
@@ -268,7 +263,9 @@ const ExamListView = ({ schoolId, onSelect, isMobile }: { schoolId: string, onSe
                 </Paper>
             ) : (
                 <Grid container spacing={2}>
-                    {exams.data.map((exam: any) => {
+                    {exams.data.map((rawExam: any) => {
+                        const effStatus = getEffectiveExamStatus(rawExam);
+                        const exam = { ...rawExam, status: effStatus };
                         const statusColor = getStatusColor(exam.status);
                         return (
                             <Grid key={exam._id} size={{ xs: 12, md: 6, lg: 4 }}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Box,
     Typography,
@@ -16,6 +16,12 @@ import {
     IconButton,
     Stack,
     Grid,
+    Paper,
+    TextField,
+    MenuItem,
+    InputAdornment,
+    useTheme,
+    alpha,
 } from '@mui/material';
 import {
     Announcement as AnnouncementIcon,
@@ -25,7 +31,13 @@ import {
     Download as DownloadIcon,
     Edit as EditIcon,
     Delete as DeleteIcon,
+    Search as SearchIcon,
+    CalendarToday as CalendarIcon,
+    RestartAlt as ResetIcon,
 } from '@mui/icons-material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import type { Announcement, AnnouncementCategory, AnnouncementAttachment, AnnouncementPriority, AnnouncementTargetAudience, Class } from '../../types';
 import { AppInput } from '../../components/shared/AppInput';
 import { AppSelect } from '../../components/shared/AppSelect';
@@ -39,10 +51,13 @@ import {
     useMarkAnnouncementSeen,
     useDeleteAnnouncement,
     useCreateAnnouncement,
-    useUpdateAnnouncement
+    useUpdateAnnouncement,
+    type AnnouncementFilters,
 } from '../../queries/Announcement';
 import { useGetClasses } from '../../queries/Class';
 import FileUpload from '../../components/FileUpload/FileUpload';
+
+type DatePreset = 'all' | 'today' | 'this_week' | 'this_month' | 'custom';
 import { IMAGEKIT_FOLDERS } from '../../utils/imagekit';
 
 
@@ -58,16 +73,64 @@ const categoryColors: Record<AnnouncementCategory, 'default' | 'primary' | 'seco
 
 
 const Announcements: React.FC = () => {
+    const theme = useTheme();
     const schoolId = TokenService.getSchoolId() || '';
     const userId = TokenService.getUserId() || '';
-    const { data, isLoading, error } = useGetAnnouncements(schoolId);
-    const markAsSeen = useMarkAnnouncementSeen(schoolId);
 
     const [tabValue, setTabValue] = useUrlTab(0, ['all', 'mine']);
     const [viewerOpen, setViewerOpen] = useState(false);
     const [currentFile, setCurrentFile] = useState<AnnouncementAttachment | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [priorityFilter, setPriorityFilter] = useState('all');
+    const [datePreset, setDatePreset] = useState<DatePreset>('all');
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [endDate, setEndDate] = useState<Date | null>(null);
+
+    // Compute active date boundaries
+    const dateRangeValues = useMemo(() => {
+        const now = new Date();
+        if (datePreset === 'today') {
+            const todayStr = now.toISOString().split('T')[0];
+            return { start: todayStr, end: todayStr };
+        }
+        if (datePreset === 'this_week') {
+            const day = now.getDay();
+            const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+            const monday = new Date(now.setDate(diff));
+            return {
+                start: monday.toISOString().split('T')[0],
+                end: new Date().toISOString().split('T')[0],
+            };
+        }
+        if (datePreset === 'this_month') {
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            return {
+                start: firstDay.toISOString().split('T')[0],
+                end: new Date().toISOString().split('T')[0],
+            };
+        }
+        if (datePreset === 'custom') {
+            return {
+                start: startDate ? startDate.toISOString().split('T')[0] : undefined,
+                end: endDate ? endDate.toISOString().split('T')[0] : undefined,
+            };
+        }
+        return { start: undefined, end: undefined };
+    }, [datePreset, startDate, endDate]);
+
+    const queryFilters: AnnouncementFilters = useMemo(() => ({
+        category: categoryFilter !== 'all' ? categoryFilter : undefined,
+        priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+        search: searchQuery.trim() || undefined,
+        startDate: dateRangeValues.start,
+        endDate: dateRangeValues.end,
+    }), [categoryFilter, priorityFilter, searchQuery, dateRangeValues]);
+
+    const { data, isLoading, error, refetch } = useGetAnnouncements(schoolId, queryFilters);
+    const markAsSeen = useMarkAnnouncementSeen(schoolId);
 
     const deleteAnnouncement = useDeleteAnnouncement(schoolId);
     const createAnnouncement = useCreateAnnouncement(schoolId);
@@ -75,13 +138,87 @@ const Announcements: React.FC = () => {
     const { data: classesData } = useGetClasses(schoolId);
 
     const classes = classesData?.data || [];
-    console.log(currentFile, "currentFile")
     const allAnnouncements = data?.data || [];
 
-    // Filter announcements based on tab
-    const announcements = tabValue === 0
-        ? allAnnouncements // All announcements
-        : allAnnouncements.filter((ann: Announcement) => ann.createdBy === userId); // Your announcements
+    const handleResetFilters = () => {
+        setSearchQuery('');
+        setCategoryFilter('all');
+        setPriorityFilter('all');
+        setDatePreset('all');
+        setStartDate(null);
+        setEndDate(null);
+    };
+
+    const hasActiveFilters = Boolean(
+        searchQuery.trim() ||
+        categoryFilter !== 'all' ||
+        priorityFilter !== 'all' ||
+        datePreset !== 'all' ||
+        startDate ||
+        endDate
+    );
+
+    // Client-side filtering fallback
+    const announcements = useMemo(() => {
+        let list = tabValue === 0
+            ? allAnnouncements
+            : allAnnouncements.filter((ann: Announcement) => ann.createdBy === userId);
+
+        if (searchQuery.trim()) {
+            const q = searchQuery.toLowerCase().trim();
+            list = list.filter(ann =>
+                (ann.title || '').toLowerCase().includes(q) ||
+                (ann.content || '').toLowerCase().includes(q)
+            );
+        }
+
+        if (categoryFilter !== 'all') {
+            list = list.filter(ann => ann.category === categoryFilter);
+        }
+
+        if (priorityFilter !== 'all') {
+            list = list.filter(ann => ann.priority === priorityFilter);
+        }
+
+        if (datePreset !== 'all') {
+            const now = new Date();
+            let startMs = 0;
+            let endMs = Infinity;
+
+            if (datePreset === 'today') {
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                startMs = today.getTime();
+                endMs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+            } else if (datePreset === 'this_week') {
+                const day = now.getDay();
+                const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+                const start = new Date(now.setDate(diff));
+                start.setHours(0, 0, 0, 0);
+                startMs = start.getTime();
+            } else if (datePreset === 'this_month') {
+                const start = new Date(now.getFullYear(), now.getMonth(), 1);
+                startMs = start.getTime();
+            } else if (datePreset === 'custom') {
+                if (startDate) {
+                    const s = new Date(startDate);
+                    s.setHours(0, 0, 0, 0);
+                    startMs = s.getTime();
+                }
+                if (endDate) {
+                    const e = new Date(endDate);
+                    e.setHours(23, 59, 59, 999);
+                    endMs = e.getTime();
+                }
+            }
+
+            list = list.filter(ann => {
+                const annTime = new Date(ann.publishDate || ann.createdAt || '').getTime();
+                return annTime >= startMs && annTime <= endMs;
+            });
+        }
+
+        return list;
+    }, [allAnnouncements, tabValue, userId, searchQuery, categoryFilter, priorityFilter, datePreset, startDate, endDate]);
 
     const handleExpand = (announcementId: string, isSeen: boolean) => {
         // Mark as seen when expanding if not already seen
@@ -105,6 +242,7 @@ const Announcements: React.FC = () => {
             await deleteAnnouncement.mutateAsync(selectedAnnouncement.announcementId);
             setDeleteDialogOpen(false);
             setSelectedAnnouncement(null);
+            refetch();
         }
     };
 
@@ -196,6 +334,7 @@ const Announcements: React.FC = () => {
             }
 
             handleCloseFormDialog();
+            refetch();
         } catch (error) {
             console.error('Error saving announcement:', error);
         }
@@ -258,11 +397,325 @@ const Announcements: React.FC = () => {
                 </Button>
             </Box>
 
-            {/* Tabs for filtering */}
-            <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} sx={{ mb: 3 }}>
-                <Tab label="All Announcements" />
-                <Tab label="Your Announcements" />
-            </Tabs>
+            {/* Tabs Row */}
+            <Box sx={{ mb: 2.5, borderBottom: '1px solid', borderColor: theme.palette.divider }}>
+                <Tabs
+                    value={tabValue}
+                    onChange={(_, v) => setTabValue(v)}
+                    sx={{
+                        '& .MuiTab-root': {
+                            textTransform: 'none',
+                            fontWeight: 600,
+                            fontSize: '0.95rem',
+                            minHeight: 48,
+                        },
+                    }}
+                >
+                    <Tab
+                        label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <span>All Announcements</span>
+                                <Chip
+                                    size="small"
+                                    label={allAnnouncements.length}
+                                    sx={{ height: 20, fontSize: '0.75rem', fontWeight: 700 }}
+                                />
+                            </Box>
+                        }
+                    />
+                    <Tab
+                        label={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <span>Your Announcements</span>
+                                <Chip
+                                    size="small"
+                                    label={allAnnouncements.filter((ann: Announcement) => ann.createdBy === userId).length}
+                                    sx={{ height: 20, fontSize: '0.75rem', fontWeight: 700 }}
+                                />
+                            </Box>
+                        }
+                    />
+                </Tabs>
+            </Box>
+
+            {/* Comprehensive Theme-Based Filter Bar */}
+            <Paper
+                elevation={0}
+                sx={{
+                    p: 2,
+                    mb: 3,
+                    borderRadius: 2.5,
+                    border: '1px solid',
+                    borderColor: theme.palette.divider,
+                    bgcolor: theme.palette.background.paper,
+                }}
+            >
+                {/* Search & Selectors Row */}
+                <Box
+                    sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                            xs: '1fr',
+                            sm: 'repeat(2, 1fr)',
+                            md: '2fr 1fr 1fr 1fr',
+                        },
+                        gap: 1.5,
+                        alignItems: 'center',
+                    }}
+                >
+                    {/* Search Field */}
+                    <TextField
+                        size="small"
+                        placeholder="Search notices by title or content..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon sx={{ color: theme.palette.text.secondary, fontSize: 18 }} />
+                                </InputAdornment>
+                            ),
+                            endAdornment: searchQuery ? (
+                                <InputAdornment position="end">
+                                    <IconButton size="small" onClick={() => setSearchQuery('')}>
+                                        <CloseIcon sx={{ fontSize: 16 }} />
+                                    </IconButton>
+                                </InputAdornment>
+                            ) : null,
+                        }}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: 2,
+                                bgcolor: theme.palette.background.default,
+                            },
+                        }}
+                    />
+
+                    {/* Date Range Preset */}
+                    <TextField
+                        select
+                        size="small"
+                        label="Date Range"
+                        value={datePreset}
+                        onChange={(e) => setDatePreset(e.target.value as DatePreset)}
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <CalendarIcon sx={{ color: theme.palette.text.secondary, fontSize: 18 }} />
+                                </InputAdornment>
+                            ),
+                        }}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: 2,
+                                bgcolor: theme.palette.background.default,
+                            },
+                        }}
+                    >
+                        <MenuItem value="all">All Time</MenuItem>
+                        <MenuItem value="today">Today</MenuItem>
+                        <MenuItem value="this_week">This Week</MenuItem>
+                        <MenuItem value="this_month">This Month</MenuItem>
+                        <MenuItem value="custom">Custom Date Range</MenuItem>
+                    </TextField>
+
+                    {/* Category Filter */}
+                    <TextField
+                        select
+                        size="small"
+                        label="Category"
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: 2,
+                                bgcolor: theme.palette.background.default,
+                            },
+                        }}
+                    >
+                        <MenuItem value="all">All Categories</MenuItem>
+                        <MenuItem value="general">General</MenuItem>
+                        <MenuItem value="academic">Academic</MenuItem>
+                        <MenuItem value="exam">Examination</MenuItem>
+                        <MenuItem value="event">Events & Sports</MenuItem>
+                        <MenuItem value="holiday">Holiday Notice</MenuItem>
+                        <MenuItem value="fee">Fee Circular</MenuItem>
+                        <MenuItem value="emergency">Emergency / Alert</MenuItem>
+                    </TextField>
+
+                    {/* Priority Filter */}
+                    <TextField
+                        select
+                        size="small"
+                        label="Priority"
+                        value={priorityFilter}
+                        onChange={(e) => setPriorityFilter(e.target.value)}
+                        sx={{
+                            '& .MuiOutlinedInput-root': {
+                                borderRadius: 2,
+                                bgcolor: theme.palette.background.default,
+                            },
+                        }}
+                    >
+                        <MenuItem value="all">All Priorities</MenuItem>
+                        <MenuItem value="normal">Normal</MenuItem>
+                        <MenuItem value="urgent">Urgent</MenuItem>
+                        <MenuItem value="high">High</MenuItem>
+                        <MenuItem value="low">Low</MenuItem>
+                    </TextField>
+                </Box>
+
+                {/* Custom Date Range Pickers (Expandable when Custom is selected) */}
+                {datePreset === 'custom' && (
+                    <Box
+                        sx={{
+                            mt: 2,
+                            pt: 2,
+                            borderTop: '1px dashed',
+                            borderColor: theme.palette.divider,
+                            display: 'flex',
+                            gap: 2,
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <Typography variant="body2" sx={{ fontWeight: 600, color: theme.palette.text.secondary }}>
+                            Custom Period:
+                        </Typography>
+                        <LocalizationProvider dateAdapter={AdapterDateFns}>
+                            <DatePicker
+                                label="From Date"
+                                value={startDate}
+                                maxDate={endDate || undefined}
+                                onChange={(val) => {
+                                    setStartDate(val);
+                                    if (val && endDate && val > endDate) {
+                                        setEndDate(null);
+                                    }
+                                }}
+                                slotProps={{
+                                    textField: {
+                                        size: 'small',
+                                        sx: {
+                                            minWidth: 160,
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                bgcolor: theme.palette.background.default,
+                                            },
+                                        },
+                                    },
+                                }}
+                            />
+                            <DatePicker
+                                label="To Date"
+                                value={endDate}
+                                minDate={startDate || undefined}
+                                referenceDate={startDate || undefined}
+                                onChange={(val) => {
+                                    setEndDate(val);
+                                    if (val && startDate && val < startDate) {
+                                        setStartDate(null);
+                                    }
+                                }}
+                                slotProps={{
+                                    textField: {
+                                        size: 'small',
+                                        sx: {
+                                            minWidth: 160,
+                                            '& .MuiOutlinedInput-root': {
+                                                borderRadius: 2,
+                                                bgcolor: theme.palette.background.default,
+                                            },
+                                        },
+                                    },
+                                }}
+                            />
+                        </LocalizationProvider>
+                    </Box>
+                )}
+
+                {/* Active Filter Chips & Reset */}
+                {hasActiveFilters && (
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexWrap: 'wrap',
+                            alignItems: 'center',
+                            gap: 1,
+                            mt: 2,
+                            pt: 1.5,
+                            borderTop: '1px solid',
+                            borderColor: alpha(theme.palette.divider, 0.6),
+                        }}
+                    >
+                        <Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.secondary, mr: 0.5 }}>
+                            Active Filters:
+                        </Typography>
+
+                        {searchQuery && (
+                            <Chip
+                                size="small"
+                                label={`Search: "${searchQuery}"`}
+                                onDelete={() => setSearchQuery('')}
+                                sx={{ borderRadius: 1.5 }}
+                            />
+                        )}
+
+                        {datePreset !== 'all' && (
+                            <Chip
+                                size="small"
+                                label={`Date: ${
+                                    datePreset === 'custom'
+                                        ? `${startDate ? startDate.toLocaleDateString() : 'Start'} – ${endDate ? endDate.toLocaleDateString() : 'End'}`
+                                        : datePreset.replace('_', ' ')
+                                }`}
+                                onDelete={() => {
+                                    setDatePreset('all');
+                                    setStartDate(null);
+                                    setEndDate(null);
+                                }}
+                                sx={{ borderRadius: 1.5 }}
+                            />
+                        )}
+
+                        {categoryFilter !== 'all' && (
+                            <Chip
+                                size="small"
+                                label={`Category: ${categoryFilter}`}
+                                onDelete={() => setCategoryFilter('all')}
+                                sx={{ borderRadius: 1.5, textTransform: 'capitalize' }}
+                            />
+                        )}
+
+                        {priorityFilter !== 'all' && (
+                            <Chip
+                                size="small"
+                                label={`Priority: ${priorityFilter}`}
+                                onDelete={() => setPriorityFilter('all')}
+                                sx={{ borderRadius: 1.5, textTransform: 'capitalize' }}
+                            />
+                        )}
+
+                        <Button
+                            size="small"
+                            variant="text"
+                            color="inherit"
+                            startIcon={<ResetIcon sx={{ fontSize: 16 }} />}
+                            onClick={handleResetFilters}
+                            sx={{
+                                textTransform: 'none',
+                                fontSize: '0.75rem',
+                                fontWeight: 700,
+                                ml: 'auto',
+                                color: theme.palette.text.secondary,
+                                '&:hover': { color: theme.palette.error.main },
+                            }}
+                        >
+                            Reset Filters
+                        </Button>
+                    </Box>
+                )}
+            </Paper>
 
             {isLoading ? (
                 <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 4 }} />

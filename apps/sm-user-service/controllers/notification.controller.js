@@ -61,7 +61,7 @@ const getMyNotifications = async (req, res) => {
     try {
         const { schoolId } = req.params;
         const { userId, role, parentId, studentId, teacherId } = req.user;
-        const { isRead, type, page = 1, limit = 20 } = req.query;
+        const { isRead, type, page = 1, limit = 20, search, startDate, endDate } = req.query;
 
         const schoolDbName = await getSchoolDbName(schoolId);
         const Notification = getNotificationModel(schoolDbName);
@@ -76,11 +76,42 @@ const getMyNotifications = async (req, res) => {
 
         // SECURITY (NoSQL Injection): Only accept plain scalar values for query filters.
         // Reject objects like {"$gt": ""} that could manipulate Mongoose queries.
-        if (isRead !== undefined && typeof isRead === 'string') {
+        if (isRead !== undefined && typeof isRead === 'string' && isRead !== 'all') {
             query.isRead = isRead === 'true';
         }
-        if (type && typeof type === 'string') {
+        if (type && typeof type === 'string' && type !== 'all') {
             query.type = type;
+        }
+
+        // Search in title or message
+        if (search && typeof search === 'string' && search.trim()) {
+            const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            query.$or = [
+                { title: { $regex: escaped, $options: 'i' } },
+                { message: { $regex: escaped, $options: 'i' } },
+            ];
+        }
+
+        // Date range filter on createdAt
+        if (startDate || endDate) {
+            query.createdAt = {};
+            if (startDate && typeof startDate === 'string') {
+                const start = new Date(startDate);
+                if (!isNaN(start.getTime())) {
+                    start.setHours(0, 0, 0, 0);
+                    query.createdAt.$gte = start;
+                }
+            }
+            if (endDate && typeof endDate === 'string') {
+                const end = new Date(endDate);
+                if (!isNaN(end.getTime())) {
+                    end.setHours(23, 59, 59, 999);
+                    query.createdAt.$lte = end;
+                }
+            }
+            if (Object.keys(query.createdAt).length === 0) {
+                delete query.createdAt;
+            }
         }
 
         const notifications = await Notification.find(query)

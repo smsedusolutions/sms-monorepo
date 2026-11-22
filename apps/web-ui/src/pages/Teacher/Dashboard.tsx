@@ -13,6 +13,7 @@ import {
     Paper,
     Button,
 } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
 import { format } from 'date-fns';
 import {
     People as StudentsIcon,
@@ -24,7 +25,6 @@ import {
     Star as StarIcon,
     School as SchoolIcon,
     Groups as GroupsIcon,
-    Chat as ChatIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import TokenService from '../../queries/token/tokenService';
@@ -40,9 +40,11 @@ import ExamPerformanceChart from '../../components/Dashboard/ExamPerformanceChar
 import UpcomingEventsWidget from '../../components/Dashboard/UpcomingEventsWidget';
 import DashboardErrorState from '../../components/shared/DashboardErrorState';
 import DashboardRefreshButton from '../../components/shared/DashboardRefreshButton';
+import { getEffectiveExamStatus } from '../../utils/examUtils';
 import type { Class, Student } from '../../types';
 
 const TeacherDashboard: React.FC = () => {
+    const theme = useTheme();
     const navigate = useNavigate();
     const [supportDialogOpen, setSupportDialogOpen] = useState(false);
     const user = TokenService.getUser();
@@ -64,7 +66,10 @@ const TeacherDashboard: React.FC = () => {
     const allStudents: Student[] = studentsData?.data || [];
     const exams = examsData?.data || [];
 
-    const activeExam = exams.find((e: any) => e.status === 'published' || e.status === 'completed') || exams[0];
+    const activeExam = exams.find((e: any) => {
+        const s = getEffectiveExamStatus(e);
+        return s === 'published' || s === 'completed';
+    }) || exams[0];
 
     const { data: publishStatusData, isLoading: isStatusLoading } = useGetExamPublishStatus(
         schoolId,
@@ -161,13 +166,13 @@ const TeacherDashboard: React.FC = () => {
         });
     }, [teacher, allClasses, allStudents]);
 
-    const cardColors = [
-        { bg: '#ecfdf5', accent: '#059669', iconBg: '#d1fae5' },
-        { bg: '#f3f4f6', accent: '#111827', iconBg: '#e5e7eb' },
-        { bg: '#fffbeb', accent: '#f59e0b', iconBg: '#fef3c7' },
-        { bg: '#f0fdf4', accent: '#047857', iconBg: '#dcfce7' },
-        { bg: '#fffbeb', accent: '#d97706', iconBg: '#fef3c7' },
-    ];
+    const cardColors = useMemo(() => [
+        { bg: alpha(theme.palette.primary.main, 0.05), accent: theme.palette.primary.main, iconBg: alpha(theme.palette.primary.main, 0.12) },
+        { bg: alpha(theme.palette.secondary.main, 0.05), accent: theme.palette.secondary.main, iconBg: alpha(theme.palette.secondary.main, 0.12) },
+        { bg: alpha(theme.palette.warning.main, 0.05), accent: theme.palette.warning.main, iconBg: alpha(theme.palette.warning.main, 0.12) },
+        { bg: alpha(theme.palette.primary.dark, 0.05), accent: theme.palette.primary.dark, iconBg: alpha(theme.palette.primary.dark, 0.12) },
+        { bg: alpha(theme.palette.warning.dark, 0.05), accent: theme.palette.warning.dark, iconBg: alpha(theme.palette.warning.dark, 0.12) },
+    ], [theme]);
 
     const assignedTotalStudents = useMemo(() => {
         return myClassCards.reduce((acc, c) => acc + c.studentCount, 0);
@@ -204,7 +209,7 @@ const TeacherDashboard: React.FC = () => {
                             fontWeight={800}
                             sx={{
                                 mb: 0.25,
-                                color: '#0F172A',
+                                color: 'text.primary',
                                 fontSize: { xs: '1.45rem', sm: '1.85rem', md: '2.25rem' },
                                 letterSpacing: '-0.02em',
                                 lineHeight: 1.2
@@ -248,9 +253,9 @@ const TeacherDashboard: React.FC = () => {
                     ))
                 ) : (
                     [
-                        { label: 'Total Students', value: assignedTotalStudents > 0 ? assignedTotalStudents : (stats?.totalStudents || 0), icon: <StudentsIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: '#059669' },
-                        { label: 'Today Attendance', value: stats?.attendancePercentage || 'Not Marked', icon: <AttendanceIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: '#047857' },
-                        { label: 'Pending Leaves', value: stats?.pendingLeaveRequests || 0, icon: <EventIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: '#f59e0b' },
+                        { label: 'Total Students', value: assignedTotalStudents > 0 ? assignedTotalStudents : (stats?.totalStudents || 0), icon: <StudentsIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: theme.palette.primary.main },
+                        { label: 'Today Attendance', value: stats?.attendancePercentage || 'Not Marked', icon: <AttendanceIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: theme.palette.primary.dark },
+                        { label: 'Pending Leaves', value: stats?.pendingLeaveRequests || 0, icon: <EventIcon sx={{ fontSize: { xs: 18, sm: 22 } }} />, color: theme.palette.warning.main },
                     ].map((stat) => (
                         <Grid size={{ xs: 4, sm: 4, md: 4 }} key={stat.label}>
                             <Paper
@@ -262,13 +267,13 @@ const TeacherDashboard: React.FC = () => {
                                     gap: { xs: 1, sm: 2 },
                                     p: { xs: 1.25, sm: 2 },
                                     borderRadius: 2.5,
-                                    bgcolor: '#ffffff',
-                                    border: '1px solid #e2e8f0',
+                                    bgcolor: theme.palette.background.paper,
+                                    border: `1px solid ${theme.palette.divider}`,
                                     boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
                                     height: '100%'
                                 }}
                             >
-                                <Avatar sx={{ bgcolor: `${stat.color}15`, color: stat.color, width: { xs: 32, sm: 42 }, height: { xs: 32, sm: 42 }, border: '1px solid', borderColor: `${stat.color}20`, borderRadius: 2 }}>
+                                <Avatar sx={{ bgcolor: alpha(stat.color, 0.12), color: stat.color, width: { xs: 32, sm: 42 }, height: { xs: 32, sm: 42 }, border: `1px solid ${alpha(stat.color, 0.25)}`, borderRadius: 2 }}>
                                     {stat.icon}
                                 </Avatar>
                                 <Box sx={{ minWidth: 0 }}>
@@ -283,15 +288,15 @@ const TeacherDashboard: React.FC = () => {
 
             {/* Quick Attendance CTA Banner & Chat */}
             <Grid container spacing={{ xs: 1.5, sm: 2 }} sx={{ mb: { xs: 2, sm: 3 } }}>
-                <Grid size={{ xs: 12, md: 6 }}>
+                <Grid size={{ xs: 12 }}>
                     <Paper
                         elevation={0}
                         onClick={() => navigate('/teacher/attendance')}
                         sx={{
                             p: { xs: 1.5, sm: 2 },
                             borderRadius: 2.5,
-                            bgcolor: '#f0fdf4',
-                            border: '1px solid #a7f3d0',
+                            bgcolor: alpha(theme.palette.primary.main, 0.04),
+                            border: `1px solid ${alpha(theme.palette.primary.main, 0.25)}`,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
@@ -300,19 +305,19 @@ const TeacherDashboard: React.FC = () => {
                             transition: 'transform 0.18s ease, box-shadow 0.18s ease',
                             '&:hover': {
                                 transform: 'translateY(-1.5px)',
-                                boxShadow: '0 6px 18px rgba(16, 185, 129, 0.12)',
+                                boxShadow: `0 6px 18px ${alpha(theme.palette.primary.main, 0.12)}`,
                             }
                         }}
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                            <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: theme.palette.primary.main, color: theme.palette.primary.contrastText, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <AttendanceIcon sx={{ fontSize: 20 }} />
                             </Box>
                             <Box>
-                                <Typography variant="subtitle2" fontWeight={700} color="#065f46" sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem' } }}>
+                                <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem' } }}>
                                     Record Attendance
                                 </Typography>
-                                <Typography variant="caption" color="#047857" sx={{ fontSize: '0.72rem', display: { xs: 'none', sm: 'block' } }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem', display: { xs: 'none', sm: 'block' } }}>
                                     Mark simple or period-wise student attendance.
                                 </Typography>
                             </Box>
@@ -321,13 +326,14 @@ const TeacherDashboard: React.FC = () => {
                             variant="contained"
                             size="small"
                             onClick={(e) => { e.stopPropagation(); navigate('/teacher/attendance'); }}
-                            sx={{ bgcolor: '#10b981', '&:hover': { bgcolor: '#059669' }, fontWeight: 700, borderRadius: 2, textTransform: 'none', fontSize: '0.75rem', px: 1.5, py: 0.4, flexShrink: 0 }}
+                            sx={{ bgcolor: theme.palette.primary.main, '&:hover': { bgcolor: theme.palette.primary.dark }, color: theme.palette.primary.contrastText, fontWeight: 700, borderRadius: 2, textTransform: 'none', fontSize: '0.75rem', px: 1.5, py: 0.4, flexShrink: 0 }}
                         >
                             Mark Now
                         </Button>
                     </Paper>
                 </Grid>
 
+                {/* Chat with Parents CTA Banner - Temporarily commented out
                 <Grid size={{ xs: 12, md: 6 }}>
                     <Paper
                         elevation={0}
@@ -335,8 +341,8 @@ const TeacherDashboard: React.FC = () => {
                         sx={{
                             p: { xs: 1.5, sm: 2 },
                             borderRadius: 2.5,
-                            bgcolor: '#f5f3ff',
-                            border: '1px solid #c4b5fd',
+                            bgcolor: alpha(theme.palette.secondary.main, 0.04),
+                            border: `1px solid ${alpha(theme.palette.secondary.main, 0.25)}`,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
@@ -345,19 +351,19 @@ const TeacherDashboard: React.FC = () => {
                             transition: 'transform 0.18s ease, box-shadow 0.18s ease',
                             '&:hover': {
                                 transform: 'translateY(-1.5px)',
-                                boxShadow: '0 6px 18px rgba(139, 92, 246, 0.12)',
+                                boxShadow: `0 6px 18px ${alpha(theme.palette.secondary.main, 0.12)}`,
                             }
                         }}
                     >
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
-                            <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#7c3aed', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: theme.palette.secondary.main, color: theme.palette.secondary.contrastText, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <ChatIcon sx={{ fontSize: 20 }} />
                             </Box>
                             <Box>
-                                <Typography variant="subtitle2" fontWeight={700} color="#4c1d95" sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem' } }}>
+                                <Typography variant="subtitle2" fontWeight={700} color="text.primary" sx={{ fontSize: { xs: '0.85rem', sm: '0.9rem' } }}>
                                     Chat with Parents
                                 </Typography>
-                                <Typography variant="caption" color="#6d28d9" sx={{ fontSize: '0.72rem', display: { xs: 'none', sm: 'block' } }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem', display: { xs: 'none', sm: 'block' } }}>
                                     Send secure messages regarding student progress.
                                 </Typography>
                             </Box>
@@ -366,12 +372,13 @@ const TeacherDashboard: React.FC = () => {
                             variant="contained"
                             size="small"
                             onClick={(e) => { e.stopPropagation(); navigate('/teacher/chat'); }}
-                            sx={{ bgcolor: '#7c3aed', '&:hover': { bgcolor: '#6d28d9' }, fontWeight: 700, borderRadius: 2, textTransform: 'none', fontSize: '0.75rem', px: 1.5, py: 0.4, flexShrink: 0 }}
+                            sx={{ bgcolor: theme.palette.secondary.main, '&:hover': { bgcolor: theme.palette.secondary.dark }, color: theme.palette.secondary.contrastText, fontWeight: 700, borderRadius: 2, textTransform: 'none', fontSize: '0.75rem', px: 1.5, py: 0.4, flexShrink: 0 }}
                         >
                             Open Chat
                         </Button>
                     </Paper>
                 </Grid>
+                */}
             </Grid>
 
             {/* My Assigned Classes Section */}
@@ -420,12 +427,12 @@ const TeacherDashboard: React.FC = () => {
                                                             icon={<StarIcon sx={{ fontSize: '12px !important' }} />}
                                                             label="Class Teacher"
                                                             size="small"
-                                                            sx={{ bgcolor: '#fef3c7', color: '#92400e', fontWeight: 700, fontSize: '0.65rem', height: 20 }}
+                                                            sx={{ bgcolor: alpha(theme.palette.warning.main, 0.15), color: theme.palette.warning.dark, fontWeight: 700, fontSize: '0.65rem', height: 20 }}
                                                         />
                                                     )}
                                                 </Box>
 
-                                                <Typography variant="subtitle1" fontWeight={800} color="#1e293b" sx={{ fontSize: '0.95rem', mb: 0.5 }}>
+                                                <Typography variant="subtitle1" fontWeight={800} color="text.primary" sx={{ fontSize: '0.95rem', mb: 0.5 }}>
                                                     {c.className}
                                                 </Typography>
 
@@ -475,11 +482,11 @@ const TeacherDashboard: React.FC = () => {
                                                 sx={{
                                                     p: 1.5,
                                                     borderRadius: 2.5,
-                                                    border: '1px solid #e2e8f0',
+                                                    border: `1px solid ${theme.palette.divider}`,
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     gap: 1.5,
-                                                    bgcolor: '#ffffff',
+                                                    bgcolor: theme.palette.background.paper,
                                                     boxShadow: '0 2px 6px rgba(0,0,0,0.02)',
                                                     transition: 'all 0.18s ease',
                                                     '&:hover': {
@@ -525,7 +532,8 @@ const TeacherDashboard: React.FC = () => {
 
                     {(() => {
                         const examName = publishData?.exam?.name || activeExam?.name;
-                        const examStatus = publishData?.exam?.status || activeExam?.status;
+                        const rawStatus = publishData?.exam?.status || activeExam?.status;
+                        const examStatus = publishData?.exam ? getEffectiveExamStatus(publishData.exam) : activeExam ? getEffectiveExamStatus(activeExam) : rawStatus;
 
                         let teacherPassed = 0;
                         let teacherFailed = 0;
@@ -588,14 +596,14 @@ const TeacherDashboard: React.FC = () => {
                                         sx={{
                                             p: 1.5,
                                             borderRadius: 2.5,
-                                            bgcolor: '#ffffff',
+                                            bgcolor: theme.palette.background.paper,
                                             border: '1px solid',
-                                            borderColor: task.priority === 'high' ? '#fecaca' : '#e2e8f0',
+                                            borderColor: task.priority === 'high' ? alpha(theme.palette.error.main, 0.4) : theme.palette.divider,
                                             display: 'flex',
                                             justifyContent: 'space-between',
                                             alignItems: 'center',
                                             cursor: task.task.includes('Attendance') ? 'pointer' : 'default',
-                                            '&:hover': task.task.includes('Attendance') ? { bgcolor: '#fef2f2' } : {}
+                                            '&:hover': task.task.includes('Attendance') ? { bgcolor: alpha(theme.palette.error.main, 0.04) } : {}
                                         }}
                                     >
                                         <Box>
@@ -627,10 +635,10 @@ const TeacherDashboard: React.FC = () => {
                     <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5, fontSize: { xs: '0.95rem', sm: '1.05rem' } }}>Quick Actions</Typography>
                     <Grid container spacing={1.5}>
                         {[
-                            { label: 'Add Homework', icon: <AddIcon />, onClick: () => navigate('/teacher/homework', { state: { openDialog: true } }), color: '#3b82f6' },
-                            { label: 'Exam Scheduler', icon: <ScheduleIcon />, onClick: () => navigate('/teacher/exam/scheduler'), color: '#8b5cf6' },
-                            { label: 'Chat Parents', icon: <ChatIcon />, onClick: () => navigate('/teacher/chat'), color: '#7c3aed' },
-                            { label: 'Apply Leave', icon: <EventIcon />, onClick: () => navigate('/teacher/leave/apply'), color: '#f59e0b' },
+                            { label: 'Add Homework', icon: <AddIcon />, onClick: () => navigate('/teacher/homework', { state: { openDialog: true } }), color: theme.palette.primary.main },
+                            { label: 'Exam Scheduler', icon: <ScheduleIcon />, onClick: () => navigate('/teacher/exam/scheduler'), color: theme.palette.secondary.main },
+                            // { label: 'Chat Parents', icon: <ChatIcon />, onClick: () => navigate('/teacher/chat'), color: theme.palette.primary.dark },
+                            { label: 'Apply Leave', icon: <EventIcon />, onClick: () => navigate('/teacher/leave/apply'), color: theme.palette.warning.main },
                         ].map((action) => (
                             <Grid size={{ xs: 6, lg: 6 }} key={action.label}>
                                 <Paper
@@ -641,14 +649,14 @@ const TeacherDashboard: React.FC = () => {
                                         textAlign: 'center',
                                         cursor: 'pointer',
                                         borderRadius: 2.5,
-                                        bgcolor: '#ffffff',
-                                        border: '1px solid #e2e8f0',
+                                        bgcolor: theme.palette.background.paper,
+                                        border: `1px solid ${theme.palette.divider}`,
                                         boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
                                         transition: 'all 0.18s ease-in-out',
-                                        '&:hover': { transform: 'translateY(-2px)', borderColor: '#cbd5e1', boxShadow: '0 4px 14px rgba(0,0,0,0.06)' }
+                                        '&:hover': { transform: 'translateY(-2px)', borderColor: theme.palette.divider, boxShadow: '0 4px 14px rgba(0,0,0,0.06)' }
                                     }}
                                 >
-                                    <Avatar sx={{ bgcolor: `${action.color}15`, color: action.color, mb: 0.75, mx: 'auto', width: 36, height: 36, border: '1px solid', borderColor: `${action.color}30` }}>
+                                    <Avatar sx={{ bgcolor: alpha(action.color, 0.12), color: action.color, mb: 0.75, mx: 'auto', width: 36, height: 36, border: `1px solid ${alpha(action.color, 0.25)}` }}>
                                         {React.cloneElement(action.icon as any, { sx: { fontSize: 18 } })}
                                     </Avatar>
                                     <Typography variant="caption" fontWeight={700} color="text.primary" sx={{ display: 'block', fontSize: '0.75rem' }} noWrap>{action.label}</Typography>
@@ -657,7 +665,7 @@ const TeacherDashboard: React.FC = () => {
                         ))}
                     </Grid>
 
-                    <Paper sx={{ mt: 2, p: { xs: 1.75, sm: 2 }, bgcolor: '#1e293b', color: '#ffffff', borderRadius: 2.5 }}>
+                    <Paper sx={{ mt: 2, p: { xs: 1.75, sm: 2 }, bgcolor: theme.palette.text.primary, color: theme.palette.primary.contrastText, borderRadius: 2.5 }}>
                         <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5, fontSize: '0.875rem' }}>Teacher Support</Typography>
                         <Typography variant="caption" sx={{ mb: 1.5, opacity: 0.85, display: 'block', fontSize: '0.72rem' }}>
                             Need technical help with the platform?
@@ -667,7 +675,7 @@ const TeacherDashboard: React.FC = () => {
                             size="small"
                             fullWidth
                             onClick={() => setSupportDialogOpen(true)}
-                            sx={{ bgcolor: '#3b82f6', '&:hover': { bgcolor: '#2563eb' }, fontWeight: 700, borderRadius: 2, textTransform: 'none', py: 0.5, fontSize: '0.775rem' }}
+                            sx={{ bgcolor: theme.palette.background.paper, '&:hover': { bgcolor: alpha(theme.palette.background.paper, 0.9) }, color: theme.palette.text.primary, fontWeight: 700, borderRadius: 2, textTransform: 'none', py: 0.5, fontSize: '0.775rem' }}
                         >
                             Open Support Ticket
                         </Button>

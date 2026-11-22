@@ -17,6 +17,7 @@ import {
     Tab,
     Avatar,
 } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
 import {
     Assignment as AssignmentIcon,
     CalendarToday as CalendarIcon,
@@ -43,6 +44,7 @@ import type { Homework } from '../../types';
 import SubmitHomework from '../Student/Homework/SubmitHomework';
 
 const ParentHomework: React.FC = () => {
+    const theme = useTheme();
     const navigate = useNavigate();
     const schoolId = TokenService.getSchoolId() || '';
     const { selectedChild, setSelectedChild, children: contextChildren, isLoading: loadingChild } = useChildSelector();
@@ -130,11 +132,11 @@ const ParentHomework: React.FC = () => {
             {/* Header */}
             <Box sx={{ mb: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-                    <Box sx={{ p: 1.25, borderRadius: 2.5, bgcolor: '#fff7ed', color: '#ea580c' }}>
+                    <Box sx={{ p: 1.25, borderRadius: 2.5, bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main }}>
                         <AssignmentIcon sx={{ fontSize: 28 }} />
                     </Box>
                     <Box>
-                        <Typography variant="h4" fontWeight={800} color="#1e293b" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+                        <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                             Homework & Assignments
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
@@ -146,7 +148,7 @@ const ParentHomework: React.FC = () => {
 
             {/* ── Multi-Child Switcher Bar ── */}
             {contextChildren.length > 1 && (
-                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 2, border: '1px solid', borderColor: theme.palette.divider, bgcolor: theme.palette.background.paper }}>
                     <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, display: 'block' }}>
                         Select Child
                     </Typography>
@@ -168,13 +170,13 @@ const ParentHomework: React.FC = () => {
                                         py: 0.75,
                                         fontSize: '0.8125rem',
                                         flexShrink: 0,
-                                        bgcolor: isSelected ? '#4f46e5' : '#ffffff',
-                                        color: isSelected ? '#ffffff' : '#475569',
-                                        borderColor: isSelected ? '#4f46e5' : '#cbd5e1',
-                                        boxShadow: isSelected ? '0 2px 8px rgba(79, 70, 229, 0.25)' : 'none',
+                                        bgcolor: isSelected ? theme.palette.primary.main : theme.palette.background.paper,
+                                        color: isSelected ? theme.palette.primary.contrastText : theme.palette.text.secondary,
+                                        borderColor: isSelected ? theme.palette.primary.main : theme.palette.divider,
+                                        boxShadow: isSelected ? `0 2px 8px ${alpha(theme.palette.primary.main, 0.25)}` : 'none',
                                         '&:hover': {
-                                            bgcolor: isSelected ? '#4338ca' : '#f1f5f9',
-                                            borderColor: isSelected ? '#4338ca' : '#94a3b8',
+                                            bgcolor: isSelected ? theme.palette.primary.dark : alpha(theme.palette.text.primary, 0.04),
+                                            borderColor: isSelected ? theme.palette.primary.dark : theme.palette.divider,
                                         }
                                     }}
                                 >
@@ -207,13 +209,13 @@ const ParentHomework: React.FC = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     sx={{
                         width: { xs: '100%', sm: 300 },
-                        bgcolor: '#ffffff',
+                        bgcolor: theme.palette.background.paper,
                         '& .MuiOutlinedInput-root': { borderRadius: 2 }
                     }}
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <SearchIcon sx={{ color: '#94a3b8' }} />
+                                <SearchIcon sx={{ color: theme.palette.text.secondary }} />
                             </InputAdornment>
                         ),
                     }}
@@ -236,8 +238,9 @@ const ParentHomework: React.FC = () => {
                     sx={{
                         p: { xs: 4, sm: 6 },
                         borderRadius: 4,
-                        border: '1px solid #e2e8f0',
-                        bgcolor: '#ffffff',
+                        border: '1px solid',
+                        borderColor: theme.palette.divider,
+                        bgcolor: theme.palette.background.paper,
                         textAlign: 'center',
                         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
                     }}
@@ -248,20 +251,20 @@ const ParentHomework: React.FC = () => {
                             width: 88,
                             height: 88,
                             borderRadius: '50%',
-                            bgcolor: '#f0fdf4',
-                            border: '2px solid #bbf7d0',
+                            bgcolor: alpha(theme.palette.success.main, 0.1),
+                            border: `2px solid ${alpha(theme.palette.success.main, 0.25)}`,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             mx: 'auto',
                             mb: 2.5,
-                            boxShadow: '0 12px 24px -6px rgba(16, 185, 129, 0.2)'
+                            boxShadow: `0 12px 24px -6px ${alpha(theme.palette.success.main, 0.2)}`
                         }}
                     >
-                        <DoneIcon sx={{ fontSize: 44, color: '#10b981' }} />
+                        <DoneIcon sx={{ fontSize: 44, color: theme.palette.success.main }} />
                     </Box>
 
-                    <Typography variant="h5" fontWeight={800} color="#1e293b" sx={{ mb: 1 }}>
+                    <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mb: 1 }}>
                         All Homework Up To Date!
                     </Typography>
                     <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 600, mx: 'auto', mb: 4, lineHeight: 1.6 }}>
@@ -271,10 +274,10 @@ const ParentHomework: React.FC = () => {
                     {/* Informational Cards */}
                     <Grid container spacing={2.5} sx={{ maxWidth: 850, mx: 'auto', mb: 4, textAlign: 'left' }}>
                         <Grid size={{ xs: 12, sm: 4 }}>
-                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#2563eb' }}>
+                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: alpha(theme.palette.text.primary, 0.02), border: '1px solid', borderColor: theme.palette.divider, height: '100%' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: theme.palette.primary.main }}>
                                     <SchoolIcon fontSize="small" />
-                                    <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Class Syllabus</Typography>
+                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary">Class Syllabus</Typography>
                                 </Box>
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.5 }}>
                                     Keep track of daily class subjects and study goals with teachers.
@@ -282,10 +285,10 @@ const ParentHomework: React.FC = () => {
                             </Box>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
-                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#8b5cf6' }}>
+                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: alpha(theme.palette.text.primary, 0.02), border: '1px solid', borderColor: theme.palette.divider, height: '100%' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: theme.palette.secondary.main }}>
                                     <PersonIcon fontSize="small" />
-                                    <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Contact Teachers</Typography>
+                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary">Contact Teachers</Typography>
                                 </Box>
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.5 }}>
                                     Need help with assignments? Reach out to subject teachers directly.
@@ -293,10 +296,10 @@ const ParentHomework: React.FC = () => {
                             </Box>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
-                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#f59e0b' }}>
+                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: alpha(theme.palette.text.primary, 0.02), border: '1px solid', borderColor: theme.palette.divider, height: '100%' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: theme.palette.warning.main }}>
                                     <CalendarIcon fontSize="small" />
-                                    <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Timetable</Typography>
+                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary">Timetable</Typography>
                                 </Box>
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.5 }}>
                                     Review daily subject schedules to prepare books in advance.
@@ -312,8 +315,8 @@ const ParentHomework: React.FC = () => {
                             endIcon={<ArrowForwardIcon />}
                             onClick={() => navigate('/parent/timetable')}
                             sx={{
-                                bgcolor: '#2563eb',
-                                '&:hover': { bgcolor: '#1d4ed8' },
+                                bgcolor: theme.palette.primary.main,
+                                '&:hover': { bgcolor: theme.palette.primary.dark },
                                 borderRadius: 2.5,
                                 fontWeight: 700,
                                 px: 3.5,
@@ -332,9 +335,9 @@ const ParentHomework: React.FC = () => {
                                 px: 3.5,
                                 py: 1.2,
                                 textTransform: 'none',
-                                borderColor: '#cbd5e1',
-                                color: '#475569',
-                                '&:hover': { borderColor: '#2563eb', bgcolor: '#f0f9ff' }
+                                borderColor: theme.palette.divider,
+                                color: theme.palette.text.primary,
+                                '&:hover': { borderColor: theme.palette.primary.main, bgcolor: alpha(theme.palette.primary.main, 0.04) }
                             }}
                         >
                             Contact Subject Teachers
@@ -342,9 +345,9 @@ const ParentHomework: React.FC = () => {
                     </Stack>
                 </Paper>
             ) : filteredHomework.length === 0 ? (
-                <Paper elevation={0} sx={{ p: 5, textAlign: 'center', borderRadius: 4, border: '1px solid #e2e8f0', bgcolor: '#ffffff' }}>
-                    <SearchIcon sx={{ fontSize: 48, color: '#cbd5e1', mb: 1.5 }} />
-                    <Typography variant="h6" fontWeight={700} color="#1e293b">No matching homework found</Typography>
+                <Paper elevation={0} sx={{ p: 5, textAlign: 'center', borderRadius: 4, border: '1px solid', borderColor: theme.palette.divider, bgcolor: theme.palette.background.paper }}>
+                    <SearchIcon sx={{ fontSize: 48, color: theme.palette.divider, mb: 1.5 }} />
+                    <Typography variant="h6" fontWeight={700} color="text.primary">No matching homework found</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                         Try clearing your search or switching filter tabs.
                     </Typography>
@@ -368,17 +371,17 @@ const ParentHomework: React.FC = () => {
                                         borderRadius: 4,
                                         border: '1px solid',
                                         borderColor: isChangesRequested
-                                            ? '#fdba74'
+                                            ? theme.palette.warning.main
                                             : isAccepted
-                                            ? '#86efac'
+                                            ? theme.palette.success.main
                                             : overdue && !isSubmitted
-                                            ? '#fca5a5'
-                                            : '#e2e8f0',
-                                        bgcolor: '#ffffff',
+                                            ? theme.palette.error.main
+                                            : theme.palette.divider,
+                                        bgcolor: theme.palette.background.paper,
                                         boxShadow: isChangesRequested
-                                            ? '0 6px 20px -6px rgba(249, 115, 22, 0.15)'
+                                            ? `0 6px 20px -6px ${alpha(theme.palette.warning.main, 0.25)}`
                                             : overdue && !isSubmitted
-                                            ? '0 6px 20px -6px rgba(239, 68, 68, 0.15)'
+                                            ? `0 6px 20px -6px ${alpha(theme.palette.error.main, 0.25)}`
                                             : '0 4px 16px rgba(0,0,0,0.04)',
                                         transition: 'all 0.2s ease',
                                         '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(0,0,0,0.08)' }
@@ -386,7 +389,7 @@ const ParentHomework: React.FC = () => {
                                 >
                                     <CardContent sx={{ p: 3 }}>
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5, gap: 1 }}>
-                                            <Typography variant="h6" fontWeight={800} color="#1e293b">
+                                            <Typography variant="h6" fontWeight={800} color="text.primary">
                                                 {hw.title}
                                             </Typography>
                                             <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -425,9 +428,9 @@ const ParentHomework: React.FC = () => {
                                                 label={hw.subjectName || hw.subjectId}
                                                 sx={{
                                                     fontWeight: 700,
-                                                    bgcolor: '#eff6ff',
-                                                    color: '#2563eb',
-                                                    border: '1px solid #bfdbfe'
+                                                    bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                                    color: theme.palette.primary.main,
+                                                    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`
                                                 }}
                                             />
                                             {childSubmission?.marksAwarded !== undefined && (
@@ -444,7 +447,7 @@ const ParentHomework: React.FC = () => {
 
                                         <Typography
                                             variant="body2"
-                                            color="#475569"
+                                            color="text.secondary"
                                             sx={{
                                                 mb: 2,
                                                 lineHeight: 1.6,
@@ -463,7 +466,7 @@ const ParentHomework: React.FC = () => {
                                                 <Typography variant="caption" fontWeight={700} display="block">
                                                     Teacher Requested Changes:
                                                 </Typography>
-                                                <Typography variant="caption" sx={{ color: '#9a3412' }}>
+                                                <Typography variant="caption" sx={{ color: theme.palette.warning.dark }}>
                                                     {childSubmission?.teacherRemarks || 'Please update the submission as requested by the teacher.'}
                                                 </Typography>
                                             </Alert>
@@ -471,19 +474,19 @@ const ParentHomework: React.FC = () => {
 
                                         {/* Teacher Remarks */}
                                         {childSubmission?.teacherRemarks && !isChangesRequested && (
-                                            <Box sx={{ p: 1.25, bgcolor: '#f8fafc', borderRadius: 1.5, border: '1px solid #e2e8f0', mb: 2 }}>
+                                            <Box sx={{ p: 1.25, bgcolor: alpha(theme.palette.text.primary, 0.02), borderRadius: 1.5, border: '1px solid', borderColor: theme.palette.divider, mb: 2 }}>
                                                 <Typography variant="caption" color="text.secondary" fontWeight={700} display="block">
                                                     Teacher Feedback:
                                                 </Typography>
-                                                <Typography variant="caption" color="#334155">
+                                                <Typography variant="caption" color="text.primary">
                                                     {childSubmission.teacherRemarks}
                                                 </Typography>
                                             </Box>
                                         )}
 
-                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1, pt: 1.5, borderTop: '1px solid #f1f5f9' }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 1, pt: 1.5, borderTop: '1px solid', borderTopColor: theme.palette.divider }}>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <CalendarIcon fontSize="small" sx={{ color: overdue && !isSubmitted ? '#ef4444' : '#64748b' }} />
+                                                <CalendarIcon fontSize="small" sx={{ color: overdue && !isSubmitted ? theme.palette.error.main : theme.palette.text.secondary }} />
                                                 <Typography variant="caption" fontWeight={700} color={overdue && !isSubmitted ? 'error.main' : 'text.secondary'}>
                                                     Due: {formatDate(hw.dueDate)}
                                                 </Typography>
@@ -527,7 +530,7 @@ const ParentHomework: React.FC = () => {
                                         </Box>
 
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1.5 }}>
-                                            <Avatar sx={{ width: 22, height: 22, fontSize: '0.7rem', bgcolor: '#e2e8f0', color: '#475569' }}>
+                                            <Avatar sx={{ width: 22, height: 22, fontSize: '0.7rem', bgcolor: alpha(theme.palette.text.primary, 0.08), color: theme.palette.text.secondary }}>
                                                 {hw.teacherName?.[0] || 'T'}
                                             </Avatar>
                                             <Typography variant="caption" color="text.secondary" fontWeight={500}>

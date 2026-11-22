@@ -21,6 +21,7 @@ import {
     useTheme,
     useMediaQuery,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
     CalendarMonth as CalendarIcon,
     AccessTime as TimeIcon,
@@ -33,6 +34,7 @@ import { useGetSubjects } from '../../../queries/Subject';
 import TokenService from '../../../queries/token/tokenService';
 import { useUrlTab } from '../../../hooks/useUrlTab';
 import { useAcademicYear } from '../../../hooks/useAcademicYear';
+import { categorizeExams, getExamStatusColor } from '../../../utils/examUtils';
 
 const fmtDate = (d: string | Date) => {
     if (!d) return '-';
@@ -55,15 +57,11 @@ const ParentExamSchedule: React.FC = () => {
     const { data: subjectsData } = useGetSubjects(schoolId);
 
     const allExams = examsData?.data || [];
-    const sortByStartDate = (a: any, b: any) => {
-        const dateA = a.startDate ? new Date(a.startDate).getTime() : 0;
-        const dateB = b.startDate ? new Date(b.startDate).getTime() : 0;
-        return dateA - dateB;
-    };
 
-    const upcomingExams = allExams.filter((e: any) => ['scheduled', 'draft'].includes(e.status)).sort(sortByStartDate);
-    const ongoingExams = allExams.filter((e: any) => e.status === 'ongoing').sort(sortByStartDate);
-    const completedExams = allExams.filter((e: any) => e.status === 'completed').sort(sortByStartDate);
+    const { upcoming: upcomingExams, ongoing: ongoingExams, completed: completedExams } = useMemo(
+        () => categorizeExams(allExams),
+        [allExams]
+    );
 
     const tabExams = [upcomingExams, ongoingExams, completedExams][selectedTab] ?? [];
 
@@ -112,7 +110,7 @@ const ParentExamSchedule: React.FC = () => {
 
             {/* Child Selector Pills */}
             {contextChildren.length > 1 && (
-                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 2, border: '1px solid', borderColor: theme.palette.divider, bgcolor: theme.palette.background.paper }}>
                     <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, display: 'block' }}>
                         Select Child
                     </Typography>
@@ -134,13 +132,13 @@ const ParentExamSchedule: React.FC = () => {
                                         py: 0.75,
                                         fontSize: '0.8125rem',
                                         flexShrink: 0,
-                                        bgcolor: isSelected ? '#4f46e5' : '#ffffff',
-                                        color: isSelected ? '#ffffff' : '#475569',
-                                        borderColor: isSelected ? '#4f46e5' : '#cbd5e1',
-                                        boxShadow: isSelected ? '0 2px 8px rgba(79, 70, 229, 0.25)' : 'none',
+                                        bgcolor: isSelected ? theme.palette.primary.main : theme.palette.background.paper,
+                                        color: isSelected ? theme.palette.primary.contrastText : theme.palette.text.secondary,
+                                        borderColor: isSelected ? theme.palette.primary.main : theme.palette.divider,
+                                        boxShadow: isSelected ? `0 2px 8px ${alpha(theme.palette.primary.main, 0.25)}` : 'none',
                                         '&:hover': {
-                                            bgcolor: isSelected ? '#4338ca' : '#f1f5f9',
-                                            borderColor: isSelected ? '#4338ca' : '#94a3b8',
+                                            bgcolor: isSelected ? theme.palette.primary.dark : alpha(theme.palette.text.primary, 0.04),
+                                            borderColor: isSelected ? theme.palette.primary.dark : theme.palette.divider,
                                         }
                                     }}
                                 >
@@ -160,16 +158,16 @@ const ParentExamSchedule: React.FC = () => {
                         sx={{
                             p: { xs: 1.25, sm: 1.75 },
                             textAlign: 'center',
-                            bgcolor: '#fffbeb',
+                            bgcolor: alpha(theme.palette.warning.main, 0.06),
                             borderRadius: 2,
                             border: '1px solid',
-                            borderColor: '#fde68a',
+                            borderColor: alpha(theme.palette.warning.main, 0.25),
                         }}
                     >
-                        <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} color="#b45309">
+                        <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} sx={{ color: theme.palette.warning.dark }}>
                             {upcomingExams.length}
                         </Typography>
-                        <Typography variant="caption" color="#92400e" fontWeight={600}>
+                        <Typography variant="caption" sx={{ color: theme.palette.warning.main }} fontWeight={600}>
                             Upcoming
                         </Typography>
                     </Paper>
@@ -180,16 +178,16 @@ const ParentExamSchedule: React.FC = () => {
                         sx={{
                             p: { xs: 1.25, sm: 1.75 },
                             textAlign: 'center',
-                            bgcolor: '#f0fdf4',
+                            bgcolor: alpha(theme.palette.success.main, 0.06),
                             borderRadius: 2,
                             border: '1px solid',
-                            borderColor: '#bbf7d0',
+                            borderColor: alpha(theme.palette.success.main, 0.25),
                         }}
                     >
-                        <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} color="#15803d">
+                        <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} sx={{ color: theme.palette.success.dark }}>
                             {ongoingExams.length}
                         </Typography>
-                        <Typography variant="caption" color="#166534" fontWeight={600}>
+                        <Typography variant="caption" sx={{ color: theme.palette.success.main }} fontWeight={600}>
                             Ongoing
                         </Typography>
                     </Paper>
@@ -240,7 +238,7 @@ const ParentExamSchedule: React.FC = () => {
                             color: 'text.secondary',
                             '&.Mui-selected': {
                                 bgcolor: 'primary.main',
-                                color: '#ffffff',
+                                color: 'primary.contrastText',
                                 borderColor: 'primary.main',
                                 '&:hover': { bgcolor: 'primary.dark' },
                             },
@@ -368,14 +366,14 @@ const ExamScheduleCard = ({
                     <Chip
                         label={exam.status}
                         size="small"
-                        color={exam.status === 'scheduled' ? 'warning' : exam.status === 'ongoing' ? 'success' : 'default'}
+                        color={getExamStatusColor(exam.status) as any}
                         sx={{ textTransform: 'capitalize', fontWeight: 700, fontSize: '0.75rem', height: 24 }}
                     />
                 </Box>
 
                 {/* Period Badge */}
                 {exam.startDate && (
-                    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, bgcolor: '#ffffff', px: 1, py: 0.5, borderRadius: 1.5, border: '1px solid', borderColor: 'divider' }}>
+                    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, bgcolor: 'background.paper', px: 1, py: 0.5, borderRadius: 1.5, border: '1px solid', borderColor: 'divider' }}>
                         <CalendarIcon sx={{ fontSize: 14, color: 'primary.main' }} />
                         <Typography variant="caption" fontWeight={600} color="text.primary">
                             {fmtDate(exam.startDate)} — {fmtDate(exam.endDate)}

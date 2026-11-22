@@ -3,6 +3,7 @@ import {
     Box, Typography, Paper, Grid, Button, Chip, Alert, Skeleton,
     CircularProgress, Snackbar, Divider,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
     People as PTMIcon,
     AccessTime as ClockIcon,
@@ -78,9 +79,10 @@ const PTMBooking: React.FC = () => {
                     size="small"
                     sx={{
                         fontWeight: 600,
-                        bgcolor: isBooked ? '#e2e8f0' : '#f1f5f9',
-                        color: isBooked ? '#334155' : '#64748b',
-                        border: isBooked ? '1px solid #cbd5e1' : undefined,
+                        bgcolor: isBooked ? 'action.selected' : 'action.hover',
+                        color: isBooked ? 'text.primary' : 'text.secondary',
+                        border: isBooked ? '1px solid' : undefined,
+                        borderColor: isBooked ? 'divider' : undefined,
                     }}
                 />
             );
@@ -199,10 +201,10 @@ const PTMBooking: React.FC = () => {
                                                 border: '2px solid',
                                                 borderColor: isBooked && !isPast ? 'success.light' : isSelected ? 'primary.main' : 'divider',
                                                 cursor: isBooked || isPast ? 'default' : 'pointer',
-                                                bgcolor: isBooked && !isPast ? '#f0fdf4' : isSelected ? 'primary.50' : isPast ? '#f8fafc' : 'background.paper',
+                                                bgcolor: isBooked && !isPast ? (theme) => alpha(theme.palette.success.main, 0.08) : isSelected ? 'action.selected' : isPast ? 'action.hover' : 'background.paper',
                                                 opacity: isPast && !isBooked ? 0.75 : 1,
                                                 transition: 'all 0.2s',
-                                                '&:hover': !isBooked && !isPast ? { borderColor: 'primary.main', bgcolor: 'primary.50' } : {},
+                                                '&:hover': !isBooked && !isPast ? { borderColor: 'primary.main', bgcolor: 'action.hover' } : {},
                                             }}
                                         >
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -235,12 +237,12 @@ const PTMBooking: React.FC = () => {
                                                 </Typography>
                                             )}
                                             {isBooked && (
-                                                <Typography variant="caption" sx={{ color: isPast ? '#64748b' : '#15803d', mt: 0.5, display: 'block', fontWeight: 600 }}>
+                                                <Typography variant="caption" sx={{ color: isPast ? 'text.secondary' : 'success.main', mt: 0.5, display: 'block', fontWeight: 600 }}>
                                                     ✓ {myBooking?.slotTime ? `Your Booked Slot: ${myBooking.slotTime}${myBooking.studentName ? ` (Student: ${myBooking.studentName})` : ''}` : 'Slot Booked'}
                                                 </Typography>
                                             )}
                                             {isPast && !isBooked && (
-                                                <Typography variant="caption" sx={{ color: '#94a3b8', mt: 0.5, display: 'block', fontStyle: 'italic' }}>
+                                                <Typography variant="caption" sx={{ color: 'text.secondary', mt: 0.5, display: 'block', fontStyle: 'italic' }}>
                                                     Session completed
                                                 </Typography>
                                             )}

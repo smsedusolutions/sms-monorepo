@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
     Box,
     Typography,
@@ -21,6 +21,7 @@ import {
     useTheme,
     useMediaQuery,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
     Add as AddIcon,
     CheckCircle as CheckCircleIcon,
@@ -49,19 +50,19 @@ interface LeaveRequest {
     createdAt: string;
 }
 
-const statusConfig: Record<string, { label: string; bg: string; text: string; icon: React.ReactNode }> = {
-    pending: { label: 'Pending', bg: '#fffbeb', text: '#b45309', icon: <PendingIcon sx={{ fontSize: 15 }} /> },
-    approved: { label: 'Approved', bg: '#f0fdf4', text: '#15803d', icon: <CheckCircleIcon sx={{ fontSize: 15 }} /> },
-    rejected: { label: 'Rejected', bg: '#fef2f2', text: '#b91c1c', icon: <CancelIcon sx={{ fontSize: 15 }} /> },
-    cancelled: { label: 'Cancelled', bg: '#f3f4f6', text: '#6b7280', icon: <CancelIcon sx={{ fontSize: 15 }} /> },
-};
-
 const ParentLeaveHistory: React.FC = () => {
     const navigate = useNavigate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const schoolId = TokenService.getSchoolId() || '';
     const { children, isLoading: loadingChildren } = useChildSelector();
+
+    const statusConfig: Record<string, { label: string; bg: string; text: string; icon: React.ReactNode }> = useMemo(() => ({
+        pending: { label: 'Pending', bg: alpha(theme.palette.warning.main, 0.08), text: theme.palette.warning.dark, icon: <PendingIcon sx={{ fontSize: 15 }} /> },
+        approved: { label: 'Approved', bg: alpha(theme.palette.success.main, 0.08), text: theme.palette.success.dark, icon: <CheckCircleIcon sx={{ fontSize: 15 }} /> },
+        rejected: { label: 'Rejected', bg: alpha(theme.palette.error.main, 0.08), text: theme.palette.error.dark, icon: <CancelIcon sx={{ fontSize: 15 }} /> },
+        cancelled: { label: 'Cancelled', bg: alpha(theme.palette.text.secondary, 0.08), text: theme.palette.text.secondary, icon: <CancelIcon sx={{ fontSize: 15 }} /> },
+    }), [theme]);
 
     const [tabValue, setTabValue] = useUrlTab(0, ['all', 'pending', 'approved', 'rejected']);
     const statusFilter = tabValue === 1 ? 'pending' : tabValue === 2 ? 'approved' : tabValue === 3 ? 'rejected' : undefined;
@@ -155,16 +156,16 @@ const ParentLeaveHistory: React.FC = () => {
                             sx={{
                                 p: { xs: 1.25, sm: 2 },
                                 textAlign: 'center',
-                                bgcolor: '#fffbeb',
+                                bgcolor: alpha(theme.palette.warning.main, 0.06),
                                 borderRadius: 2.5,
                                 border: '1px solid',
-                                borderColor: '#fde68a',
+                                borderColor: alpha(theme.palette.warning.main, 0.25),
                             }}
                         >
-                            <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} color="#b45309">
+                            <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} sx={{ color: theme.palette.warning.dark }}>
                                 {summary.pending}
                             </Typography>
-                            <Typography variant="caption" color="#92400e" fontWeight={600}>
+                            <Typography variant="caption" sx={{ color: theme.palette.warning.main }} fontWeight={600}>
                                 Pending
                             </Typography>
                         </Paper>
@@ -175,16 +176,16 @@ const ParentLeaveHistory: React.FC = () => {
                             sx={{
                                 p: { xs: 1.25, sm: 2 },
                                 textAlign: 'center',
-                                bgcolor: '#f0fdf4',
+                                bgcolor: alpha(theme.palette.success.main, 0.06),
                                 borderRadius: 2.5,
                                 border: '1px solid',
-                                borderColor: '#bbf7d0',
+                                borderColor: alpha(theme.palette.success.main, 0.25),
                             }}
                         >
-                            <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} color="#15803d">
+                            <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} sx={{ color: theme.palette.success.dark }}>
                                 {summary.approved}
                             </Typography>
-                            <Typography variant="caption" color="#166534" fontWeight={600}>
+                            <Typography variant="caption" sx={{ color: theme.palette.success.main }} fontWeight={600}>
                                 Approved
                             </Typography>
                         </Paper>
@@ -195,16 +196,16 @@ const ParentLeaveHistory: React.FC = () => {
                             sx={{
                                 p: { xs: 1.25, sm: 2 },
                                 textAlign: 'center',
-                                bgcolor: '#fef2f2',
+                                bgcolor: alpha(theme.palette.error.main, 0.06),
                                 borderRadius: 2.5,
                                 border: '1px solid',
-                                borderColor: '#fecaca',
+                                borderColor: alpha(theme.palette.error.main, 0.25),
                             }}
                         >
-                            <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} color="#b91c1c">
+                            <Typography variant={isMobile ? "h6" : "h5"} fontWeight={700} sx={{ color: theme.palette.error.dark }}>
                                 {summary.rejected}
                             </Typography>
-                            <Typography variant="caption" color="#991b1b" fontWeight={600}>
+                            <Typography variant="caption" sx={{ color: theme.palette.error.main }} fontWeight={600}>
                                 Rejected
                             </Typography>
                         </Paper>
@@ -237,7 +238,7 @@ const ParentLeaveHistory: React.FC = () => {
                             color: 'text.secondary',
                             '&.Mui-selected': {
                                 bgcolor: 'primary.main',
-                                color: '#ffffff',
+                                color: 'primary.contrastText',
                                 borderColor: 'primary.main',
                                 '&:hover': {
                                     bgcolor: 'primary.dark',

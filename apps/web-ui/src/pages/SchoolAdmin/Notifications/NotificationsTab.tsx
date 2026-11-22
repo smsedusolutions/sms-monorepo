@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -10,6 +10,12 @@ import {
   IconButton,
   Pagination,
   Tooltip,
+  TextField,
+  MenuItem,
+  InputAdornment,
+  Chip,
+  useTheme,
+  alpha,
 } from "@mui/material";
 import {
   Notifications as NotificationsIcon,
@@ -25,7 +31,15 @@ import {
   Campaign as CampaignIcon,
   DirectionsBus as TransportIcon,
   BugReport as BugReportIcon,
+  Search as SearchIcon,
+  CalendarToday as CalendarIcon,
+  Close as CloseIcon,
+  RestartAlt as ResetIcon,
+  FilterList as FilterIcon,
 } from "@mui/icons-material";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { useNavigate } from "react-router-dom";
 import {
   useGetMyNotifications,
@@ -40,7 +54,9 @@ import MobileSegmentedTabs from "../../../components/mobile/navigation/MobileSeg
 import ConfirmationDialog from "../../../components/Dialogs/ConfirmationDialog";
 import PushNotificationBanner from "../../../components/Notification/PushNotificationBanner";
 import PushDiagnosticsDialog from "../../../components/Notification/PushDiagnosticsDialog";
-import type { Notification, NotificationType } from "../../../types";
+import type { Notification, NotificationType, NotificationFilters } from "../../../types";
+
+type DatePreset = "all" | "today" | "this_week" | "this_month" | "custom";
 
 const getNotificationVisuals = (type: NotificationType | string) => {
   switch (type) {
@@ -125,6 +141,7 @@ const getNotificationVisuals = (type: NotificationType | string) => {
 };
 
 const NotificationsTab: React.FC = () => {
+  const theme = useTheme();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const schoolId = TokenService.getSchoolId() || "";
@@ -133,15 +150,78 @@ const NotificationsTab: React.FC = () => {
   const [page, setPage] = useState(1);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [diagOpen, setDiagOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [datePreset, setDatePreset] = useState<DatePreset>("all");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const limit = 20;
 
   const isReadFilter = tabValue === 1 ? true : tabValue === 2 ? false : undefined;
 
-  const { data, isLoading, refetch } = useGetMyNotifications(schoolId, {
-    isRead: isReadFilter,
-    page,
-    limit,
-  });
+  // Compute active date boundaries
+  const dateRangeValues = useMemo(() => {
+    const now = new Date();
+    if (datePreset === "today") {
+      const todayStr = now.toISOString().split("T")[0];
+      return { start: todayStr, end: todayStr };
+    }
+    if (datePreset === "this_week") {
+      const day = now.getDay();
+      const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+      const monday = new Date(now.setDate(diff));
+      return {
+        start: monday.toISOString().split("T")[0],
+        end: new Date().toISOString().split("T")[0],
+      };
+    }
+    if (datePreset === "this_month") {
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      return {
+        start: firstDay.toISOString().split("T")[0],
+        end: new Date().toISOString().split("T")[0],
+      };
+    }
+    if (datePreset === "custom") {
+      return {
+        start: startDate ? startDate.toISOString().split("T")[0] : undefined,
+        end: endDate ? endDate.toISOString().split("T")[0] : undefined,
+      };
+    }
+    return { start: undefined, end: undefined };
+  }, [datePreset, startDate, endDate]);
+
+  const queryFilters: NotificationFilters = useMemo(
+    () => ({
+      isRead: isReadFilter,
+      type: typeFilter !== "all" ? typeFilter : undefined,
+      search: searchQuery.trim() || undefined,
+      startDate: dateRangeValues.start,
+      endDate: dateRangeValues.end,
+      page,
+      limit,
+    }),
+    [isReadFilter, typeFilter, searchQuery, dateRangeValues, page, limit]
+  );
+
+  const { data, isLoading, refetch } = useGetMyNotifications(schoolId, queryFilters);
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setTypeFilter("all");
+    setDatePreset("all");
+    setStartDate(null);
+    setEndDate(null);
+    setPage(1);
+  };
+
+  const hasActiveFilters = Boolean(
+    searchQuery.trim() ||
+      typeFilter !== "all" ||
+      datePreset !== "all" ||
+      startDate ||
+      endDate
+  );
 
   const markAsRead = useMarkAsRead(schoolId);
   const markAllAsRead = useMarkAllAsRead(schoolId);
@@ -304,6 +384,287 @@ const NotificationsTab: React.FC = () => {
         </Box>
       </Box>
 
+      {/* Comprehensive Notification Filter Bar */}
+      <Paper
+        elevation={0}
+        sx={{
+          p: 2,
+          mb: 2.5,
+          borderRadius: 2.5,
+          border: "1px solid",
+          borderColor: theme.palette.divider,
+          bgcolor: theme.palette.background.paper,
+        }}
+      >
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "repeat(2, 1fr)",
+              md: "2fr 1fr 1fr",
+            },
+            gap: 1.5,
+            alignItems: "center",
+          }}
+        >
+          {/* Search Field */}
+          <TextField
+            size="small"
+            placeholder="Search notifications..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1);
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon sx={{ color: theme.palette.text.secondary, fontSize: 18 }} />
+                </InputAdornment>
+              ),
+              endAdornment: searchQuery ? (
+                <InputAdornment position="end">
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setPage(1);
+                    }}
+                  >
+                    <CloseIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                </InputAdornment>
+              ) : null,
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                bgcolor: theme.palette.background.default,
+              },
+            }}
+          />
+
+          {/* Notification Type Filter */}
+          <TextField
+            select
+            size="small"
+            label="Type"
+            value={typeFilter}
+            onChange={(e) => {
+              setTypeFilter(e.target.value);
+              setPage(1);
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <FilterIcon sx={{ color: theme.palette.text.secondary, fontSize: 18 }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                bgcolor: theme.palette.background.default,
+              },
+            }}
+          >
+            <MenuItem value="all">All Types</MenuItem>
+            <MenuItem value="absence_alert">Absence Alert</MenuItem>
+            <MenuItem value="system_alert">School Alert</MenuItem>
+            <MenuItem value="announcement">Announcement</MenuItem>
+            <MenuItem value="leave_status">Leave Update</MenuItem>
+            <MenuItem value="homework_assigned">Homework</MenuItem>
+            <MenuItem value="exam_scheduled">Exam</MenuItem>
+            <MenuItem value="result_published">Result</MenuItem>
+            <MenuItem value="transport_update">Transport</MenuItem>
+            <MenuItem value="chat_invite">Chat</MenuItem>
+          </TextField>
+
+          {/* Date Range Preset */}
+          <TextField
+            select
+            size="small"
+            label="Date Range"
+            value={datePreset}
+            onChange={(e) => {
+              setDatePreset(e.target.value as DatePreset);
+              setPage(1);
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <CalendarIcon sx={{ color: theme.palette.text.secondary, fontSize: 18 }} />
+                </InputAdornment>
+              ),
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+                bgcolor: theme.palette.background.default,
+              },
+            }}
+          >
+            <MenuItem value="all">All Time</MenuItem>
+            <MenuItem value="today">Today</MenuItem>
+            <MenuItem value="this_week">This Week</MenuItem>
+            <MenuItem value="this_month">This Month</MenuItem>
+            <MenuItem value="custom">Custom Date Range</MenuItem>
+          </TextField>
+        </Box>
+
+        {/* Custom Date Pickers */}
+        {datePreset === "custom" && (
+          <Box
+            sx={{
+              mt: 2,
+              pt: 2,
+              borderTop: "1px dashed",
+              borderColor: theme.palette.divider,
+              display: "flex",
+              gap: 2,
+              flexWrap: "wrap",
+              alignItems: "center",
+            }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 600, color: theme.palette.text.secondary }}>
+              Custom Period:
+            </Typography>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="From Date"
+                value={startDate}
+                maxDate={endDate || undefined}
+                onChange={(val) => {
+                  setStartDate(val);
+                  if (val && endDate && val > endDate) {
+                    setEndDate(null);
+                  }
+                  setPage(1);
+                }}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    sx: {
+                      minWidth: 160,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        bgcolor: theme.palette.background.default,
+                      },
+                    },
+                  },
+                }}
+              />
+              <DatePicker
+                label="To Date"
+                value={endDate}
+                minDate={startDate || undefined}
+                referenceDate={startDate || undefined}
+                onChange={(val) => {
+                  setEndDate(val);
+                  if (val && startDate && val < startDate) {
+                    setStartDate(null);
+                  }
+                  setPage(1);
+                }}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    sx: {
+                      minWidth: 160,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        bgcolor: theme.palette.background.default,
+                      },
+                    },
+                  },
+                }}
+              />
+            </LocalizationProvider>
+          </Box>
+        )}
+
+        {/* Active Filter Chips & Reset */}
+        {hasActiveFilters && (
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              gap: 1,
+              mt: 2,
+              pt: 1.5,
+              borderTop: "1px solid",
+              borderColor: alpha(theme.palette.divider, 0.6),
+            }}
+          >
+            <Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.secondary, mr: 0.5 }}>
+              Active Filters:
+            </Typography>
+
+            {searchQuery && (
+              <Chip
+                size="small"
+                label={`Search: "${searchQuery}"`}
+                onDelete={() => {
+                  setSearchQuery("");
+                  setPage(1);
+                }}
+                sx={{ borderRadius: 1.5 }}
+              />
+            )}
+
+            {typeFilter !== "all" && (
+              <Chip
+                size="small"
+                label={`Type: ${typeFilter.replace(/_/g, " ")}`}
+                onDelete={() => {
+                  setTypeFilter("all");
+                  setPage(1);
+                }}
+                sx={{ borderRadius: 1.5, textTransform: "capitalize" }}
+              />
+            )}
+
+            {datePreset !== "all" && (
+              <Chip
+                size="small"
+                label={`Date: ${
+                  datePreset === "custom"
+                    ? `${startDate ? startDate.toLocaleDateString() : "Start"} – ${endDate ? endDate.toLocaleDateString() : "End"}`
+                    : datePreset.replace("_", " ")
+                }`}
+                onDelete={() => {
+                  setDatePreset("all");
+                  setStartDate(null);
+                  setEndDate(null);
+                  setPage(1);
+                }}
+                sx={{ borderRadius: 1.5 }}
+              />
+            )}
+
+            <Button
+              size="small"
+              variant="text"
+              color="inherit"
+              startIcon={<ResetIcon sx={{ fontSize: 16 }} />}
+              onClick={handleResetFilters}
+              sx={{
+                textTransform: "none",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                ml: "auto",
+                color: theme.palette.text.secondary,
+                "&:hover": { color: theme.palette.error.main },
+              }}
+            >
+              Reset Filters
+            </Button>
+          </Box>
+        )}
+      </Paper>
+
       {/* Notification Cards List */}
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         {isLoading ? (
@@ -311,7 +672,7 @@ const NotificationsTab: React.FC = () => {
             <Paper
               key={i}
               elevation={0}
-              sx={{ p: 1.75, borderRadius: 2, border: "1px solid #e2e8f0" }}
+              sx={{ p: 1.75, borderRadius: 2, border: "1px solid", borderColor: theme.palette.divider, bgcolor: theme.palette.background.paper }}
             >
               <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
                 <Skeleton
@@ -336,16 +697,17 @@ const NotificationsTab: React.FC = () => {
               py: 6,
               px: 2,
               borderRadius: 2,
-              border: "1px solid #e2e8f0",
-              bgcolor: "#ffffff",
+              border: "1px solid",
+              borderColor: theme.palette.divider,
+              bgcolor: theme.palette.background.paper,
             }}
           >
-            <NotificationsIcon sx={{ fontSize: 36, color: "#94a3b8", mb: 1 }} />
-            <Typography variant="subtitle1" fontWeight={600} color="#1e293b">
+            <NotificationsIcon sx={{ fontSize: 36, color: theme.palette.text.disabled, mb: 1 }} />
+            <Typography variant="subtitle1" fontWeight={600} color="text.primary">
               No notifications found
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              You're all caught up!
+              {hasActiveFilters ? "No notifications match your active filter criteria." : "You're all caught up!"}
             </Typography>
           </Paper>
         ) : (

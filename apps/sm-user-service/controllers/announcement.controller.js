@@ -215,8 +215,9 @@ const createAnnouncementNotifications = async (Notification, Student, Parent, Te
  */
 const sendAnnouncementEmails = async (schoolId, announcement, recipients) => {
     try {
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.log("ℹ️ [MailService] EMAIL_USER / EMAIL_PASS not configured - skipping announcement emails");
+        const hasMailConfig = Boolean(process.env.SMTP_USERNAME || process.env.EMAIL_USER) && Boolean(process.env.SMTP_PASSWORD || process.env.EMAIL_PASS);
+        if (!hasMailConfig) {
+            console.log("ℹ️ [MailService] SMTP credentials not configured - skipping announcement emails");
             return;
         }
 
@@ -365,24 +366,83 @@ const sendAnnouncementEmails = async (schoolId, announcement, recipients) => {
 const getAllAnnouncements = async (req, res) => {
     try {
         const { schoolId } = req.params;
-        const { category, status, page = 1, limit = 20 } = req.query;
+        const {
+            category,
+            status,
+            priority,
+            targetAudience,
+            search,
+            startDate,
+            endDate,
+            from,
+            to,
+            page = 1,
+            limit = 50,
+        } = req.query;
         const { role, userId, classId, studentId } = req.user;
 
         const schoolDbName = await getSchoolDbName(schoolId);
         const { Announcement, Student } = getAnnouncementModels(schoolDbName);
 
-        let query = { schoolId, status: status || 'active', isPublished: true };
+        let query = { schoolId, isPublished: true };
+
+        // Status handling
+        if (status && status !== 'all') {
+            query.status = status;
+        } else if (!status) {
+            query.status = 'active';
+        }
 
         // Filter by category if provided
-        if (category) {
+        if (category && category !== 'all') {
             query.category = category;
         }
 
-        // Filter expiry date
-        query.$or = [
-            { expiryDate: null },
-            { expiryDate: { $gte: new Date() } }
-        ];
+        // Filter by priority if provided
+        if (priority && priority !== 'all') {
+            query.priority = priority;
+        }
+
+        // Filter by targetAudience if provided
+        if (targetAudience && targetAudience !== 'all') {
+            query.targetAudience = targetAudience;
+        }
+
+        // Filter expiry date for active tab
+        if (!status || status === 'active') {
+            query.$or = [
+                { expiryDate: null },
+                { expiryDate: { $gte: new Date() } }
+            ];
+        }
+
+        // Search in title and content
+        if (search && search.trim()) {
+            const searchRegex = new RegExp(search.trim(), 'i');
+            const searchConditions = [{ title: searchRegex }, { content: searchRegex }];
+            if (query.$or) {
+                // Combine existing $or with search conditions via $and
+                query.$and = query.$and || [];
+                query.$and.push({ $or: searchConditions });
+            } else {
+                query.$or = searchConditions;
+            }
+        }
+
+        // Date range filtering on publishDate (or createdAt)
+        const fromDate = startDate || from;
+        const toDate = endDate || to;
+        if (fromDate || toDate) {
+            query.publishDate = query.publishDate || {};
+            if (fromDate) {
+                query.publishDate.$gte = new Date(fromDate);
+            }
+            if (toDate) {
+                const end = new Date(toDate);
+                end.setHours(23, 59, 59, 999);
+                query.publishDate.$lte = end;
+            }
+        }
 
         // Role-based filtering
         if (role === 'student') {

@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const { AdminModel: Admin, SchoolModel: School, EmailRegistryModel: EmailRegistry, PendingSuperAdminModel: PendingSuperAdmin } = require("@sms/shared");
+const { AdminModel: Admin, SchoolModel: School, EmailRegistryModel: EmailRegistry, PendingSuperAdminModel: PendingSuperAdmin, PasswordResetOtpModel: PasswordResetOtp } = require("@sms/shared");
 const { sendEmail, verifyPassword, hashPassword } = require("@sms/shared/utils");
 const { getSchoolDbConnection } = require("../configs/db");
 
@@ -647,10 +647,280 @@ const confirmSuperAdminOtp = async (req, res) => {
     }
 };
 
+// Request Password Reset OTP
+const requestPasswordResetOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email || typeof email !== 'string') {
+            return res.status(400).json({
+                success: false,
+                message: "A valid email address is required",
+            });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+
+        // Verify user exists in EmailRegistry and is active
+        const emailEntry = await EmailRegistry.findOne({
+            email: normalizedEmail,
+            status: "active"
+        }).lean();
+
+        if (!emailEntry) {
+            return res.status(404).json({
+                success: false,
+                message: "No active account found matching this email address.",
+            });
+        }
+
+        // Generate cryptographically random 6-digit OTP
+        const crypto = require("crypto");
+        const otp = crypto.randomInt(100000, 999999).toString();
+
+        // Upsert OTP record (valid for 10 minutes)
+        await PasswordResetOtp.findOneAndUpdate(
+            { email: normalizedEmail },
+            { otp, verified: false, createdAt: new Date() },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+
+        // Fetch school details if available to brand the email
+        let schoolName = "SMS Edu Solutions";
+        if (emailEntry.schoolId) {
+            const school = await getSchoolById(emailEntry.schoolId);
+            if (school && school.schoolName) {
+                schoolName = school.schoolName;
+            }
+        }
+
+        // Send OTP via Nodemailer
+        const emailHtml = `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 24px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;">
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <h2 style="color: #0f172a; font-size: 20px; font-weight: 800; margin: 0 0 6px 0;">Password Reset Request</h2>
+                    <p style="color: #64748b; font-size: 14px; margin: 0;">${schoolName}</p>
+                </div>
+                <p style="color: #334155; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+                    Hello,
+                </p>
+                <p style="color: #334155; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+                    We received a request to reset the password for your account (<strong>${normalizedEmail}</strong>). Use the one-time verification code below to proceed with setting a new password:
+                </p>
+                <div style="background-color: #f8fafc; border: 1.5px dashed #0284c7; border-radius: 8px; padding: 20px; text-align: center; margin-bottom: 24px;">
+                    <div style="font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #0284c7; font-family: monospace;">
+                        ${otp}
+                    </div>
+                    <p style="color: #64748b; font-size: 12px; margin: 8px 0 0 0;">Valid for 10 minutes</p>
+                </div>
+                <p style="color: #64748b; font-size: 13px; line-height: 1.5; margin-bottom: 24px;">
+                    If you did not request a password reset, please disregard this email. Your existing password will remain active and secure.
+                </p>
+                <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
+                <p style="color: #94a3b8; font-size: 11px; text-align: center; margin: 0;">
+                    This is an automated security notice from ${schoolName}. Please do not reply directly to this email.
+                </p>
+            </div>
+        `;
+
+        await sendEmail({
+            to: normalizedEmail,
+            subject: `Password Reset Verification Code: ${otp}`,
+            html: emailHtml,
+            from: `${schoolName} Security`,
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "A 6-digit verification code has been sent to your email address.",
+        });
+    } catch (error) {
+        console.error("Error requesting password reset OTP:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to process password reset request. Please check email configuration or try again later.",
+            error: error.message,
+        });
+    }
+};
+
+// Verify Password Reset OTP
+const verifyPasswordResetOtp = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        if (!email || !otp) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and verification code are required",
+            });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const trimmedOtp = String(otp).trim();
+
+        const record = await PasswordResetOtp.findOne({ email: normalizedEmail });
+        if (!record) {
+            return res.status(400).json({
+                success: false,
+                message: "Verification code has expired or was not requested. Please request a new code.",
+            });
+        }
+
+        if (record.otp !== trimmedOtp) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid verification code. Please check your email and try again.",
+            });
+        }
+
+        record.verified = true;
+        await record.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Verification code confirmed successfully.",
+        });
+    } catch (error) {
+        console.error("Error verifying password reset OTP:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to verify code",
+            error: error.message,
+        });
+    }
+};
+
+// Reset Password with OTP
+const resetPasswordWithOtp = async (req, res) => {
+    try {
+        const { email, otp, newPassword, confirmPassword } = req.body;
+        if (!email || !otp || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Email, verification code, and new password are required",
+            });
+        }
+
+        if (confirmPassword !== undefined && newPassword !== confirmPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Passwords do not match",
+            });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 6 characters long",
+            });
+        }
+
+        const normalizedEmail = email.toLowerCase().trim();
+        const trimmedOtp = String(otp).trim();
+
+        const record = await PasswordResetOtp.findOne({ email: normalizedEmail });
+        if (!record || record.otp !== trimmedOtp) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid or expired verification session. Please request a new code.",
+            });
+        }
+
+        // Check EmailRegistry for user role and location
+        const emailEntry = await EmailRegistry.findOne({
+            email: normalizedEmail,
+            status: "active",
+        }).lean();
+
+        if (!emailEntry) {
+            return res.status(404).json({
+                success: false,
+                message: "No active user account found matching this email address.",
+            });
+        }
+
+        const { role, schoolId } = emailEntry;
+        const hashedPassword = await hashPassword(newPassword);
+
+        // Update password in the target collection
+        if (role === "super_admin") {
+            await Admin.updateOne(
+                { email: normalizedEmail },
+                { password: hashedPassword }
+            );
+        } else if (role === "sch_admin") {
+            const { UserModel: User } = require("@sms/shared");
+            await User.updateOne(
+                { email: normalizedEmail },
+                { password: hashedPassword }
+            );
+        } else {
+            // School-specific user (Teacher, Student, Parent, Driver, Principal)
+            const school = await getSchoolById(schoolId);
+            if (!school) {
+                return res.status(404).json({
+                    success: false,
+                    message: "School associated with user was not found.",
+                });
+            }
+
+            const schoolDb = getSchoolDbConnection(school.schoolDbName);
+            let Model;
+
+            switch (role) {
+                case "teacher":
+                    Model = schoolDb.model("Teacher", teacherSchema);
+                    break;
+                case "student":
+                    Model = schoolDb.model("Student", studentSchema);
+                    break;
+                case "parent":
+                    Model = schoolDb.model("Parent", parentSchema);
+                    break;
+                case "driver":
+                    const { DriverSchema: driverSchema } = require("@sms/shared");
+                    Model = schoolDb.model("Driver", driverSchema);
+                    break;
+                case "principal":
+                    const { PrincipalSchema: principalSchema } = require("@sms/shared");
+                    Model = schoolDb.model("Principal", principalSchema);
+                    break;
+                default:
+                    return res.status(400).json({
+                        success: false,
+                        message: "Unsupported role for password reset",
+                    });
+            }
+
+            await Model.updateOne(
+                { email: normalizedEmail },
+                { password: hashedPassword }
+            );
+        }
+
+        // Clean up the used OTP
+        await PasswordResetOtp.deleteOne({ email: normalizedEmail });
+
+        return res.status(200).json({
+            success: true,
+            message: "Password reset successfully. You can now log in with your new password.",
+        });
+    } catch (error) {
+        console.error("Error resetting password with OTP:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to reset password",
+            error: error.message,
+        });
+    }
+};
+
 module.exports = {
     login,
     verifyToken,
     createAdmin,
     requestSuperAdminOtp,
     confirmSuperAdminOtp,
+    requestPasswordResetOtp,
+    verifyPasswordResetOtp,
+    resetPasswordWithOtp,
 };

@@ -19,6 +19,7 @@ import {
     Button,
     Stack,
 } from '@mui/material';
+import { useTheme, alpha } from '@mui/material/styles';
 import {
     EmojiEvents as TrophyIcon,
     TrendingUp as TrendingIcon,
@@ -39,6 +40,7 @@ import { exportReportCardPDF } from '../../../utils/reportCardPdfExport';
 import { useAcademicYear } from '../../../hooks/useAcademicYear';
 
 const ParentExamResults: React.FC = () => {
+    const theme = useTheme();
     const navigate = useNavigate();
     const schoolId = TokenService.getSchoolId() || '';
     const { currentAcademicYear } = useAcademicYear();
@@ -91,11 +93,11 @@ const ParentExamResults: React.FC = () => {
             {/* Header */}
             <Box sx={{ mb: 3 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
-                    <Box sx={{ p: 1.25, borderRadius: 2.5, bgcolor: '#fef3c7', color: '#d97706' }}>
+                    <Box sx={{ p: 1.25, borderRadius: 2.5, bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main }}>
                         <TrophyIcon sx={{ fontSize: 28 }} />
                     </Box>
                     <Box>
-                        <Typography variant="h4" fontWeight={800} color="#1e293b" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
+                        <Typography variant="h4" fontWeight={800} color="text.primary" sx={{ fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                             Exam Results & Report Cards
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
@@ -107,7 +109,7 @@ const ParentExamResults: React.FC = () => {
 
             {/* ── Multi-Child Switcher Bar ── */}
             {contextChildren.length > 1 && (
-                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 2, border: '1px solid #e2e8f0', bgcolor: '#f8fafc' }}>
+                <Paper elevation={0} sx={{ p: 2, mb: 2.5, borderRadius: 2, border: '1px solid', borderColor: theme.palette.divider, bgcolor: theme.palette.background.paper }}>
                     <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, mb: 1.5, display: 'block' }}>
                         Select Child
                     </Typography>
@@ -129,13 +131,13 @@ const ParentExamResults: React.FC = () => {
                                         py: 0.75,
                                         fontSize: '0.8125rem',
                                         flexShrink: 0,
-                                        bgcolor: isSelected ? '#4f46e5' : '#ffffff',
-                                        color: isSelected ? '#ffffff' : '#475569',
-                                        borderColor: isSelected ? '#4f46e5' : '#cbd5e1',
-                                        boxShadow: isSelected ? '0 2px 8px rgba(79, 70, 229, 0.25)' : 'none',
+                                        bgcolor: isSelected ? theme.palette.primary.main : theme.palette.background.paper,
+                                        color: isSelected ? theme.palette.primary.contrastText : theme.palette.text.secondary,
+                                        borderColor: isSelected ? theme.palette.primary.main : theme.palette.divider,
+                                        boxShadow: isSelected ? `0 2px 8px ${alpha(theme.palette.primary.main, 0.25)}` : 'none',
                                         '&:hover': {
-                                            bgcolor: isSelected ? '#4338ca' : '#f1f5f9',
-                                            borderColor: isSelected ? '#4338ca' : '#94a3b8',
+                                            bgcolor: isSelected ? theme.palette.primary.dark : alpha(theme.palette.text.primary, 0.04),
+                                            borderColor: isSelected ? theme.palette.primary.dark : theme.palette.divider,
                                         }
                                     }}
                                 >
@@ -161,8 +163,9 @@ const ParentExamResults: React.FC = () => {
                     sx={{
                         p: { xs: 3, sm: 6 },
                         borderRadius: 4,
-                        border: '1px solid #e2e8f0',
-                        bgcolor: '#ffffff',
+                        border: '1px solid',
+                        borderColor: theme.palette.divider,
+                        bgcolor: theme.palette.background.paper,
                         textAlign: 'center',
                         boxShadow: '0 8px 30px rgba(0, 0, 0, 0.04)',
                     }}
@@ -173,20 +176,20 @@ const ParentExamResults: React.FC = () => {
                             width: 88,
                             height: 88,
                             borderRadius: '50%',
-                            bgcolor: '#fffbeb',
-                            border: '2px solid #fef3c7',
+                            bgcolor: alpha(theme.palette.warning.main, 0.1),
+                            border: `2px solid ${alpha(theme.palette.warning.main, 0.25)}`,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             mx: 'auto',
                             mb: 2.5,
-                            boxShadow: '0 12px 24px -6px rgba(245, 158, 11, 0.2)'
+                            boxShadow: `0 12px 24px -6px ${alpha(theme.palette.warning.main, 0.2)}`
                         }}
                     >
-                        <ReportIcon sx={{ fontSize: 44, color: '#f59e0b' }} />
+                        <ReportIcon sx={{ fontSize: 44, color: theme.palette.warning.main }} />
                     </Box>
 
-                    <Typography variant="h5" fontWeight={800} color="#1e293b" sx={{ mb: 1 }}>
+                    <Typography variant="h5" fontWeight={800} color="text.primary" sx={{ mb: 1 }}>
                         No Examination Results Published Yet
                     </Typography>
                     <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 620, mx: 'auto', mb: 4, lineHeight: 1.6 }}>
@@ -196,10 +199,10 @@ const ParentExamResults: React.FC = () => {
                     {/* Feature Information Grid */}
                     <Grid container spacing={2.5} sx={{ maxWidth: 850, mx: 'auto', mb: 4, textAlign: 'left' }}>
                         <Grid size={{ xs: 12, sm: 4 }}>
-                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#2563eb' }}>
+                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: alpha(theme.palette.text.primary, 0.02), border: '1px solid', borderColor: theme.palette.divider, height: '100%' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: theme.palette.primary.main }}>
                                     <CalendarIcon fontSize="small" />
-                                    <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Exam Timetable</Typography>
+                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary">Exam Timetable</Typography>
                                 </Box>
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.5 }}>
                                     Check upcoming exam dates, term schedules, and subject syllabus breakdown.
@@ -207,10 +210,10 @@ const ParentExamResults: React.FC = () => {
                             </Box>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
-                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#10b981' }}>
+                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: alpha(theme.palette.text.primary, 0.02), border: '1px solid', borderColor: theme.palette.divider, height: '100%' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: theme.palette.success.main }}>
                                     <SchoolIcon fontSize="small" />
-                                    <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Grading Standard</Typography>
+                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary">Grading Standard</Typography>
                                 </Box>
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.5 }}>
                                     Standardized grading scale from A+ (90%+) to D, verified by subject teachers.
@@ -218,10 +221,10 @@ const ParentExamResults: React.FC = () => {
                             </Box>
                         </Grid>
                         <Grid size={{ xs: 12, sm: 4 }}>
-                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: '#f8fafc', border: '1px solid #e2e8f0', height: '100%' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: '#8b5cf6' }}>
+                            <Box sx={{ p: 2.5, borderRadius: 2, bgcolor: alpha(theme.palette.text.primary, 0.02), border: '1px solid', borderColor: theme.palette.divider, height: '100%' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, color: theme.palette.secondary.main }}>
                                     <NotifyIcon fontSize="small" />
-                                    <Typography variant="subtitle2" fontWeight={700} color="#1e293b">Instant Alerts</Typography>
+                                    <Typography variant="subtitle2" fontWeight={700} color="text.primary">Instant Alerts</Typography>
                                 </Box>
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.5 }}>
                                     You will receive a notification as soon as fresh report cards are published.
@@ -237,8 +240,8 @@ const ParentExamResults: React.FC = () => {
                             endIcon={<ArrowForwardIcon />}
                             onClick={() => navigate('/parent/exam/scheduler')}
                             sx={{
-                                bgcolor: '#2563eb',
-                                '&:hover': { bgcolor: '#1d4ed8' },
+                                bgcolor: theme.palette.primary.main,
+                                '&:hover': { bgcolor: theme.palette.primary.dark },
                                 borderRadius: 2.5,
                                 fontWeight: 700,
                                 px: 3.5,
@@ -257,9 +260,9 @@ const ParentExamResults: React.FC = () => {
                                 px: 3.5,
                                 py: 1.2,
                                 textTransform: 'none',
-                                borderColor: '#cbd5e1',
-                                color: '#475569',
-                                '&:hover': { borderColor: '#2563eb', bgcolor: '#f0f9ff' }
+                                borderColor: theme.palette.divider,
+                                color: theme.palette.text.primary,
+                                '&:hover': { borderColor: theme.palette.primary.main, bgcolor: alpha(theme.palette.primary.main, 0.04) }
                             }}
                         >
                             Contact Class Teacher
@@ -270,12 +273,12 @@ const ParentExamResults: React.FC = () => {
                 /* Results List View when available */
                 <Stack spacing={3}>
                     {examResults.map((examResult: any) => (
-                        <Card key={examResult.examId} sx={{ borderRadius: 4, border: '1px solid #e2e8f0', boxShadow: 'none' }}>
+                        <Card key={examResult.examId} sx={{ borderRadius: 4, border: '1px solid', borderColor: theme.palette.divider, bgcolor: theme.palette.background.paper, boxShadow: 'none' }}>
                             <CardContent sx={{ p: 3 }}>
                                 {/* Exam Header */}
                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2.5, flexWrap: 'wrap', gap: 1 }}>
                                     <Box>
-                                        <Typography variant="h6" fontWeight={800} color="#1e293b">
+                                        <Typography variant="h6" fontWeight={800} color="text.primary">
                                             {examResult.name}
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary" fontWeight={500}>
@@ -329,27 +332,27 @@ const ParentExamResults: React.FC = () => {
                                 {examResult.overall && (
                                     <Grid container spacing={2} sx={{ mb: 2.5 }}>
                                         <Grid size={{ xs: 6, sm: 3 }}>
-                                            <Paper elevation={0} sx={{ p: 2, textAlign: 'center', bgcolor: '#eff6ff', borderRadius: 2.5, border: '1px solid #bfdbfe' }}>
+                                            <Paper elevation={0} sx={{ p: 2, textAlign: 'center', bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 2.5, border: '1px solid', borderColor: alpha(theme.palette.primary.main, 0.2) }}>
                                                 <Typography variant="caption" color="text.secondary" fontWeight={600}>Total Marks</Typography>
-                                                <Typography variant="h6" fontWeight={800} color="#1e40af">{examResult.overall.totalMarks || '-'}</Typography>
+                                                <Typography variant="h6" fontWeight={800} sx={{ color: theme.palette.primary.main }}>{examResult.overall.totalMarks || '-'}</Typography>
                                             </Paper>
                                         </Grid>
                                         <Grid size={{ xs: 6, sm: 3 }}>
-                                            <Paper elevation={0} sx={{ p: 2, textAlign: 'center', bgcolor: '#f5f3ff', borderRadius: 2.5, border: '1px solid #ddd6fe' }}>
+                                            <Paper elevation={0} sx={{ p: 2, textAlign: 'center', bgcolor: alpha(theme.palette.secondary.main, 0.05), borderRadius: 2.5, border: '1px solid', borderColor: alpha(theme.palette.secondary.main, 0.2) }}>
                                                 <Typography variant="caption" color="text.secondary" fontWeight={600}>Obtained Marks</Typography>
-                                                <Typography variant="h6" fontWeight={800} color="#6d28d9">{examResult.overall.obtainedMarks || '-'}</Typography>
+                                                <Typography variant="h6" fontWeight={800} sx={{ color: theme.palette.secondary.main }}>{examResult.overall.obtainedMarks || '-'}</Typography>
                                             </Paper>
                                         </Grid>
                                         <Grid size={{ xs: 6, sm: 3 }}>
-                                            <Paper elevation={0} sx={{ p: 2, textAlign: 'center', bgcolor: '#ecfdf5', borderRadius: 2.5, border: '1px solid #a7f3d0' }}>
+                                            <Paper elevation={0} sx={{ p: 2, textAlign: 'center', bgcolor: alpha(theme.palette.success.main, 0.05), borderRadius: 2.5, border: '1px solid', borderColor: alpha(theme.palette.success.main, 0.2) }}>
                                                 <Typography variant="caption" color="text.secondary" fontWeight={600}>Percentage</Typography>
-                                                <Typography variant="h6" fontWeight={800} color="#047857">{examResult.overall.percentage ? `${examResult.overall.percentage}%` : '-'}</Typography>
+                                                <Typography variant="h6" fontWeight={800} sx={{ color: theme.palette.success.main }}>{examResult.overall.percentage ? `${examResult.overall.percentage}%` : '-'}</Typography>
                                             </Paper>
                                         </Grid>
                                         <Grid size={{ xs: 6, sm: 3 }}>
-                                            <Paper elevation={0} sx={{ p: 2, textAlign: 'center', bgcolor: '#fffbeb', borderRadius: 2.5, border: '1px solid #fde68a' }}>
+                                            <Paper elevation={0} sx={{ p: 2, textAlign: 'center', bgcolor: alpha(theme.palette.warning.main, 0.05), borderRadius: 2.5, border: '1px solid', borderColor: alpha(theme.palette.warning.main, 0.2) }}>
                                                 <Typography variant="caption" color="text.secondary" fontWeight={600}>Overall Grade</Typography>
-                                                <Typography variant="h6" fontWeight={800} color="#b45309">{examResult.overall.grade || '-'}</Typography>
+                                                <Typography variant="h6" fontWeight={800} sx={{ color: theme.palette.warning.main }}>{examResult.overall.grade || '-'}</Typography>
                                             </Paper>
                                         </Grid>
                                     </Grid>
@@ -358,14 +361,14 @@ const ParentExamResults: React.FC = () => {
                                 <Divider sx={{ my: 2 }} />
 
                                 {/* Subject-wise Results */}
-                                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }} color="#1e293b">
+                                <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }} color="text.primary">
                                     Subject-wise Performance
                                 </Typography>
 
                                 <TableContainer component={Paper} elevation={0} variant="outlined" sx={{ borderRadius: 2.5, overflow: 'hidden' }}>
                                     <Table size="small">
                                         <TableHead>
-                                            <TableRow sx={{ bgcolor: '#f8fafc' }}>
+                                            <TableRow sx={{ bgcolor: alpha(theme.palette.text.primary, 0.02) }}>
                                                 <TableCell sx={{ fontWeight: 700 }}>Subject</TableCell>
                                                 <TableCell align="right" sx={{ fontWeight: 700 }}>Max Marks</TableCell>
                                                 <TableCell align="right" sx={{ fontWeight: 700 }}>Obtained</TableCell>
@@ -411,11 +414,11 @@ const ParentExamResults: React.FC = () => {
 
                                 {/* Teacher's Remarks */}
                                 {examResult.remarks && (
-                                    <Paper elevation={0} sx={{ mt: 2.5, p: 2, bgcolor: '#fefce8', border: '1px solid #fef08a', borderRadius: 2.5 }}>
-                                        <Typography variant="subtitle2" fontWeight={700} color="#854d0e">
+                                    <Paper elevation={0} sx={{ mt: 2.5, p: 2, bgcolor: alpha(theme.palette.warning.main, 0.06), border: `1px solid ${alpha(theme.palette.warning.main, 0.25)}`, borderRadius: 2.5 }}>
+                                        <Typography variant="subtitle2" fontWeight={700} sx={{ color: theme.palette.warning.dark }}>
                                             Teacher's Remarks:
                                         </Typography>
-                                        <Typography variant="body2" color="#713f12" sx={{ mt: 0.5 }}>
+                                        <Typography variant="body2" sx={{ mt: 0.5, color: theme.palette.text.primary }}>
                                             {examResult.remarks}
                                         </Typography>
                                     </Paper>

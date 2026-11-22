@@ -1,13 +1,68 @@
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// Create transporter with Gmail configuration
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-    },
+/**
+ * Resolves SMTP / Mail server configuration strictly from environment variables.
+ */
+const getSmtpConfig = () => {
+    const host = process.env.SMTP_HOST || 'smtpout.secureserver.net';
+    const port = parseInt(process.env.SMTP_PORT || '465', 10);
+    const security = (process.env.SMTP_SECURITY || 'SSL').toUpperCase();
+    const isSecure = security === 'SSL' || port === 465;
+    const user = process.env.SMTP_USERNAME || process.env.EMAIL_USER;
+    const pass = process.env.SMTP_PASSWORD || process.env.EMAIL_PASS;
+    const senderName = process.env.SMTP_SENDER_NAME || 'SMS EDU SOLUTIONS';
+
+    return { host, port, isSecure, user, pass, senderName };
+};
+
+let cachedTransporter = null;
+let cachedConfigKey = null;
+
+/**
+ * Returns a configured nodemailer transporter.
+ * Dynamically updates if environment variables change.
+ */
+const getTransporter = () => {
+    const { host, port, isSecure, user, pass } = getSmtpConfig();
+    const key = `${host}:${port}:${isSecure}:${user}:${pass}`;
+
+    if (!cachedTransporter || cachedConfigKey !== key) {
+        cachedConfigKey = key;
+        if (host && host.toLowerCase() !== 'gmail') {
+            cachedTransporter = nodemailer.createTransport({
+                host,
+                port,
+                secure: isSecure, // true for port 465 (SSL)
+                auth: {
+                    user,
+                    pass,
+                },
+                tls: {
+                    rejectUnauthorized: false,
+                },
+            });
+        } else {
+            cachedTransporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user,
+                    pass,
+                },
+            });
+        }
+    }
+
+    return cachedTransporter;
+};
+
+// Backwards-compatible proxy for legacy callers of `transporter`
+const transporter = new Proxy({}, {
+    get(target, prop) {
+        const trans = getTransporter();
+        const value = trans[prop];
+        return typeof value === 'function' ? value.bind(trans) : value;
+    }
 });
 
 /**
@@ -20,6 +75,7 @@ const transporter = nodemailer.createTransport({
  * @param {string} [options.cc] - CC email addresses (optional)
  * @param {string} [options.bcc] - BCC email addresses (optional)
  * @param {Array} [options.attachments] - Email attachments (optional)
+ * @param {string} [options.from] - Sender display name
  * @returns {Promise<Object>} - Email send result
  */
 const sendEmail = async ({ to, subject, html, text, cc, bcc, attachments, from }) => {
@@ -30,8 +86,13 @@ const sendEmail = async ({ to, subject, html, text, cc, bcc, attachments, from }
     }
 
     try {
+        const { user, senderName } = getSmtpConfig();
+        const fromEmail = user || 'support@smsedusolutions.in';
+        const displayName = from || senderName;
+        const fromHeader = `"${displayName}" <${fromEmail}>`;
+
         const mailOptions = {
-            from: from ? `"${from}" <${process.env.EMAIL_USER}>` : `<${process.env.EMAIL_USER}>`,
+            from: fromHeader,
             to,
             subject,
             html,
@@ -41,7 +102,8 @@ const sendEmail = async ({ to, subject, html, text, cc, bcc, attachments, from }
             attachments: attachments || undefined,
         };
 
-        const info = await transporter.sendMail(mailOptions);
+        const currentTransporter = getTransporter();
+        const info = await currentTransporter.sendMail(mailOptions);
         console.log('Email sent successfully:', info.messageId);
         return { success: true, messageId: info.messageId };
     } catch (error) {
@@ -56,7 +118,8 @@ const sendEmail = async ({ to, subject, html, text, cc, bcc, attachments, from }
  */
 const verifyConnection = async () => {
     try {
-        await transporter.verify();
+        const currentTransporter = getTransporter();
+        await currentTransporter.verify();
         console.log('Email server connection verified');
         return true;
     } catch (error) {
@@ -69,4 +132,5 @@ module.exports = {
     sendEmail,
     verifyConnection,
     transporter,
+    getSmtpConfig,
 };

@@ -95,7 +95,7 @@ async function seedData() {
   console.log("Creating School & Admin...");
   const school = await SchoolModel.create({
     schoolId: SCHOOL_ID,
-    schoolName: "Bangalore International Public School",
+    schoolName: "SMS Demo School",
     schoolDbName: SCHOOL_DB_NAME,
     status: "active",
     schoolAddress: "MG Road, Bangalore, Karnataka",
@@ -129,7 +129,7 @@ async function seedData() {
   // 4. Create Classes and Sections (1 to 10)
   console.log("Creating Classes & Sections...");
   const classes = [];
-  
+
   for (let i = 1; i <= 10; i++) {
     const secAId = generateId("SEC");
     const secBId = generateId("SEC");
@@ -150,12 +150,12 @@ async function seedData() {
   console.log("Creating Teachers...");
   const teachers = [];
   const subjectKeys = Object.keys(subjectMap);
-  
+
   // 30 teachers to ensure plenty for assignments
   for (let i = 0; i < 30; i++) {
     const gender = Math.random() > 0.5 ? "male" : "female";
     const { firstName, lastName } = getRandomName(gender);
-    
+
     // Assign 2 random subjects to a teacher
     const tSubjects = [
       subjectMap[subjectKeys[i % subjectKeys.length]],
@@ -167,7 +167,7 @@ async function seedData() {
       schoolId: SCHOOL_ID,
       firstName,
       lastName,
-      email: `teacher${i+1}@demoschool.com`,
+      email: `teacher${i + 1}@demoschool.com`,
       password: "password123",
       phone: `+9199${Math.floor(10000000 + Math.random() * 90000000)}`,
       subjects: tSubjects,
@@ -196,21 +196,21 @@ async function seedData() {
   console.log("Creating Students and Parents (This may take a minute)...");
   let sIndex = 1;
   let pIndex = 1;
-  
+
   for (const c of classes) {
     for (const sec of c.sections) {
       // 20-40 students per section
-      const numStudents = Math.floor(Math.random() * 21) + 20; 
-      
+      const numStudents = Math.floor(Math.random() * 21) + 20;
+
       for (let s = 0; s < numStudents; s++) {
         const gender = Math.random() > 0.5 ? "male" : "female";
         const { firstName, lastName } = getRandomName(gender);
-        
+
         // Generate a Parent for the student
         const parentGender = Math.random() > 0.5 ? "male" : "female";
         const pName = getRandomParentName(parentGender);
         const pRelation = parentGender === "male" ? "father" : "mother";
-        
+
         const parent = await Parent.create({
           parentId: generateId("PAR"),
           schoolId: SCHOOL_ID,

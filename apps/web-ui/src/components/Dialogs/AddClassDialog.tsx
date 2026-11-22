@@ -52,6 +52,7 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [sectionToDelete, setSectionToDelete] = useState<{ sectionId: string; name: string } | null>(null);
+    const [sectionTeachers, setSectionTeachers] = useState<Record<string, string | null>>({});
 
     const createMutation = useCreateClass(schoolId);
     const updateMutation = useUpdateClass(schoolId);
@@ -63,26 +64,31 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
     const { data: allClassesData } = useGetClasses(schoolId);
     const allClasses = allClassesData?.data || [];
 
-    // Fetch teachers for autocomplete (active teachers)
-    const { data: teachersData } = useGetTeachers(schoolId, { status: 'active' });
+    // Fetch teachers for autocomplete (active teachers, up to 1000)
+    const { data: teachersData } = useGetTeachers(schoolId, { status: 'active', limit: 1000 });
     const teachers: Teacher[] = teachersData?.data || [];
-    const teacherOptions = teachers.map((t) => ({
-        id: t.teacherId,
-        label: `${t.firstName} ${t.lastName}`,
-    }));
+    const teacherOptions = useMemo(() => {
+        return teachers.map((t) => ({
+            id: t.teacherId,
+            label: `${t.firstName} ${t.lastName}`.trim(),
+        }));
+    }, [teachers]);
 
     // Find all teachers currently assigned to any class section in the school
     const assignedTeacherIds = useMemo(() => {
         const ids = new Set<string>();
         allClasses.forEach((cls: any) => {
             cls.sections?.forEach((sec: any) => {
-                if (sec.classTeacherId) {
+                if (editData && cls.classId === editData.classId) {
+                    const localTid = sectionTeachers[sec.sectionId];
+                    if (localTid) ids.add(localTid);
+                } else if (sec.classTeacherId) {
                     ids.add(sec.classTeacherId);
                 }
             });
         });
         return ids;
-    }, [allClasses]);
+    }, [allClasses, editData, sectionTeachers]);
 
     // Find teachers staged in newSections state
     const stagedTeacherIds = useMemo(() => {
@@ -90,7 +96,7 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
     }, [newSections]);
 
     // Available options for a specific section (includes its current teacher if assigned)
-    const getAvailableTeacherOptionsForSection = (currentTeacherId?: string) => {
+    const getAvailableTeacherOptionsForSection = (currentTeacherId?: string | null) => {
         return teacherOptions.filter(
             (option) =>
                 option.id === currentTeacherId ||
@@ -112,8 +118,14 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
                 description: editData.description || '',
                 sections: [],
             });
+            const mapping: Record<string, string | null> = {};
+            editData.sections?.forEach((sec) => {
+                mapping[sec.sectionId] = sec.classTeacherId || sec.classTeacher || null;
+            });
+            setSectionTeachers(mapping);
         } else {
             setFormData({ name: '', description: '', sections: [] });
+            setSectionTeachers({});
         }
         setNewSections([]);
         setNewSectionName('');
@@ -322,10 +334,27 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
                                     Existing Sections (Manage & Edit)
                                 </Typography>
                                 {editData.sections.map((section) => {
-                                    const teacher = teachers.find((t) => t.teacherId === section.classTeacherId);
+                                    const currentTeacherId = sectionTeachers[section.sectionId] !== undefined
+                                        ? sectionTeachers[section.sectionId]
+                                        : (section.classTeacherId || section.classTeacher || null);
+                                    
+                                    const teacher = teachers.find(
+                                        (t) =>
+                                            t.teacherId === currentTeacherId ||
+                                            (t as any)._id === currentTeacherId ||
+                                            (t as any).userId === currentTeacherId
+                                    );
+
                                     const currentTeacherOption = teacher
-                                        ? { id: teacher.teacherId, label: `${teacher.firstName} ${teacher.lastName}` }
-                                        : null;
+                                        ? { id: teacher.teacherId, label: `${teacher.firstName} ${teacher.lastName}`.trim() }
+                                        : (currentTeacherId && (section.classTeacherName || section.classTeacher))
+                                            ? { id: currentTeacherId, label: String(section.classTeacherName || section.classTeacher).trim() }
+                                            : null;
+
+                                    const availableOptions = getAvailableTeacherOptionsForSection(currentTeacherId);
+                                    const sectionAvailableOptions = currentTeacherOption && !availableOptions.some((o) => o.id === currentTeacherOption.id)
+                                        ? [currentTeacherOption, ...availableOptions]
+                                        : availableOptions;
 
                                     return (
                                         <Box
@@ -345,22 +374,35 @@ const ClassDialog: React.FC<ClassDialogProps> = ({ open, onClose, schoolId, edit
                                             </Typography>
                                             
                                             <Autocomplete
-                                                options={getAvailableTeacherOptionsForSection(section.classTeacherId)}
-                                                getOptionLabel={(o) => o.label}
+                                                options={sectionAvailableOptions}
+                                                getOptionLabel={(o) => (typeof o === 'string' ? o : o.label || '')}
                                                 value={currentTeacherOption}
                                                 onChange={async (_, v) => {
+                                                    const newTeacherId = v ? v.id : null;
+                                                    setSectionTeachers((prev) => ({
+                                                        ...prev,
+                                                        [section.sectionId]: newTeacherId,
+                                                    }));
                                                     try {
                                                         await assignTeacherMutation.mutateAsync({
                                                             classId: editData.classId,
                                                             sectionId: section.sectionId,
-                                                            data: { teacherId: v ? v.id : null as any },
+                                                            data: { teacherId: newTeacherId },
                                                         });
-                                                        notification.success(`Teacher assignment updated for Section ${section.name}`);
-                                                    } catch {
-                                                        notification.error("Failed to assign teacher");
+                                                        notification.success(
+                                                            newTeacherId
+                                                                ? `Teacher assignment updated for Section ${section.name}`
+                                                                : `Teacher removed from Section ${section.name}`
+                                                        );
+                                                    } catch (err: any) {
+                                                        setSectionTeachers((prev) => ({
+                                                            ...prev,
+                                                            [section.sectionId]: section.classTeacherId || null,
+                                                        }));
+                                                        notification.error(err?.message || "Failed to update teacher assignment");
                                                     }
                                                 }}
-                                                isOptionEqualToValue={(o, v) => o.id === v.id}
+                                                isOptionEqualToValue={(o, v) => o.id === v.id || o.label === v.label}
                                                 sx={{ flex: 1 }}
                                                 renderInput={(params) => (
                                                     <AppInput
