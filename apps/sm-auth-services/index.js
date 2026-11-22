@@ -15,6 +15,15 @@ const app = express();
 
 // Trust proxy for Vercel / serverless/ reverse proxies to resolve client IPs accurately
 app.set('trust proxy', 1);
+app.set('etag', false);
+
+// Prevent stale 304 responses from caching without CORS headers
+app.use((_req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+});
 
 
 // Unified dynamic CORS configuration
