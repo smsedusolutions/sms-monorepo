@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Box, IconButton, Tooltip, FormControl, InputLabel, Select, MenuItem, Chip } from '@mui/material';
-import { Edit as EditIcon, Block as BlockIcon, Chat as ChatIcon } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { Edit as EditIcon, Block as BlockIcon } from '@mui/icons-material';
 import DataTable, { StatusChip } from '../../components/Table/DataTable';
 import type { Column } from '../../components/Table/DataTable';
 import ParentDialog from '../../components/Dialogs/AddParentDialog';
@@ -14,7 +13,6 @@ import { useAuth } from '../../context/AuthContext';
 import { AppSearchInput } from '../../components/shared/AppSearchInput';
 
 const TeacherParentsPage = () => {
-    const navigate = useNavigate();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editData, setEditData] = useState<Parent | null>(null);
 

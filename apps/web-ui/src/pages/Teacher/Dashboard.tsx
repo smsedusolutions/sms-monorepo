@@ -25,7 +25,6 @@ import {
     Star as StarIcon,
     School as SchoolIcon,
     Groups as GroupsIcon,
-    Chat as ChatIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import TokenService from '../../queries/token/tokenService';

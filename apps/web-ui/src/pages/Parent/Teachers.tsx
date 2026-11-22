@@ -30,9 +30,7 @@ import {
     Call as CallIcon,
     MenuBook as SubjectIcon,
     Badge as BadgeIcon,
-    Chat as ChatIcon,
 } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 import { useChildSelector } from '../../context/ChildSelectorContext';
 import { useGetChildTeachers } from '../../queries/ParentPortal';
 import TokenService from '../../queries/token/tokenService';
@@ -40,7 +38,6 @@ import type { ChildTeacherInfo } from '../../types';
 
 const ParentTeachers: React.FC = () => {
     const theme = useTheme();
-    const navigate = useNavigate();
     const schoolId = TokenService.getSchoolId() || '';
     const { selectedChild, setSelectedChild, children: contextChildren, isLoading: loadingChild } = useChildSelector();
     const [searchQuery, setSearchQuery] = useState('');
