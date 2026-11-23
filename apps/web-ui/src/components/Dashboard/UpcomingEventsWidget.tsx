@@ -53,17 +53,17 @@ const getCategoryConfig = (type: CalendarEventType | string) => {
         case 'holiday':
             return {
                 label: 'Holiday',
-                color: '#10b981',
-                bg: '#ecfdf5',
-                borderColor: '#a7f3d0',
+                color: '#dc2626',
+                bg: '#fef2f2',
+                borderColor: '#fca5a5',
                 icon: <HolidayIcon sx={{ fontSize: 14 }} />,
             };
         case 'exam':
             return {
                 label: 'Exam',
-                color: '#ef4444',
-                bg: '#fef2f2',
-                borderColor: '#fecaca',
+                color: '#4f46e5',
+                bg: '#eef2ff',
+                borderColor: '#c7d2fe',
                 icon: <ExamIcon sx={{ fontSize: 14 }} />,
             };
         case 'sports':

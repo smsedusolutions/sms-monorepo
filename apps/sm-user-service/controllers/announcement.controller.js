@@ -95,7 +95,8 @@ const createAnnouncement = async (req, res) => {
         // Create notifications for target audience and collect recipients
         const recipients = await createAnnouncementNotifications(
             Notification, Student, Parent, Teacher,
-            schoolId, newAnnouncement, targetAudience, targetClasses
+            schoolId, newAnnouncement, targetAudience, targetClasses,
+            userId, role
         );
 
         // Send announcement emails (async, don't block on failure)
@@ -122,7 +123,7 @@ const createAnnouncement = async (req, res) => {
 
 // Helper: Create notifications for announcement
 // Returns array of recipients for email sending
-const createAnnouncementNotifications = async (Notification, Student, Parent, Teacher, schoolId, announcement, targetAudience, targetClasses) => {
+const createAnnouncementNotifications = async (Notification, Student, Parent, Teacher, schoolId, announcement, targetAudience, targetClasses, createdBy, createdByRole) => {
     try {
         const notifications = [];
         const recipients = []; // Track recipients for email sending
@@ -145,19 +146,31 @@ const createAnnouncementNotifications = async (Notification, Student, Parent, Te
         }
 
         if (targetAudience === 'all' || targetAudience === 'parents' || targetAudience === 'specific_class') {
-            // Get parents of target students
-            const studentIds = targetUsers.filter(u => u.userRole === 'student').map(u => u.userId);
-            if (studentIds.length > 0) {
-                const parents = await Parent.find({ schoolId, status: 'active', studentIds: { $in: studentIds } }, 'parentId firstName lastName email');
+            if (targetAudience === 'all' || targetAudience === 'parents') {
+                // If audience is 'all' or 'parents', notify ALL active parents in the school
+                const parents = await Parent.find({ schoolId, status: 'active' }, 'parentId firstName lastName email');
                 parents.forEach(p => {
                     targetUsers.push({ userId: p.parentId, userRole: 'parent' });
-                    // Add to email recipients if parent has email
                     if (p.email) {
                         recipients.push({ email: p.email, name: `${p.firstName} ${p.lastName}`, role: 'parent' });
                     }
                 });
-            } else if (targetAudience === 'parents') {
-                const parents = await Parent.find({ schoolId, status: 'active' }, 'parentId firstName lastName email');
+            } else if (targetAudience === 'specific_class') {
+                // For specific classes, find parents by studentIds OR parentId link
+                const targetStudents = targetUsers.filter(u => u.userRole === 'student' && u.student);
+                const studentIds = targetStudents.map(u => u.userId);
+                const parentIdsFromStudents = targetStudents.map(u => u.student.parentId).filter(Boolean);
+
+                const parentQuery = {
+                    schoolId,
+                    status: 'active',
+                    $or: [
+                        { studentIds: { $in: studentIds } },
+                        { parentId: { $in: parentIdsFromStudents } },
+                    ],
+                };
+
+                const parents = await Parent.find(parentQuery, 'parentId firstName lastName email');
                 parents.forEach(p => {
                     targetUsers.push({ userId: p.parentId, userRole: 'parent' });
                     if (p.email) {
@@ -178,9 +191,24 @@ const createAnnouncementNotifications = async (Notification, Student, Parent, Te
             });
         }
 
+        // Also include the creator/admin so that administrators/testers receive push on their own devices
+        if (createdBy) {
+            targetUsers.push({
+                userId: createdBy,
+                userRole: createdByRole || 'sch_admin',
+            });
+        }
+
+        // Deduplicate targetUsers by userId to prevent multiple notifications
+        const uniqueTargetUsers = Array.from(
+            new Map(targetUsers.map(u => [u.userId.toString(), u])).values()
+        );
+
         // Create notifications in batches
-        for (const user of targetUsers) {
-            const notificationId = `NOTIF${Date.now()}${Math.random().toString(36).substr(2, 5)}`;
+        for (let i = 0; i < uniqueTargetUsers.length; i++) {
+            const user = uniqueTargetUsers[i];
+            // Use index + random suffix to guarantee unique IDs even inside the same ms
+            const notificationId = `NOTIF${Date.now()}${i}${Math.random().toString(36).substr(2, 6)}`;
             notifications.push({
                 notificationId,
                 schoolId,
@@ -197,9 +225,14 @@ const createAnnouncementNotifications = async (Notification, Student, Parent, Te
         }
 
         if (notifications.length > 0) {
-            await Notification.insertMany(notifications);
-            // Asynchronously dispatch real-time WebSocket events and Web Push notifications
-            dispatchRealtimePush(notifications);
+            // ordered:false so a single duplicate key doesn't abort the whole batch
+            await Notification.insertMany(notifications, { ordered: false }).catch(err => {
+                // BulkWriteError with partial success is acceptable — log but don't throw
+                if (err.name !== 'BulkWriteError') throw err;
+                console.warn(`⚠️ [announcement] insertMany partial error (${err.writeErrors?.length} skipped):`, err.message);
+            });
+            // Dispatch real-time WebSocket + Web Push to all recipients reliably
+            await dispatchRealtimePush(notifications);
         }
 
         return recipients; // Return recipients for email sending

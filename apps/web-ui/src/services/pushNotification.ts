@@ -2,11 +2,10 @@ import TokenService from "../queries/token/tokenService";
 
 const getNotificationApiUrl = (): string => {
   if (import.meta.env.VITE_NOTIF_API_URL) {
-    return import.meta.env.VITE_NOTIF_API_URL;
+    return import.meta.env.VITE_NOTIF_API_URL.trim().replace(/\/+$/, "");
   }
   if (typeof window !== "undefined" && window.location.hostname && window.location.hostname !== "localhost") {
-    const protocol = window.location.protocol === "https:" ? "https:" : "http:";
-    return `${protocol}//${window.location.hostname}:5008`;
+    return "https://sm-notification-service-production.up.railway.app";
   }
   return "http://localhost:5008";
 };

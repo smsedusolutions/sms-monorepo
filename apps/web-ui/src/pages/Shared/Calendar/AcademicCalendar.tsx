@@ -88,18 +88,18 @@ export const CALENDAR_EVENT_TYPES: EventTypeConfig[] = [
     {
         value: 'holiday',
         label: 'Holiday',
-        color: '#10b981',
-        bg: '#ecfdf5',
-        borderColor: '#a7f3d0',
+        color: '#dc2626',
+        bg: '#fef2f2',
+        borderColor: '#fca5a5',
         icon: <HolidayIcon fontSize="small" />,
         description: 'School holidays & vacation days',
     },
     {
         value: 'exam',
         label: 'Exam',
-        color: '#ef4444',
-        bg: '#fef2f2',
-        borderColor: '#fecaca',
+        color: '#4f46e5',
+        bg: '#eef2ff',
+        borderColor: '#c7d2fe',
         icon: <ExamIcon fontSize="small" />,
         description: 'Examinations, assessments & tests',
     },
@@ -711,6 +711,8 @@ export const AcademicCalendar: React.FC = () => {
                                             const today = isToday(day);
                                             const dayOfWeek = getDay(day);
                                             const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                                            const isSunday = dayOfWeek === 0;
+                                            const hasHoliday = dayEvents.some(e => e.eventType === 'holiday');
 
                                             return (
                                                 <Box
@@ -727,6 +729,8 @@ export const AcademicCalendar: React.FC = () => {
                                                             ? '#eff6ff'
                                                             : today
                                                             ? '#fffbeb'
+                                                            : isSunday
+                                                            ? '#fff5f5'
                                                             : isWeekend
                                                             ? '#fafbfc'
                                                             : 'transparent',
@@ -745,7 +749,7 @@ export const AcademicCalendar: React.FC = () => {
                                                         <Typography
                                                             sx={{
                                                                 fontSize: { xs: '0.75rem', sm: '0.85rem' },
-                                                                fontWeight: today ? 900 : isSelected ? 800 : 600,
+                                                                fontWeight: today ? 900 : isSelected ? 800 : (isSunday || hasHoliday) ? 700 : 600,
                                                                 width: { xs: 22, sm: 26 },
                                                                 height: { xs: 22, sm: 26 },
                                                                 borderRadius: '50%',
@@ -753,7 +757,7 @@ export const AcademicCalendar: React.FC = () => {
                                                                 alignItems: 'center',
                                                                 justifyContent: 'center',
                                                                 bgcolor: today ? '#f59e0b' : isSelected ? '#059669' : 'transparent',
-                                                                color: today || isSelected ? 'white' : isWeekend ? '#64748b' : 'text.primary',
+                                                                color: today || isSelected ? 'white' : (isSunday || hasHoliday) ? '#dc2626' : isWeekend ? '#64748b' : 'text.primary',
                                                                 boxShadow: today ? '0 2px 6px rgba(245, 158, 11, 0.4)' : 'none',
                                                             }}
                                                         >

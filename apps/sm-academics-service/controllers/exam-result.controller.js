@@ -910,6 +910,115 @@ const remindTeacherForMarksEntry = async (req, res) => {
     }
 };
 
+// Get Gradebook (Class-wide consolidated marks & ranking matrix for an exam)
+const getGradebook = async (req, res) => {
+    try {
+        const { schoolId } = req.params;
+        const { examId, classId } = req.query;
+
+        if (!examId || !classId) {
+            return res.status(400).json({ success: false, message: "examId and classId are required query parameters" });
+        }
+
+        const schoolDbName = await getSchoolDbName(schoolId);
+        const { ExamResult, ExamSchedule, Student, Subject } = getModels(schoolDbName);
+
+        // 1. Get all schedules for this exam & class to find subjects
+        const schedules = await ExamSchedule.find({ schoolId, examId, classId }).lean();
+        const subjectIds = [...new Set(schedules.map(s => s.subjectId))];
+
+        // Fetch subjects metadata
+        let subjects = [];
+        if (Subject && subjectIds.length > 0) {
+            subjects = await Subject.find({ schoolId, $or: [{ subjectId: { $in: subjectIds } }, { _id: { $in: subjectIds } }] }, 'subjectId name code').lean();
+        }
+        if (!subjects.length) {
+            subjects = subjectIds.map(id => ({ subjectId: id, name: id }));
+        }
+
+        // 2. Get all results for this exam & class
+        const results = await ExamResult.find({ schoolId, examId, classId }).lean();
+        const studentIds = [...new Set(results.map(r => r.studentId))];
+
+        // 3. Get student profile details (name, rollNumber)
+        const studentsList = await Student.find({ schoolId, studentId: { $in: studentIds } }, 'studentId firstName lastName rollNumber').lean();
+        const studentMap = studentsList.reduce((acc, s) => {
+            acc[s.studentId] = s;
+            return acc;
+        }, {});
+
+        // Group results by studentId
+        const resultsByStudent = {};
+        for (const r of results) {
+            let total = r.totalMarks;
+            let grade = r.grade;
+            if (r.isEncrypted && r.encryptedMarks && r.encryptionIv && r.encryptionAuthTag) {
+                const decrypted = decryptMarks(r.encryptedMarks, r.encryptionIv, r.encryptionAuthTag);
+                if (decrypted) {
+                    total = decrypted.total ?? total;
+                    grade = decrypted.grade ?? grade;
+                }
+            }
+            if (!resultsByStudent[r.studentId]) {
+                resultsByStudent[r.studentId] = [];
+            }
+            resultsByStudent[r.studentId].push({
+                subjectId: r.subjectId,
+                marksObtained: total,
+                grade: grade,
+                attendanceStatus: r.attendanceStatus
+            });
+        }
+
+        // 4. Build students matrix with totals, percentage, and ranks
+        const studentRows = studentIds.map(stId => {
+            const s = studentMap[stId] || { studentId: stId, firstName: 'Student', lastName: '', rollNumber: '—' };
+            const resArr = resultsByStudent[stId] || [];
+            const studentTotal = resArr.reduce((sum, item) => sum + (typeof item.marksObtained === 'number' ? item.marksObtained : 0), 0);
+            const totalMaxMarks = subjectIds.length > 0 ? subjectIds.length * 100 : 100;
+            const percentage = Math.round((studentTotal / totalMaxMarks) * 100);
+
+            let overallGrade = 'D';
+            if (percentage >= 90) overallGrade = 'A+';
+            else if (percentage >= 80) overallGrade = 'A';
+            else if (percentage >= 70) overallGrade = 'B+';
+            else if (percentage >= 60) overallGrade = 'B';
+            else if (percentage >= 50) overallGrade = 'C';
+            else if (percentage >= 35) overallGrade = 'D';
+            else overallGrade = 'F';
+
+            return {
+                studentId: stId,
+                studentName: `${s.firstName || ''} ${s.lastName || ''}`.trim() || 'Student',
+                rollNumber: s.rollNumber || '—',
+                results: resArr,
+                totalMarks: studentTotal,
+                percentage,
+                overallGrade
+            };
+        });
+
+        // Sort descending by totalMarks to assign ranks
+        studentRows.sort((a, b) => b.totalMarks - a.totalMarks);
+        studentRows.forEach((s, idx) => {
+            s.rank = idx + 1;
+        });
+
+        res.status(200).json({
+            success: true,
+            data: {
+                examId,
+                classId,
+                subjects,
+                students: studentRows
+            }
+        });
+    } catch (error) {
+        console.error("Gradebook Error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     submitMarks,
     teacherPublishSubject,
@@ -918,5 +1027,6 @@ module.exports = {
     rollbackSubjectPublish,
     getExamPublishStatus,
     getStudentReportCard,
-    remindTeacherForMarksEntry
+    remindTeacherForMarksEntry,
+    getGradebook
 };
