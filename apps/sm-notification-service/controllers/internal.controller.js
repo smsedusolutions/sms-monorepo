@@ -78,40 +78,55 @@ const handleInternalNotify = async (req, res) => {
     let pushDeliveredCount = 0;
 
     // Group notifications by userId for batch processing
-    const userIds = [...new Set(notifications.map((n) => n.userId.toString()))];
+    const userIds = [...new Set(notifications.map((n) => (n.userId || "").toString().trim()))].filter(Boolean);
+
+    // Build case-insensitive regex for all target userIds
+    const regexUserIds = userIds.map((id) => new RegExp(`^${id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"));
 
     // Fetch all push subscriptions for target users in one query (matching userId or aliases)
     const subscriptions = await PushSubscription.find({
       $or: [
-        { userId: { $in: userIds } },
-        { aliases: { $in: userIds } },
+        { userId: { $in: regexUserIds } },
+        { aliases: { $in: regexUserIds } },
       ],
     }).lean();
 
     const subMap = new Map();
     subscriptions.forEach((sub) => {
+      const primaryKey = (sub.userId || "").toString().trim().toLowerCase();
       // Map under primary userId
-      if (!subMap.has(sub.userId)) {
-        subMap.set(sub.userId, []);
+      if (primaryKey) {
+        if (!subMap.has(primaryKey)) {
+          subMap.set(primaryKey, []);
+        }
+        subMap.get(primaryKey).push(sub);
       }
-      subMap.get(sub.userId).push(sub);
 
       // Also map under each alias
       if (Array.isArray(sub.aliases)) {
         sub.aliases.forEach((alias) => {
-          if (!subMap.has(alias)) {
-            subMap.set(alias, []);
-          }
-          if (!subMap.get(alias).some((s) => s.endpoint === sub.endpoint)) {
-            subMap.get(alias).push(sub);
+          const aliasKey = (alias || "").toString().trim().toLowerCase();
+          if (aliasKey) {
+            if (!subMap.has(aliasKey)) {
+              subMap.set(aliasKey, []);
+            }
+            if (!subMap.get(aliasKey).some((s) => s.endpoint === sub.endpoint)) {
+              subMap.get(aliasKey).push(sub);
+            }
           }
         });
       }
     });
 
+    if (subscriptions.length === 0) {
+      console.log(`ℹ️ [sm-notification-service] No registered push devices found in DB for target users: ${userIds.join(", ")}`);
+    } else {
+      console.log(`📱 [sm-notification-service] Found ${subscriptions.length} active push subscription(s) for target users`);
+    }
+
     // Dispatch each notification
     for (const notif of notifications) {
-      const userId = notif.userId.toString();
+      const userId = (notif.userId || "").toString().trim();
       const targetUrl = resolveNotificationUrl(notif);
 
       const dispatchPayload = {
@@ -136,7 +151,8 @@ const handleInternalNotify = async (req, res) => {
       wsDeliveredCount += wsCount;
 
       // 2. Web Push delivery (native browser push for background / offline / inactive tabs)
-      const rawSubs = subMap.get(userId) || [];
+      const lookupKey = userId.toLowerCase();
+      const rawSubs = subMap.get(lookupKey) || [];
       // Deduplicate subscriptions by endpoint so each physical device receives exactly ONE push
       const userSubs = Array.from(new Map(rawSubs.map((s) => [s.endpoint, s])).values());
 

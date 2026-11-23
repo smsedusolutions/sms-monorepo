@@ -39,6 +39,7 @@ const sendPushToSubscription = async (subscription, payload) => {
 
   try {
     const urgency = payload.urgency || "high";
+    const cleanTopic = (payload.type || "alert").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 32);
     await webpush.sendNotification(
       pushSubscription,
       JSON.stringify(payload),
@@ -47,10 +48,11 @@ const sendPushToSubscription = async (subscription, payload) => {
         urgency,
         headers: {
           Urgency: urgency,
-          Topic: payload.type || "school-alert",
+          Topic: cleanTopic,
         },
       }
     );
+    console.log(`📲 [WebPush] Delivered notification to endpoint: ${subscription.endpoint.substring(0, 38)}...`);
     return { success: true, endpoint: subscription.endpoint };
   } catch (error) {
     console.error(

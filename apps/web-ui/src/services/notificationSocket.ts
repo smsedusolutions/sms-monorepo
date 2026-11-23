@@ -36,8 +36,7 @@ class NotificationSocketService {
 
     const getWsFallback = (): string => {
       if (typeof window !== "undefined" && window.location.hostname && window.location.hostname !== "localhost") {
-        const wsProtocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-        return `${wsProtocol}//${window.location.hostname}:5008`;
+        return "wss://sm-notification-service-production.up.railway.app";
       }
       return "ws://localhost:5008";
     };

@@ -18,7 +18,8 @@ const dispatchRealtimePush = (notifications) => {
   if (notifArray.length === 0) return;
 
   try {
-    const parsedUrl = new URL(`${notifUrl}/internal/notify`);
+    const cleanUrl = notifUrl.trim().replace(/\/+$/, "");
+    const parsedUrl = new URL(`${cleanUrl}/internal/notify`);
     const postData = JSON.stringify({ notifications: notifArray });
 
     const isHttps = parsedUrl.protocol === "https:";
