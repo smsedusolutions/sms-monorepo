@@ -324,6 +324,7 @@ const MainRouters = () => {
 
           {/* Gradebook */}
           <Route path="/school-admin/exam/gradebook" element={<Gradebook />} />
+          <Route path="/school-admin/gradebook" element={<Gradebook />} />
         </Route>
 
         {/* Teacher Routes */}

@@ -27,7 +27,8 @@ const {
     rollbackSubjectPublish,
     getExamPublishStatus,
     getStudentReportCard,
-    remindTeacherForMarksEntry
+    remindTeacherForMarksEntry,
+    getGradebook
 } = require('../controllers/exam-result.controller');
 
 // ==========================================
@@ -214,6 +215,12 @@ router.get(
     Authenticated,
     authorizeRoles('sch_admin', 'principal', 'teacher'),
     getExamPublishStatus
+);
+router.get(
+    '/results/gradebook',
+    Authenticated,
+    authorizeRoles('sch_admin', 'principal', 'teacher'),
+    getGradebook
 );
 router.get(
     '/results/report-card/:studentId',

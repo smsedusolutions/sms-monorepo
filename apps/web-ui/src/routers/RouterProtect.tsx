@@ -102,6 +102,7 @@ const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
       '/school-admin/ptm',
       '/school-admin/students/discipline',
       '/school-admin/exam/gradebook',
+      '/school-admin/gradebook',
       '/school-admin/fees',
       '/school-admin/announcements',
       '/school-admin/email-templates',
